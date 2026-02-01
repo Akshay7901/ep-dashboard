@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, AuthState, LoginCredentials, AuthResponse, ForgotPasswordRequest } from '@/types';
-import api from '@/lib/api';
+import { User, AuthState, LoginCredentials, ForgotPasswordRequest } from '@/types';
+import { mockApi } from '@/lib/mockApi';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -47,24 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      // Call your custom login API
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
-      const { user, token } = response.data;
+    // Using mock API for testing
+    const { user, token } = await mockApi.login(credentials.email, credentials.password);
 
-      // Store in localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+    // Store in localStorage
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error) {
-      throw error;
-    }
+    setState({
+      user,
+      token,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   }, []);
 
   const logout = useCallback(() => {
@@ -79,8 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const forgotPassword = useCallback(async (data: ForgotPasswordRequest) => {
-    // Call your forgot-password API
-    await api.post('/auth/forgot-password', data);
+    // Using mock API for testing
+    await mockApi.forgotPassword(data.email);
   }, []);
 
   return (
