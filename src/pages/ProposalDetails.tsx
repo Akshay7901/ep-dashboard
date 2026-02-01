@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Proposal } from '@/types';
 import { format } from 'date-fns';
+import { mockApi } from '@/lib/mockApi';
+import { toast } from '@/hooks/use-toast';
 import {
   ArrowLeft,
   Calendar,
@@ -16,88 +18,6 @@ import {
   Download,
   Loader2,
 } from 'lucide-react';
-
-// Mock data - in real app, fetch from API
-const mockProposals: Record<string, Proposal> = {
-  '1': {
-    id: '1',
-    name: 'Website Redesign Proposal',
-    client: 'Acme Corporation',
-    clientEmail: 'contact@acmecorp.com',
-    clientPhone: '+1 (555) 123-4567',
-    status: 'approved',
-    description: `Complete redesign of corporate website with modern UI/UX principles and responsive design.
-
-This proposal outlines a comprehensive website redesign project that will transform your current online presence into a modern, user-centric digital experience. Our approach focuses on:
-
-• User Research & Analysis: Understanding your target audience and their needs
-• Information Architecture: Restructuring content for optimal navigation
-• Visual Design: Creating a fresh, modern aesthetic aligned with your brand
-• Responsive Development: Ensuring seamless experience across all devices
-• Performance Optimization: Fast loading times and efficient code
-• SEO Implementation: Built-in search engine optimization best practices
-
-The project timeline is estimated at 12 weeks from kickoff to launch, with regular milestone reviews and client feedback sessions.`,
-    createdAt: '2025-01-15T10:00:00Z',
-    updatedAt: '2025-01-28T14:30:00Z',
-    attachments: [
-      { id: 'a1', name: 'Project_Scope.pdf', url: '#', type: 'pdf', size: 2500000 },
-      { id: 'a2', name: 'Design_Mockups.zip', url: '#', type: 'zip', size: 15000000 },
-    ],
-    value: 45000,
-  },
-  '2': {
-    id: '2',
-    name: 'Mobile App Development',
-    client: 'TechStart Inc',
-    clientEmail: 'hello@techstart.io',
-    clientPhone: '+1 (555) 987-6543',
-    status: 'pending',
-    description: 'Development of iOS and Android mobile applications for customer engagement platform.',
-    createdAt: '2025-01-20T14:30:00Z',
-    value: 78000,
-  },
-  '3': {
-    id: '3',
-    name: 'E-commerce Platform',
-    client: 'RetailPlus',
-    clientEmail: 'projects@retailplus.com',
-    status: 'draft',
-    description: 'Full-scale e-commerce solution with inventory management and payment integration.',
-    createdAt: '2025-01-22T09:15:00Z',
-    value: 95000,
-  },
-  '4': {
-    id: '4',
-    name: 'Cloud Migration Services',
-    client: 'DataFlow Systems',
-    clientEmail: 'tech@dataflow.com',
-    status: 'rejected',
-    description: 'Migration of legacy infrastructure to AWS cloud with improved scalability.',
-    createdAt: '2025-01-10T16:45:00Z',
-    value: 65000,
-  },
-  '5': {
-    id: '5',
-    name: 'CRM Integration Project',
-    client: 'Sales Force Pro',
-    clientEmail: 'info@salesforcepro.com',
-    status: 'approved',
-    description: 'Integration of Salesforce CRM with existing business processes and workflows.',
-    createdAt: '2025-01-18T11:20:00Z',
-    value: 32000,
-  },
-  '6': {
-    id: '6',
-    name: 'Security Audit & Compliance',
-    client: 'FinanceSecure Ltd',
-    clientEmail: 'security@financesecure.com',
-    status: 'pending',
-    description: 'Comprehensive security audit and implementation of compliance measures.',
-    createdAt: '2025-01-25T08:00:00Z',
-    value: 28000,
-  },
-};
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -113,21 +33,25 @@ const ProposalDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API fetch
     const fetchProposal = async () => {
+      if (!id) return;
+      
       setIsLoading(true);
       setError(null);
       
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      if (id && mockProposals[id]) {
-        setProposal(mockProposals[id]);
-      } else {
-        setError('Proposal not found');
+      try {
+        const data = await mockApi.getProposalById(id);
+        setProposal(data);
+      } catch (err: any) {
+        setError(err?.message || 'Proposal not found');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: err?.message || 'Failed to load proposal',
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     fetchProposal();
