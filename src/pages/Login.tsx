@@ -13,7 +13,7 @@ import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  accessCode: z.string().min(6, "Access code must be at least 6 characters"),
 });
 type LoginFormData = z.infer<typeof loginSchema>;
 const Login: React.FC = () => {
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     try {
       await login({
         email: data.email,
-        password: data.password,
+        password: data.accessCode,
       });
       toast({
         title: "Welcome back!",
