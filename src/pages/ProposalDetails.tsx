@@ -2,6 +2,11 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
+import ReviewerActions from '@/components/proposals/ReviewerActions';
+import AssessmentForm from '@/components/proposals/AssessmentForm';
+import Reviewer1CommentForm from '@/components/proposals/Reviewer1CommentForm';
+import ReviewCommentsDisplay from '@/components/proposals/ReviewCommentsDisplay';
+import FinalReviewSummary from '@/components/proposals/FinalReviewSummary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProposal, useUpdateProposalStatus, useProposalComments, useWorkflowLogs } from '@/hooks/useProposals';
@@ -13,9 +18,6 @@ import {
   User,
   Mail,
   Loader2,
-  CheckCircle2,
-  XCircle,
-  Send,
   Lock,
   FileText,
   Hash,
@@ -32,8 +34,8 @@ const ProposalDetails: React.FC = () => {
   const { isReviewer1, isReviewer2 } = useAuth();
   
   const { data: proposal, isLoading, error } = useProposal(id || '');
-  const { data: comments } = useProposalComments(id || '');
-  const { data: logs } = useWorkflowLogs(id || '');
+  const { data: comments = [] } = useProposalComments(id || '');
+  const { data: logs = [] } = useWorkflowLogs(id || '');
   const updateStatus = useUpdateProposalStatus();
 
   const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
@@ -44,6 +46,9 @@ const ProposalDetails: React.FC = () => {
       previousStatus: proposal.status,
     });
   };
+
+  // Check if Reviewer 2 has submitted comments
+  const hasReviewer2Comments = comments.some(c => c.review_form_data?.submittedForAuthorization);
 
   if (isLoading) {
     return (
@@ -111,62 +116,43 @@ const ProposalDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Action buttons for Reviewer 1 */}
-        {isReviewer1 && !isLocked && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              {proposal.status === 'submitted' && (
-                <>
-                  <Button 
-                    onClick={() => handleStatusChange('under_review')}
-                    disabled={updateStatus.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Accept for Review
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    onClick={() => handleStatusChange('rejected')}
-                    disabled={updateStatus.isPending}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Decline
-                  </Button>
-                </>
-              )}
-              {proposal.status === 'under_review' && (
-                <Button 
-                  onClick={() => handleStatusChange('approved')}
-                  disabled={updateStatus.isPending}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-              )}
-              {proposal.status === 'approved' && (
-                <Button 
-                  onClick={() => handleStatusChange('finalised')}
-                  disabled={updateStatus.isPending}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Contract to Author
-                </Button>
-              )}
-              {proposal.status === 'finalised' && (
-                <Button 
-                  onClick={() => handleStatusChange('locked')}
-                  disabled={updateStatus.isPending}
-                >
-                  <Lock className="h-4 w-4 mr-2" />
-                  Lock & Finalize
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+        {/* Reviewer Actions - Role-based workflow steps */}
+        <ReviewerActions
+          proposal={proposal}
+          isReviewer1={isReviewer1}
+          isReviewer2={isReviewer2}
+          onStatusChange={handleStatusChange}
+          isPending={updateStatus.isPending}
+          hasReviewer2Comments={hasReviewer2Comments}
+        />
+
+        {/* Screen 4: Final Review Summary (Reviewer 1 only, when finalised) */}
+        <FinalReviewSummary
+          proposal={proposal}
+          comments={comments}
+          logs={logs}
+          isReviewer1={isReviewer1}
+        />
+
+        {/* Screen 2: Assessment Form (Reviewer 2 only) */}
+        <AssessmentForm
+          proposal={proposal}
+          isReviewer2={isReviewer2}
+        />
+
+        {/* Review Comments Display (for Reviewer 1 to review) */}
+        {isReviewer1 && comments.length > 0 && (
+          <ReviewCommentsDisplay
+            comments={comments}
+            isReviewer1={isReviewer1}
+          />
         )}
+
+        {/* Screen 3: Reviewer 1 Additional Comments Form */}
+        <Reviewer1CommentForm
+          proposal={proposal}
+          isReviewer1={isReviewer1}
+        />
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
@@ -339,27 +325,6 @@ const ProposalDetails: React.FC = () => {
                   <p className="text-sm text-foreground">
                     {proposal.under_review_elsewhere}
                   </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Reviewer Comments */}
-            {comments && comments.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Review Comments</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="p-4 rounded-lg bg-muted/50">
-                      <p className="text-sm text-foreground">
-                        {comment.comment_text}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {format(new Date(comment.created_at), 'MMM d, yyyy h:mm a')}
-                      </p>
-                    </div>
-                  ))}
                 </CardContent>
               </Card>
             )}
