@@ -80,6 +80,16 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     file_uploads: currentData.file_uploads || null,
     secondary_email: currentData.secondary_email || null,
     address: currentData.address || null,
+    // Additional submission fields
+    cv_submitted: currentData.cv_submitted || null,
+    sample_chapter_submitted: currentData.sample_chapter_submitted || null,
+    toc_submitted: currentData.toc_submitted || null,
+    permissions_required: currentData.permissions_required || null,
+    permissions_docs_submitted: currentData.permissions_docs_submitted || null,
+    figures_tables_count: currentData.figures_tables_count || null,
+    under_review_elsewhere: currentData.under_review_elsewhere || null,
+    submitted_date: currentData.submitted_date || null,
+    submitted_time: currentData.submitted_time || null,
   };
 };
 

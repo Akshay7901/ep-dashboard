@@ -12,7 +12,6 @@ import {
   Calendar,
   User,
   Mail,
-  Phone,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -22,6 +21,9 @@ import {
   Hash,
   RefreshCw,
   FileCheck,
+  Download,
+  ClipboardCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 const ProposalDetails: React.FC = () => {
@@ -234,6 +236,108 @@ const ProposalDetails: React.FC = () => {
                 <CardContent>
                   <p className="text-foreground whitespace-pre-line leading-relaxed">
                     {proposal.referees_reviewers}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* File Uploads */}
+            {proposal.file_uploads && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Uploaded Files
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {proposal.file_uploads.split(',').map((url, index) => {
+                      const trimmedUrl = url.trim();
+                      const fileName = trimmedUrl.split('/').pop() || `File ${index + 1}`;
+                      return (
+                        <a
+                          key={index}
+                          href={trimmedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+                        >
+                          <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="text-foreground truncate flex-1">
+                            {decodeURIComponent(fileName.replace(/_/g, ' ').replace(/\.docx$|\.pdf$|\.doc$/i, ''))}
+                          </span>
+                          <Download className="h-4 w-4 text-muted-foreground" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Submission Checklist */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
+                  Submission Checklist
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">CV Submitted</span>
+                    <span className={proposal.cv_submitted === 'Yes' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                      {proposal.cv_submitted || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Sample Chapter</span>
+                    <span className={proposal.sample_chapter_submitted === 'Yes' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                      {proposal.sample_chapter_submitted || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">TOC Submitted</span>
+                    <span className={proposal.toc_submitted === 'Yes' ? 'text-primary font-medium' : 'text-muted-foreground'}>
+                      {proposal.toc_submitted || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Permissions Required</span>
+                    <span className="text-foreground">
+                      {proposal.permissions_required || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Permissions Docs</span>
+                    <span className="text-foreground">
+                      {proposal.permissions_docs_submitted || 'N/A'}
+                    </span>
+                  </div>
+                  {proposal.figures_tables_count && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Figures/Tables Count</span>
+                      <span className="text-foreground">{proposal.figures_tables_count}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Under Review Elsewhere */}
+            {proposal.under_review_elsewhere && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Review Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-foreground">
+                    {proposal.under_review_elsewhere}
                   </p>
                 </CardContent>
               </Card>
