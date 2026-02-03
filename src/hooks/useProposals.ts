@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposal, ApiProposalsResponse, ApiProposalStatus } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import api from '@/lib/api';
 
 interface UseProposalsOptions {
   page?: number;
@@ -43,6 +42,25 @@ const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
   current_revision: apiProposal.current_revision,
 });
 
+// Helper function to fetch from edge function proxy
+const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=${limit}&offset=${offset}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch proposals');
+  }
+
+  return response.json();
+};
+
 export const useProposals = (options: UseProposalsOptions = {}) => {
   const { page = 1, limit = 10, search = '', status = 'all' } = options;
 
@@ -51,14 +69,8 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
-        params: {
-          limit,
-          offset,
-        },
-      });
-
-      let proposals = response.data.proposals.map(mapApiProposal);
+      const data = await fetchProposalsFromProxy(limit, offset);
+      let proposals = data.proposals.map(mapApiProposal);
 
       // Client-side filtering for search
       if (search) {
@@ -77,10 +89,10 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
 
       return {
         data: proposals,
-        total: response.data.total,
+        total: data.total,
         page,
         limit,
-        totalPages: Math.ceil(response.data.total / limit),
+        totalPages: Math.ceil(data.total / limit),
       };
     },
   });
@@ -90,12 +102,10 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Fetch from API and find by ticket_number
-      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
-        params: { limit: 100 },
-      });
+      // Fetch from edge function proxy and find by ticket_number
+      const data = await fetchProposalsFromProxy(100, 0);
 
-      const apiProposal = response.data.proposals.find(p => p.ticket_number === id);
+      const apiProposal = data.proposals.find(p => p.ticket_number === id);
       if (!apiProposal) throw new Error('Proposal not found');
 
       return mapApiProposal(apiProposal);
@@ -249,11 +259,8 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
-        params: { limit: 1000 },
-      });
-
-      const proposals = response.data.proposals.map(mapApiProposal);
+      const data = await fetchProposalsFromProxy(1000, 0);
+      const proposals = data.proposals.map(mapApiProposal);
 
       const stats = {
         total: proposals.length,
