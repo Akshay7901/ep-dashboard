@@ -34,14 +34,17 @@ const ProposalDetails: React.FC = () => {
   const { isReviewer1, isReviewer2 } = useAuth();
   
   const { data: proposal, isLoading, error } = useProposal(id || '');
-  const { data: comments = [] } = useProposalComments(id || '');
-  const { data: logs = [] } = useWorkflowLogs(id || '');
+  
+  // Use proposal's local ID for comments and logs (synced proposals have UUID)
+  const localProposalId = proposal?.id || '';
+  const { data: comments = [] } = useProposalComments(localProposalId);
+  const { data: logs = [] } = useWorkflowLogs(localProposalId);
   const updateStatus = useUpdateProposalStatus();
 
   const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
     if (!proposal) return;
     updateStatus.mutate({
-      id: proposal.id,
+      id: proposal.id, // This is now always a UUID
       status: newStatus,
       previousStatus: proposal.status,
     });

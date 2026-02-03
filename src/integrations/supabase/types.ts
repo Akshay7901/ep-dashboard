@@ -96,6 +96,7 @@ export type Database = {
           id: string
           name: string
           status: Database["public"]["Enums"]["proposal_status"]
+          ticket_number: string | null
           updated_at: string
           value: number | null
         }
@@ -112,6 +113,7 @@ export type Database = {
           id?: string
           name: string
           status?: Database["public"]["Enums"]["proposal_status"]
+          ticket_number?: string | null
           updated_at?: string
           value?: number | null
         }
@@ -128,6 +130,7 @@ export type Database = {
           id?: string
           name?: string
           status?: Database["public"]["Enums"]["proposal_status"]
+          ticket_number?: string | null
           updated_at?: string
           value?: number | null
         }
