@@ -42,7 +42,7 @@ const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
   current_revision: apiProposal.current_revision,
 });
 
-// Helper function to fetch from edge function proxy
+// Helper function to fetch proposals list from edge function proxy
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=${limit}&offset=${offset}`,
@@ -56,6 +56,25 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch proposals');
+  }
+
+  return response.json();
+};
+
+// Helper function to fetch single proposal by ticket number
+const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposal> => {
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?ticket=${ticketNumber}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch proposal');
   }
 
   return response.json();
@@ -102,12 +121,8 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Fetch from edge function proxy and find by ticket_number
-      const data = await fetchProposalsFromProxy(100, 0);
-
-      const apiProposal = data.proposals.find(p => p.ticket_number === id);
-      if (!apiProposal) throw new Error('Proposal not found');
-
+      // Fetch single proposal by ticket number directly
+      const apiProposal = await fetchProposalByTicket(id);
       return mapApiProposal(apiProposal);
     },
     enabled: !!id,
