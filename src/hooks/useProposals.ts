@@ -10,6 +10,12 @@ interface UseProposalsOptions {
   status?: ProposalStatus | 'all';
 }
 
+// Helper to check if string is a valid UUID
+const isUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 // Map API status to internal status
 const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
   const statusMap: Record<ApiProposalStatus, ProposalStatus> = {
@@ -93,6 +99,28 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
   };
 };
 
+// Map local Supabase proposal to internal Proposal structure
+const mapLocalProposal = (dbProposal: any): Proposal => ({
+  id: dbProposal.id,
+  name: dbProposal.name,
+  author_name: dbProposal.author_name,
+  author_email: dbProposal.author_email,
+  author_phone: dbProposal.author_phone,
+  description: dbProposal.description,
+  status: dbProposal.status,
+  value: dbProposal.value,
+  contract_sent: dbProposal.contract_sent,
+  contract_sent_at: dbProposal.contract_sent_at,
+  finalised_at: dbProposal.finalised_at,
+  finalised_by: dbProposal.finalised_by,
+  created_at: dbProposal.created_at,
+  updated_at: dbProposal.updated_at,
+  ticket_number: null,
+  current_revision: null,
+  short_description: dbProposal.description,
+  detailed_description: dbProposal.description,
+});
+
 // Helper function to fetch proposals list from edge function proxy
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
   const response = await fetch(
@@ -131,6 +159,20 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
   return response.json();
 };
 
+// Helper function to fetch local proposal by UUID
+const fetchLocalProposal = async (id: string): Promise<Proposal> => {
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Proposal not found');
+
+  return mapLocalProposal(data);
+};
+
 export const useProposals = (options: UseProposalsOptions = {}) => {
   const { page = 1, limit = 10, search = '', status = 'all' } = options;
 
@@ -139,8 +181,20 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      const data = await fetchProposalsFromProxy(limit, offset);
-      let proposals = data.proposals.map(mapApiProposal);
+      // Fetch from both API and local database
+      const [apiData, localData] = await Promise.all([
+        fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 })),
+        supabase.from('proposals').select('*').order('created_at', { ascending: false }),
+      ]);
+
+      // Map API proposals
+      let apiProposals = apiData.proposals.map(mapApiProposal);
+      
+      // Map local proposals
+      let localProposals = (localData.data || []).map(mapLocalProposal);
+
+      // Combine both sources (local first for testing)
+      let proposals = [...localProposals, ...apiProposals];
 
       // Client-side filtering for search
       if (search) {
@@ -159,10 +213,10 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
 
       return {
         data: proposals,
-        total: data.total,
+        total: apiData.total + localProposals.length,
         page,
         limit,
-        totalPages: Math.ceil(data.total / limit),
+        totalPages: Math.ceil((apiData.total + localProposals.length) / limit),
       };
     },
   });
@@ -172,9 +226,15 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Fetch single proposal by ticket number directly (full details)
-      const apiProposal = await fetchProposalByTicket(id);
-      return mapApiProposalDetail(apiProposal);
+      // Check if ID is a UUID (local proposal) or ticket number (API proposal)
+      if (isUUID(id)) {
+        // Fetch from local Supabase database
+        return fetchLocalProposal(id);
+      } else {
+        // Fetch from external API
+        const apiProposal = await fetchProposalByTicket(id);
+        return mapApiProposalDetail(apiProposal);
+      }
     },
     enabled: !!id,
   });
@@ -193,6 +253,11 @@ export const useUpdateProposalStatus = () => {
       status: ProposalStatus; 
       previousStatus: ProposalStatus;
     }) => {
+      // Only allow status updates for local proposals (UUIDs)
+      if (!isUUID(id)) {
+        throw new Error('Cannot update status for external API proposals. Use local proposals for testing.');
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       
       // Update proposal status
@@ -244,6 +309,11 @@ export const useProposalComments = (proposalId: string) => {
   return useQuery({
     queryKey: ['proposal-comments', proposalId],
     queryFn: async () => {
+      // Only query comments for local proposals (UUIDs)
+      if (!isUUID(proposalId)) {
+        return [] as ReviewerComment[];
+      }
+
       const { data, error } = await supabase
         .from('reviewer_comments')
         .select('*')
@@ -272,6 +342,11 @@ export const useAddComment = () => {
       reviewFormData?: Record<string, any>;
       duplicateOf?: string;
     }) => {
+      // Only allow comments for local proposals (UUIDs)
+      if (!isUUID(proposalId)) {
+        throw new Error('Cannot add comments to external API proposals. Use local proposals for testing.');
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -308,6 +383,11 @@ export const useWorkflowLogs = (proposalId: string) => {
   return useQuery({
     queryKey: ['workflow-logs', proposalId],
     queryFn: async () => {
+      // Only query workflow logs for local proposals (UUIDs)
+      if (!isUUID(proposalId)) {
+        return [] as WorkflowLog[];
+      }
+
       const { data, error } = await supabase
         .from('workflow_logs')
         .select('*')
@@ -325,17 +405,24 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const data = await fetchProposalsFromProxy(1000, 0);
-      const proposals = data.proposals.map(mapApiProposal);
+      // Fetch from both API and local database
+      const [apiData, localData] = await Promise.all([
+        fetchProposalsFromProxy(1000, 0).catch(() => ({ proposals: [], total: 0 })),
+        supabase.from('proposals').select('*'),
+      ]);
+
+      const apiProposals = apiData.proposals.map(mapApiProposal);
+      const localProposals = (localData.data || []).map(mapLocalProposal);
+      const allProposals = [...localProposals, ...apiProposals];
 
       const stats = {
-        total: proposals.length,
-        submitted: proposals.filter(p => p.status === 'submitted').length,
-        under_review: proposals.filter(p => p.status === 'under_review').length,
-        approved: proposals.filter(p => p.status === 'approved').length,
-        finalised: proposals.filter(p => p.status === 'finalised').length,
-        rejected: proposals.filter(p => p.status === 'rejected').length,
-        locked: proposals.filter(p => p.status === 'locked').length,
+        total: allProposals.length,
+        submitted: allProposals.filter(p => p.status === 'submitted').length,
+        under_review: allProposals.filter(p => p.status === 'under_review').length,
+        approved: allProposals.filter(p => p.status === 'approved').length,
+        finalised: allProposals.filter(p => p.status === 'finalised').length,
+        rejected: allProposals.filter(p => p.status === 'rejected').length,
+        locked: allProposals.filter(p => p.status === 'locked').length,
       };
 
       return stats;
