@@ -169,15 +169,34 @@ const ProposalDetails: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
+            {/* Proposal Summary */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Description</CardTitle>
+                <CardTitle className="text-lg">Proposal Summary</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-foreground whitespace-pre-line leading-relaxed">
-                  {proposal.description || 'No description provided.'}
-                </p>
+              <CardContent className="space-y-4">
+                {proposal.description ? (
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                    {proposal.description}
+                  </p>
+                ) : (
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>Description not available from external API.</p>
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <p className="font-medium text-foreground mb-2">Available Information:</p>
+                      <ul className="space-y-1.5">
+                        <li><span className="font-medium">Title:</span> {proposal.name}</li>
+                        <li><span className="font-medium">Author:</span> {proposal.author_name}</li>
+                        {proposal.ticket_number && (
+                          <li><span className="font-medium">Ticket:</span> {proposal.ticket_number}</li>
+                        )}
+                        {proposal.current_revision && (
+                          <li><span className="font-medium">Revision:</span> {proposal.current_revision}</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
