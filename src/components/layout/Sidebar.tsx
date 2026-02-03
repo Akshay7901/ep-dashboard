@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <FileText className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">Cambridge Scholars Dashboard  </span>
+            <span className="text-lg font-semibold text-sidebar-foreground">EP Dashboard   </span>
           </div>}
         <Button variant="ghost" size="icon" onClick={onToggle} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <ChevronLeft className={cn('h-4 w-4 transition-transform', isCollapsed && 'rotate-180')} />
