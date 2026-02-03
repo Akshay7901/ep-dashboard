@@ -53,7 +53,41 @@ export type ProposalStatus =
   | 'rejected' 
   | 'locked';
 
-// API response proposal structure
+// API proposal current_data structure (full details)
+export interface ApiProposalCurrentData {
+  address?: string;
+  biography?: string;
+  book_type?: string;
+  co_authors_editors?: string;
+  corresponding_author_name?: string;
+  cv_submitted?: string;
+  detailed_description?: string;
+  email?: string;
+  expected_completion_date?: string;
+  figures_tables_count?: string;
+  file_uploads?: string;
+  institution?: string;
+  job_title?: string;
+  keywords?: string;
+  main_title?: string;
+  marketing_info?: string;
+  permissions_docs_submitted?: string;
+  permissions_required?: string;
+  referees_reviewers?: string;
+  referrer_url?: string;
+  sample_chapter_submitted?: string;
+  secondary_email?: string;
+  short_description?: string;
+  sub_title?: string;
+  submitted_date?: string;
+  submitted_time?: string;
+  table_of_contents?: string;
+  toc_submitted?: string;
+  under_review_elsewhere?: string;
+  word_count?: string;
+}
+
+// API response proposal structure (list view - basic fields)
 export interface ApiProposal {
   ticket_number: string;
   title: string;
@@ -62,6 +96,15 @@ export interface ApiProposal {
   status: ApiProposalStatus;
   submitted_at: string;
   current_revision: number;
+}
+
+// API response proposal structure (detail view - includes current_data)
+export interface ApiProposalDetail extends ApiProposal {
+  current_data?: ApiProposalCurrentData;
+  revisions?: Array<{
+    action: string;
+    created_at: string;
+  }>;
 }
 
 // API response structure
@@ -90,6 +133,24 @@ export interface Proposal {
   updated_at: string;
   ticket_number?: string;
   current_revision?: number;
+  // Extended fields from API current_data
+  short_description?: string | null;
+  detailed_description?: string | null;
+  sub_title?: string | null;
+  biography?: string | null;
+  institution?: string | null;
+  job_title?: string | null;
+  keywords?: string | null;
+  book_type?: string | null;
+  word_count?: string | null;
+  expected_completion_date?: string | null;
+  table_of_contents?: string | null;
+  marketing_info?: string | null;
+  co_authors_editors?: string | null;
+  referees_reviewers?: string | null;
+  file_uploads?: string | null;
+  secondary_email?: string | null;
+  address?: string | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
