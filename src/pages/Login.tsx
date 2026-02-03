@@ -12,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 
 import { Loader2, FileText, Mail, Lock } from "lucide-react";
 
+import loginBg from "@/assets/login-bg.jpg";
+
 /* ================== Validation ================== */
 
 const loginSchema = z.object({
@@ -69,10 +71,13 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* ================= LEFT SIDE GRADIENT ================= */}
-      <div className="hidden lg:flex relative items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-accent">
+      {/* ================= LEFT SIDE IMAGE ================= */}
+      <div
+        className="hidden lg:flex relative items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      >
         {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-foreground/60" />
 
         {/* Text Content */}
         <div className="relative z-10 text-white px-12 max-w-xl">
