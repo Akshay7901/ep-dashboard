@@ -151,6 +151,16 @@ export interface Proposal {
   file_uploads?: string | null;
   secondary_email?: string | null;
   address?: string | null;
+  // Additional submission fields
+  cv_submitted?: string | null;
+  sample_chapter_submitted?: string | null;
+  toc_submitted?: string | null;
+  permissions_required?: string | null;
+  permissions_docs_submitted?: string | null;
+  figures_tables_count?: string | null;
+  under_review_elsewhere?: string | null;
+  submitted_date?: string | null;
+  submitted_time?: string | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
