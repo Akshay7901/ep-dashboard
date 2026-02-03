@@ -1,61 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Proposal } from '@/types';
+import { useProposal, useUpdateProposalStatus, useProposalComments, useWorkflowLogs } from '@/hooks/useProposals';
+import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import { mockApi } from '@/lib/mockApi';
-import { toast } from '@/hooks/use-toast';
 import {
   ArrowLeft,
   Calendar,
   User,
   Mail,
   Phone,
-  FileIcon,
-  Download,
   Loader2,
+  CheckCircle2,
+  XCircle,
+  Send,
+  Lock,
 } from 'lucide-react';
-
-const formatFileSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [proposal, setProposal] = useState<Proposal | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isReviewer1, isReviewer2 } = useAuth();
+  
+  const { data: proposal, isLoading, error } = useProposal(id || '');
+  const { data: comments } = useProposalComments(id || '');
+  const { data: logs } = useWorkflowLogs(id || '');
+  const updateStatus = useUpdateProposalStatus();
 
-  useEffect(() => {
-    const fetchProposal = async () => {
-      if (!id) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const data = await mockApi.getProposalById(id);
-        setProposal(data);
-      } catch (err: any) {
-        setError(err?.message || 'Proposal not found');
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: err?.message || 'Failed to load proposal',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProposal();
-  }, [id]);
+  const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
+    if (!proposal) return;
+    updateStatus.mutate({
+      id: proposal.id,
+      status: newStatus,
+      previousStatus: proposal.status,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -71,7 +53,7 @@ const ProposalDetails: React.FC = () => {
     return (
       <DashboardLayout title="Proposal Details">
         <div className="text-center py-12 space-y-4">
-          <p className="text-destructive">{error || 'Proposal not found'}</p>
+          <p className="text-destructive">Proposal not found</p>
           <Button variant="outline" onClick={() => navigate('/proposals')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Proposals
@@ -80,6 +62,8 @@ const ProposalDetails: React.FC = () => {
       </DashboardLayout>
     );
   }
+
+  const isLocked = proposal.status === 'locked';
 
   return (
     <DashboardLayout title="Proposal Details">
@@ -102,61 +86,123 @@ const ProposalDetails: React.FC = () => {
               <ProposalStatusBadge status={proposal.status} />
               {proposal.value && (
                 <span className="text-lg font-semibold text-primary">
-                  ${proposal.value.toLocaleString()}
+                  £{proposal.value.toLocaleString()}
                 </span>
               )}
             </div>
           </div>
         </div>
 
+        {/* Action buttons for Reviewer 1 */}
+        {isReviewer1 && !isLocked && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              {proposal.status === 'submitted' && (
+                <>
+                  <Button 
+                    onClick={() => handleStatusChange('under_review')}
+                    disabled={updateStatus.isPending}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Accept for Review
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => handleStatusChange('rejected')}
+                    disabled={updateStatus.isPending}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Decline
+                  </Button>
+                </>
+              )}
+              {proposal.status === 'under_review' && (
+                <Button 
+                  onClick={() => handleStatusChange('approved')}
+                  disabled={updateStatus.isPending}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+              )}
+              {proposal.status === 'approved' && (
+                <Button 
+                  onClick={() => handleStatusChange('finalised')}
+                  disabled={updateStatus.isPending}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Contract to Author
+                </Button>
+              )}
+              {proposal.status === 'finalised' && (
+                <Button 
+                  onClick={() => handleStatusChange('locked')}
+                  disabled={updateStatus.isPending}
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  Lock & Finalize
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description */}
-            <Card className="border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Description
-                </CardTitle>
+                <CardTitle className="text-lg">Description</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-foreground whitespace-pre-line leading-relaxed">
-                  {proposal.description}
+                  {proposal.description || 'No description provided.'}
                 </p>
               </CardContent>
             </Card>
 
-            {/* Attachments */}
-            {proposal.attachments && proposal.attachments.length > 0 && (
-              <Card className="border-border">
+            {/* Reviewer Comments */}
+            {comments && comments.length > 0 && (
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-foreground">
-                    Attachments
-                  </CardTitle>
+                  <CardTitle className="text-lg">Review Comments</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="p-4 rounded-lg bg-muted/50">
+                      <p className="text-sm text-foreground">
+                        {comment.comment_text}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {format(new Date(comment.created_at), 'MMM d, yyyy h:mm a')}
+                      </p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Workflow History */}
+            {logs && logs.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Activity Log</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {proposal.attachments.map((attachment) => (
-                      <div
-                        key={attachment.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <FileIcon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">
-                              {attachment.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(attachment.size)}
-                            </p>
-                          </div>
+                    {logs.map((log) => (
+                      <div key={log.id} className="flex items-start gap-3 text-sm">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                        <div className="flex-1">
+                          <p className="text-foreground">{log.action}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
+                          </p>
                         </div>
-                        <Button variant="ghost" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
@@ -165,13 +211,11 @@ const ProposalDetails: React.FC = () => {
             )}
           </div>
 
-          {/* Sidebar - Client info */}
+          {/* Sidebar - Author info */}
           <div className="space-y-6">
-            <Card className="border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Client Information
-                </CardTitle>
+                <CardTitle className="text-lg">Author Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -179,42 +223,44 @@ const ProposalDetails: React.FC = () => {
                     <User className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Client</p>
-                    <p className="text-sm font-medium text-foreground">{proposal.client}</p>
+                    <p className="text-xs text-muted-foreground">Author</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.author_name}
+                    </p>
                   </div>
                 </div>
 
-                {proposal.clientEmail && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Email</p>
-                      <p className="text-sm font-medium text-foreground">{proposal.clientEmail}</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
                   </div>
-                )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.author_email}
+                    </p>
+                  </div>
+                </div>
 
-                {proposal.clientPhone && (
+                {proposal.author_phone && (
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="text-sm font-medium text-foreground">{proposal.clientPhone}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {proposal.author_phone}
+                      </p>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Timeline
-                </CardTitle>
+                <CardTitle className="text-lg">Timeline</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -222,14 +268,14 @@ const ProposalDetails: React.FC = () => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Created</p>
+                    <p className="text-xs text-muted-foreground">Submitted</p>
                     <p className="text-sm font-medium text-foreground">
-                      {format(new Date(proposal.createdAt), 'MMMM d, yyyy')}
+                      {format(new Date(proposal.created_at), 'MMMM d, yyyy')}
                     </p>
                   </div>
                 </div>
 
-                {proposal.updatedAt && (
+                {proposal.updated_at && (
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -237,7 +283,21 @@ const ProposalDetails: React.FC = () => {
                     <div>
                       <p className="text-xs text-muted-foreground">Last Updated</p>
                       <p className="text-sm font-medium text-foreground">
-                        {format(new Date(proposal.updatedAt), 'MMMM d, yyyy')}
+                        {format(new Date(proposal.updated_at), 'MMMM d, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {proposal.finalised_at && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Finalized</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {format(new Date(proposal.finalised_at), 'MMMM d, yyyy')}
                       </p>
                     </div>
                   </div>
