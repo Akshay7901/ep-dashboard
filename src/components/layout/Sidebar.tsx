@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
   const SidebarContent = () => <div className="flex h-full flex-col bg-sidebar">
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-0">
+      <div className="h-16 border-b border-sidebar-border px-0 flex-row flex items-center justify-between">
         {!isCollapsed && <div className="flex items-center gap-3 animate-fade-in">
             
             <span className="text-lg font-semibold text-sidebar-foreground">EP Dashboard   </span>
