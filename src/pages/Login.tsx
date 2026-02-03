@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, FileText, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
+import brandLogo from "@/assets/brand-logo.png";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -66,10 +67,8 @@ const Login: React.FC = () => {
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           {/* Logo and website name */}
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-lg">
-              <FileText className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">ProposalHub</span>
+            <img src={brandLogo} alt="Cambridge Scholar" className="h-12 w-12 object-contain" />
+            <span className="text-2xl font-bold text-foreground">Cambridge Scholar</span>
           </div>
 
           <div className="text-center">
@@ -129,7 +128,7 @@ const Login: React.FC = () => {
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            © 2025 ProposalHub. All rights reserved.
+            © 2025 Cambridge Scholar. All rights reserved.
           </p>
         </div>
       </div>
