@@ -55,14 +55,14 @@ const Login: React.FC = () => {
     <div className="flex min-h-screen">
       {/* Left side - Image */}
       <div
-        className="hidden lg:flex lg:w-1/2 relative bg-cover bg-center"
+        className="hidden md:flex md:w-1/2 relative bg-cover bg-center"
         style={{ backgroundImage: `url(${loginBg})` }}
       >
         <div className="absolute inset-0 bg-foreground/40" />
       </div>
 
       {/* Right side - Login form */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-8 bg-background">
+      <div className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           {/* Logo and website name */}
           <div className="flex items-center justify-center gap-3 mb-8">
