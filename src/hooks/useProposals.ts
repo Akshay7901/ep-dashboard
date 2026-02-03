@@ -175,11 +175,12 @@ const fetchLocalProposal = async (id: string): Promise<Proposal> => {
 // Helper to find or create local record for API proposal
 const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<string> => {
   // Check if we already have a local record for this ticket
-  const { data: existing } = await supabase
+  // Using raw filter to avoid type issues with new ticket_number column
+  const { data: existing } = await (supabase
     .from('proposals')
-    .select('id, status, value, contract_sent, contract_sent_at, finalised_at, finalised_by, updated_at, ticket_number')
+    .select('*')
     .eq('ticket_number', apiProposal.ticket_number)
-    .maybeSingle();
+    .maybeSingle() as any);
 
   if (existing) {
     return existing.id;
@@ -187,18 +188,20 @@ const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<stri
 
   // Create a new local record synced from API
   const currentData = apiProposal.current_data || {};
-  const { data: newRecord, error } = await supabase
+  const insertData = {
+    name: currentData.main_title || apiProposal.title,
+    author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
+    author_email: currentData.email || apiProposal.email,
+    description: currentData.short_description || null,
+    status: mapApiStatus(apiProposal.status),
+    ticket_number: apiProposal.ticket_number,
+  };
+  
+  const { data: newRecord, error } = await (supabase
     .from('proposals')
-    .insert({
-      name: currentData.main_title || apiProposal.title,
-      author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
-      author_email: currentData.email || apiProposal.email,
-      description: currentData.short_description || null,
-      status: mapApiStatus(apiProposal.status),
-      ticket_number: apiProposal.ticket_number,
-    })
+    .insert(insertData)
     .select('id')
-    .single();
+    .single() as any);
 
   if (error) throw error;
   return newRecord.id;
@@ -206,11 +209,11 @@ const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<stri
 
 // Get local override data for a ticket number
 const getLocalOverride = async (ticketNumber: string) => {
-  const { data } = await supabase
+  const { data } = await (supabase
     .from('proposals')
-    .select('id, status, value, contract_sent, contract_sent_at, finalised_at, finalised_by, updated_at, ticket_number')
+    .select('*')
     .eq('ticket_number', ticketNumber)
-    .maybeSingle();
+    .maybeSingle() as any);
   return data;
 };
 
@@ -267,14 +270,25 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Check if ID is a UUID (local proposal) or ticket number (API proposal)
+      // Check if ID is a UUID (could be a local-only or synced API proposal)
       if (isUUID(id)) {
         // Fetch from local Supabase database
         return fetchLocalProposal(id);
       } else {
-        // Fetch from external API
+        // Fetch from external API and ensure local record exists
         const apiProposal = await fetchProposalByTicket(id);
-        return mapApiProposalDetail(apiProposal);
+        
+        // Ensure we have a local record for workflow actions
+        const localId = await ensureLocalProposal(apiProposal);
+        
+        // Get local override data (status, contract_sent, etc.)
+        const localOverride = await getLocalOverride(id);
+        
+        // Return merged data with local ID for mutations
+        return {
+          ...mapApiProposalDetail(apiProposal, localOverride),
+          id: localId, // Use local UUID for mutations
+        };
       }
     },
     enabled: !!id,
