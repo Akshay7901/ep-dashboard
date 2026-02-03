@@ -120,9 +120,7 @@ const Login: React.FC = () => {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground">
-            © 2025 Cambridge Scholars Publishing. All rights reserved
-          </p>
+          <p className="text-center text-sm text-muted-foreground">Copyright © 2026, Ethics Press.</p>
         </div>
       </div>
     </div>
