@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposal, ApiProposalsResponse, ApiProposalStatus } from '@/types';
+import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposal, ApiProposalDetail, ApiProposalsResponse, ApiProposalStatus } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
 interface UseProposalsOptions {
@@ -22,7 +22,7 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
   return statusMap[apiStatus] || 'submitted';
 };
 
-// Map API proposal to internal Proposal structure
+// Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
   id: apiProposal.ticket_number,
   name: apiProposal.title,
@@ -41,6 +41,47 @@ const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
   ticket_number: apiProposal.ticket_number,
   current_revision: apiProposal.current_revision,
 });
+
+// Map API proposal detail to internal Proposal structure (detail view - full)
+const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
+  const currentData = apiProposal.current_data || {};
+  return {
+    id: apiProposal.ticket_number,
+    name: currentData.main_title || apiProposal.title,
+    author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
+    author_email: currentData.email || apiProposal.email,
+    author_phone: null,
+    description: currentData.detailed_description || currentData.short_description || null,
+    status: mapApiStatus(apiProposal.status),
+    value: null,
+    contract_sent: false,
+    contract_sent_at: null,
+    finalised_at: null,
+    finalised_by: null,
+    created_at: apiProposal.submitted_at,
+    updated_at: apiProposal.submitted_at,
+    ticket_number: apiProposal.ticket_number,
+    current_revision: apiProposal.current_revision,
+    // Extended fields
+    short_description: currentData.short_description || null,
+    detailed_description: currentData.detailed_description || null,
+    sub_title: currentData.sub_title || null,
+    biography: currentData.biography || null,
+    institution: currentData.institution || null,
+    job_title: currentData.job_title || null,
+    keywords: currentData.keywords || null,
+    book_type: currentData.book_type || null,
+    word_count: currentData.word_count || null,
+    expected_completion_date: currentData.expected_completion_date || null,
+    table_of_contents: currentData.table_of_contents || null,
+    marketing_info: currentData.marketing_info || null,
+    co_authors_editors: currentData.co_authors_editors || null,
+    referees_reviewers: currentData.referees_reviewers || null,
+    file_uploads: currentData.file_uploads || null,
+    secondary_email: currentData.secondary_email || null,
+    address: currentData.address || null,
+  };
+};
 
 // Helper function to fetch proposals list from edge function proxy
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
@@ -61,8 +102,8 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
   return response.json();
 };
 
-// Helper function to fetch single proposal by ticket number
-const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposal> => {
+// Helper function to fetch single proposal by ticket number (returns full detail)
+const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalDetail> => {
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?ticket=${ticketNumber}`,
     {
@@ -121,9 +162,9 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Fetch single proposal by ticket number directly
+      // Fetch single proposal by ticket number directly (full details)
       const apiProposal = await fetchProposalByTicket(id);
-      return mapApiProposal(apiProposal);
+      return mapApiProposalDetail(apiProposal);
     },
     enabled: !!id,
   });

@@ -169,36 +169,75 @@ const ProposalDetails: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Proposal Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Proposal Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {proposal.description ? (
+            {/* Short Description */}
+            {proposal.short_description && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Short Description</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <p className="text-foreground whitespace-pre-line leading-relaxed">
-                    {proposal.description}
+                    {proposal.short_description}
                   </p>
-                ) : (
-                  <div className="text-sm text-muted-foreground space-y-2">
-                    <p>Description not available from external API.</p>
-                    <div className="p-4 rounded-lg bg-muted/50">
-                      <p className="font-medium text-foreground mb-2">Available Information:</p>
-                      <ul className="space-y-1.5">
-                        <li><span className="font-medium">Title:</span> {proposal.name}</li>
-                        <li><span className="font-medium">Author:</span> {proposal.author_name}</li>
-                        {proposal.ticket_number && (
-                          <li><span className="font-medium">Ticket:</span> {proposal.ticket_number}</li>
-                        )}
-                        {proposal.current_revision && (
-                          <li><span className="font-medium">Revision:</span> {proposal.current_revision}</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Detailed Description */}
+            {proposal.detailed_description && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Detailed Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                    {proposal.detailed_description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Table of Contents */}
+            {proposal.table_of_contents && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Table of Contents</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground whitespace-pre-line leading-relaxed font-mono text-sm">
+                    {proposal.table_of_contents}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Marketing Info */}
+            {proposal.marketing_info && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Marketing Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                    {proposal.marketing_info}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Referees/Reviewers */}
+            {proposal.referees_reviewers && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Referees / Reviewers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                    {proposal.referees_reviewers}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Reviewer Comments */}
             {comments && comments.length > 0 && (
@@ -253,7 +292,7 @@ const ProposalDetails: React.FC = () => {
                 <CardTitle className="text-lg">Author Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-muted">
                     <User className="h-4 w-4 text-muted-foreground" />
                   </div>
@@ -262,6 +301,16 @@ const ProposalDetails: React.FC = () => {
                     <p className="text-sm font-medium text-foreground">
                       {proposal.author_name}
                     </p>
+                    {proposal.job_title && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {proposal.job_title}
+                      </p>
+                    )}
+                    {proposal.institution && (
+                      <p className="text-xs text-muted-foreground">
+                        {proposal.institution}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -271,23 +320,99 @@ const ProposalDetails: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-foreground break-all">
                       {proposal.author_email}
                     </p>
+                    {proposal.secondary_email && (
+                      <p className="text-xs text-muted-foreground break-all">
+                        {proposal.secondary_email}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {proposal.author_phone && (
-                  <div className="flex items-center gap-3">
+                {proposal.address && (
+                  <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-muted">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <FileText className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {proposal.author_phone}
+                      <p className="text-xs text-muted-foreground">Address</p>
+                      <p className="text-sm text-foreground">
+                        {proposal.address}
                       </p>
                     </div>
+                  </div>
+                )}
+
+                {proposal.biography && (
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Biography</p>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {proposal.biography}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Book/Proposal Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Book Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {proposal.sub_title && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Subtitle</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.sub_title}
+                    </p>
+                  </div>
+                )}
+
+                {proposal.book_type && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Book Type</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.book_type}
+                    </p>
+                  </div>
+                )}
+
+                {proposal.keywords && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Keywords</p>
+                    <p className="text-sm text-foreground">
+                      {proposal.keywords}
+                    </p>
+                  </div>
+                )}
+
+                {proposal.word_count && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Word Count</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.word_count}
+                    </p>
+                  </div>
+                )}
+
+                {proposal.expected_completion_date && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Expected Completion</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.expected_completion_date}
+                    </p>
+                  </div>
+                )}
+
+                {proposal.co_authors_editors && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Co-Authors / Editors</p>
+                    <p className="text-sm text-foreground">
+                      {proposal.co_authors_editors}
+                    </p>
                   </div>
                 )}
               </CardContent>
