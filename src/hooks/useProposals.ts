@@ -29,46 +29,46 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
 };
 
 // Map API proposal to internal Proposal structure (list view - basic)
-const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
-  id: apiProposal.ticket_number,
+const mapApiProposal = (apiProposal: ApiProposal, localOverride?: any): Proposal => ({
+  id: localOverride?.id || apiProposal.ticket_number,
   name: apiProposal.title,
   author_name: apiProposal.corresponding_author,
   author_email: apiProposal.email,
   author_phone: null,
   description: null,
-  status: mapApiStatus(apiProposal.status),
-  value: null,
-  contract_sent: false,
-  contract_sent_at: null,
-  finalised_at: null,
-  finalised_by: null,
+  status: localOverride?.status || mapApiStatus(apiProposal.status),
+  value: localOverride?.value || null,
+  contract_sent: localOverride?.contract_sent || false,
+  contract_sent_at: localOverride?.contract_sent_at || null,
+  finalised_at: localOverride?.finalised_at || null,
+  finalised_by: localOverride?.finalised_by || null,
   created_at: apiProposal.submitted_at,
-  updated_at: apiProposal.submitted_at,
+  updated_at: localOverride?.updated_at || apiProposal.submitted_at,
   ticket_number: apiProposal.ticket_number,
   current_revision: apiProposal.current_revision,
 });
 
 // Map API proposal detail to internal Proposal structure (detail view - full)
-const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
+const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: any): Proposal => {
   const currentData = apiProposal.current_data || {};
   return {
-    id: apiProposal.ticket_number,
+    id: localOverride?.id || apiProposal.ticket_number,
     name: currentData.main_title || apiProposal.title,
     author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
     author_email: currentData.email || apiProposal.email,
     author_phone: null,
     description: currentData.detailed_description || currentData.short_description || null,
-    status: mapApiStatus(apiProposal.status),
-    value: null,
-    contract_sent: false,
-    contract_sent_at: null,
-    finalised_at: null,
-    finalised_by: null,
+    status: localOverride?.status || mapApiStatus(apiProposal.status),
+    value: localOverride?.value || null,
+    contract_sent: localOverride?.contract_sent || false,
+    contract_sent_at: localOverride?.contract_sent_at || null,
+    finalised_at: localOverride?.finalised_at || null,
+    finalised_by: localOverride?.finalised_by || null,
     created_at: apiProposal.submitted_at,
-    updated_at: apiProposal.submitted_at,
+    updated_at: localOverride?.updated_at || apiProposal.submitted_at,
     ticket_number: apiProposal.ticket_number,
     current_revision: apiProposal.current_revision,
-    // Extended fields
+    // Extended fields from API
     short_description: currentData.short_description || null,
     detailed_description: currentData.detailed_description || null,
     sub_title: currentData.sub_title || null,
@@ -86,7 +86,6 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     file_uploads: currentData.file_uploads || null,
     secondary_email: currentData.secondary_email || null,
     address: currentData.address || null,
-    // Additional submission fields
     cv_submitted: currentData.cv_submitted || null,
     sample_chapter_submitted: currentData.sample_chapter_submitted || null,
     toc_submitted: currentData.toc_submitted || null,
@@ -115,7 +114,7 @@ const mapLocalProposal = (dbProposal: any): Proposal => ({
   finalised_by: dbProposal.finalised_by,
   created_at: dbProposal.created_at,
   updated_at: dbProposal.updated_at,
-  ticket_number: null,
+  ticket_number: dbProposal.ticket_number || null,
   current_revision: null,
   short_description: dbProposal.description,
   detailed_description: dbProposal.description,
@@ -171,6 +170,48 @@ const fetchLocalProposal = async (id: string): Promise<Proposal> => {
   if (!data) throw new Error('Proposal not found');
 
   return mapLocalProposal(data);
+};
+
+// Helper to find or create local record for API proposal
+const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<string> => {
+  // Check if we already have a local record for this ticket
+  const { data: existing } = await supabase
+    .from('proposals')
+    .select('id, status, value, contract_sent, contract_sent_at, finalised_at, finalised_by, updated_at, ticket_number')
+    .eq('ticket_number', apiProposal.ticket_number)
+    .maybeSingle();
+
+  if (existing) {
+    return existing.id;
+  }
+
+  // Create a new local record synced from API
+  const currentData = apiProposal.current_data || {};
+  const { data: newRecord, error } = await supabase
+    .from('proposals')
+    .insert({
+      name: currentData.main_title || apiProposal.title,
+      author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
+      author_email: currentData.email || apiProposal.email,
+      description: currentData.short_description || null,
+      status: mapApiStatus(apiProposal.status),
+      ticket_number: apiProposal.ticket_number,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return newRecord.id;
+};
+
+// Get local override data for a ticket number
+const getLocalOverride = async (ticketNumber: string) => {
+  const { data } = await supabase
+    .from('proposals')
+    .select('id, status, value, contract_sent, contract_sent_at, finalised_at, finalised_by, updated_at, ticket_number')
+    .eq('ticket_number', ticketNumber)
+    .maybeSingle();
+  return data;
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
