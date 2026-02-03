@@ -39,9 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-0">
         {!isCollapsed && <div className="flex items-center gap-3 animate-fade-in">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-4 w-4 text-primary-foreground" />
-            </div>
+            
             <span className="text-lg font-semibold text-sidebar-foreground">EP Dashboard   </span>
           </div>}
         <Button variant="ghost" size="icon" onClick={onToggle} className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
