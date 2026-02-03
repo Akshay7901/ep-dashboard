@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
-import brandLogo from "@/assets/brand-logo.png";
+import brandLogo from "@/assets/brand-logo.webp";
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters")
