@@ -15,20 +15,28 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    const ticketNumber = url.searchParams.get('ticket');
     const limit = url.searchParams.get('limit') || '50';
     const offset = url.searchParams.get('offset') || '0';
 
-    console.log(`Fetching proposals from external API: limit=${limit}, offset=${offset}`);
+    let apiUrl: string;
+    
+    if (ticketNumber) {
+      // Fetch single proposal by ticket number
+      apiUrl = `${API_BASE_URL}/api/proposals/${ticketNumber}`;
+      console.log(`Fetching proposal details: ${ticketNumber}`);
+    } else {
+      // Fetch list of proposals
+      apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
+      console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
+    }
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -37,7 +45,12 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log(`Successfully fetched ${data.proposals?.length || 0} proposals`);
+    
+    if (ticketNumber) {
+      console.log(`Successfully fetched proposal: ${ticketNumber}`);
+    } else {
+      console.log(`Successfully fetched ${data.proposals?.length || 0} proposals`);
+    }
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
