@@ -1,180 +1,172 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
 
-import { Loader2, FileText, Mail, Lock } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 
-/* ✅ Import your local image */
-import loginBg from "@/assets/login-bg.jpg";
+import loginImage from "@/assets/login-side.jpg";
 
-/* ================== Validation ================== */
+/* ================= Validation ================= */
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+const schema = z.object({
+  name: z.string().min(2, "Name required"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Min 6 characters"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type FormData = z.infer<typeof schema>;
 
-/* ================== Component ================== */
+/* ================= Component ================= */
 
-const Login: React.FC = () => {
-  const { login } = useAuth();
+const Login = () => {
   const navigate = useNavigate();
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
   });
 
-  /* ================== Submit ================== */
+  const onSubmit = async (data: FormData) => {
+    setLoading(true);
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-
-    try {
-      await login({
-        email: data.email,
-        password: data.password,
-      });
-
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-
+    setTimeout(() => {
+      console.log(data);
+      setLoading(false);
       navigate("/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error?.message || "Please check your credentials and try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    }, 1500);
   };
 
-  /* ================== UI ================== */
-
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* ================= LEFT SIDE IMAGE ================= */}
-      <div
-        className="hidden lg:flex relative items-center justify-center bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${loginBg})`,
-        }}
-      >
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
-
-        {/* Text Content */}
-        <div className="relative z-10 text-white px-12 max-w-xl">
-          <h1 className="text-4xl font-bold mb-6 leading-tight">
-            Manage Your Proposals <br />
-            Smarter & Faster
-          </h1>
-
-          <p className="text-lg text-gray-200 mb-8">
-            Track, organize, and close deals efficiently using ProposalHub’s powerful dashboard.
-          </p>
-
-          {/* Branding */}
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="text-white" />
-            </div>
-
-            <span className="text-xl font-semibold">ProposalHub Platform</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= RIGHT SIDE LOGIN ================= */}
-      <div className="flex items-center justify-center bg-background p-8">
-        <div className="w-full max-w-md bg-card rounded-2xl shadow-xl p-8 space-y-6">
-          {/* Logo */}
-          <div className="flex flex-col items-center gap-3 mb-4">
-            <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-              <FileText className="h-7 w-7 text-primary-foreground" />
-            </div>
-
-            <h1 className="text-2xl font-bold text-foreground">ProposalHub</h1>
-
-            <p className="text-muted-foreground text-sm text-center">Sign in to manage your proposals</p>
-          </div>
+    <div className="min-h-screen flex bg-white">
+      {/* ================= LEFT FORM ================= */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6">
+        <div className="w-full max-w-sm space-y-6">
+          {/* Back Button */}
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-black">
+            <ArrowLeft size={18} />
+            Back
+          </button>
 
           {/* Heading */}
           <div className="text-center">
-            <h2 className="text-xl font-semibold">Welcome Back 👋</h2>
+            <h1 className="text-3xl font-bold">Register</h1>
 
-            <p className="text-sm text-muted-foreground mt-1">Enter your credentials to continue</p>
+            <p className="text-gray-500 text-sm mt-1">Create your new account</p>
           </div>
 
           {/* ================= FORM ================= */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Name */}
+            <div>
+              <Label>Name</Label>
+
+              <div className="relative mt-1">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+
+                <Input placeholder="Enter your name" className="pl-10 bg-orange-50 border-none" {...register("name")} />
+              </div>
+
+              {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
+            </div>
+
             {/* Email */}
             <div>
               <Label>Email</Label>
 
               <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
 
-                <Input type="email" placeholder="you@company.com" className="pl-10" {...register("email")} />
+                <Input
+                  placeholder="Enter valid email"
+                  className="pl-10 bg-orange-50 border-none"
+                  {...register("email")}
+                />
               </div>
 
-              {errors.email && <p className="text-sm text-destructive mt-1">{errors.email.message}</p>}
+              {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex justify-between items-center">
-                <Label>Password</Label>
-
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot?
-                </Link>
-              </div>
+              <Label>Password</Label>
 
               <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
 
-                <Input type="password" placeholder="••••••••" className="pl-10" {...register("password")} />
+                <Input
+                  type="password"
+                  placeholder="Set a strong password"
+                  className="pl-10 bg-orange-50 border-none"
+                  {...register("password")}
+                />
               </div>
 
-              {errors.password && <p className="text-sm text-destructive mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
             </div>
 
-            {/* Submit */}
-            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            {/* Button */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-400 hover:bg-orange-500 text-white rounded-xl h-11"
+            >
+              {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Please wait
                 </>
               ) : (
-                "Sign In"
+                "Login"
               )}
             </Button>
           </form>
 
+          {/* Remember + Forgot */}
+          <div className="flex justify-between text-sm text-gray-500">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" />
+              Remember me
+            </label>
+
+            <Link to="/forgot-password" className="text-orange-500 hover:underline">
+              Forgot Password?
+            </Link>
+          </div>
+
+          {/* Social */}
+          <div className="text-center text-sm text-gray-400">
+            <p className="my-3">Or continue with</p>
+
+            <div className="flex justify-center gap-4 text-lg">
+              <button>🔵</button>
+              <button>🟢</button>
+              <button>⚫</button>
+            </div>
+          </div>
+
           {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground pt-4">© 2025 ProposalHub. All rights reserved.</p>
+          <p className="text-center text-sm text-gray-500 pt-2">
+            Already have account?{" "}
+            <Link to="/login" className="text-orange-500 font-medium">
+              Sign in
+            </Link>
+          </p>
         </div>
+      </div>
+
+      {/* ================= RIGHT IMAGE ================= */}
+      <div className="hidden lg:block w-1/2">
+        <img src={loginImage} alt="Login" className="h-full w-full object-cover" />
       </div>
     </div>
   );
