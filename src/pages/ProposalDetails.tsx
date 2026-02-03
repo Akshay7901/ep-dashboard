@@ -18,6 +18,10 @@ import {
   XCircle,
   Send,
   Lock,
+  FileText,
+  Hash,
+  RefreshCw,
+  FileCheck,
 } from 'lucide-react';
 
 const ProposalDetails: React.FC = () => {
@@ -81,6 +85,18 @@ const ProposalDetails: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
+            <div className="flex items-center gap-3 mb-1">
+              {proposal.ticket_number && (
+                <span className="text-sm font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  {proposal.ticket_number}
+                </span>
+              )}
+              {proposal.current_revision && (
+                <span className="text-xs text-muted-foreground">
+                  Rev. {proposal.current_revision}
+                </span>
+              )}
+            </div>
             <h1 className="text-2xl font-bold text-foreground">{proposal.name}</h1>
             <div className="flex items-center gap-4 mt-2">
               <ProposalStatusBadge status={proposal.status} />
@@ -255,6 +271,60 @@ const ProposalDetails: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Proposal Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Proposal Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {proposal.ticket_number && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ticket Number</p>
+                      <p className="text-sm font-medium font-mono text-foreground">
+                        {proposal.ticket_number}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {proposal.current_revision && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Current Revision</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {proposal.current_revision}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <FileCheck className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                <div>
+                    <p className="text-xs text-muted-foreground">Contract Status</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {proposal.contract_sent ? (
+                        <span className="text-primary">
+                          Sent {proposal.contract_sent_at && `on ${format(new Date(proposal.contract_sent_at), 'MMM d, yyyy')}`}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Not sent</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
