@@ -91,7 +91,7 @@ const Login: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Access Code</Label>
               </div>
 
               <div className="relative">
@@ -100,7 +100,7 @@ const Login: React.FC = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Access Code"
                   className="pl-11 h-12 text-base"
                   {...register("password")}
                 />
