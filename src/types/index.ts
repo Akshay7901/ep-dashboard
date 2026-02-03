@@ -41,6 +41,10 @@ export interface AuthResponse {
   token: string;
 }
 
+// API status values from external API
+export type ApiProposalStatus = 'new' | 'under_review' | 'approved' | 'rejected' | 'published';
+
+// Internal status values (for Supabase)
 export type ProposalStatus = 
   | 'submitted' 
   | 'under_review' 
@@ -49,6 +53,26 @@ export type ProposalStatus =
   | 'rejected' 
   | 'locked';
 
+// API response proposal structure
+export interface ApiProposal {
+  ticket_number: string;
+  title: string;
+  corresponding_author: string;
+  email: string;
+  status: ApiProposalStatus;
+  submitted_at: string;
+  current_revision: number;
+}
+
+// API response structure
+export interface ApiProposalsResponse {
+  proposals: ApiProposal[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// Internal proposal structure (mapped from API)
 export interface Proposal {
   id: string;
   name: string;
@@ -64,6 +88,8 @@ export interface Proposal {
   finalised_by?: string | null;
   created_at: string;
   updated_at: string;
+  ticket_number?: string;
+  current_revision?: number;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
