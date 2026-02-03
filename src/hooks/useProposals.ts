@@ -225,20 +225,11 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch from both API and local database
-      const [apiData, localData] = await Promise.all([
-        fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 })),
-        supabase.from('proposals').select('*').order('created_at', { ascending: false }),
-      ]);
+      // Fetch proposals only from external API
+      const apiData = await fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
       // Map API proposals
-      let apiProposals = apiData.proposals.map(mapApiProposal);
-      
-      // Map local proposals
-      let localProposals = (localData.data || []).map(mapLocalProposal);
-
-      // Combine both sources (local first for testing)
-      let proposals = [...localProposals, ...apiProposals];
+      let proposals = apiData.proposals.map(mapApiProposal);
 
       // Client-side filtering for search
       if (search) {
@@ -257,10 +248,10 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
 
       return {
         data: proposals,
-        total: apiData.total + localProposals.length,
+        total: apiData.total,
         page,
         limit,
-        totalPages: Math.ceil((apiData.total + localProposals.length) / limit),
+        totalPages: Math.ceil(apiData.total / limit),
       };
     },
   });
@@ -460,24 +451,19 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      // Fetch from both API and local database
-      const [apiData, localData] = await Promise.all([
-        fetchProposalsFromProxy(1000, 0).catch(() => ({ proposals: [], total: 0 })),
-        supabase.from('proposals').select('*'),
-      ]);
+      // Fetch proposals only from external API
+      const apiData = await fetchProposalsFromProxy(1000, 0).catch(() => ({ proposals: [], total: 0 }));
 
-      const apiProposals = apiData.proposals.map(mapApiProposal);
-      const localProposals = (localData.data || []).map(mapLocalProposal);
-      const allProposals = [...localProposals, ...apiProposals];
+      const proposals = apiData.proposals.map(mapApiProposal);
 
       const stats = {
-        total: allProposals.length,
-        submitted: allProposals.filter(p => p.status === 'submitted').length,
-        under_review: allProposals.filter(p => p.status === 'under_review').length,
-        approved: allProposals.filter(p => p.status === 'approved').length,
-        finalised: allProposals.filter(p => p.status === 'finalised').length,
-        rejected: allProposals.filter(p => p.status === 'rejected').length,
-        locked: allProposals.filter(p => p.status === 'locked').length,
+        total: proposals.length,
+        submitted: proposals.filter(p => p.status === 'submitted').length,
+        under_review: proposals.filter(p => p.status === 'under_review').length,
+        approved: proposals.filter(p => p.status === 'approved').length,
+        finalised: proposals.filter(p => p.status === 'finalised').length,
+        rejected: proposals.filter(p => p.status === 'rejected').length,
+        locked: proposals.filter(p => p.status === 'locked').length,
       };
 
       return stats;
