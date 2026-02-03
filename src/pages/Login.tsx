@@ -123,6 +123,13 @@ const Login: React.FC = () => {
             </Button>
           </form>
 
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-primary hover:underline font-medium">
+              Sign up
+            </Link>
+          </p>
+
           <p className="text-center text-sm text-muted-foreground">Copyright © 2026, Ethics Press.</p>
         </div>
       </div>
