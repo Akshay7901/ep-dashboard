@@ -68,7 +68,7 @@ const Login: React.FC = () => {
           {/* Logo and website name */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <img src={brandLogo} alt="Cambridge Scholar" className="h-12 w-12 object-contain" />
-            <span className="text-2xl font-bold text-foreground">Cambridge Scholar</span>
+            <span className="text-2xl font-bold text-foreground">Cambridge Scholars</span>
           </div>
 
           <div className="text-center">
@@ -81,12 +81,12 @@ const Login: React.FC = () => {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="you@company.com" 
-                  className="pl-11 h-12 text-base" 
-                  {...register("email")} 
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  className="pl-11 h-12 text-base"
+                  {...register("email")}
                 />
               </div>
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
@@ -128,7 +128,7 @@ const Login: React.FC = () => {
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            © 2025 Cambridge Scholar. All rights reserved.
+            © 2025 Cambridge Scholars Publishing. All rights reserved
           </p>
         </div>
       </div>
