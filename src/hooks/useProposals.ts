@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog } from '@/types';
+import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposal, ApiProposalsResponse, ApiProposalStatus } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 interface UseProposalsOptions {
   page?: number;
@@ -10,36 +11,76 @@ interface UseProposalsOptions {
   status?: ProposalStatus | 'all';
 }
 
+// Map API status to internal status
+const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
+  const statusMap: Record<ApiProposalStatus, ProposalStatus> = {
+    'new': 'submitted',
+    'under_review': 'under_review',
+    'approved': 'approved',
+    'rejected': 'rejected',
+    'published': 'finalised',
+  };
+  return statusMap[apiStatus] || 'submitted';
+};
+
+// Map API proposal to internal Proposal structure
+const mapApiProposal = (apiProposal: ApiProposal): Proposal => ({
+  id: apiProposal.ticket_number,
+  name: apiProposal.title,
+  author_name: apiProposal.corresponding_author,
+  author_email: apiProposal.email,
+  author_phone: null,
+  description: null,
+  status: mapApiStatus(apiProposal.status),
+  value: null,
+  contract_sent: false,
+  contract_sent_at: null,
+  finalised_at: null,
+  finalised_by: null,
+  created_at: apiProposal.submitted_at,
+  updated_at: apiProposal.submitted_at,
+  ticket_number: apiProposal.ticket_number,
+  current_revision: apiProposal.current_revision,
+});
+
 export const useProposals = (options: UseProposalsOptions = {}) => {
   const { page = 1, limit = 10, search = '', status = 'all' } = options;
 
   return useQuery({
     queryKey: ['proposals', page, limit, search, status],
     queryFn: async () => {
-      let query = supabase
-        .from('proposals')
-        .select('*', { count: 'exact' });
+      const offset = (page - 1) * limit;
+      
+      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
+        params: {
+          limit,
+          offset,
+        },
+      });
 
+      let proposals = response.data.proposals.map(mapApiProposal);
+
+      // Client-side filtering for search
       if (search) {
-        query = query.or(`name.ilike.%${search}%,author_name.ilike.%${search}%,author_email.ilike.%${search}%`);
+        const searchLower = search.toLowerCase();
+        proposals = proposals.filter(p => 
+          p.name.toLowerCase().includes(searchLower) ||
+          p.author_name.toLowerCase().includes(searchLower) ||
+          p.author_email.toLowerCase().includes(searchLower)
+        );
       }
 
+      // Client-side filtering for status
       if (status !== 'all') {
-        query = query.eq('status', status);
+        proposals = proposals.filter(p => p.status === status);
       }
-
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range((page - 1) * limit, page * limit - 1);
-
-      if (error) throw error;
 
       return {
-        data: data as Proposal[],
-        total: count || 0,
+        data: proposals,
+        total: response.data.total,
         page,
         limit,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: Math.ceil(response.data.total / limit),
       };
     },
   });
@@ -49,16 +90,15 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('proposals')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      // Fetch from API and find by ticket_number
+      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
+        params: { limit: 100 },
+      });
 
-      if (error) throw error;
-      if (!data) throw new Error('Proposal not found');
+      const apiProposal = response.data.proposals.find(p => p.ticket_number === id);
+      if (!apiProposal) throw new Error('Proposal not found');
 
-      return data as Proposal;
+      return mapApiProposal(apiProposal);
     },
     enabled: !!id,
   });
@@ -209,20 +249,20 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('proposals')
-        .select('status');
+      const response = await api.get<ApiProposalsResponse>('/api/proposals', {
+        params: { limit: 1000 },
+      });
 
-      if (error) throw error;
+      const proposals = response.data.proposals.map(mapApiProposal);
 
       const stats = {
-        total: data.length,
-        submitted: data.filter(p => p.status === 'submitted').length,
-        under_review: data.filter(p => p.status === 'under_review').length,
-        approved: data.filter(p => p.status === 'approved').length,
-        finalised: data.filter(p => p.status === 'finalised').length,
-        rejected: data.filter(p => p.status === 'rejected').length,
-        locked: data.filter(p => p.status === 'locked').length,
+        total: proposals.length,
+        submitted: proposals.filter(p => p.status === 'submitted').length,
+        under_review: proposals.filter(p => p.status === 'under_review').length,
+        approved: proposals.filter(p => p.status === 'approved').length,
+        finalised: proposals.filter(p => p.status === 'finalised').length,
+        rejected: proposals.filter(p => p.status === 'rejected').length,
+        locked: proposals.filter(p => p.status === 'locked').length,
       };
 
       return stats;

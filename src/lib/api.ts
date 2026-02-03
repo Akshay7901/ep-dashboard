@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { ApiError } from '@/types';
 
 // API base URL from environment or default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.example.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
