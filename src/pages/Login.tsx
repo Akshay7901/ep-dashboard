@@ -93,19 +93,25 @@ const Login: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Access Code </Label>
+                <Label htmlFor="accessCode">Access Code</Label>
               </div>
+
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+
                 <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="pl-11 h-12 text-base"
-                  {...register("password")}
+                  id="accessCode"
+                  type="text" // changed from password
+                  inputMode="numeric" // mobile numeric keyboard
+                  pattern="[0-9]*" // allow only numbers
+                  placeholder="Enter access code"
+                  className="pl-11 h-12 text-base tracking-widest"
+                  maxLength={6} // optional (6-digit code)
+                  {...register("accessCode")}
                 />
               </div>
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+
+              {errors.accessCode && <p className="text-sm text-destructive">{errors.accessCode.message}</p>}
             </div>
 
             <Button type="submit" className="w-full h-12 text-base font-semibold" size="lg" disabled={isLoading}>
