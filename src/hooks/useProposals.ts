@@ -261,24 +261,21 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Check if ID is a UUID (could be a local-only or synced API proposal)
+      // Check if ID is a UUID (local database proposal)
       if (isUUID(id)) {
         // Fetch from local Supabase database
         return fetchLocalProposal(id);
       } else {
-        // Fetch from external API and ensure local record exists
+        // Fetch from external API - no local sync required for viewing
         const apiProposal = await fetchProposalByTicket(id);
         
-        // Ensure we have a local record for workflow actions
-        const localId = await ensureLocalProposal(apiProposal);
-        
-        // Get local override data (status, contract_sent, etc.)
+        // Get local override data if it exists (status, contract_sent, etc.)
         const localOverride = await getLocalOverride(id);
         
-        // Return merged data with local ID for mutations
+        // Return merged data - use local ID if exists, otherwise use ticket number
         return {
           ...mapApiProposalDetail(apiProposal, localOverride),
-          id: localId, // Use local UUID for mutations
+          id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
         };
       }
     },
