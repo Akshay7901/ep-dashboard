@@ -1,103 +1,128 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Clock, CheckCircle, XCircle, TrendingUp, Loader2 } from 'lucide-react';
-import { mockApi } from '@/lib/mockApi';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardStats, useProposals } from '@/hooks/useProposals';
+import { 
+  FileText, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  Lock, 
+  FileCheck,
+  ArrowRight,
+  Loader2
+} from 'lucide-react';
+import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
+import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
+  const navigate = useNavigate();
+  const { user, profile, isAnyReviewer, isReviewer1, isReviewer2 } = useAuth();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: recentProposals, isLoading: proposalsLoading } = useProposals({ 
+    page: 1, 
+    limit: 5 
   });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await mockApi.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
 
   const statCards = [
     {
       title: 'Total Proposals',
-      value: stats.total,
-      change: '+12%',
+      value: stats?.total || 0,
       icon: FileText,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
     },
     {
-      title: 'Pending',
-      value: stats.pending,
-      change: '+3',
+      title: 'Submitted',
+      value: stats?.submitted || 0,
+      icon: FileText,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      title: 'Under Review',
+      value: stats?.under_review || 0,
       icon: Clock,
-      color: 'text-status-pending',
-      bgColor: 'bg-status-pending/10',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
     },
     {
       title: 'Approved',
-      value: stats.approved,
-      change: '+5',
-      icon: CheckCircle,
-      color: 'text-status-approved',
-      bgColor: 'bg-status-approved/10',
+      value: stats?.approved || 0,
+      icon: CheckCircle2,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
     },
     {
-      title: 'Rejected',
-      value: stats.rejected,
-      change: '-1',
-      icon: XCircle,
-      color: 'text-status-rejected',
-      bgColor: 'bg-status-rejected/10',
+      title: 'Finalised',
+      value: stats?.finalised || 0,
+      icon: FileCheck,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+    },
+    {
+      title: 'Locked',
+      value: stats?.locked || 0,
+      icon: Lock,
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
     },
   ];
+
+  if (!isAnyReviewer) {
+    return (
+      <DashboardLayout title="Dashboard">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Welcome, {user?.name}!</h2>
+            <p className="text-muted-foreground text-center max-w-md">
+              You don't have a reviewer role assigned yet. 
+              Please contact an administrator to get access to the proposal management system.
+            </p>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-8">
         {/* Welcome section */}
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Welcome back! 👋</h2>
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome back, {profile?.name || user?.name}!
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Here's what's happening with your proposals today.
+            {isReviewer1 
+              ? "You're logged in as Reviewer 1 (Sarah) - Primary reviewer with full access"
+              : "You're logged in as Reviewer 2 (Amanda) - Secondary reviewer for assessments"
+            }
           </p>
         </div>
 
         {/* Stats grid */}
-        {isLoading ? (
+        {statsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {statCards.map((stat) => (
-              <Card key={stat.title} className="border-border">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="h-3 w-3 text-status-approved" />
-                    <span className="text-xs text-muted-foreground">
-                      {stat.change} from last month
-                    </span>
+              <Card key={stat.title}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">{stat.title}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -105,38 +130,104 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Recent activity */}
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Recent Activity
-            </CardTitle>
+        {/* Recent proposals */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Recent Proposals</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/proposals')}>
+              View all
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { text: 'New proposal submitted for Acme Corp', time: '2 hours ago' },
-                { text: 'Proposal #1024 was approved', time: '5 hours ago' },
-                { text: 'Client feedback received on Project Alpha', time: '1 day ago' },
-              ].map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                >
-                  <p className="text-sm text-foreground">{activity.text}</p>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
-            </div>
+            {proposalsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : recentProposals?.data.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No proposals yet.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentProposals?.data.map((proposal) => (
+                  <div
+                    key={proposal.id}
+                    className="flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate(`/proposals/${proposal.id}`)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-foreground truncate">
+                        {proposal.name}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {proposal.author_name} • {format(new Date(proposal.created_at), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                    <ProposalStatusBadge status={proposal.status} />
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Test credentials notice */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-6">
-            <p className="text-sm text-foreground">
-              <strong>🧪 Test Mode:</strong> You're using mock data. Login credentials: <code className="bg-muted px-1.5 py-0.5 rounded text-xs">demo@example.com</code> / <code className="bg-muted px-1.5 py-0.5 rounded text-xs">password123</code>
-            </p>
+        {/* Quick actions based on role */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Button
+                variant="outline"
+                className="h-auto py-4 flex flex-col items-start gap-1"
+                onClick={() => navigate('/proposals')}
+              >
+                <span className="font-semibold">View All Proposals</span>
+                <span className="text-xs text-muted-foreground">
+                  Browse and manage all book proposals
+                </span>
+              </Button>
+              
+              {isReviewer1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex flex-col items-start gap-1"
+                    onClick={() => navigate('/proposals?status=submitted')}
+                  >
+                    <span className="font-semibold">Review Submissions</span>
+                    <span className="text-xs text-muted-foreground">
+                      Accept or decline new proposals
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex flex-col items-start gap-1"
+                    onClick={() => navigate('/proposals?status=approved')}
+                  >
+                    <span className="font-semibold">Send Contracts</span>
+                    <span className="text-xs text-muted-foreground">
+                      Finalize and send contracts to authors
+                    </span>
+                  </Button>
+                </>
+              )}
+              
+              {isReviewer2 && (
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start gap-1"
+                  onClick={() => navigate('/proposals?status=under_review')}
+                >
+                  <span className="font-semibold">Pending Reviews</span>
+                  <span className="text-xs text-muted-foreground">
+                    Complete assessment forms for proposals
+                  </span>
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

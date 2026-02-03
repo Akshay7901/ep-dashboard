@@ -13,7 +13,7 @@ import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  accessCode: z.string().min(6, "Access code must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 type LoginFormData = z.infer<typeof loginSchema>;
 const Login: React.FC = () => {
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
     try {
       await login({
         email: data.email,
-        password: data.accessCode,
+        password: data.password,
       });
       toast({
         title: "Welcome back!",
@@ -93,25 +93,22 @@ const Login: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="accessCode">Access Code</Label>
+                <Label htmlFor="password">Password</Label>
               </div>
 
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
 
                 <Input
-                  id="accessCode"
-                  type="text" // changed from password
-                  inputMode="numeric" // mobile numeric keyboard
-                  pattern="[0-9]*" // allow only numbers
-                  placeholder="Enter access code"
-                  className="pl-11 h-12 text-base tracking-widest"
-                  maxLength={6} // optional (6-digit code)
-                  {...register("accessCode")}
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  className="pl-11 h-12 text-base"
+                  {...register("password")}
                 />
               </div>
 
-              {errors.accessCode && <p className="text-sm text-destructive">{errors.accessCode.message}</p>}
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
             <Button type="submit" className="w-full h-12 text-base font-semibold" size="lg" disabled={isLoading}>
