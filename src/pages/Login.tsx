@@ -67,7 +67,7 @@ const Login: React.FC = () => {
           {/* Logo and website name */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <img src={brandLogo} alt="Cambridge Scholar" className="h-12 w-12 object-contain" />
-            <span className="text-2xl font-bold text-foreground">EthicsPress</span>
+            <span className="text-2xl font-bold text-foreground">Ethics Press</span>
           </div>
 
           <div className="text-center">
