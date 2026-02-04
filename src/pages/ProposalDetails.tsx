@@ -33,7 +33,13 @@ const ProposalDetails: React.FC = () => {
   const navigate = useNavigate();
   const { isReviewer1, isReviewer2 } = useAuth();
   
-  const { data: proposal, isLoading, error } = useProposal(id || '');
+  const {
+    data: proposal,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useProposal(id || '');
   
   // Use proposal's local ID for comments and logs (synced proposals have UUID)
   const localProposalId = proposal?.id || '';
@@ -64,14 +70,28 @@ const ProposalDetails: React.FC = () => {
   }
 
   if (error || !proposal) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Failed to load proposal details.';
+
     return (
       <DashboardLayout title="Proposal Details">
         <div className="text-center py-12 space-y-4">
-          <p className="text-destructive">Proposal not found</p>
-          <Button variant="outline" onClick={() => navigate('/proposals')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Proposals
-          </Button>
+          <p className="text-destructive">Unable to load proposal details</p>
+          <p className="text-sm text-muted-foreground max-w-xl mx-auto break-words">
+            {errorMessage}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+              <RefreshCw className={"mr-2 h-4 w-4" + (isFetching ? ' animate-spin' : '')} />
+              Retry
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/proposals')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Proposals
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
