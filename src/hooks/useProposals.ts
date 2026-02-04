@@ -122,11 +122,18 @@ const mapLocalProposal = (dbProposal: any): Proposal => ({
 
 // Helper function to fetch proposals list from edge function proxy
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
+  const token = localStorage.getItem('auth_token');
+  
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=${limit}&offset=${offset}`,
     {
       headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'Authorization': `Bearer ${token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
     }
   );
@@ -141,11 +148,18 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
 
 // Helper function to fetch single proposal by ticket number (returns full detail)
 const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalDetail> => {
+  const token = localStorage.getItem('auth_token');
+  
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?ticket=${ticketNumber}`,
     {
       headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'Authorization': `Bearer ${token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
     }
   );

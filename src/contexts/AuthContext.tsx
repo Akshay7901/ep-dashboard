@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, AuthState, LoginCredentials, ForgotPasswordRequest, Profile } from '@/types';
+import { User, AuthState, LoginCredentials, ForgotPasswordRequest } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  getToken: () => string | null;
   isReviewer1: boolean;
   isReviewer2: boolean;
   isAnyReviewer: boolean;
@@ -15,13 +14,18 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mapSupabaseUser = (supabaseUser: SupabaseUser, profile?: Profile | null): User => ({
-  id: supabaseUser.id,
-  email: supabaseUser.email || '',
-  name: profile?.name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
-  avatar: supabaseUser.user_metadata?.avatar_url,
-  role: profile?.role || null,
-});
+// Map API roles to internal roles
+const mapApiRole = (apiRole: string): 'reviewer_1' | 'reviewer_2' | null => {
+  switch (apiRole) {
+    case 'admin':
+    case 'decision_reviewer':
+      return 'reviewer_2'; // Full access
+    case 'peer_reviewer':
+      return 'reviewer_1'; // Limited access
+    default:
+      return null;
+  }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
@@ -31,106 +35,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading: true,
   });
 
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-    
-    return data as Profile | null;
-  };
-
-  // Initialize auth state
+  // Initialize auth state from localStorage
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          // Fetch profile with a small delay to ensure it's created
-          setTimeout(async () => {
-            const profile = await fetchProfile(session.user.id);
-            setState({
-              user: mapSupabaseUser(session.user, profile),
-              profile,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          }, 0);
-        } else {
-          setState({
-            user: null,
-            profile: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
+    const token = localStorage.getItem('auth_token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
         setState({
-          user: mapSupabaseUser(session.user, profile),
-          profile,
+          user,
+          profile: null,
           isAuthenticated: true,
           isLoading: false,
         });
-      } else {
+      } catch {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
         setState(prev => ({ ...prev, isLoading: false }));
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    } else {
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
+    const response = await supabase.functions.invoke('auth-login', {
+      body: { email: credentials.email, password: credentials.password },
     });
 
-    if (error) {
-      throw { message: error.message, status: 401 };
+    if (response.error) {
+      throw { message: response.error.message || 'Login failed', status: 401 };
     }
 
-    if (data.user) {
-      const profile = await fetchProfile(data.user.id);
-      setState({
-        user: mapSupabaseUser(data.user, profile),
-        profile,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+    const data = response.data;
+    
+    if (!data.token) {
+      throw { message: data.error || 'Login failed', status: 401 };
     }
-  }, []);
 
-  const signUp = useCallback(async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name },
-        emailRedirectTo: window.location.origin,
-      },
+    // Store token
+    localStorage.setItem('auth_token', data.token);
+
+    // Map user data
+    const user: User = {
+      id: data.user?.id || data.id || credentials.email,
+      email: data.user?.email || credentials.email,
+      name: data.user?.name || data.name || credentials.email.split('@')[0],
+      role: mapApiRole(data.user?.role || data.role || ''),
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+
+    setState({
+      user,
+      profile: null,
+      isAuthenticated: true,
+      isLoading: false,
     });
-
-    if (error) {
-      throw { message: error.message, status: 400 };
-    }
   }, []);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
     setState({
       user: null,
       profile: null,
@@ -140,17 +107,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const forgotPassword = useCallback(async (data: ForgotPasswordRequest) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      throw { message: error.message, status: 400 };
-    }
+    // For now, just show a message - the external API may have its own flow
+    console.log('Password reset requested for:', data.email);
   }, []);
 
-  const isReviewer1 = state.profile?.role === 'reviewer_1';
-  const isReviewer2 = state.profile?.role === 'reviewer_2';
+  const getToken = useCallback(() => {
+    return localStorage.getItem('auth_token');
+  }, []);
+
+  const isReviewer1 = state.user?.role === 'reviewer_1';
+  const isReviewer2 = state.user?.role === 'reviewer_2';
   const isAnyReviewer = isReviewer1 || isReviewer2;
 
   return (
@@ -160,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login, 
         logout, 
         forgotPassword, 
-        signUp,
+        getToken,
         isReviewer1,
         isReviewer2,
         isAnyReviewer,
