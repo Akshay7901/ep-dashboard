@@ -24,7 +24,7 @@ const statusConfig: Record<ProposalStatus, {
   icon: React.ElementType;
 }> = {
   submitted: {
-    label: 'Submitted',
+    label: 'New',
     variant: 'secondary',
     className: 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200',
     icon: FileText,
