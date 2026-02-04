@@ -155,11 +155,6 @@ const ProposalDetails: React.FC = () => {
             <h1 className="text-2xl font-bold text-foreground">{proposal.name}</h1>
             <div className="flex items-center gap-4 mt-2">
               <ProposalStatusBadge status={proposal.status} />
-              {proposal.value && (
-                <span className="text-lg font-semibold text-primary">
-                  £{proposal.value.toLocaleString()}
-                </span>
-              )}
             </div>
           </div>
         </div>
