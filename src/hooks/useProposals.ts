@@ -314,9 +314,30 @@ export const useProposal = (id: string) => {
                   ...(localOverride || {}),
                   id: localOverride?.id || id,
                   _isPartialData: true, // Flag to indicate this is fallback data
+                  _detailFetchError: true,
                 };
               }
             }
+          }
+
+          // If the user landed directly on the details route (no cached list),
+          // fetch the list endpoint once and extract the matching proposal.
+          try {
+            const apiList = await fetchProposalsFromProxy(1000, 0);
+            const found = apiList.proposals?.find((p) => p.ticket_number === id);
+            if (found) {
+              const mapped = mapApiProposal(found);
+              const localOverride = await getLocalOverride(id);
+              return {
+                ...mapped,
+                ...(localOverride || {}),
+                id: localOverride?.id || id,
+                _isPartialData: true,
+                _detailFetchError: true,
+              };
+            }
+          } catch {
+            // ignore and fall through to throwing original error
           }
 
           // No cached data available - throw original error
