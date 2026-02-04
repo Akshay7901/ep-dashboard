@@ -19,6 +19,17 @@ serve(async (req) => {
     const limit = url.searchParams.get('limit') || '50';
     const offset = url.searchParams.get('offset') || '0';
 
+    // Get authorization token from request headers
+    const authHeader = req.headers.get('authorization');
+    
+    if (!authHeader) {
+      console.error('No authorization token provided');
+      return new Response(
+        JSON.stringify({ error: 'Authorization token is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
     let apiUrl: string;
     
     if (ticketNumber) {
@@ -35,6 +46,7 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': authHeader,
       },
     });
 
