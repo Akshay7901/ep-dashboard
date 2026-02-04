@@ -34,8 +34,9 @@ serve(async (req) => {
     
     if (ticketNumber) {
       // Fetch single proposal by ticket number
-      apiUrl = `${API_BASE_URL}/api/proposals/${ticketNumber}`;
-      console.log(`Fetching proposal details: ${ticketNumber}`);
+      const safeTicket = encodeURIComponent(ticketNumber);
+      apiUrl = `${API_BASE_URL}/api/proposals/${safeTicket}`;
+      console.log(`Fetching proposal details: ${ticketNumber} (encoded: ${safeTicket})`);
     } else {
       // Fetch list of proposals
       apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
@@ -50,13 +51,33 @@ serve(async (req) => {
       },
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API error: ${response.status} - ${errorText}`);
-      throw new Error(`API responded with status ${response.status}: ${errorText}`);
+      console.error(`Upstream API error`, {
+        status: response.status,
+        url: apiUrl,
+        body: responseText,
+      });
+
+      // Forward upstream status + body so the client can see the real failure.
+      return new Response(
+        JSON.stringify({
+          error: `Upstream API error (${response.status})`,
+          upstream: {
+            status: response.status,
+            url: apiUrl,
+            body: responseText,
+          },
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status,
+        }
+      );
     }
 
-    const data = await response.json();
+    const data = responseText ? JSON.parse(responseText) : null;
     
     if (ticketNumber) {
       console.log(`Successfully fetched proposal: ${ticketNumber}`);
