@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
@@ -61,49 +62,51 @@ const Login: React.FC = () => {
 
       {/* Right side - Login form */}
       <div className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-[#f2f2ee]">
-        <div className="w-full max-w-md space-y-8 animate-fade-in">
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-6">
-            <img src={brandLogo} alt="Ethics Press" className="h-14 w-14 object-contain" />
-          </div>
-
-          {/* Title and subtitle */}
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-semibold text-foreground">Proposal Portal</h1>
-            <p className="text-muted-foreground">Access your academic review dashboard</p>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground font-medium">
-                Email address
-              </Label>
-              <Input id="email" type="email" placeholder="your.email@university.edu" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("email")} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+        <Card className="w-full max-w-md shadow-lg border-0 bg-white">
+          <CardContent className="p-8 space-y-6">
+            {/* Logo */}
+            <div className="flex items-center justify-center">
+              <img src={brandLogo} alt="Ethics Press" className="h-14 w-14 object-contain" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground font-medium">
-                Access code
-              </Label>
-              <Input id="password" type="password" placeholder="Enter your code" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("password")} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+            {/* Title and subtitle */}
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-semibold text-foreground">Proposal Portal</h1>
+              <p className="text-muted-foreground">Access your academic review dashboard</p>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white rounded-full" disabled={isLoading}>
-              {isLoading ? <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Signing in...
-                </> : "Log in"}
-            </Button>
-          </form>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground font-medium">
+                  Email address
+                </Label>
+                <Input id="email" type="email" placeholder="your.email@university.edu" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("email")} />
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              </div>
 
-          <div className="text-center">
-            <Link to="/forgot-password" className="text-foreground underline underline-offset-4 hover:text-foreground/80 text-sm font-medium">
-              Get new code
-            </Link>
-          </div>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground font-medium">
+                  Access code
+                </Label>
+                <Input id="password" type="password" placeholder="Enter your code" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("password")} />
+                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              </div>
+
+              <Button type="submit" className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white rounded-full" disabled={isLoading}>
+                {isLoading ? <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Signing in...
+                  </> : "Log in"}
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <Link to="/forgot-password" className="text-foreground underline underline-offset-4 hover:text-foreground/80 text-sm font-medium">
+                Get new code
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>;
 };
