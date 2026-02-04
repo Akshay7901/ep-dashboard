@@ -281,19 +281,27 @@ export const useProposal = (id: string) => {
         return fetchLocalProposal(id);
       } else {
         // Fetch from external API - no local sync required for viewing
-        const apiProposal = await fetchProposalByTicket(id);
-        
-        // Get local override data if it exists (status, contract_sent, etc.)
-        const localOverride = await getLocalOverride(id);
-        
-        // Return merged data - use local ID if exists, otherwise use ticket number
-        return {
-          ...mapApiProposalDetail(apiProposal, localOverride),
-          id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
-        };
+        try {
+          const apiProposal = await fetchProposalByTicket(id);
+
+          // Get local override data if it exists (status, contract_sent, etc.)
+          const localOverride = await getLocalOverride(id);
+
+          // Return merged data - use local ID if exists, otherwise use ticket number
+          return {
+            ...mapApiProposalDetail(apiProposal, localOverride),
+            id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
+          };
+        } catch (e) {
+          // Don't let a broken upstream detail endpoint blank the entire page.
+          // Surface the error to the UI; the page will render an error state.
+          const message = e instanceof Error ? e.message : 'Failed to fetch proposal details';
+          throw new Error(message);
+        }
       }
     },
     enabled: !!id,
+    retry: false,
   });
 };
 
