@@ -41,32 +41,32 @@ const Topbar: React.FC<TopbarProps> = ({ title }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-8">
-      {/* Logo and Navigation */}
-      <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-card px-4 lg:px-8">
+      {/* Logo */}
+      <div className="flex items-center">
         <span className="text-lg font-semibold text-foreground">EP Dashboard</span>
-        
-        {/* Nav Links */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                )
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
       </div>
+
+      {/* Nav Links - Centered */}
+      <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )
+            }
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       {/* User section */}
       <div className="flex items-center gap-4">
