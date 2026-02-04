@@ -5,76 +5,68 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardStats, useProposals } from '@/hooks/useProposals';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Lock, 
-  FileCheck,
-  ArrowRight,
-  Loader2
-} from 'lucide-react';
+import { FileText, Clock, CheckCircle2, XCircle, Lock, FileCheck, ArrowRight, Loader2 } from 'lucide-react';
 import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
 import { format } from 'date-fns';
-
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile, isAnyReviewer, isReviewer1, isReviewer2 } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: recentProposals, isLoading: proposalsLoading } = useProposals({ 
-    page: 1, 
-    limit: 5 
+  const {
+    user,
+    profile,
+    isAnyReviewer,
+    isReviewer1,
+    isReviewer2
+  } = useAuth();
+  const {
+    data: stats,
+    isLoading: statsLoading
+  } = useDashboardStats();
+  const {
+    data: recentProposals,
+    isLoading: proposalsLoading
+  } = useProposals({
+    page: 1,
+    limit: 5
   });
-
-  const statCards = [
-    {
-      title: 'Total Proposals',
-      value: stats?.total || 0,
-      icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Submitted',
-      value: stats?.submitted || 0,
-      icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Under Review',
-      value: stats?.under_review || 0,
-      icon: Clock,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-    },
-    {
-      title: 'Approved',
-      value: stats?.approved || 0,
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Finalised',
-      value: stats?.finalised || 0,
-      icon: FileCheck,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Locked',
-      value: stats?.locked || 0,
-      icon: Lock,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50',
-    },
-  ];
-
+  const statCards = [{
+    title: 'Total Proposals',
+    value: stats?.total || 0,
+    icon: FileText,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50'
+  }, {
+    title: 'Submitted',
+    value: stats?.submitted || 0,
+    icon: FileText,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50'
+  }, {
+    title: 'Under Review',
+    value: stats?.under_review || 0,
+    icon: Clock,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50'
+  }, {
+    title: 'Approved',
+    value: stats?.approved || 0,
+    icon: CheckCircle2,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50'
+  }, {
+    title: 'Finalised',
+    value: stats?.finalised || 0,
+    icon: FileCheck,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50'
+  }, {
+    title: 'Locked',
+    value: stats?.locked || 0,
+    icon: Lock,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50'
+  }];
   if (!isAnyReviewer) {
-    return (
-      <DashboardLayout title="Dashboard">
+    return <DashboardLayout title="Dashboard">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -85,35 +77,23 @@ const Dashboard: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
-  return (
-    <DashboardLayout title="Dashboard">
+  return <DashboardLayout title="Dashboard">
       <div className="space-y-8">
         {/* Welcome section */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             Welcome back, {profile?.name || user?.name}!
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {isReviewer1 
-              ? "You're logged in as Reviewer 1 (Sarah) - Primary reviewer with full access"
-              : "You're logged in as Reviewer 2 (Amanda) - Secondary reviewer for assessments"
-            }
-          </p>
+          
         </div>
 
         {/* Stats grid */}
-        {statsLoading ? (
-          <div className="flex justify-center py-8">
+        {statsLoading ? <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {statCards.map((stat) => (
-              <Card key={stat.title}>
+          </div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {statCards.map(stat => <Card key={stat.title}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${stat.bgColor}`}>
@@ -125,10 +105,8 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
 
         {/* Recent proposals */}
         <Card>
@@ -140,22 +118,12 @@ const Dashboard: React.FC = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            {proposalsLoading ? (
-              <div className="flex justify-center py-8">
+            {proposalsLoading ? <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : recentProposals?.data.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+              </div> : recentProposals?.data.length === 0 ? <p className="text-center text-muted-foreground py-8">
                 No proposals yet.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {recentProposals?.data.map((proposal) => (
-                  <div
-                    key={proposal.id}
-                    className="flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`/proposals/${proposal.id}`)}
-                  >
+              </p> : <div className="space-y-4">
+                {recentProposals?.data.map(proposal => <div key={proposal.id} className="flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/proposals/${proposal.id}`)}>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-foreground truncate">
                         {proposal.name}
@@ -165,10 +133,8 @@ const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <ProposalStatusBadge status={proposal.status} />
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </CardContent>
         </Card>
 
@@ -179,60 +145,38 @@ const Dashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Button
-                variant="outline"
-                className="h-auto py-4 flex flex-col items-start gap-1"
-                onClick={() => navigate('/proposals')}
-              >
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-start gap-1" onClick={() => navigate('/proposals')}>
                 <span className="font-semibold">View All Proposals</span>
                 <span className="text-xs text-muted-foreground">
                   Browse and manage all book proposals
                 </span>
               </Button>
               
-              {isReviewer1 && (
-                <>
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex flex-col items-start gap-1"
-                    onClick={() => navigate('/proposals?status=submitted')}
-                  >
+              {isReviewer1 && <>
+                  <Button variant="outline" className="h-auto py-4 flex flex-col items-start gap-1" onClick={() => navigate('/proposals?status=submitted')}>
                     <span className="font-semibold">Review Submissions</span>
                     <span className="text-xs text-muted-foreground">
                       Accept or decline new proposals
                     </span>
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex flex-col items-start gap-1"
-                    onClick={() => navigate('/proposals?status=approved')}
-                  >
+                  <Button variant="outline" className="h-auto py-4 flex flex-col items-start gap-1" onClick={() => navigate('/proposals?status=approved')}>
                     <span className="font-semibold">Send Contracts</span>
                     <span className="text-xs text-muted-foreground">
                       Finalize and send contracts to authors
                     </span>
                   </Button>
-                </>
-              )}
+                </>}
               
-              {isReviewer2 && (
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex flex-col items-start gap-1"
-                  onClick={() => navigate('/proposals?status=under_review')}
-                >
+              {isReviewer2 && <Button variant="outline" className="h-auto py-4 flex flex-col items-start gap-1" onClick={() => navigate('/proposals?status=under_review')}>
                   <span className="font-semibold">Pending Reviews</span>
                   <span className="text-xs text-muted-foreground">
                     Complete assessment forms for proposals
                   </span>
-                </Button>
-              )}
+                </Button>}
             </div>
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Dashboard;
