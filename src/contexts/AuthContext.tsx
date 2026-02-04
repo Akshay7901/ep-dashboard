@@ -19,9 +19,9 @@ const mapApiRole = (apiRole: string): 'reviewer_1' | 'reviewer_2' | null => {
   switch (apiRole) {
     case 'admin':
     case 'decision_reviewer':
-      return 'reviewer_2'; // Full access
+      return 'reviewer_1'; // Sarah - accepts/declines, sends contracts, finalizes
     case 'peer_reviewer':
-      return 'reviewer_1'; // Limited access
+      return 'reviewer_2'; // Amanda - completes assessment form
     default:
       return null;
   }
