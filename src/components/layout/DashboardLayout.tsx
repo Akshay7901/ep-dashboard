@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import Sidebar from './Sidebar';
+import React from 'react';
 import Topbar from './Topbar';
 
 interface DashboardLayoutProps {
@@ -8,24 +7,15 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
+    <div className="flex min-h-screen flex-col bg-background">
+      <Topbar title={title} />
       
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar title={title} />
-        
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <div className="animate-fade-in">
-            {children}
-          </div>
-        </main>
-      </div>
+      <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <div className="animate-fade-in">
+          {children}
+        </div>
+      </main>
     </div>
   );
 };
