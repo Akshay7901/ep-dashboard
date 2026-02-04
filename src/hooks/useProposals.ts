@@ -95,6 +95,9 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: an
     under_review_elsewhere: currentData.under_review_elsewhere || null,
     submitted_date: currentData.submitted_date || null,
     submitted_time: currentData.submitted_time || null,
+    additional_info: currentData.additional_info || null,
+    corresponding_author_name: currentData.corresponding_author_name || null,
+    referrer_url: currentData.referrer_url || null,
   };
 };
 

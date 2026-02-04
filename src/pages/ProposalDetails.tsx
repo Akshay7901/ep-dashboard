@@ -26,6 +26,9 @@ import {
   Download,
   ClipboardCheck,
   AlertTriangle,
+  MapPin,
+  Link,
+  Info,
 } from 'lucide-react';
 
 const ProposalDetails: React.FC = () => {
@@ -361,12 +364,29 @@ const ProposalDetails: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5" />
-                    Review Status
+                    Review Status Elsewhere
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground">
                     {proposal.under_review_elsewhere}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Additional Information */}
+            {proposal.additional_info && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Info className="h-5 w-5" />
+                    Additional Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                    {proposal.additional_info}
                   </p>
                 </CardContent>
               </Card>
@@ -411,7 +431,7 @@ const ProposalDetails: React.FC = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Author</p>
                     <p className="text-sm font-medium text-foreground">
-                      {proposal.author_name}
+                      {proposal.corresponding_author_name || proposal.author_name}
                     </p>
                     {proposal.job_title && (
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -435,7 +455,7 @@ const ProposalDetails: React.FC = () => {
                     <p className="text-sm font-medium text-foreground break-all">
                       {proposal.author_email}
                     </p>
-                    {proposal.secondary_email && (
+                    {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && (
                       <p className="text-xs text-muted-foreground break-all">
                         {proposal.secondary_email}
                       </p>
@@ -446,13 +466,32 @@ const ProposalDetails: React.FC = () => {
                 {proposal.address && (
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-muted">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Address</p>
                       <p className="text-sm text-foreground">
                         {proposal.address}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {proposal.referrer_url && (
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Link className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Referrer</p>
+                      <a 
+                        href={proposal.referrer_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {proposal.referrer_url}
+                      </a>
                     </div>
                   </div>
                 )}

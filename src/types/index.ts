@@ -55,6 +55,7 @@ export type ProposalStatus =
 
 // API proposal current_data structure (full details)
 export interface ApiProposalCurrentData {
+  additional_info?: string;
   address?: string;
   biography?: string;
   book_type?: string;
@@ -161,6 +162,9 @@ export interface Proposal {
   under_review_elsewhere?: string | null;
   submitted_date?: string | null;
   submitted_time?: string | null;
+  additional_info?: string | null;
+  corresponding_author_name?: string | null;
+  referrer_url?: string | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
