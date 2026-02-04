@@ -98,10 +98,35 @@ const ProposalDetails: React.FC = () => {
   }
 
   const isLocked = proposal.status === 'locked';
+  const isPartialData = (proposal as any)?._isPartialData === true;
 
   return (
     <DashboardLayout title="Proposal Details">
       <div className="space-y-6 max-w-4xl">
+        {/* Partial data warning banner */}
+        {isPartialData && (
+          <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                Limited data available
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                The external API detail endpoint is temporarily unavailable. Showing basic proposal information only.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex-shrink-0"
+            >
+              <RefreshCw className={"h-4 w-4" + (isFetching ? ' animate-spin' : '')} />
+            </Button>
+          </div>
+        )}
+
         {/* Back button */}
         <Button
           variant="ghost"

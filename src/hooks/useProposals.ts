@@ -272,6 +272,8 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
 };
 
 export const useProposal = (id: string) => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
@@ -293,8 +295,31 @@ export const useProposal = (id: string) => {
             id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
           };
         } catch (e) {
-          // Don't let a broken upstream detail endpoint blank the entire page.
-          // Surface the error to the UI; the page will render an error state.
+          // Detail endpoint failed - try to use cached list data as fallback
+          const cachedListData = queryClient.getQueriesData<{
+            data: Proposal[];
+          }>({ queryKey: ['proposals'] });
+
+          // Search for this proposal in cached list data
+          for (const [, queryData] of cachedListData) {
+            if (queryData?.data) {
+              const cachedProposal = queryData.data.find(
+                (p) => p.ticket_number === id || p.id === id
+              );
+              if (cachedProposal) {
+                // Return basic info from list with a flag indicating partial data
+                const localOverride = await getLocalOverride(id);
+                return {
+                  ...cachedProposal,
+                  ...(localOverride || {}),
+                  id: localOverride?.id || id,
+                  _isPartialData: true, // Flag to indicate this is fallback data
+                };
+              }
+            }
+          }
+
+          // No cached data available - throw original error
           const message = e instanceof Error ? e.message : 'Failed to fetch proposal details';
           throw new Error(message);
         }
