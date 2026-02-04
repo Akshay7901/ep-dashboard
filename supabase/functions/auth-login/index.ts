@@ -25,7 +25,7 @@ serve(async (req) => {
 
     if (!email || !password) {
       return new Response(
-        JSON.stringify({ error: 'Email and password are required' }),
+        JSON.stringify({ error: 'Email and access code are required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -37,7 +37,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, access_code: password }),
     });
 
     const data = await response.json();
