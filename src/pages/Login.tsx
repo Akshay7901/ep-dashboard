@@ -11,62 +11,56 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
-
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters")
 });
-
 type LoginFormData = z.infer<typeof loginSchema>;
-
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const {
+    login
+  } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: {
+      errors
+    }
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema)
   });
-
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
       await login({
         email: data.email,
-        password: data.password,
+        password: data.password
       });
       toast({
         title: "Welcome back!",
-        description: "You have successfully logged in.",
+        description: "You have successfully logged in."
       });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error?.message || "Please check your credentials and try again.",
+        description: error?.message || "Please check your credentials and try again."
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="flex min-h-screen">
+  return <div className="flex min-h-screen">
       {/* Left side - Image */}
-      <div
-        className="hidden md:flex md:w-1/2 relative bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${loginBg})`,
-        }}
-      />
+      <div className="hidden md:flex md:w-1/2 relative bg-cover bg-center" style={{
+      backgroundImage: `url(${loginBg})`
+    }} />
 
       {/* Right side - Login form */}
-      <div className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-[#faf8f5]">
+      <div className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-[#f2f2ee]">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           {/* Logo */}
           <div className="flex items-center justify-center mb-6">
@@ -84,13 +78,7 @@ const Login: React.FC = () => {
               <Label htmlFor="email" className="text-foreground font-medium">
                 Email address
               </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@university.edu"
-                className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60"
-                {...register("email")}
-              />
+              <Input id="email" type="email" placeholder="your.email@university.edu" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("email")} />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
@@ -98,44 +86,25 @@ const Login: React.FC = () => {
               <Label htmlFor="password" className="text-foreground font-medium">
                 Access code
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your code"
-                className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60"
-                {...register("password")}
-              />
+              <Input id="password" type="password" placeholder="Enter your code" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white rounded-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
+            <Button type="submit" className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white rounded-full" disabled={isLoading}>
+              {isLoading ? <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Signing in...
-                </>
-              ) : (
-                "Log in"
-              )}
+                </> : "Log in"}
             </Button>
           </form>
 
           <div className="text-center">
-            <Link 
-              to="/forgot-password" 
-              className="text-foreground underline underline-offset-4 hover:text-foreground/80 text-sm font-medium"
-            >
+            <Link to="/forgot-password" className="text-foreground underline underline-offset-4 hover:text-foreground/80 text-sm font-medium">
               Get new code
             </Link>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Login;
