@@ -151,7 +151,6 @@ const Proposals: React.FC = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Submitted</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -166,9 +165,6 @@ const Proposals: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {format(new Date(proposal.created_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {proposal.value ? `£${proposal.value.toLocaleString()}` : '—'}
                         </TableCell>
                       </TableRow>)}
                   </TableBody>
@@ -193,9 +189,6 @@ const Proposals: React.FC = () => {
                         </p>}
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{format(new Date(proposal.created_at), 'MMM d, yyyy')}</span>
-                        {proposal.value && <span className="font-medium text-foreground">
-                            £{proposal.value.toLocaleString()}
-                          </span>}
                       </div>
                     </CardContent>
                   </Card>)}
