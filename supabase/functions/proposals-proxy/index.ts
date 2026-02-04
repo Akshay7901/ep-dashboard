@@ -43,12 +43,23 @@ serve(async (req) => {
       console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
     }
 
+    // Some upstream APIs behave differently depending on request headers.
+    // For GET requests, avoid sending Content-Type (no body) and prefer an Accept header.
+    // Also forward a small allow-list of headers that can affect API routing/auth.
+    const accept = req.headers.get('accept') || 'application/json';
+    const userAgent = req.headers.get('user-agent');
+    const xForwardedFor = req.headers.get('x-forwarded-for');
+
+    const upstreamHeaders: Record<string, string> = {
+      'Accept': accept,
+      'Authorization': authHeader,
+    };
+    if (userAgent) upstreamHeaders['User-Agent'] = userAgent;
+    if (xForwardedFor) upstreamHeaders['X-Forwarded-For'] = xForwardedFor;
+
     const response = await fetch(apiUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-      },
+      headers: upstreamHeaders,
     });
 
     const responseText = await response.text();
