@@ -206,36 +206,83 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---------------- AUTHOR INFO ---------------- */}
 
-          <TabsContent value="author">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Author Details</CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-2">
-                  <InfoRow label="Name" value={proposal.corresponding_author_name} />
-
-                  <InfoRow label="Email" value={proposal.email} />
-
-                  <InfoRow label="Secondary Email" value={proposal.secondary_email} />
-
-                  <InfoRow label="Job Title" value={proposal.job_title} />
-
-                  <InfoRow label="Institution" value={proposal.institution} />
-
-                  <InfoRow label="Address" value={proposal.address} />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Biography</CardTitle>
-                </CardHeader>
-
-                <CardContent className="text-sm whitespace-pre-line">{proposal.biography}</CardContent>
-              </Card>
+          <TabsContent value="author" className="space-y-8">
+            {/* Author Name with Badge */}
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold">
+                {proposal.corresponding_author_name || proposal.author_name || "N/A"}
+              </h2>
+              <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-md uppercase tracking-wide">
+                Author
+              </span>
             </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Contact Information</h3>
+              <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+                <OverviewItem label="Email" value={proposal.author_email || proposal.email} />
+                <OverviewItem label="Institution" value={proposal.institution} />
+                <OverviewItem label="Job Title" value={proposal.job_title} />
+                <OverviewItem label="Address" value={proposal.address} />
+                <OverviewItem label="City" value={proposal.city} />
+                <OverviewItem label="Province/State" value={proposal.province_state || proposal.state} />
+                <OverviewItem label="Country" value={proposal.country} />
+                {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && (
+                  <OverviewItem label="Secondary Email" value={proposal.secondary_email} />
+                )}
+              </div>
+            </div>
+
+            {/* Biography */}
+            {proposal.biography && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Biography</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {proposal.biography}
+                </p>
+              </div>
+            )}
+
+            {/* CV Attachment */}
+            {proposal.cv_file_url && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Curriculum Vitae</h3>
+                <div className="flex items-center justify-between border rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{proposal.cv_file_name || "CV Document"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        PDF • {proposal.cv_file_size || "Unknown size"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setDocumentPreview({
+                          url: proposal.cv_file_url,
+                          name: proposal.cv_file_name || "CV",
+                          type: "pdf",
+                        })
+                      }
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={proposal.cv_file_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* ---------------- DOCUMENTS ---------------- */}
