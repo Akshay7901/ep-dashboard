@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
 const loginSchema = z.object({
@@ -23,7 +23,7 @@ const Login: React.FC = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  
   const {
     register,
     handleSubmit,
@@ -89,22 +89,7 @@ const Login: React.FC = () => {
                 <Label htmlFor="password" className="text-foreground font-medium">
                   Access code
                 </Label>
-                <div className="relative">
-                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="Enter your code" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 pr-12" {...register("password")} />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
+                <Input id="password" type="text" placeholder="Enter your code" className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60" {...register("password")} />
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
 
