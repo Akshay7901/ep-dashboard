@@ -25,6 +25,7 @@ import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalSta
 
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
+import ProposalDetailsSidebar from "@/components/proposals/ProposalDetailsSidebar";
 
 /* ---------------- Helper ---------------- */
 
@@ -155,9 +156,9 @@ const ProposalDetails: React.FC = () => {
         </div>
 
         {/* Main */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left */}
-          <div className="lg:col-span-2">
+        <div className="grid gap-6 lg:grid-cols-12">
+          {/* Main */}
+          <div className="lg:col-span-8 xl:col-span-9">
             <Tabs defaultValue="book">
               <TabsList>
                 <TabsTrigger value="book">Book Info</TabsTrigger>
@@ -343,6 +344,11 @@ const ProposalDetails: React.FC = () => {
                 </Card>
               </TabsContent>
             </Tabs>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 xl:col-span-3">
+            <ProposalDetailsSidebar proposal={proposal} />
           </div>
         </div>
       </div>
