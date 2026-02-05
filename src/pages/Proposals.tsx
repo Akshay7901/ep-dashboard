@@ -139,28 +139,27 @@ const Proposals: React.FC = () => {
         </Card>
       </DashboardLayout>;
   }
-  return <DashboardLayout title="Proposals">
+  return (
+    <DashboardLayout title="Proposals">
       <div className="space-y-6">
-  {/* Header */}
-  <div className="flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <img
-        src="/logo.png"   // update path if needed
-        alt="Proposal Intake Logo"
-        className="h-8 w-auto"
-      />
-      <h1 className="text-2xl font-bold text-foreground">
-        Proposal Intake
-      </h1>
-    </div>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Proposal Intake Logo"
+              className="h-8 w-auto"
+            />
+            <h1 className="text-2xl font-bold text-foreground">
+              Proposal Intake
+            </h1>
+          </div>
 
-    <Button variant="outline" className="gap-2">
-      <Users className="h-4 w-4" />
-      Peer Reviewers
-    </Button>
-  </div>
-</div>
-
+          <Button variant="outline" className="gap-2">
+            <Users className="h-4 w-4" />
+            Peer Reviewers
+          </Button>
+        </div>
 
         {/* Status Summary Chips */}
         <div className="flex flex-wrap items-center gap-3">
@@ -282,6 +281,7 @@ const Proposals: React.FC = () => {
             </>}
         </div>
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
 export default Proposals;
