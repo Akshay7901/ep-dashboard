@@ -1,4 +1,4 @@
-// FULL REDESIGN WITH ALL CONTENT + OVERVIEW + RIGHT PANEL DROPDOWNS
+// FULL REDESIGN WITH UI IMPROVEMENTS (NO CONTENT REMOVED)
 
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -79,7 +79,7 @@ const ProposalDetails: React.FC = () => {
   if (isLoading) {
     return (
       <DashboardLayout title="Proposal Details">
-        <div className="flex justify-center py-16">
+        <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </DashboardLayout>
@@ -89,8 +89,8 @@ const ProposalDetails: React.FC = () => {
   if (!proposal || error) {
     return (
       <DashboardLayout title="Proposal Details">
-        <div className="text-center py-16 space-y-4">
-          <p className="text-destructive">Failed to load proposal</p>
+        <div className="text-center py-20 space-y-4">
+          <p className="text-destructive text-lg">Failed to load proposal</p>
 
           <div className="flex justify-center gap-3">
             <Button variant="outline" onClick={() => refetch()}>
@@ -114,29 +114,37 @@ const ProposalDetails: React.FC = () => {
 
   return (
     <DashboardLayout title="Proposal Details">
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Back */}
         <Button variant="ghost" onClick={() => navigate("/proposals")} className="-ml-3">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to list
         </Button>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between gap-4">
+        {/* Header Card */}
+        <div className="p-5 rounded-xl border bg-muted/40 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs font-mono text-muted-foreground">
               {proposal.ticket_number} • Rev {proposal.current_revision}
             </p>
 
-            <h1 className="text-2xl font-semibold mt-1">{proposal.name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight mt-1">{proposal.name}</h1>
 
-            <div className="mt-2">
+            <div className="mt-2 flex gap-2">
               <ProposalStatusBadge status={proposal.status} />
             </div>
           </div>
+
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline">
+              Assign
+            </Button>
+
+            <Button size="sm">Update Status</Button>
+          </div>
         </div>
 
-        {/* Sticky Actions */}
-        <div className="sticky top-0 z-20 bg-background border-b py-3">
+        {/* Sticky Reviewer Actions */}
+        <div className="sticky top-0 z-20 bg-background border rounded-lg shadow-sm p-3">
           <ReviewerActions
             proposal={proposal}
             isReviewer1={isReviewer1}
@@ -149,78 +157,85 @@ const ProposalDetails: React.FC = () => {
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left */}
+          {/* Left Side */}
           <div className="lg:col-span-2 space-y-6">
-            <Tabs defaultValue="overview">
-              <TabsList>
+            <Tabs defaultValue="overview" className="w-full">
+              {/* Tabs */}
+              <TabsList className="sticky top-[72px] z-10 bg-background border rounded-lg p-1 shadow-sm">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
-              {/* ---------------- Overview ---------------- */}
-              <TabsContent value="overview">
-                <Accordion type="multiple">
-                  {proposal.short_description && (
-                    <AccordionItem value="short">
-                      <AccordionTrigger>Short Description</AccordionTrigger>
-                      <AccordionContent>{proposal.short_description}</AccordionContent>
-                    </AccordionItem>
-                  )}
+              {/* Overview */}
+              <TabsContent value="overview" className="pt-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <Accordion type="multiple">
+                      {proposal.short_description && (
+                        <AccordionItem value="short">
+                          <AccordionTrigger>Short Description</AccordionTrigger>
+                          <AccordionContent>{proposal.short_description}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.detailed_description && (
-                    <AccordionItem value="detailed">
-                      <AccordionTrigger>Detailed Description</AccordionTrigger>
-                      <AccordionContent>{proposal.detailed_description}</AccordionContent>
-                    </AccordionItem>
-                  )}
+                      {proposal.detailed_description && (
+                        <AccordionItem value="detailed">
+                          <AccordionTrigger>Detailed Description</AccordionTrigger>
+                          <AccordionContent>{proposal.detailed_description}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.table_of_contents && (
-                    <AccordionItem value="toc">
-                      <AccordionTrigger>Table of Contents</AccordionTrigger>
-                      <AccordionContent>{proposal.table_of_contents}</AccordionContent>
-                    </AccordionItem>
-                  )}
+                      {proposal.table_of_contents && (
+                        <AccordionItem value="toc">
+                          <AccordionTrigger>Table of Contents</AccordionTrigger>
+                          <AccordionContent>{proposal.table_of_contents}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.marketing_info && (
-                    <AccordionItem value="marketing">
-                      <AccordionTrigger>Marketing Information</AccordionTrigger>
-                      <AccordionContent>{proposal.marketing_info}</AccordionContent>
-                    </AccordionItem>
-                  )}
+                      {proposal.marketing_info && (
+                        <AccordionItem value="marketing">
+                          <AccordionTrigger>Marketing Information</AccordionTrigger>
+                          <AccordionContent>{proposal.marketing_info}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.additional_info && (
-                    <AccordionItem value="additional">
-                      <AccordionTrigger>Additional Information</AccordionTrigger>
-                      <AccordionContent>{proposal.additional_info}</AccordionContent>
-                    </AccordionItem>
-                  )}
+                      {proposal.additional_info && (
+                        <AccordionItem value="additional">
+                          <AccordionTrigger>Additional Information</AccordionTrigger>
+                          <AccordionContent>{proposal.additional_info}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.biography && (
-                    <AccordionItem value="bio">
-                      <AccordionTrigger>Author Biography</AccordionTrigger>
-                      <AccordionContent>{proposal.biography}</AccordionContent>
-                    </AccordionItem>
-                  )}
+                      {proposal.biography && (
+                        <AccordionItem value="bio">
+                          <AccordionTrigger>Author Biography</AccordionTrigger>
+                          <AccordionContent>{proposal.biography}</AccordionContent>
+                        </AccordionItem>
+                      )}
 
-                  {proposal.referees_reviewers && (
-                    <AccordionItem value="ref">
-                      <AccordionTrigger>Suggested Reviewers</AccordionTrigger>
-                      <AccordionContent>{proposal.referees_reviewers}</AccordionContent>
-                    </AccordionItem>
-                  )}
-                </Accordion>
+                      {proposal.referees_reviewers && (
+                        <AccordionItem value="ref">
+                          <AccordionTrigger>Suggested Reviewers</AccordionTrigger>
+                          <AccordionContent>{proposal.referees_reviewers}</AccordionContent>
+                        </AccordionItem>
+                      )}
+                    </Accordion>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
-              {/* ---------------- Documents ---------------- */}
-              <TabsContent value="documents">
+              {/* Documents */}
+              <TabsContent value="documents" className="pt-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Uploaded Files</CardTitle>
                   </CardHeader>
 
-                  <CardContent>
+                  <CardContent className="divide-y">
+                    {files.length === 0 && <p className="text-sm text-muted-foreground py-4">No files uploaded</p>}
+
                     {files.map((url, i) => {
                       const name = url.split("/").pop() || "File";
 
@@ -228,16 +243,19 @@ const ProposalDetails: React.FC = () => {
                       const isWord = url.toLowerCase().endsWith(".doc") || url.toLowerCase().endsWith(".docx");
 
                       return (
-                        <div key={i} className="flex justify-between items-center p-3 border-b">
-                          <div className="flex gap-2 items-center">
-                            <FileText className="h-4 w-4" />
-                            {decodeURIComponent(name)}
+                        <div
+                          key={i}
+                          className="flex justify-between items-center py-3 hover:bg-muted/50 px-2 rounded-md transition"
+                        >
+                          <div className="flex gap-3 items-center">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span className="text-sm truncate">{decodeURIComponent(name)}</span>
                           </div>
 
                           <div className="flex gap-2">
                             {(isPdf || isWord) && (
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="ghost"
                                 onClick={() =>
                                   setDocumentPreview({
@@ -251,7 +269,7 @@ const ProposalDetails: React.FC = () => {
                               </Button>
                             )}
 
-                            <Button size="sm" variant="ghost" asChild>
+                            <Button size="icon" variant="ghost" asChild>
                               <a href={url} target="_blank" rel="noreferrer">
                                 <Download className="h-4 w-4" />
                               </a>
@@ -264,8 +282,8 @@ const ProposalDetails: React.FC = () => {
                 </Card>
               </TabsContent>
 
-              {/* ---------------- Reviews ---------------- */}
-              <TabsContent value="reviews" className="space-y-6">
+              {/* Reviews */}
+              <TabsContent value="reviews" className="pt-4 space-y-6">
                 <AssessmentForm proposal={proposal} isReviewer2={isReviewer2} />
 
                 {isReviewer1 && comments.length > 0 && <ReviewCommentsDisplay comments={comments} isReviewer1 />}
@@ -277,17 +295,20 @@ const ProposalDetails: React.FC = () => {
                 {proposal.ticket_number && <CommentsSection ticketNumber={proposal.ticket_number} />}
               </TabsContent>
 
-              {/* ---------------- Activity ---------------- */}
-              <TabsContent value="activity">
+              {/* Activity */}
+              <TabsContent value="activity" className="pt-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Workflow History</CardTitle>
                   </CardHeader>
 
-                  <CardContent>
+                  <CardContent className="space-y-3">
+                    {logs.length === 0 && <p className="text-sm text-muted-foreground">No activity yet</p>}
+
                     {logs.map((log) => (
-                      <div key={log.id} className="mb-3 text-sm">
-                        <p>{log.action}</p>
+                      <div key={log.id} className="border-l-2 pl-3 border-primary/40">
+                        <p className="text-sm">{log.action}</p>
+
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
                         </p>
@@ -299,9 +320,9 @@ const ProposalDetails: React.FC = () => {
             </Tabs>
           </div>
 
-          {/* ---------------- Right Panel (Dropdown) ---------------- */}
+          {/* Right Panel */}
           <div>
-            <Card className="sticky top-24">
+            <Card className="sticky top-24 shadow-sm">
               <CardHeader>
                 <CardTitle>Information</CardTitle>
               </CardHeader>
@@ -359,7 +380,7 @@ const ProposalDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Preview */}
+      {/* Preview Dialog */}
       <DocumentPreviewDialog
         open={!!documentPreview}
         onOpenChange={(o) => !o && setDocumentPreview(null)}
