@@ -12,6 +12,7 @@ import { Search, Loader2, Users } from 'lucide-react';
 import { useProposals } from '@/hooks/useProposals';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.jpg';
 const ITEMS_PER_PAGE = 10;
 const statusOptions: {
   value: ProposalStatus | 'all';
@@ -146,7 +147,7 @@ const Proposals: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
-              src="/logo.png"
+              src={logo}
               alt="Proposal Intake Logo"
               className="h-8 w-auto"
             />
