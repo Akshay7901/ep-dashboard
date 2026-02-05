@@ -366,11 +366,16 @@ export const useUpdateProposalStatus = () => {
       id: string; 
       status: ProposalStatus; 
       previousStatus: ProposalStatus;
-    }) => {
-      // Only allow status updates for local proposals (UUIDs)
-      if (!isUUID(id)) {
-        throw new Error('Cannot update status for external API proposals. Use local proposals for testing.');
-      }
+     ticketNumber?: string;
+   }) => {
+     let localId = id;
+     
+     // If the ID is not a UUID (it's a ticket number), we need to ensure a local record exists
+     if (!isUUID(id)) {
+       // Fetch the full proposal from API to create local record
+       const apiProposal = await fetchProposalByTicket(id);
+       localId = await ensureLocalProposal(apiProposal);
+     }
 
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -384,7 +389,7 @@ export const useUpdateProposalStatus = () => {
             finalised_by: user?.id 
           } : {})
         })
-        .eq('id', id);
+       .eq('id', localId);
 
       if (updateError) throw updateError;
 
@@ -392,7 +397,7 @@ export const useUpdateProposalStatus = () => {
       const { error: logError } = await supabase
         .from('workflow_logs')
         .insert({
-          proposal_id: id,
+         proposal_id: localId,
           user_id: user?.id,
           action: `Status changed from ${previousStatus} to ${status}`,
           previous_status: previousStatus,
@@ -400,10 +405,16 @@ export const useUpdateProposalStatus = () => {
         });
 
       if (logError) console.error('Error logging workflow:', logError);
+     
+     return { localId };
     },
-    onSuccess: () => {
+   onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal'] });
+     // If we synced a new local ID, also invalidate by that
+     if (data?.localId) {
+       queryClient.invalidateQueries({ queryKey: ['proposal', data.localId] });
+     }
       toast({
         title: 'Status updated',
         description: 'Proposal status has been updated successfully.',
@@ -455,11 +466,16 @@ export const useAddComment = () => {
       commentText?: string;
       reviewFormData?: Record<string, any>;
       duplicateOf?: string;
-    }) => {
-      // Only allow comments for local proposals (UUIDs)
-      if (!isUUID(proposalId)) {
-        throw new Error('Cannot add comments to external API proposals. Use local proposals for testing.');
-      }
+     ticketNumber?: string;
+   }) => {
+     let localProposalId = proposalId;
+     
+     // If the proposal ID is not a UUID (it's a ticket number), we need to ensure a local record exists
+     if (!isUUID(proposalId)) {
+       // Fetch the full proposal from API to create local record
+       const apiProposal = await fetchProposalByTicket(proposalId);
+       localProposalId = await ensureLocalProposal(apiProposal);
+     }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -467,7 +483,7 @@ export const useAddComment = () => {
       const { error } = await supabase
         .from('reviewer_comments')
         .insert({
-          proposal_id: proposalId,
+         proposal_id: localProposalId,
           reviewer_id: user.id,
           comment_text: commentText,
           review_form_data: reviewFormData || {},
@@ -475,9 +491,14 @@ export const useAddComment = () => {
         });
 
       if (error) throw error;
+     
+     return { localProposalId };
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['proposal-comments', variables.proposalId] });
+   onSuccess: (data) => {
+     if (data?.localProposalId) {
+       queryClient.invalidateQueries({ queryKey: ['proposal-comments', data.localProposalId] });
+     }
+     queryClient.invalidateQueries({ queryKey: ['proposal'] });
       toast({
         title: 'Comment added',
         description: 'Your review has been saved.',
