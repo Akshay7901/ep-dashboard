@@ -87,7 +87,9 @@ const Proposals: React.FC = () => {
         {/* Header with role indicator */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Book Proposals</h1>
+            <h1 className="text-2xl font-bold text-foreground">Proposal Intake
+
+          </h1>
             
           </div>
         </div>
