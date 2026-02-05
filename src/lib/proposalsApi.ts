@@ -49,7 +49,11 @@
      });
      
      if (error) throw error;
-     return data || [];
+   // Handle various response structures from the API
+   if (Array.isArray(data)) return data;
+   if (data?.reviewers && Array.isArray(data.reviewers)) return data.reviewers;
+   if (data?.data && Array.isArray(data.data)) return data.data;
+   return [];
    },
  
    create: async (reviewer: { email: string; name: string }): Promise<PeerReviewer> => {

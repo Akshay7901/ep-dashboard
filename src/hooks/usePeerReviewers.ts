@@ -50,7 +50,7 @@
    });
  
    return {
-     reviewers: reviewersQuery.data || [],
+   reviewers: Array.isArray(reviewersQuery.data) ? reviewersQuery.data : [],
      isLoading: reviewersQuery.isLoading,
      error: reviewersQuery.error,
      createReviewer: createMutation.mutate,
