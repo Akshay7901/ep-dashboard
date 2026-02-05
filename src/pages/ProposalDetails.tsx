@@ -1,4 +1,4 @@
-// FULL REDESIGN WITH ALL CONTENT + BOOK INFO + AUTHOR INFO TABS
+// FULL REDESIGN WITH ALL CONTENT + BOOK INFO + AUTHOR INFO TABS (BIO MOVED)
 
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -31,7 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex justify-between gap-3 text-sm border-b pb-1">
     <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-right">{value || "N/A"}</span>
+    <span className="font-medium text-right break-words">{value || "N/A"}</span>
   </div>
 );
 
@@ -212,13 +212,6 @@ const ProposalDetails: React.FC = () => {
                     </AccordionItem>
                   )}
 
-                  {proposal.biography && (
-                    <AccordionItem value="bio">
-                      <AccordionTrigger>Author Biography</AccordionTrigger>
-                      <AccordionContent>{proposal.biography}</AccordionContent>
-                    </AccordionItem>
-                  )}
-
                   {proposal.referees_reviewers && (
                     <AccordionItem value="ref">
                       <AccordionTrigger>Referees / Reviewers</AccordionTrigger>
@@ -230,25 +223,41 @@ const ProposalDetails: React.FC = () => {
 
               {/* ---------------- Author Info ---------------- */}
               <TabsContent value="author">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Author & Contact Details</CardTitle>
-                  </CardHeader>
+                <div className="space-y-6">
+                  {/* Contact Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Author & Contact Details</CardTitle>
+                    </CardHeader>
 
-                  <CardContent className="space-y-3">
-                    <InfoRow label="Author" value={proposal.corresponding_author_name || proposal.author_name} />
+                    <CardContent className="space-y-3">
+                      <InfoRow label="Author" value={proposal.corresponding_author_name || proposal.author_name} />
 
-                    <InfoRow label="Email" value={proposal.author_email} />
+                      <InfoRow label="Email" value={proposal.author_email} />
 
-                    {proposal.secondary_email && <InfoRow label="Secondary Email" value={proposal.secondary_email} />}
+                      {proposal.secondary_email && <InfoRow label="Secondary Email" value={proposal.secondary_email} />}
 
-                    <InfoRow label="Job Title" value={proposal.job_title} />
+                      <InfoRow label="Job Title" value={proposal.job_title} />
 
-                    <InfoRow label="Institution" value={proposal.institution} />
+                      <InfoRow label="Institution" value={proposal.institution} />
 
-                    <InfoRow label="Address" value={proposal.address} />
-                  </CardContent>
-                </Card>
+                      <InfoRow label="Address" value={proposal.address} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Biography Card */}
+                  {proposal.biography && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Author Biography</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <p className="text-sm whitespace-pre-line leading-relaxed">{proposal.biography}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </TabsContent>
 
               {/* ---------------- Documents ---------------- */}
