@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Proposals from "./pages/Proposals";
 import ProposalDetails from "./pages/ProposalDetails";
+import PeerReviewers from "./pages/PeerReviewers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProposalDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/peer-reviewers"
+              element={
+                <ProtectedRoute>
+                  <PeerReviewers />
                 </ProtectedRoute>
               }
             />
