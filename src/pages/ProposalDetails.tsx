@@ -141,7 +141,7 @@ const ProposalDetails: React.FC = () => {
 
   return (
     <DashboardLayout title="Proposal Details">
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6">
         {/* Partial data warning banner */}
         {isPartialData && (
           <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-lg">
@@ -256,17 +256,17 @@ const ProposalDetails: React.FC = () => {
           isReviewer1={isReviewer1}
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left column - Descriptions & Documents */}
+          <div className="space-y-6">
             {/* Short Description */}
             {proposal.short_description && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Short Description</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                <CardContent className="max-h-[300px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed text-sm">
                     {proposal.short_description}
                   </p>
                 </CardContent>
@@ -279,8 +279,8 @@ const ProposalDetails: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Detailed Description</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                <CardContent className="max-h-[400px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed text-sm">
                     {proposal.detailed_description}
                   </p>
                 </CardContent>
@@ -293,8 +293,8 @@ const ProposalDetails: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Table of Contents</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed font-mono text-sm">
+                <CardContent className="max-h-[300px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed font-mono text-xs">
                     {proposal.table_of_contents}
                   </p>
                 </CardContent>
@@ -307,8 +307,8 @@ const ProposalDetails: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Marketing Information</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                <CardContent className="max-h-[300px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed text-sm">
                     {proposal.marketing_info}
                   </p>
                 </CardContent>
@@ -321,8 +321,8 @@ const ProposalDetails: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Referees / Reviewers</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                <CardContent className="max-h-[200px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed text-sm">
                     {proposal.referees_reviewers}
                   </p>
                 </CardContent>
@@ -440,45 +440,16 @@ const ProposalDetails: React.FC = () => {
                     Additional Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">
+                <CardContent className="max-h-[300px] overflow-y-auto">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed text-sm">
                     {proposal.additional_info}
                   </p>
                 </CardContent>
               </Card>
             )}
-
-            {/* Comments Section - External API */}
-            {proposal.ticket_number && (
-              <CommentsSection ticketNumber={proposal.ticket_number} />
-            )}
-
-            {/* Workflow History */}
-            {logs && logs.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Activity Log</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {logs.map((log) => (
-                      <div key={log.id} className="flex items-start gap-3 text-sm">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2" />
-                        <div className="flex-1">
-                          <p className="text-foreground">{log.action}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
-          {/* Sidebar - Author info */}
+          {/* Right column - Author, Book Details, Timeline */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -730,6 +701,42 @@ const ProposalDetails: React.FC = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        {/* Full-width sections below the two-column grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Comments Section - External API */}
+          <div>
+            {proposal.ticket_number && (
+              <CommentsSection ticketNumber={proposal.ticket_number} />
+            )}
+          </div>
+
+          {/* Workflow History */}
+          <div>
+            {logs && logs.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Activity Log</CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-[300px] overflow-y-auto">
+                  <div className="space-y-3">
+                    {logs.map((log) => (
+                      <div key={log.id} className="flex items-start gap-3 text-sm">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                        <div className="flex-1">
+                          <p className="text-foreground">{log.action}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
