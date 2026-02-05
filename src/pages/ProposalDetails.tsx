@@ -1,4 +1,4 @@
-// FULL REDESIGN WITH ALL ORIGINAL CONTENT PRESERVED
+// FULL REDESIGN WITH ALL CONTENT + OVERVIEW DROPDOWN SECTIONS
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -16,26 +16,9 @@ import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-import {
-  ArrowLeft,
-  FileText,
-  Loader2,
-  Download,
-  Eye,
-  Calendar,
-  User,
-  Mail,
-  MapPin,
-  Link,
-  Hash,
-  RefreshCw,
-  FileCheck,
-  Lock,
-  Info,
-  ClipboardCheck,
-  AlertTriangle,
-} from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Download, Eye } from "lucide-react";
 
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
 
@@ -177,67 +160,54 @@ const ProposalDetails: React.FC = () => {
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
-              {/* ---------------- Overview ---------------- */}
-              <TabsContent value="overview" className="space-y-6">
-                {/* Short */}
-                {proposal.short_description && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Short Description</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm whitespace-pre-line">{proposal.short_description}</p>
-                    </CardContent>
-                  </Card>
-                )}
+              {/* ---------------- Overview (Dropdown) ---------------- */}
+              <TabsContent value="overview">
+                <Accordion type="multiple" className="w-full">
+                  {proposal.short_description && (
+                    <AccordionItem value="short">
+                      <AccordionTrigger>Short Description</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.short_description}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
-                {/* Detailed */}
-                {proposal.detailed_description && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Detailed Description</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm whitespace-pre-line">{proposal.detailed_description}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                  {proposal.detailed_description && (
+                    <AccordionItem value="detailed">
+                      <AccordionTrigger>Detailed Description</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.detailed_description}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
-                {/* TOC */}
-                {proposal.table_of_contents && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Table of Contents</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-xs whitespace-pre-wrap">{proposal.table_of_contents}</pre>
-                    </CardContent>
-                  </Card>
-                )}
+                  {proposal.table_of_contents && (
+                    <AccordionItem value="toc">
+                      <AccordionTrigger>Table of Contents</AccordionTrigger>
+                      <AccordionContent>
+                        <pre className="text-xs whitespace-pre-wrap">{proposal.table_of_contents}</pre>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
-                {/* Marketing */}
-                {proposal.marketing_info && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Marketing Info</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm whitespace-pre-line">{proposal.marketing_info}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                  {proposal.marketing_info && (
+                    <AccordionItem value="marketing">
+                      <AccordionTrigger>Marketing Information</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.marketing_info}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
 
-                {/* Additional */}
-                {proposal.additional_info && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Additional Info</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm whitespace-pre-line">{proposal.additional_info}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                  {proposal.additional_info && (
+                    <AccordionItem value="additional">
+                      <AccordionTrigger>Additional Information</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.additional_info}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
               </TabsContent>
 
               {/* ---------------- Documents ---------------- */}
@@ -337,7 +307,6 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---------------- Right ---------------- */}
           <div className="space-y-6">
-            {/* Author */}
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle>Author & Book Info</CardTitle>
@@ -353,29 +322,6 @@ const ProposalDetails: React.FC = () => {
                 <InfoRow label="Status" value={proposal.status} />
 
                 <InfoRow label="Submitted" value={format(new Date(proposal.created_at), "MMM d, yyyy")} />
-
-                {proposal.updated_at && (
-                  <InfoRow label="Updated" value={format(new Date(proposal.updated_at), "MMM d, yyyy")} />
-                )}
-
-                {proposal.finalised_at && (
-                  <InfoRow label="Finalised" value={format(new Date(proposal.finalised_at), "MMM d, yyyy")} />
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Checklist */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Submission Checklist</CardTitle>
-              </CardHeader>
-
-              <CardContent className="space-y-2 text-sm">
-                <InfoRow label="CV" value={proposal.cv_submitted} />
-                <InfoRow label="Sample Chapter" value={proposal.sample_chapter_submitted} />
-                <InfoRow label="TOC" value={proposal.toc_submitted} />
-                <InfoRow label="Permissions" value={proposal.permissions_required} />
-                <InfoRow label="Docs" value={proposal.permissions_docs_submitted} />
               </CardContent>
             </Card>
           </div>
