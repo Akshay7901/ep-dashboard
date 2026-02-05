@@ -40,21 +40,22 @@
    };
  };
  
- // Peer Reviewers API
- export const peerReviewersApi = {
-   list: async (): Promise<PeerReviewer[]> => {
-     const { data, error } = await supabase.functions.invoke('proposals-proxy/peer-reviewers', {
-       method: 'GET',
-       headers: buildHeaders(),
-     });
-     
-     if (error) throw error;
-   // Handle various response structures from the API
-   if (Array.isArray(data)) return data;
-   if (data?.reviewers && Array.isArray(data.reviewers)) return data.reviewers;
-   if (data?.data && Array.isArray(data.data)) return data.data;
-   return [];
-   },
+// Peer Reviewers API
+export const peerReviewersApi = {
+  list: async (): Promise<PeerReviewer[]> => {
+    const { data, error } = await supabase.functions.invoke('proposals-proxy/peer-reviewers', {
+      method: 'GET',
+      headers: buildHeaders(),
+    });
+    
+    if (error) throw error;
+    // Handle various response structures from the API
+    if (Array.isArray(data)) return data;
+    if (data?.peer_reviewers && Array.isArray(data.peer_reviewers)) return data.peer_reviewers;
+    if (data?.reviewers && Array.isArray(data.reviewers)) return data.reviewers;
+    if (data?.data && Array.isArray(data.data)) return data.data;
+    return [];
+  },
  
    create: async (reviewer: { email: string; name: string }): Promise<PeerReviewer> => {
      const { data, error } = await supabase.functions.invoke('proposals-proxy/peer-reviewers', {

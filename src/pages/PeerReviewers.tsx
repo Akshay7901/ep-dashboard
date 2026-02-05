@@ -128,7 +128,7 @@ const PeerReviewers: React.FC = () => {
               <Card key={reviewer.id} className="border">
                 <CardContent className="flex items-center justify-between py-4 px-6">
                   <div className="space-y-1">
-                    <p className="font-medium text-foreground">{reviewer.name}</p>
+                    <p className="font-medium text-foreground">{reviewer.name || reviewer.email.split('@')[0]}</p>
                     <p className="text-sm text-muted-foreground">{reviewer.email}</p>
                     {(reviewer as any).expertise && (
                       <p className="text-sm text-muted-foreground">{(reviewer as any).expertise}</p>
