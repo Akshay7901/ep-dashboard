@@ -125,9 +125,31 @@ const ProposalDetails: React.FC = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button className="bg-[#3d5a47] hover:bg-emerald-700">Accept for Review</Button>
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => updateStatus.mutate({ 
+                id: localId || id || '', 
+                status: 'under_review', 
+                previousStatus: proposal.status,
+                ticketNumber: proposal.ticket_number 
+              })}
+              disabled={updateStatus.isPending || proposal.status !== 'submitted'}
+            >
+              Accept for Review
+            </Button>
 
-            <Button variant="outline">Decline</Button>
+            <Button 
+              variant="outline"
+              onClick={() => updateStatus.mutate({ 
+                id: localId || id || '', 
+                status: 'rejected', 
+                previousStatus: proposal.status,
+                ticketNumber: proposal.ticket_number 
+              })}
+              disabled={updateStatus.isPending || proposal.status !== 'submitted'}
+            >
+              Decline
+            </Button>
           </div>
         </div>
 
