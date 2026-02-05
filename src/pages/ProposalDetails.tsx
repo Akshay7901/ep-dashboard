@@ -14,6 +14,7 @@ import FinalReviewSummary from "@/components/proposals/FinalReviewSummary";
 import CommentsSection from "@/components/proposals/CommentsSection";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ProposalDetailsSidebar from "@/components/proposals/ProposalDetailsSidebar";
+import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,9 @@ const ProposalDetails: React.FC = () => {
     name: string;
     type: "pdf" | "word";
   } | null>(null);
+
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'accept' | 'decline' | null>(null);
 
   /* ---------------- Data ---------------- */
 
@@ -127,19 +131,10 @@ const ProposalDetails: React.FC = () => {
           <div className="flex gap-3">
             <Button 
               className="bg-primary hover:bg-primary/90"
-              onClick={() => updateStatus.mutate({ 
-                id: localId || id || '', 
-                status: 'under_review', 
-                previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number || id,
-                proposalData: {
-                  id: localId || undefined,
-                  name: proposal.name,
-                  author_name: proposal.author_name,
-                  author_email: proposal.author_email,
-                  ticket_number: proposal.ticket_number || id,
-                }
-              })}
+              onClick={() => {
+                setPendingAction('accept');
+                setIsAssignDialogOpen(true);
+              }}
               disabled={updateStatus.isPending || proposal.status !== 'submitted'}
             >
               Accept for Review
@@ -450,6 +445,42 @@ const ProposalDetails: React.FC = () => {
         documentUrl={documentPreview?.url || ""}
         fileName={documentPreview?.name || ""}
         fileType={documentPreview?.type || "pdf"}
+      />
+
+      {/* Assign Reviewers Dialog */}
+      <AssignReviewersDialog
+        open={isAssignDialogOpen}
+        onOpenChange={(open) => {
+          setIsAssignDialogOpen(open);
+          if (!open) setPendingAction(null);
+        }}
+        onAssign={(reviewerIds) => {
+          // First update status to under_review
+          updateStatus.mutate(
+            { 
+              id: localId || id || '', 
+              status: 'under_review', 
+              previousStatus: proposal.status,
+              ticketNumber: proposal.ticket_number || id,
+              proposalData: {
+                id: localId || undefined,
+                name: proposal.name,
+                author_name: proposal.author_name,
+                author_email: proposal.author_email,
+                ticket_number: proposal.ticket_number || id,
+              }
+            },
+            {
+              onSuccess: () => {
+                // TODO: Also assign the selected reviewers to this proposal
+                // For now, just close the dialog
+                setIsAssignDialogOpen(false);
+                setPendingAction(null);
+              }
+            }
+          );
+        }}
+        isLoading={updateStatus.isPending}
       />
     </DashboardLayout>
   );
