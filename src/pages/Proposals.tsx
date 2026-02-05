@@ -138,7 +138,11 @@ const Proposals: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Proposal Intake</h1>
-          <Button variant="outline" className="gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={() => navigate('/peer-reviewers')}
+          >
             <Users className="h-4 w-4" />
             Peer Reviewers
           </Button>
