@@ -181,7 +181,7 @@ const ProposalDetails: React.FC = () => {
 
             <Accordion type="multiple" className="space-y-2">
               <AccordionItem value="blurb">
-                <AccordionTrigger>Blurb</AccordionTrigger>
+                <AccordionTrigger>Short Description</AccordionTrigger>
                 <AccordionContent>{proposal.short_description}</AccordionContent>
               </AccordionItem>
 
