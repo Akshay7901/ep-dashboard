@@ -285,6 +285,68 @@ const ProposalDetails: React.FC = () => {
             )}
           </TabsContent>
 
+          {/* ---------------- MARKET ---------------- */}
+
+          <TabsContent value="market" className="space-y-8">
+            {/* Keywords */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Keywords</h3>
+              <div className="flex flex-wrap gap-2">
+                {proposal.keywords ? (
+                  proposal.keywords.split(",").map((keyword: string, i: number) => (
+                    <span
+                      key={i}
+                      className="bg-muted text-foreground text-sm px-3 py-1 rounded-md border"
+                    >
+                      {keyword.trim()}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No keywords specified</p>
+                )}
+              </div>
+            </div>
+
+            {/* Accordion sections */}
+            <Accordion type="multiple" className="space-y-2">
+              <AccordionItem value="similar-works" className="border-b">
+                <AccordionTrigger className="text-base font-medium">Similar Works</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm whitespace-pre-line">
+                    {proposal.similar_works || proposal.competing_books || "No similar works listed"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="societies" className="border-b">
+                <AccordionTrigger className="text-base font-medium">Societies, Research Bodies</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm whitespace-pre-line">
+                    {proposal.societies_research_bodies || proposal.professional_societies || "No societies listed"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="referees" className="border-b">
+                <AccordionTrigger className="text-base font-medium">Referees & Reviewers</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm whitespace-pre-line">
+                    {proposal.referees_reviewers || proposal.suggested_reviewers || "No referees specified"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="additional-info" className="border-b">
+                <AccordionTrigger className="text-base font-medium">Additional info</AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm whitespace-pre-line">
+                    {proposal.additional_info || "No additional information"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </TabsContent>
+
           {/* ---------------- DOCUMENTS ---------------- */}
 
           <TabsContent value="documents">
