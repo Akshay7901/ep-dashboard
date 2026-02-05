@@ -141,14 +141,26 @@ const Proposals: React.FC = () => {
   }
   return <DashboardLayout title="Proposals">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Proposal Intake</h1>
-          <Button variant="outline" className="gap-2">
-            <Users className="h-4 w-4" />
-            Peer Reviewers
-          </Button>
-        </div>
+  {/* Header */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <img
+        src="/logo.png"   // update path if needed
+        alt="Proposal Intake Logo"
+        className="h-8 w-auto"
+      />
+      <h1 className="text-2xl font-bold text-foreground">
+        Proposal Intake
+      </h1>
+    </div>
+
+    <Button variant="outline" className="gap-2">
+      <Users className="h-4 w-4" />
+      Peer Reviewers
+    </Button>
+  </div>
+</div>
+
 
         {/* Status Summary Chips */}
         <div className="flex flex-wrap items-center gap-3">
