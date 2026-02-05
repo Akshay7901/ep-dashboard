@@ -15,10 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProposal, useUpdateProposalStatus, useProposalComments, useWorkflowLogs } from '@/hooks/useProposals';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar, User, Mail, Loader2, Lock, FileText, Hash, RefreshCw, FileCheck, Download, ClipboardCheck, AlertTriangle, MapPin, Link, Info, Edit, UserPlus } from 'lucide-react';
- import { Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Mail, Loader2, Lock, FileText, Hash, RefreshCw, FileCheck, Download, ClipboardCheck, AlertTriangle, MapPin, Link, Info, Edit, UserPlus, Eye } from 'lucide-react';
 import { useProposalActions } from '@/hooks/useProposalActions';
- import PdfPreviewDialog from '@/components/proposals/PdfPreviewDialog';
+import DocumentPreviewDialog from '@/components/proposals/PdfPreviewDialog';
 const ProposalDetails: React.FC = () => {
   const {
     id
@@ -32,7 +31,7 @@ const ProposalDetails: React.FC = () => {
   } = useAuth();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-   const [pdfPreview, setPdfPreview] = useState<{ url: string; name: string } | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: 'pdf' | 'word' } | null>(null);
   const {
     data: proposal,
     isLoading,
@@ -253,35 +252,42 @@ const ProposalDetails: React.FC = () => {
                     {proposal.file_uploads.split(',').map((url, index) => {
                   const trimmedUrl = url.trim();
                   const fileName = trimmedUrl.split('/').pop() || `File ${index + 1}`;
-                   const isPdf = trimmedUrl.toLowerCase().endsWith('.pdf');
-                   const displayName = decodeURIComponent(fileName.replace(/_/g, ' ').replace(/\.docx$|\.pdf$|\.doc$/i, ''));
-                   return <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm">
+                  const lowerUrl = trimmedUrl.toLowerCase();
+                  const isPdf = lowerUrl.endsWith('.pdf');
+                  const isWord = lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx');
+                  const isPreviewable = isPdf || isWord;
+                  const displayName = decodeURIComponent(fileName.replace(/_/g, ' ').replace(/\.docx$|\.pdf$|\.doc$/i, ''));
+                  return <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm">
                           <FileText className="h-4 w-4 text-primary flex-shrink-0" />
                           <span className="text-foreground truncate flex-1">
-                             {displayName}
+                            {displayName}
                           </span>
-                           {isPdf && (
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               className="h-8 px-2"
-                               onClick={() => setPdfPreview({ url: trimmedUrl, name: displayName })}
-                             >
-                               <Eye className="h-4 w-4 mr-1" />
-                               Preview
-                             </Button>
-                           )}
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className="h-8 px-2"
-                             asChild
-                           >
-                             <a href={trimmedUrl} target="_blank" rel="noopener noreferrer">
-                               <Download className="h-4 w-4" />
-                             </a>
-                           </Button>
-                         </div>;
+                          {isPreviewable && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={() => setDocumentPreview({ 
+                                url: trimmedUrl, 
+                                name: displayName,
+                                type: isPdf ? 'pdf' : 'word'
+                              })}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Preview
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2"
+                            asChild
+                          >
+                            <a href={trimmedUrl} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>;
                 })}
                   </div>
                 </CardContent>
@@ -616,13 +622,14 @@ const ProposalDetails: React.FC = () => {
           <StatusUpdateDialog open={showStatusDialog} onOpenChange={setShowStatusDialog} currentStatus={proposal.status} onUpdate={handleExternalStatusUpdate} isLoading={isUpdatingExternalStatus} />
           <AssignReviewersDialog open={showAssignDialog} onOpenChange={setShowAssignDialog} onAssign={handleAssign} isLoading={isAssigning} />
         </>}
-       {/* PDF Preview Dialog */}
-       <PdfPreviewDialog
-         open={!!pdfPreview}
-         onOpenChange={(open) => !open && setPdfPreview(null)}
-         pdfUrl={pdfPreview?.url || ''}
-         fileName={pdfPreview?.name || ''}
-       />
+      {/* Document Preview Dialog */}
+      <DocumentPreviewDialog
+        open={!!documentPreview}
+        onOpenChange={(open) => !open && setDocumentPreview(null)}
+        documentUrl={documentPreview?.url || ''}
+        fileName={documentPreview?.name || ''}
+        fileType={documentPreview?.type || 'pdf'}
+      />
     </DashboardLayout>;
 };
 export default ProposalDetails;

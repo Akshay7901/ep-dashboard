@@ -1,4 +1,4 @@
- import React from 'react';
+import React, { useState } from 'react';
  import {
    Dialog,
    DialogContent,
@@ -6,21 +6,33 @@
    DialogTitle,
  } from '@/components/ui/dialog';
  import { Button } from '@/components/ui/button';
- import { Download, ExternalLink, X } from 'lucide-react';
+import { Download, ExternalLink, Loader2 } from 'lucide-react';
  
- interface PdfPreviewDialogProps {
+interface DocumentPreviewDialogProps {
    open: boolean;
    onOpenChange: (open: boolean) => void;
-   pdfUrl: string;
+  documentUrl: string;
    fileName: string;
+  fileType: 'pdf' | 'word';
  }
  
- const PdfPreviewDialog: React.FC<PdfPreviewDialogProps> = ({
+const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
    open,
    onOpenChange,
-   pdfUrl,
+  documentUrl,
    fileName,
+  fileType,
  }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  // For Word docs, use Google Docs Viewer; for PDFs, embed directly
+  const getPreviewUrl = () => {
+    if (fileType === 'word') {
+      return `https://docs.google.com/gview?url=${encodeURIComponent(documentUrl)}&embedded=true`;
+    }
+    return `${documentUrl}#toolbar=1&navpanes=0`;
+  };
+
    return (
      <Dialog open={open} onOpenChange={onOpenChange}>
        <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0">
@@ -35,7 +47,7 @@
                  size="sm"
                  asChild
                >
-                 <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                <a href={documentUrl} target="_blank" rel="noopener noreferrer">
                    <ExternalLink className="h-4 w-4 mr-2" />
                    Open in New Tab
                  </a>
@@ -45,7 +57,7 @@
                  size="sm"
                  asChild
                >
-                 <a href={pdfUrl} download={fileName}>
+                <a href={documentUrl} download={fileName}>
                    <Download className="h-4 w-4 mr-2" />
                    Download
                  </a>
@@ -53,11 +65,17 @@
              </div>
            </div>
          </DialogHeader>
-         <div className="flex-1 overflow-hidden bg-muted">
+        <div className="flex-1 overflow-hidden bg-muted relative">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
            <iframe
-             src={`${pdfUrl}#toolbar=1&navpanes=0`}
-             className="w-full h-full border-0"
+            src={getPreviewUrl()}
+            className={`w-full h-full border-0 ${isLoading ? 'invisible' : 'visible'}`}
              title={`Preview of ${fileName}`}
+            onLoad={() => setIsLoading(false)}
            />
          </div>
        </DialogContent>
@@ -65,4 +83,4 @@
    );
  };
  
- export default PdfPreviewDialog;
+export default DocumentPreviewDialog;
