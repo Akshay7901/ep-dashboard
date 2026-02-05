@@ -1,4 +1,5 @@
-// FULL REDESIGN WITH ALL CONTENT + OVERVIEW DROPDOWN SECTIONS
+// FULL REDESIGN WITH ALL CONTENT + OVERVIEW + RIGHT PANEL DROPDOWNS
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -26,6 +27,7 @@ import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* ---------------- Helper ---------------- */
+
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex flex-col gap-1 text-sm">
     <span className="text-muted-foreground">{label}</span>
@@ -34,6 +36,7 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 );
 
 /* ---------------- Main ---------------- */
+
 const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -118,7 +121,7 @@ const ProposalDetails: React.FC = () => {
         </Button>
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">
               {proposal.ticket_number} • Rev {proposal.current_revision}
@@ -129,11 +132,6 @@ const ProposalDetails: React.FC = () => {
             <div className="mt-2">
               <ProposalStatusBadge status={proposal.status} />
             </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline">Assign</Button>
-            <Button>Update Status</Button>
           </div>
         </div>
 
@@ -161,69 +159,55 @@ const ProposalDetails: React.FC = () => {
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
-              {/* ---------------- Overview (Dropdown) ---------------- */}
+              {/* ---------------- Overview ---------------- */}
               <TabsContent value="overview">
-                <Accordion type="multiple" className="w-full">
+                <Accordion type="multiple">
                   {proposal.short_description && (
                     <AccordionItem value="short">
                       <AccordionTrigger>Short Description</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.short_description}</p>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.short_description}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.detailed_description && (
                     <AccordionItem value="detailed">
                       <AccordionTrigger>Detailed Description</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.detailed_description}</p>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.detailed_description}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.table_of_contents && (
                     <AccordionItem value="toc">
                       <AccordionTrigger>Table of Contents</AccordionTrigger>
-                      <AccordionContent>
-                        <pre className="text-xs whitespace-pre-wrap">{proposal.table_of_contents}</pre>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.table_of_contents}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.marketing_info && (
                     <AccordionItem value="marketing">
                       <AccordionTrigger>Marketing Information</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.marketing_info}</p>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.marketing_info}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.additional_info && (
                     <AccordionItem value="additional">
                       <AccordionTrigger>Additional Information</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.additional_info}</p>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.additional_info}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.biography && (
-                    <AccordionItem value="biography">
+                    <AccordionItem value="bio">
                       <AccordionTrigger>Author Biography</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.biography}</p>
-                      </AccordionContent>
+                      <AccordionContent>{proposal.biography}</AccordionContent>
                     </AccordionItem>
                   )}
 
                   {proposal.referees_reviewers && (
-                    <AccordionItem value="referees">
-                      <AccordionTrigger>Suggested Referees/Reviewers</AccordionTrigger>
-                      <AccordionContent>
-                        <p className="text-sm whitespace-pre-line">{proposal.referees_reviewers}</p>
-                      </AccordionContent>
+                    <AccordionItem value="ref">
+                      <AccordionTrigger>Suggested Reviewers</AccordionTrigger>
+                      <AccordionContent>{proposal.referees_reviewers}</AccordionContent>
                     </AccordionItem>
                   )}
                 </Accordion>
@@ -237,48 +221,45 @@ const ProposalDetails: React.FC = () => {
                   </CardHeader>
 
                   <CardContent>
-                    <div className="divide-y border rounded-lg">
-                      {files.length === 0 && <p className="text-sm text-muted-foreground p-4">No files uploaded</p>}
+                    {files.map((url, i) => {
+                      const name = url.split("/").pop() || "File";
 
-                      {files.map((url, i) => {
-                        const name = url.split("/").pop() || "File";
-                        const isPdf = url.toLowerCase().endsWith(".pdf");
-                        const isWord = url.toLowerCase().endsWith(".doc") || url.toLowerCase().endsWith(".docx");
+                      const isPdf = url.toLowerCase().endsWith(".pdf");
+                      const isWord = url.toLowerCase().endsWith(".doc") || url.toLowerCase().endsWith(".docx");
 
-                        return (
-                          <div key={i} className="flex items-center justify-between p-3 hover:bg-muted">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-4 w-4" />
-                              <span className="text-sm truncate">{decodeURIComponent(name)}</span>
-                            </div>
-
-                            <div className="flex gap-2">
-                              {(isPdf || isWord) && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() =>
-                                    setDocumentPreview({
-                                      url,
-                                      name,
-                                      type: isPdf ? "pdf" : "word",
-                                    })
-                                  }
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-
-                              <Button size="sm" variant="ghost" asChild>
-                                <a href={url} target="_blank" rel="noreferrer">
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </div>
+                      return (
+                        <div key={i} className="flex justify-between items-center p-3 border-b">
+                          <div className="flex gap-2 items-center">
+                            <FileText className="h-4 w-4" />
+                            {decodeURIComponent(name)}
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          <div className="flex gap-2">
+                            {(isPdf || isWord) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setDocumentPreview({
+                                    url,
+                                    name,
+                                    type: isPdf ? "pdf" : "word",
+                                  })
+                                }
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            <Button size="sm" variant="ghost" asChild>
+                              <a href={url} target="_blank" rel="noreferrer">
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -303,19 +284,13 @@ const ProposalDetails: React.FC = () => {
                     <CardTitle>Workflow History</CardTitle>
                   </CardHeader>
 
-                  <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {logs.length === 0 && <p className="text-sm text-muted-foreground">No activity yet</p>}
-
+                  <CardContent>
                     {logs.map((log) => (
-                      <div key={log.id} className="flex gap-3 text-sm">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2" />
-
-                        <div>
-                          <p>{log.action}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
-                          </p>
-                        </div>
+                      <div key={log.id} className="mb-3 text-sm">
+                        <p>{log.action}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
+                        </p>
                       </div>
                     ))}
                   </CardContent>
@@ -324,50 +299,60 @@ const ProposalDetails: React.FC = () => {
             </Tabs>
           </div>
 
-          {/* ---------------- Right ---------------- */}
-          <div className="space-y-6">
+          {/* ---------------- Right Panel (Dropdown) ---------------- */}
+          <div>
             <Card className="sticky top-24">
               <CardHeader>
-                <CardTitle>Author & Book Info</CardTitle>
+                <CardTitle>Information</CardTitle>
               </CardHeader>
 
-              <CardContent className="space-y-4">
-                <InfoRow label="Author" value={proposal.corresponding_author_name || proposal.author_name} />
-                <InfoRow label="Email" value={proposal.author_email} />
-                {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && (
-                  <InfoRow label="Secondary Email" value={proposal.secondary_email} />
-                )}
-                <InfoRow label="Job Title" value={proposal.job_title} />
-                <InfoRow label="Institution" value={proposal.institution} />
-                <InfoRow label="Address" value={proposal.address} />
-                
-                <div className="border-t pt-4 mt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-3">Book Details</p>
-                </div>
-                
-                <InfoRow label="Sub Title" value={proposal.sub_title} />
-                <InfoRow label="Word Count" value={proposal.word_count} />
-                <InfoRow label="Book Type" value={proposal.book_type} />
-                <InfoRow label="Keywords" value={proposal.keywords} />
-                <InfoRow label="Figures/Tables" value={proposal.figures_tables_count} />
-                <InfoRow label="Expected Completion" value={proposal.expected_completion_date} />
-                <InfoRow label="Co-Authors/Editors" value={proposal.co_authors_editors} />
-                
-                <div className="border-t pt-4 mt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-3">Submission Status</p>
-                </div>
-                
-                <InfoRow label="Status" value={proposal.status} />
-                <InfoRow label="Submitted" value={format(new Date(proposal.created_at), "MMM d, yyyy")} />
-                {proposal.submitted_date && (
-                  <InfoRow label="Submitted Date" value={proposal.submitted_date} />
-                )}
-                <InfoRow label="CV Submitted" value={proposal.cv_submitted} />
-                <InfoRow label="Sample Chapter" value={proposal.sample_chapter_submitted} />
-                <InfoRow label="TOC Submitted" value={proposal.toc_submitted} />
-                <InfoRow label="Permissions Required" value={proposal.permissions_required} />
-                <InfoRow label="Permissions Docs" value={proposal.permissions_docs_submitted} />
-                <InfoRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
+              <CardContent>
+                <Accordion type="multiple">
+                  {/* Author */}
+                  <AccordionItem value="author">
+                    <AccordionTrigger>Author & Contact Info</AccordionTrigger>
+
+                    <AccordionContent className="space-y-3">
+                      <InfoRow label="Author" value={proposal.author_name} />
+                      <InfoRow label="Email" value={proposal.author_email} />
+                      <InfoRow label="Secondary Email" value={proposal.secondary_email} />
+                      <InfoRow label="Job Title" value={proposal.job_title} />
+                      <InfoRow label="Institution" value={proposal.institution} />
+                      <InfoRow label="Address" value={proposal.address} />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Book */}
+                  <AccordionItem value="book">
+                    <AccordionTrigger>Book Details</AccordionTrigger>
+
+                    <AccordionContent className="space-y-3">
+                      <InfoRow label="Subtitle" value={proposal.sub_title} />
+                      <InfoRow label="Word Count" value={proposal.word_count} />
+                      <InfoRow label="Book Type" value={proposal.book_type} />
+                      <InfoRow label="Keywords" value={proposal.keywords} />
+                      <InfoRow label="Figures/Tables" value={proposal.figures_tables_count} />
+                      <InfoRow label="Expected Completion" value={proposal.expected_completion_date} />
+                      <InfoRow label="Co-Authors" value={proposal.co_authors_editors} />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Submission */}
+                  <AccordionItem value="submission">
+                    <AccordionTrigger>Submission Status</AccordionTrigger>
+
+                    <AccordionContent className="space-y-3">
+                      <InfoRow label="Status" value={proposal.status} />
+                      <InfoRow label="Submitted" value={format(new Date(proposal.created_at), "MMM d, yyyy")} />
+                      <InfoRow label="CV Submitted" value={proposal.cv_submitted} />
+                      <InfoRow label="Sample Chapter" value={proposal.sample_chapter_submitted} />
+                      <InfoRow label="TOC Submitted" value={proposal.toc_submitted} />
+                      <InfoRow label="Permissions Required" value={proposal.permissions_required} />
+                      <InfoRow label="Permissions Docs" value={proposal.permissions_docs_submitted} />
+                      <InfoRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </CardContent>
             </Card>
           </div>
