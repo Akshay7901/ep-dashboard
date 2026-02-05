@@ -108,7 +108,7 @@ const ProposalDetails: React.FC = () => {
 
         <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          Back to Home
         </Button>
 
         {/* Header */}
