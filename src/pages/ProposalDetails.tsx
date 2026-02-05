@@ -14,7 +14,6 @@ import FinalReviewSummary from "@/components/proposals/FinalReviewSummary";
 import CommentsSection from "@/components/proposals/CommentsSection";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ProposalDetailsSidebar from "@/components/proposals/ProposalDetailsSidebar";
-import SelectReviewerDialog from "@/components/proposals/SelectReviewerDialog";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,8 +28,6 @@ import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalSta
 
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { assignmentsApi } from "@/lib/proposalsApi";
 
 /* ---------------- Helpers ---------------- */
 
@@ -53,7 +50,6 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const { isReviewer1, isReviewer2 } = useAuth();
 
@@ -62,9 +58,6 @@ const ProposalDetails: React.FC = () => {
     name: string;
     type: "pdf" | "word";
   } | null>(null);
-  
-  const [showReviewerDialog, setShowReviewerDialog] = useState(false);
-  const [isAssigning, setIsAssigning] = useState(false);
 
   /* ---------------- Data ---------------- */
 
@@ -132,56 +125,11 @@ const ProposalDetails: React.FC = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button 
-              className="bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => setShowReviewerDialog(true)}
-            >
-              Accept for Review
-            </Button>
+            <Button className="bg-[#3d5a47] hover:bg-emerald-700">Accept for Review</Button>
 
             <Button variant="outline">Decline</Button>
           </div>
         </div>
-
-        {/* Select Reviewer Dialog */}
-        <SelectReviewerDialog
-          open={showReviewerDialog}
-          onOpenChange={setShowReviewerDialog}
-          isLoading={isAssigning}
-          onConfirm={async (reviewerId) => {
-            try {
-              setIsAssigning(true);
-              // Assign the reviewer to this proposal
-              await assignmentsApi.assign(proposal.ticket_number || id || '', {
-                reviewer_ids: [reviewerId],
-              });
-              
-              // Update status to under_review
-              await updateStatus.mutateAsync({
-                id: proposal.id,
-                ticketNumber: proposal.ticket_number || id || '',
-                status: 'under_review',
-                previousStatus: proposal.status,
-              });
-              
-              toast({
-                title: 'Reviewer Assigned',
-                description: 'The reviewer has been notified about this proposal.',
-              });
-              
-              setShowReviewerDialog(false);
-              refetch();
-            } catch (error) {
-              toast({
-                title: 'Error',
-                description: 'Failed to assign reviewer. Please try again.',
-                variant: 'destructive',
-              });
-            } finally {
-              setIsAssigning(false);
-            }
-          }}
-        />
 
         {/* Tabs */}
 
