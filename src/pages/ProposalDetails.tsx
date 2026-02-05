@@ -208,6 +208,24 @@ const ProposalDetails: React.FC = () => {
                       </AccordionContent>
                     </AccordionItem>
                   )}
+
+                  {proposal.biography && (
+                    <AccordionItem value="biography">
+                      <AccordionTrigger>Author Biography</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.biography}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
+                  {proposal.referees_reviewers && (
+                    <AccordionItem value="referees">
+                      <AccordionTrigger>Suggested Referees/Reviewers</AccordionTrigger>
+                      <AccordionContent>
+                        <p className="text-sm whitespace-pre-line">{proposal.referees_reviewers}</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
                 </Accordion>
               </TabsContent>
 
@@ -314,15 +332,42 @@ const ProposalDetails: React.FC = () => {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <InfoRow label="Author" value={proposal.author_name} />
+                <InfoRow label="Author" value={proposal.corresponding_author_name || proposal.author_name} />
                 <InfoRow label="Email" value={proposal.author_email} />
+                {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && (
+                  <InfoRow label="Secondary Email" value={proposal.secondary_email} />
+                )}
+                <InfoRow label="Job Title" value={proposal.job_title} />
                 <InfoRow label="Institution" value={proposal.institution} />
+                <InfoRow label="Address" value={proposal.address} />
+                
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-3">Book Details</p>
+                </div>
+                
+                <InfoRow label="Sub Title" value={proposal.sub_title} />
                 <InfoRow label="Word Count" value={proposal.word_count} />
                 <InfoRow label="Book Type" value={proposal.book_type} />
                 <InfoRow label="Keywords" value={proposal.keywords} />
+                <InfoRow label="Figures/Tables" value={proposal.figures_tables_count} />
+                <InfoRow label="Expected Completion" value={proposal.expected_completion_date} />
+                <InfoRow label="Co-Authors/Editors" value={proposal.co_authors_editors} />
+                
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-3">Submission Status</p>
+                </div>
+                
                 <InfoRow label="Status" value={proposal.status} />
-
                 <InfoRow label="Submitted" value={format(new Date(proposal.created_at), "MMM d, yyyy")} />
+                {proposal.submitted_date && (
+                  <InfoRow label="Submitted Date" value={proposal.submitted_date} />
+                )}
+                <InfoRow label="CV Submitted" value={proposal.cv_submitted} />
+                <InfoRow label="Sample Chapter" value={proposal.sample_chapter_submitted} />
+                <InfoRow label="TOC Submitted" value={proposal.toc_submitted} />
+                <InfoRow label="Permissions Required" value={proposal.permissions_required} />
+                <InfoRow label="Permissions Docs" value={proposal.permissions_docs_submitted} />
+                <InfoRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
               </CardContent>
             </Card>
           </div>
