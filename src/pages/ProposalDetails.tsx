@@ -131,7 +131,14 @@ const ProposalDetails: React.FC = () => {
                 id: localId || id || '', 
                 status: 'under_review', 
                 previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number 
+                ticketNumber: proposal.ticket_number || id,
+                proposalData: {
+                  id: localId || undefined,
+                  name: proposal.name,
+                  author_name: proposal.author_name,
+                  author_email: proposal.author_email,
+                  ticket_number: proposal.ticket_number || id,
+                }
               })}
               disabled={updateStatus.isPending || proposal.status !== 'submitted'}
             >
@@ -144,7 +151,14 @@ const ProposalDetails: React.FC = () => {
                 id: localId || id || '', 
                 status: 'rejected', 
                 previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number 
+                ticketNumber: proposal.ticket_number || id,
+                proposalData: {
+                  id: localId || undefined,
+                  name: proposal.name,
+                  author_name: proposal.author_name,
+                  author_email: proposal.author_email,
+                  ticket_number: proposal.ticket_number || id,
+                }
               })}
               disabled={updateStatus.isPending || proposal.status !== 'submitted'}
             >

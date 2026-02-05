@@ -361,60 +361,47 @@ export const useUpdateProposalStatus = () => {
     mutationFn: async ({ 
       id, 
       status, 
-      previousStatus 
+      previousStatus,
+      ticketNumber,
+      proposalData,
     }: { 
       id: string; 
       status: ProposalStatus; 
       previousStatus: ProposalStatus;
-     ticketNumber?: string;
-   }) => {
-     let localId = id;
-     
-     // If the ID is not a UUID (it's a ticket number), we need to ensure a local record exists
-     if (!isUUID(id)) {
-       // Fetch the full proposal from API to create local record
-       const apiProposal = await fetchProposalByTicket(id);
-       localId = await ensureLocalProposal(apiProposal);
-     }
-
-      const { data: { user } } = await supabase.auth.getUser();
+      ticketNumber?: string;
+      proposalData?: Partial<Proposal>;
+    }) => {
+      // Get auth token
+      const token = localStorage.getItem('auth_token');
       
-      // Update proposal status
-      const { error: updateError } = await supabase
-        .from('proposals')
-        .update({ 
+      // Use edge function to bypass RLS (since we use external API auth)
+      const response = await supabase.functions.invoke('proposal-workflow', {
+        body: {
+          action: 'updateStatus',
+          proposalData: proposalData || { id },
           status,
-          ...(status === 'locked' ? { 
-            finalised_at: new Date().toISOString(),
-            finalised_by: user?.id 
-          } : {})
-        })
-       .eq('id', localId);
+          previousStatus,
+          ticketNumber: ticketNumber || id,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
 
-      if (updateError) throw updateError;
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to update status');
+      }
 
-      // Log the workflow action
-      const { error: logError } = await supabase
-        .from('workflow_logs')
-        .insert({
-         proposal_id: localId,
-          user_id: user?.id,
-          action: `Status changed from ${previousStatus} to ${status}`,
-          previous_status: previousStatus,
-          new_status: status,
-        });
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
-      if (logError) console.error('Error logging workflow:', logError);
-     
-     return { localId };
+      return { localId: response.data?.id };
     },
-   onSuccess: (data) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal'] });
-     // If we synced a new local ID, also invalidate by that
-     if (data?.localId) {
-       queryClient.invalidateQueries({ queryKey: ['proposal', data.localId] });
-     }
+      if (data?.localId) {
+        queryClient.invalidateQueries({ queryKey: ['proposal', data.localId] });
+      }
       toast({
         title: 'Status updated',
         description: 'Proposal status has been updated successfully.',
