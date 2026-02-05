@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
@@ -7,6 +7,9 @@ import AssessmentForm from '@/components/proposals/AssessmentForm';
 import Reviewer1CommentForm from '@/components/proposals/Reviewer1CommentForm';
 import ReviewCommentsDisplay from '@/components/proposals/ReviewCommentsDisplay';
 import FinalReviewSummary from '@/components/proposals/FinalReviewSummary';
+import CommentsSection from '@/components/proposals/CommentsSection';
+import StatusUpdateDialog from '@/components/proposals/StatusUpdateDialog';
+import AssignReviewersDialog from '@/components/proposals/AssignReviewersDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProposal, useUpdateProposalStatus, useProposalComments, useWorkflowLogs } from '@/hooks/useProposals';
@@ -29,12 +32,17 @@ import {
   MapPin,
   Link,
   Info,
+  Edit,
+  UserPlus,
 } from 'lucide-react';
+import { useProposalActions } from '@/hooks/useProposalActions';
 
 const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isReviewer1, isReviewer2 } = useAuth();
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
   
   const {
     data: proposal,
@@ -49,6 +57,14 @@ const ProposalDetails: React.FC = () => {
   const { data: comments = [] } = useProposalComments(localProposalId);
   const { data: logs = [] } = useWorkflowLogs(localProposalId);
   const updateStatus = useUpdateProposalStatus();
+  
+  // API actions for external EthicsPress API
+  const {
+    updateStatus: updateExternalStatus,
+    isUpdatingStatus: isUpdatingExternalStatus,
+    assignReviewers,
+    isAssigning,
+  } = useProposalActions(proposal?.ticket_number || id);
 
   const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
     if (!proposal) return;
@@ -56,6 +72,18 @@ const ProposalDetails: React.FC = () => {
       id: proposal.id, // This is now always a UUID
       status: newStatus,
       previousStatus: proposal.status,
+    });
+  };
+
+  const handleExternalStatusUpdate = (data: { status: string; notes?: string }) => {
+    updateExternalStatus(data, {
+      onSuccess: () => setShowStatusDialog(false),
+    });
+  };
+
+  const handleAssign = (reviewerIds: string[]) => {
+    assignReviewers(reviewerIds, {
+      onSuccess: () => setShowAssignDialog(false),
     });
   };
 
@@ -161,6 +189,26 @@ const ProposalDetails: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Action buttons for Reviewer 1 */}
+        {isReviewer1 && !isLocked && proposal.ticket_number && (
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowStatusDialog(true)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Update Status
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowAssignDialog(true)}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assign Reviewers
+            </Button>
+          </div>
+        )}
 
         {/* Reviewer Actions - Role-based workflow steps */}
         <ReviewerActions
@@ -390,6 +438,11 @@ const ProposalDetails: React.FC = () => {
                   </p>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Comments Section - External API */}
+            {proposal.ticket_number && (
+              <CommentsSection ticketNumber={proposal.ticket_number} />
             )}
 
             {/* Workflow History */}
@@ -672,6 +725,25 @@ const ProposalDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      {proposal?.ticket_number && (
+        <>
+          <StatusUpdateDialog
+            open={showStatusDialog}
+            onOpenChange={setShowStatusDialog}
+            currentStatus={proposal.status}
+            onUpdate={handleExternalStatusUpdate}
+            isLoading={isUpdatingExternalStatus}
+          />
+          <AssignReviewersDialog
+            open={showAssignDialog}
+            onOpenChange={setShowAssignDialog}
+            onAssign={handleAssign}
+            isLoading={isAssigning}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };
