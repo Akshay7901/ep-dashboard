@@ -15,107 +15,85 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProposal, useUpdateProposalStatus, useProposalComments, useWorkflowLogs } from '@/hooks/useProposals';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import {
-  ArrowLeft,
-  Calendar,
-  User,
-  Mail,
-  Loader2,
-  Lock,
-  FileText,
-  Hash,
-  RefreshCw,
-  FileCheck,
-  Download,
-  ClipboardCheck,
-  AlertTriangle,
-  MapPin,
-  Link,
-  Info,
-  Edit,
-  UserPlus,
-} from 'lucide-react';
+import { ArrowLeft, Calendar, User, Mail, Loader2, Lock, FileText, Hash, RefreshCw, FileCheck, Download, ClipboardCheck, AlertTriangle, MapPin, Link, Info, Edit, UserPlus } from 'lucide-react';
 import { useProposalActions } from '@/hooks/useProposalActions';
-
 const ProposalDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
-  const { isReviewer1, isReviewer2 } = useAuth();
+  const {
+    isReviewer1,
+    isReviewer2
+  } = useAuth();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  
   const {
     data: proposal,
     isLoading,
     error,
     refetch,
-    isFetching,
+    isFetching
   } = useProposal(id || '');
-  
+
   // Use proposal's local ID for comments and logs (synced proposals have UUID)
   const localProposalId = proposal?.id || '';
-  const { data: comments = [] } = useProposalComments(localProposalId);
-  const { data: logs = [] } = useWorkflowLogs(localProposalId);
+  const {
+    data: comments = []
+  } = useProposalComments(localProposalId);
+  const {
+    data: logs = []
+  } = useWorkflowLogs(localProposalId);
   const updateStatus = useUpdateProposalStatus();
-  
+
   // API actions for external EthicsPress API
   const {
     updateStatus: updateExternalStatus,
     isUpdatingStatus: isUpdatingExternalStatus,
     assignReviewers,
-    isAssigning,
+    isAssigning
   } = useProposalActions(proposal?.ticket_number || id);
-
   const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
     if (!proposal) return;
-   updateStatus.mutate(
-     {
-       id: proposal.id,
-       status: newStatus,
-       previousStatus: proposal.status,
-     },
-     {
-       onSuccess: () => {
-         // Refetch to get updated data with local ID
-         refetch();
-       },
-     }
-   );
-  };
-
-  const handleExternalStatusUpdate = (data: { status: string; notes?: string }) => {
-    updateExternalStatus(data, {
-      onSuccess: () => setShowStatusDialog(false),
+    updateStatus.mutate({
+      id: proposal.id,
+      status: newStatus,
+      previousStatus: proposal.status
+    }, {
+      onSuccess: () => {
+        // Refetch to get updated data with local ID
+        refetch();
+      }
     });
   };
-
+  const handleExternalStatusUpdate = (data: {
+    status: string;
+    notes?: string;
+  }) => {
+    updateExternalStatus(data, {
+      onSuccess: () => setShowStatusDialog(false)
+    });
+  };
   const handleAssign = (reviewerIds: string[]) => {
     assignReviewers(reviewerIds, {
-      onSuccess: () => setShowAssignDialog(false),
+      onSuccess: () => setShowAssignDialog(false)
     });
   };
 
   // Check if Reviewer 2 has submitted comments
   const hasReviewer2Comments = comments.some(c => c.review_form_data?.submittedForAuthorization);
-
   if (isLoading) {
-    return (
-      <DashboardLayout title="Proposal Details">
+    return <DashboardLayout title="Proposal Details">
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
   if (error || !proposal) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : 'Failed to load proposal details.';
-
-    return (
-      <DashboardLayout title="Proposal Details">
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load proposal details.';
+    return <DashboardLayout title="Proposal Details">
         <div className="text-center py-12 space-y-4">
           <p className="text-destructive">Unable to load proposal details</p>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto break-words">
@@ -132,19 +110,14 @@ const ProposalDetails: React.FC = () => {
             </Button>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
   const isLocked = proposal.status === 'locked';
   const isPartialData = (proposal as any)?._isPartialData === true;
-
-  return (
-    <DashboardLayout title="Proposal Details">
+  return <DashboardLayout title="Proposal Details">
       <div className="space-y-6">
         {/* Partial data warning banner */}
-        {isPartialData && (
-          <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+        {isPartialData && <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-lg">
             <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">
@@ -154,24 +127,13 @@ const ProposalDetails: React.FC = () => {
                 The external API detail endpoint is temporarily unavailable. Showing basic proposal information only.
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="flex-shrink-0"
-            >
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="flex-shrink-0">
               <RefreshCw className={"h-4 w-4" + (isFetching ? ' animate-spin' : '')} />
             </Button>
-          </div>
-        )}
+          </div>}
 
         {/* Back button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/proposals')}
-          className="text-muted-foreground hover:text-foreground -ml-3"
-        >
+        <Button variant="ghost" onClick={() => navigate('/proposals')} className="text-muted-foreground hover:text-foreground -ml-3">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Proposals
         </Button>
@@ -180,16 +142,12 @@ const ProposalDetails: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              {proposal.ticket_number && (
-                <span className="text-sm font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+              {proposal.ticket_number && <span className="text-sm font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   {proposal.ticket_number}
-                </span>
-              )}
-              {proposal.current_revision && (
-                <span className="text-xs text-muted-foreground">
+                </span>}
+              {proposal.current_revision && <span className="text-xs text-muted-foreground">
                   Rev. {proposal.current_revision}
-                </span>
-              )}
+                </span>}
             </div>
             <h1 className="text-2xl font-bold text-foreground">{proposal.name}</h1>
             <div className="flex items-center gap-4 mt-2">
@@ -199,69 +157,28 @@ const ProposalDetails: React.FC = () => {
         </div>
 
         {/* Action buttons for Reviewer 1 */}
-        {isReviewer1 && !isLocked && proposal.ticket_number && (
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowStatusDialog(true)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Update Status
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowAssignDialog(true)}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Assign Reviewers
-            </Button>
-          </div>
-        )}
+        {isReviewer1 && !isLocked && proposal.ticket_number}
 
         {/* Reviewer Actions - Role-based workflow steps */}
-        <ReviewerActions
-          proposal={proposal}
-          isReviewer1={isReviewer1}
-          isReviewer2={isReviewer2}
-          onStatusChange={handleStatusChange}
-          isPending={updateStatus.isPending}
-          hasReviewer2Comments={hasReviewer2Comments}
-        />
+        <ReviewerActions proposal={proposal} isReviewer1={isReviewer1} isReviewer2={isReviewer2} onStatusChange={handleStatusChange} isPending={updateStatus.isPending} hasReviewer2Comments={hasReviewer2Comments} />
 
         {/* Screen 4: Final Review Summary (Reviewer 1 only, when finalised) */}
-        <FinalReviewSummary
-          proposal={proposal}
-          comments={comments}
-          logs={logs}
-          isReviewer1={isReviewer1}
-        />
+        <FinalReviewSummary proposal={proposal} comments={comments} logs={logs} isReviewer1={isReviewer1} />
 
         {/* Screen 2: Assessment Form (Reviewer 2 only) */}
-        <AssessmentForm
-          proposal={proposal}
-          isReviewer2={isReviewer2}
-        />
+        <AssessmentForm proposal={proposal} isReviewer2={isReviewer2} />
 
         {/* Review Comments Display (for Reviewer 1 to review) */}
-        {isReviewer1 && comments.length > 0 && (
-          <ReviewCommentsDisplay
-            comments={comments}
-            isReviewer1={isReviewer1}
-          />
-        )}
+        {isReviewer1 && comments.length > 0 && <ReviewCommentsDisplay comments={comments} isReviewer1={isReviewer1} />}
 
         {/* Screen 3: Reviewer 1 Additional Comments Form */}
-        <Reviewer1CommentForm
-          proposal={proposal}
-          isReviewer1={isReviewer1}
-        />
+        <Reviewer1CommentForm proposal={proposal} isReviewer1={isReviewer1} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left column - Descriptions & Documents */}
           <div className="space-y-6">
             {/* Short Description */}
-            {proposal.short_description && (
-              <Card>
+            {proposal.short_description && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Short Description</CardTitle>
                 </CardHeader>
@@ -270,12 +187,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.short_description}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Detailed Description */}
-            {proposal.detailed_description && (
-              <Card>
+            {proposal.detailed_description && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Detailed Description</CardTitle>
                 </CardHeader>
@@ -284,12 +199,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.detailed_description}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Table of Contents */}
-            {proposal.table_of_contents && (
-              <Card>
+            {proposal.table_of_contents && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Table of Contents</CardTitle>
                 </CardHeader>
@@ -298,12 +211,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.table_of_contents}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Marketing Info */}
-            {proposal.marketing_info && (
-              <Card>
+            {proposal.marketing_info && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Marketing Information</CardTitle>
                 </CardHeader>
@@ -312,12 +223,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.marketing_info}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Referees/Reviewers */}
-            {proposal.referees_reviewers && (
-              <Card>
+            {proposal.referees_reviewers && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Referees / Reviewers</CardTitle>
                 </CardHeader>
@@ -326,12 +235,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.referees_reviewers}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* File Uploads */}
-            {proposal.file_uploads && (
-              <Card>
+            {proposal.file_uploads && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Download className="h-5 w-5" />
@@ -341,28 +248,19 @@ const ProposalDetails: React.FC = () => {
                 <CardContent>
                   <div className="space-y-2">
                     {proposal.file_uploads.split(',').map((url, index) => {
-                      const trimmedUrl = url.trim();
-                      const fileName = trimmedUrl.split('/').pop() || `File ${index + 1}`;
-                      return (
-                        <a
-                          key={index}
-                          href={trimmedUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
-                        >
+                  const trimmedUrl = url.trim();
+                  const fileName = trimmedUrl.split('/').pop() || `File ${index + 1}`;
+                  return <a key={index} href={trimmedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm">
                           <FileText className="h-4 w-4 text-primary flex-shrink-0" />
                           <span className="text-foreground truncate flex-1">
                             {decodeURIComponent(fileName.replace(/_/g, ' ').replace(/\.docx$|\.pdf$|\.doc$/i, ''))}
                           </span>
                           <Download className="h-4 w-4 text-muted-foreground" />
-                        </a>
-                      );
-                    })}
+                        </a>;
+                })}
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Submission Checklist */}
             <Card>
@@ -404,19 +302,16 @@ const ProposalDetails: React.FC = () => {
                       {proposal.permissions_docs_submitted || 'N/A'}
                     </span>
                   </div>
-                  {proposal.figures_tables_count && (
-                    <div className="flex items-center justify-between text-sm">
+                  {proposal.figures_tables_count && <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Figures/Tables Count</span>
                       <span className="text-foreground">{proposal.figures_tables_count}</span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </CardContent>
             </Card>
 
             {/* Under Review Elsewhere */}
-            {proposal.under_review_elsewhere && (
-              <Card>
+            {proposal.under_review_elsewhere && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5" />
@@ -428,12 +323,10 @@ const ProposalDetails: React.FC = () => {
                     {proposal.under_review_elsewhere}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Additional Information */}
-            {proposal.additional_info && (
-              <Card>
+            {proposal.additional_info && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Info className="h-5 w-5" />
@@ -445,8 +338,7 @@ const ProposalDetails: React.FC = () => {
                     {proposal.additional_info}
                   </p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
 
           {/* Right column - Author, Book Details, Timeline */}
@@ -465,16 +357,12 @@ const ProposalDetails: React.FC = () => {
                     <p className="text-sm font-medium text-foreground">
                       {proposal.corresponding_author_name || proposal.author_name}
                     </p>
-                    {proposal.job_title && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                    {proposal.job_title && <p className="text-xs text-muted-foreground mt-0.5">
                         {proposal.job_title}
-                      </p>
-                    )}
-                    {proposal.institution && (
-                      <p className="text-xs text-muted-foreground">
+                      </p>}
+                    {proposal.institution && <p className="text-xs text-muted-foreground">
                         {proposal.institution}
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </div>
 
@@ -487,16 +375,13 @@ const ProposalDetails: React.FC = () => {
                     <p className="text-sm font-medium text-foreground break-all">
                       {proposal.author_email}
                     </p>
-                    {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && (
-                      <p className="text-xs text-muted-foreground break-all">
+                    {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <p className="text-xs text-muted-foreground break-all">
                         {proposal.secondary_email}
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </div>
 
-                {proposal.address && (
-                  <div className="flex items-start gap-3">
+                {proposal.address && <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -506,36 +391,26 @@ const ProposalDetails: React.FC = () => {
                         {proposal.address}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.referrer_url && (
-                  <div className="flex items-start gap-3">
+                {proposal.referrer_url && <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Link className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Referrer</p>
-                      <a 
-                        href={proposal.referrer_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline break-all"
-                      >
+                      <a href={proposal.referrer_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
                         {proposal.referrer_url}
                       </a>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.biography && (
-                  <div className="pt-2 border-t border-border">
+                {proposal.biography && <div className="pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground mb-1">Biography</p>
                     <p className="text-sm text-foreground leading-relaxed">
                       {proposal.biography}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
@@ -545,59 +420,47 @@ const ProposalDetails: React.FC = () => {
                 <CardTitle className="text-lg">Book Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {proposal.sub_title && (
-                  <div>
+                {proposal.sub_title && <div>
                     <p className="text-xs text-muted-foreground">Subtitle</p>
                     <p className="text-sm font-medium text-foreground">
                       {proposal.sub_title}
                     </p>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.book_type && (
-                  <div>
+                {proposal.book_type && <div>
                     <p className="text-xs text-muted-foreground">Book Type</p>
                     <p className="text-sm font-medium text-foreground">
                       {proposal.book_type}
                     </p>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.keywords && (
-                  <div>
+                {proposal.keywords && <div>
                     <p className="text-xs text-muted-foreground">Keywords</p>
                     <p className="text-sm text-foreground">
                       {proposal.keywords}
                     </p>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.word_count && (
-                  <div>
+                {proposal.word_count && <div>
                     <p className="text-xs text-muted-foreground">Word Count</p>
                     <p className="text-sm font-medium text-foreground">
                       {proposal.word_count}
                     </p>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.expected_completion_date && (
-                  <div>
+                {proposal.expected_completion_date && <div>
                     <p className="text-xs text-muted-foreground">Expected Completion</p>
                     <p className="text-sm font-medium text-foreground">
                       {proposal.expected_completion_date}
                     </p>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.co_authors_editors && (
-                  <div>
+                {proposal.co_authors_editors && <div>
                     <p className="text-xs text-muted-foreground">Co-Authors / Editors</p>
                     <p className="text-sm text-foreground">
                       {proposal.co_authors_editors}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
@@ -607,8 +470,7 @@ const ProposalDetails: React.FC = () => {
                 <CardTitle className="text-lg">Proposal Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {proposal.ticket_number && (
-                  <div className="flex items-center gap-3">
+                {proposal.ticket_number && <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Hash className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -618,11 +480,9 @@ const ProposalDetails: React.FC = () => {
                         {proposal.ticket_number}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.current_revision && (
-                  <div className="flex items-center gap-3">
+                {proposal.current_revision && <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <RefreshCw className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -632,8 +492,7 @@ const ProposalDetails: React.FC = () => {
                         {proposal.current_revision}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-muted">
@@ -642,13 +501,9 @@ const ProposalDetails: React.FC = () => {
                 <div>
                     <p className="text-xs text-muted-foreground">Contract Status</p>
                     <p className="text-sm font-medium text-foreground">
-                      {proposal.contract_sent ? (
-                        <span className="text-primary">
+                      {proposal.contract_sent ? <span className="text-primary">
                           Sent {proposal.contract_sent_at && `on ${format(new Date(proposal.contract_sent_at), 'MMM d, yyyy')}`}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Not sent</span>
-                      )}
+                        </span> : <span className="text-muted-foreground">Not sent</span>}
                     </p>
                   </div>
                 </div>
@@ -672,8 +527,7 @@ const ProposalDetails: React.FC = () => {
                   </div>
                 </div>
 
-                {proposal.updated_at && (
-                  <div className="flex items-center gap-3">
+                {proposal.updated_at && <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -683,11 +537,9 @@ const ProposalDetails: React.FC = () => {
                         {format(new Date(proposal.updated_at), 'MMMM d, yyyy')}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
-                {proposal.finalised_at && (
-                  <div className="flex items-center gap-3">
+                {proposal.finalised_at && <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -697,8 +549,7 @@ const ProposalDetails: React.FC = () => {
                         {format(new Date(proposal.finalised_at), 'MMMM d, yyyy')}
                       </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
           </div>
@@ -708,22 +559,18 @@ const ProposalDetails: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Comments Section - External API */}
           <div>
-            {proposal.ticket_number && (
-              <CommentsSection ticketNumber={proposal.ticket_number} />
-            )}
+            {proposal.ticket_number && <CommentsSection ticketNumber={proposal.ticket_number} />}
           </div>
 
           {/* Workflow History */}
           <div>
-            {logs && logs.length > 0 && (
-              <Card>
+            {logs && logs.length > 0 && <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Activity Log</CardTitle>
                 </CardHeader>
                 <CardContent className="max-h-[300px] overflow-y-auto">
                   <div className="space-y-3">
-                    {logs.map((log) => (
-                      <div key={log.id} className="flex items-start gap-3 text-sm">
+                    {logs.map(log => <div key={log.id} className="flex items-start gap-3 text-sm">
                         <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                         <div className="flex-1">
                           <p className="text-foreground">{log.action}</p>
@@ -731,36 +578,19 @@ const ProposalDetails: React.FC = () => {
                             {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
                           </p>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
         </div>
       </div>
 
       {/* Dialogs */}
-      {proposal?.ticket_number && (
-        <>
-          <StatusUpdateDialog
-            open={showStatusDialog}
-            onOpenChange={setShowStatusDialog}
-            currentStatus={proposal.status}
-            onUpdate={handleExternalStatusUpdate}
-            isLoading={isUpdatingExternalStatus}
-          />
-          <AssignReviewersDialog
-            open={showAssignDialog}
-            onOpenChange={setShowAssignDialog}
-            onAssign={handleAssign}
-            isLoading={isAssigning}
-          />
-        </>
-      )}
-    </DashboardLayout>
-  );
+      {proposal?.ticket_number && <>
+          <StatusUpdateDialog open={showStatusDialog} onOpenChange={setShowStatusDialog} currentStatus={proposal.status} onUpdate={handleExternalStatusUpdate} isLoading={isUpdatingExternalStatus} />
+          <AssignReviewersDialog open={showAssignDialog} onOpenChange={setShowAssignDialog} onAssign={handleAssign} isLoading={isAssigning} />
+        </>}
+    </DashboardLayout>;
 };
-
 export default ProposalDetails;
