@@ -68,11 +68,19 @@ const ProposalDetails: React.FC = () => {
 
   const handleStatusChange = (newStatus: 'under_review' | 'approved' | 'rejected' | 'finalised' | 'locked') => {
     if (!proposal) return;
-    updateStatus.mutate({
-      id: proposal.id, // This is now always a UUID
-      status: newStatus,
-      previousStatus: proposal.status,
-    });
+   updateStatus.mutate(
+     {
+       id: proposal.id,
+       status: newStatus,
+       previousStatus: proposal.status,
+     },
+     {
+       onSuccess: () => {
+         // Refetch to get updated data with local ID
+         refetch();
+       },
+     }
+   );
   };
 
   const handleExternalStatusUpdate = (data: { status: string; notes?: string }) => {
