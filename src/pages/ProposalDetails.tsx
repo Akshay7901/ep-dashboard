@@ -27,9 +27,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 /* ---------------- Helper ---------------- */
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-  <div className="flex justify-between text-sm">
+  <div className="flex flex-col gap-1 text-sm">
     <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-foreground truncate max-w-[60%]">{value || "N/A"}</span>
+    <span className="font-medium text-foreground break-words">{value || "N/A"}</span>
   </div>
 );
 
