@@ -57,7 +57,7 @@ const ProposalDetails: React.FC = () => {
 
   const updateStatus = useUpdateProposalStatus();
 
-  useProposalActions(proposal?.ticket_number || id);
+  const { isUpdatingStatus } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Handlers ---------------- */
 
@@ -144,6 +144,7 @@ const ProposalDetails: React.FC = () => {
             isReviewer1={isReviewer1}
             isReviewer2={isReviewer2}
             onStatusChange={handleStatusChange}
+            isPending={isUpdatingStatus}
             hasReviewer2Comments={comments.some((c) => c.review_form_data?.submittedForAuthorization)}
           />
         </div>
