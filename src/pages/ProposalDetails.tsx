@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import ReviewerActions from "@/components/proposals/ReviewerActions";
@@ -13,36 +12,41 @@ import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay"
 import FinalReviewSummary from "@/components/proposals/FinalReviewSummary";
 import CommentsSection from "@/components/proposals/CommentsSection";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-
 import { ArrowLeft, FileText, Loader2, Download, Eye } from "lucide-react";
-
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
-
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* ---------------- Helper ---------------- */
 
-const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-  <div className="flex justify-between gap-3 text-sm border-b pb-1">
+const InfoRow = ({
+  label,
+  value
+}: {
+  label: string;
+  value?: string;
+}) => <div className="flex justify-between gap-3 text-sm border-b pb-1">
     <span className="text-muted-foreground">{label}</span>
     <span className="font-medium text-right">{value || "N/A"}</span>
-  </div>
-);
+  </div>;
 
 /* ---------------- Main ---------------- */
 
 const ProposalDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
-
-  const { isReviewer1, isReviewer2 } = useAuth();
-
+  const {
+    isReviewer1,
+    isReviewer2
+  } = useAuth();
   const [documentPreview, setDocumentPreview] = useState<{
     url: string;
     name: string;
@@ -51,32 +55,35 @@ const ProposalDetails: React.FC = () => {
 
   /* ---------------- Data ---------------- */
 
-  const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
-
+  const {
+    data: proposal,
+    isLoading,
+    error,
+    refetch
+  } = useProposal(id || "");
   const localId = proposal?.id || "";
-
-  const { data: comments = [] } = useProposalComments(localId);
-  const { data: logs = [] } = useWorkflowLogs(localId);
-
+  const {
+    data: comments = []
+  } = useProposalComments(localId);
+  const {
+    data: logs = []
+  } = useWorkflowLogs(localId);
   const updateStatus = useUpdateProposalStatus();
-
-  const { isUpdatingStatus } = useProposalActions(proposal?.ticket_number || id);
+  const {
+    isUpdatingStatus
+  } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading ---------------- */
 
   if (isLoading) {
-    return (
-      <DashboardLayout title="Proposal Details">
+    return <DashboardLayout title="Proposal Details">
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
-
   if (!proposal || error) {
-    return (
-      <DashboardLayout title="Proposal Details">
+    return <DashboardLayout title="Proposal Details">
         <div className="text-center py-20 space-y-4">
           <p className="text-destructive">Failed to load proposal</p>
 
@@ -90,18 +97,16 @@ const ProposalDetails: React.FC = () => {
             </Button>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>;
   }
 
   /* ---------------- Files ---------------- */
 
-  const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f) => f.trim()) : [];
+  const files = proposal.file_uploads ? proposal.file_uploads.split(",").map(f => f.trim()) : [];
 
   /* ---------------- Render ---------------- */
 
-  return (
-    <DashboardLayout title="Proposal Details">
+  return <DashboardLayout title="Proposal Details">
       <div className="space-y-6">
         {/* Back */}
         <Button variant="ghost" onClick={() => navigate("/proposals")}>
@@ -134,14 +139,7 @@ const ProposalDetails: React.FC = () => {
 
         {/* Sticky Actions */}
         <div className="sticky top-0 z-20 bg-background border-b py-3">
-          <ReviewerActions
-            proposal={proposal}
-            isReviewer1={isReviewer1}
-            isReviewer2={isReviewer2}
-            onStatusChange={() => {}}
-            isPending={isUpdatingStatus}
-            hasReviewer2Comments={comments.some((c) => c.review_form_data?.submittedForAuthorization)}
-          />
+          <ReviewerActions proposal={proposal} isReviewer1={isReviewer1} isReviewer2={isReviewer2} onStatusChange={() => {}} isPending={isUpdatingStatus} hasReviewer2Comments={comments.some(c => c.review_form_data?.submittedForAuthorization)} />
         </div>
 
         {/* Grid */}
@@ -192,7 +190,7 @@ const ProposalDetails: React.FC = () => {
           </div>
 
           {/* Right - INFORMATION DROPDOWN */}
-          <div className="sticky top-24">
+          <div className="sticky top-24 my-0 mt-[50px]">
             <Accordion type="multiple" className="space-y-3">
               {/* Author Info */}
               <AccordionItem value="author">
@@ -251,15 +249,7 @@ const ProposalDetails: React.FC = () => {
       </div>
 
       {/* Preview */}
-      <DocumentPreviewDialog
-        open={!!documentPreview}
-        onOpenChange={(o) => !o && setDocumentPreview(null)}
-        documentUrl={documentPreview?.url || ""}
-        fileName={documentPreview?.name || ""}
-        fileType={documentPreview?.type || "pdf"}
-      />
-    </DashboardLayout>
-  );
+      <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
+    </DashboardLayout>;
 };
-
 export default ProposalDetails;
