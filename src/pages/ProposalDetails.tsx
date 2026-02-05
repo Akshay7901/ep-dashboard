@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import ReviewerActions from "@/components/proposals/ReviewerActions";
@@ -12,12 +13,16 @@ import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay"
 import FinalReviewSummary from "@/components/proposals/FinalReviewSummary";
 import CommentsSection from "@/components/proposals/CommentsSection";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 import { ArrowLeft, FileText, Loader2, Download, Eye } from "lucide-react";
+
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
+
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -33,11 +38,11 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 /* ---------------- Main ---------------- */
 
 const ProposalDetails: React.FC = () => {
-  const { id } = useParams<{
-    id: string;
-  }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const { isReviewer1, isReviewer2 } = useAuth();
+
   const [documentPreview, setDocumentPreview] = useState<{
     url: string;
     name: string;
@@ -47,10 +52,14 @@ const ProposalDetails: React.FC = () => {
   /* ---------------- Data ---------------- */
 
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
+
   const localId = proposal?.id || "";
+
   const { data: comments = [] } = useProposalComments(localId);
   const { data: logs = [] } = useWorkflowLogs(localId);
+
   const updateStatus = useUpdateProposalStatus();
+
   const { isUpdatingStatus } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading ---------------- */
@@ -64,6 +73,7 @@ const ProposalDetails: React.FC = () => {
       </DashboardLayout>
     );
   }
+
   if (!proposal || error) {
     return (
       <DashboardLayout title="Proposal Details">
@@ -182,7 +192,7 @@ const ProposalDetails: React.FC = () => {
           </div>
 
           {/* Right - INFORMATION DROPDOWN */}
-          <div className="sticky top-24 my-0 mt-[50px]">
+          <div className="sticky top-24">
             <Accordion type="multiple" className="space-y-3">
               {/* Author Info */}
               <AccordionItem value="author">
@@ -251,4 +261,5 @@ const ProposalDetails: React.FC = () => {
     </DashboardLayout>
   );
 };
+
 export default ProposalDetails;
