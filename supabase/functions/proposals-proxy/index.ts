@@ -66,6 +66,30 @@ async function proxyRequest(
       body: responseText,
     });
 
+    // IMPORTANT: Some clients/platforms treat non-2xx responses as a runtime error and can blank-screen.
+    // For upstream 409 conflicts (business-rule conflicts like "active assignments"), return 200 with a
+    // structured payload so the frontend can show a friendly message without the function being flagged.
+    if (response.status === 409) {
+      let parsedBody: unknown = responseText;
+      try {
+        parsedBody = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        // keep raw string
+      }
+
+      return jsonResponse(
+        {
+          error: `Upstream API error (409)`,
+          upstream: {
+            status: response.status,
+            url: apiUrl,
+            body: parsedBody,
+          },
+        },
+        200
+      );
+    }
+
     return errorResponse(
       `Upstream API error (${response.status})`,
       response.status,
