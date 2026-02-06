@@ -77,7 +77,7 @@ const ProposalDetails: React.FC = () => {
 
   const updateStatus = useUpdateProposalStatus();
 
-  const { isUpdatingStatus } = useProposalActions(proposal?.ticket_number || id);
+  const { assignReviewers, isAssigning } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading ---------------- */
 
@@ -453,32 +453,35 @@ const ProposalDetails: React.FC = () => {
           if (!open) setPendingAction(null);
         }}
         onAssign={(reviewerIds) => {
-          // First update status to under_review
-          updateStatus.mutate(
-            { 
-              id: localId || id || '', 
-              status: 'under_review', 
-              previousStatus: proposal.status,
-              ticketNumber: proposal.ticket_number || id,
-              proposalData: {
-                id: localId || undefined,
-                name: proposal.name,
-                author_name: proposal.author_name,
-                author_email: proposal.author_email,
-                ticket_number: proposal.ticket_number || id,
-              }
-            },
-            {
-              onSuccess: () => {
-                // TODO: Also assign the selected reviewers to this proposal
-                // For now, just close the dialog
-                setIsAssignDialogOpen(false);
-                setPendingAction(null);
-              }
+          // First assign peer reviewers via external API
+          assignReviewers(reviewerIds, {
+            onSuccess: () => {
+              // Then update status to under_review
+              updateStatus.mutate(
+                { 
+                  id: localId || id || '', 
+                  status: 'under_review', 
+                  previousStatus: proposal.status,
+                  ticketNumber: proposal.ticket_number || id,
+                  proposalData: {
+                    id: localId || undefined,
+                    name: proposal.name,
+                    author_name: proposal.author_name,
+                    author_email: proposal.author_email,
+                    ticket_number: proposal.ticket_number || id,
+                  }
+                },
+                {
+                  onSuccess: () => {
+                    setIsAssignDialogOpen(false);
+                    setPendingAction(null);
+                  }
+                }
+              );
             }
-          );
+          });
         }}
-        isLoading={updateStatus.isPending}
+        isLoading={updateStatus.isPending || isAssigning}
       />
 
       {/* Decline Confirmation Dialog */}
