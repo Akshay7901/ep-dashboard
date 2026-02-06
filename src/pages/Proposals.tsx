@@ -56,9 +56,9 @@ const StatusChip: React.FC<StatusChipProps> = ({
   const variantStyles = {
     default: 'bg-muted text-foreground border-border',
     new: 'bg-[#3d5a47] text-white border-[#3d5a47]',
-    review: 'bg-[#2d3748] text-white border-[#2d3748]',
-    contract: 'bg-[#2d3748] text-white border-[#2d3748]',
-    declined: 'bg-[#9b2c2c] text-white border-[#9b2c2c]'
+    review: 'bg-[#3d5a47] text-white border-[#3d5a47]',
+    contract: 'bg-[#3d5a47] text-white border-[#3d5a47]',
+    declined: 'bg-[#3d5a47] text-white border-[#3d5a47]'
   };
   return <button onClick={onClick} className={cn("inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded", variantStyles[variant], isActive && 'ring-2 ring-offset-2 ring-primary')}>
       {count} {label}
