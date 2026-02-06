@@ -15,6 +15,7 @@ import CommentsSection from "@/components/proposals/CommentsSection";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ProposalDetailsSidebar from "@/components/proposals/ProposalDetailsSidebar";
 import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
+import DeclineProposalDialog from "@/components/proposals/DeclineProposalDialog";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +62,7 @@ const ProposalDetails: React.FC = () => {
   } | null>(null);
 
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'accept' | 'decline' | null>(null);
 
   /* ---------------- Data ---------------- */
@@ -128,38 +130,34 @@ const ProposalDetails: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <Button 
-              className="bg-primary hover:bg-primary/90"
-              onClick={() => {
-                setPendingAction('accept');
-                setIsAssignDialogOpen(true);
-              }}
-              disabled={updateStatus.isPending || proposal.status !== 'submitted'}
-            >
-              Accept for Review
-            </Button>
+          {/* Show status badge after initial submission */}
+          {proposal.status !== 'submitted' && (
+            <ProposalStatusBadge status={proposal.status} showIcon={false} />
+          )}
 
-            <Button 
-              variant="outline"
-              onClick={() => updateStatus.mutate({ 
-                id: localId || id || '', 
-                status: 'rejected', 
-                previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number || id,
-                proposalData: {
-                  id: localId || undefined,
-                  name: proposal.name,
-                  author_name: proposal.author_name,
-                  author_email: proposal.author_email,
-                  ticket_number: proposal.ticket_number || id,
-                }
-              })}
-              disabled={updateStatus.isPending || proposal.status !== 'submitted'}
-            >
-              Decline
-            </Button>
-          </div>
+          {/* Only show action buttons for submitted proposals */}
+          {proposal.status === 'submitted' && (
+            <div className="flex gap-3">
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => {
+                  setPendingAction('accept');
+                  setIsAssignDialogOpen(true);
+                }}
+                disabled={updateStatus.isPending}
+              >
+                Accept for Review
+              </Button>
+
+              <Button 
+                variant="outline"
+                onClick={() => setIsDeclineDialogOpen(true)}
+                disabled={updateStatus.isPending}
+              >
+                Decline
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -476,6 +474,35 @@ const ProposalDetails: React.FC = () => {
                 // For now, just close the dialog
                 setIsAssignDialogOpen(false);
                 setPendingAction(null);
+              }
+            }
+          );
+        }}
+        isLoading={updateStatus.isPending}
+      />
+
+      {/* Decline Confirmation Dialog */}
+      <DeclineProposalDialog
+        open={isDeclineDialogOpen}
+        onOpenChange={setIsDeclineDialogOpen}
+        onConfirm={() => {
+          updateStatus.mutate(
+            { 
+              id: localId || id || '', 
+              status: 'rejected', 
+              previousStatus: proposal.status,
+              ticketNumber: proposal.ticket_number || id,
+              proposalData: {
+                id: localId || undefined,
+                name: proposal.name,
+                author_name: proposal.author_name,
+                author_email: proposal.author_email,
+                ticket_number: proposal.ticket_number || id,
+              }
+            },
+            {
+              onSuccess: () => {
+                setIsDeclineDialogOpen(false);
               }
             }
           );
