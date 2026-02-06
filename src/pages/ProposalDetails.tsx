@@ -24,6 +24,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder } from "lucide-react";
 
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
@@ -37,13 +48,6 @@ const OverviewItem = ({ label, value }: { label: string; value?: string }) => (
   <div className="space-y-1">
     <p className="text-sm text-muted-foreground">{label}</p>
     <p className="font-medium">{value || "N/A"}</p>
-  </div>
-);
-
-const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-  <div className="flex justify-between border-b py-2 text-sm">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium max-w-[60%] text-right break-words">{value || "N/A"}</span>
   </div>
 );
 
@@ -63,6 +67,7 @@ const ProposalDetails: React.FC = () => {
 
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
+  const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'accept' | 'decline' | null>(null);
 
   /* ---------------- Data ---------------- */
@@ -75,9 +80,16 @@ const ProposalDetails: React.FC = () => {
 
   const { data: logs = [] } = useWorkflowLogs(localId);
 
-  const updateStatus = useUpdateProposalStatus();
+  // Local workflow override (database) status update
+  const workflowStatus = useUpdateProposalStatus();
 
-  const { assignReviewers, isAssigning } = useProposalActions(proposal?.ticket_number || id);
+  // Upstream API actions (external system)
+  const {
+    updateStatus: upstreamUpdateStatus,
+    isUpdatingStatus: isUpdatingUpstream,
+    assignReviewers,
+    isAssigning,
+  } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading ---------------- */
 
@@ -105,6 +117,42 @@ const ProposalDetails: React.FC = () => {
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f) => f.trim()) : [];
 
+  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning;
+
+  const revertToNew = () => {
+    const ticketNumber = proposal.ticket_number || id || '';
+
+    // 1) Revert upstream status (this is what clears reviewer assignments)
+    upstreamUpdateStatus(
+      { status: 'new', notes: 'Reverted to new status' },
+      {
+        onSuccess: () => {
+          // 2) Reset local workflow override back to submitted
+          workflowStatus.mutate(
+            {
+              id: localId || id || '',
+              status: 'submitted',
+              previousStatus: proposal.status,
+              ticketNumber,
+              proposalData: {
+                id: localId || undefined,
+                name: proposal.name,
+                author_name: proposal.author_name,
+                author_email: proposal.author_email,
+                ticket_number: ticketNumber,
+              },
+            },
+            {
+              onSuccess: () => {
+                setIsRevertDialogOpen(false);
+              },
+            }
+          );
+        },
+      }
+    );
+  };
+
   /* ---------------- Render ---------------- */
 
   return (
@@ -112,7 +160,7 @@ const ProposalDetails: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Back */}
 
-        <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}> 
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </Button>
@@ -138,23 +186,36 @@ const ProposalDetails: React.FC = () => {
           {/* Only show action buttons for submitted proposals */}
           {proposal.status === 'submitted' && (
             <div className="flex gap-3">
-              <Button 
+              <Button
                 className="bg-primary hover:bg-primary/90"
                 onClick={() => {
                   setPendingAction('accept');
                   setIsAssignDialogOpen(true);
                 }}
-                disabled={updateStatus.isPending}
+                disabled={workflowStatus.isPending}
               >
                 Accept for Review
               </Button>
 
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => setIsDeclineDialogOpen(true)}
-                disabled={updateStatus.isPending}
+                disabled={workflowStatus.isPending}
               >
                 Decline
+              </Button>
+            </div>
+          )}
+
+          {/* Revert action for Reviewer 1 when under review */}
+          {isReviewer1 && proposal.status === 'under_review' && (
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => setIsRevertDialogOpen(true)}
+                disabled={isBusy}
+              >
+                Revert to New
               </Button>
             </div>
           )}
@@ -459,11 +520,11 @@ const ProposalDetails: React.FC = () => {
           // First assign peer reviewers via external API
           assignReviewers(reviewerIds, {
             onSuccess: () => {
-              // Then update status to under_review
-              updateStatus.mutate(
-                { 
-                  id: localId || id || '', 
-                  status: 'under_review', 
+              // Then update status to under_review (local workflow)
+              workflowStatus.mutate(
+                {
+                  id: localId || id || '',
+                  status: 'under_review',
                   previousStatus: proposal.status,
                   ticketNumber: proposal.ticket_number || id,
                   proposalData: {
@@ -472,19 +533,19 @@ const ProposalDetails: React.FC = () => {
                     author_name: proposal.author_name,
                     author_email: proposal.author_email,
                     ticket_number: proposal.ticket_number || id,
-                  }
+                  },
                 },
                 {
                   onSuccess: () => {
                     setIsAssignDialogOpen(false);
                     setPendingAction(null);
-                  }
+                  },
                 }
               );
-            }
+            },
           });
         }}
-        isLoading={updateStatus.isPending || isAssigning}
+        isLoading={workflowStatus.isPending || isAssigning}
       />
 
       {/* Decline Confirmation Dialog */}
@@ -492,10 +553,10 @@ const ProposalDetails: React.FC = () => {
         open={isDeclineDialogOpen}
         onOpenChange={setIsDeclineDialogOpen}
         onConfirm={() => {
-          updateStatus.mutate(
-            { 
-              id: localId || id || '', 
-              status: 'rejected', 
+          workflowStatus.mutate(
+            {
+              id: localId || id || '',
+              status: 'rejected',
               previousStatus: proposal.status,
               ticketNumber: proposal.ticket_number || id,
               proposalData: {
@@ -504,17 +565,35 @@ const ProposalDetails: React.FC = () => {
                 author_name: proposal.author_name,
                 author_email: proposal.author_email,
                 ticket_number: proposal.ticket_number || id,
-              }
+              },
             },
             {
               onSuccess: () => {
                 setIsDeclineDialogOpen(false);
-              }
+              },
             }
           );
         }}
-        isLoading={updateStatus.isPending}
+        isLoading={workflowStatus.isPending}
       />
+
+      {/* Revert Confirmation Dialog */}
+      <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revert proposal to New?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will move the proposal back to <strong>New</strong> and remove any active peer reviewer assignments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={revertToNew} disabled={isBusy}>
+              Revert
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
