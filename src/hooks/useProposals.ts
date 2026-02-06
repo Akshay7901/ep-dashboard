@@ -303,20 +303,20 @@ export const useProposal = (id: string) => {
       } else {
         // Fetch from external API - no local sync required for viewing
         try {
-          const apiProposal = await fetchProposalByTicket(id);
+          const apiProposal: any = await fetchProposalByTicket(id);
 
-          // Get local override data if it exists (status, contract_sent, etc.)
-          const localOverride = await getLocalOverride(id);
-          
+          // Prefer local override provided by the backend proxy (works even after refresh)
+          // Fallback to direct DB lookup only if it's available (it may be blocked by RLS in this app)
+          const localOverride = apiProposal?.local_override || null;
+
           // Merge data - local status takes priority if it exists
           const mapped = mapApiProposalDetail(apiProposal, localOverride);
-          
+
           // Return merged data - use local ID if exists, otherwise use ticket number
           return {
             ...mapped,
-            // Ensure local status overrides API status when local record exists
             status: localOverride?.status || mapped.status,
-            id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
+            id: localOverride?.id || id,
           };
         } catch (e) {
           // Detail endpoint failed - try to use cached list data as fallback
