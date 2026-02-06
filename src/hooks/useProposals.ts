@@ -284,29 +284,59 @@ export const useProposal = (id: string) => {
   return useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
-      // Check if ID is a UUID (local database proposal)
+      // Determine the ticket number to fetch
+      let ticketNumber = id;
+
+      // If ID is a UUID, we need to find the ticket_number first
       if (isUUID(id)) {
-        // Fetch from local Supabase database
-        return fetchLocalProposal(id);
-      } else {
-        // Fetch from external API - no local sync required for viewing
-        try {
-          const apiProposal: any = await fetchProposalByTicket(id);
+        // Try to find ticket_number from cached proposals list
+        const cachedListData = queryClient.getQueriesData<{
+          data: Proposal[];
+        }>({ queryKey: ['proposals'] });
 
-          // Prefer local override provided by the backend proxy (works even after refresh)
-          // Fallback to direct DB lookup only if it's available (it may be blocked by RLS in this app)
-          const localOverride = apiProposal?.local_override || null;
+        for (const [, queryData] of cachedListData) {
+          if (queryData?.data) {
+            const cachedProposal = queryData.data.find((p) => p.id === id);
+            if (cachedProposal?.ticket_number) {
+              ticketNumber = cachedProposal.ticket_number;
+              break;
+            }
+          }
+        }
 
-          // Merge data - local status takes priority if it exists
-          const mapped = mapApiProposalDetail(apiProposal, localOverride);
+        // If still a UUID (not found in cache), fetch list to find it
+        if (isUUID(ticketNumber)) {
+          try {
+            const apiList = await fetchProposalsFromProxy(1000, 0);
+            const found = apiList.proposals?.find((p: any) => 
+              p.local_override?.id === id
+            );
+            if (found) {
+              ticketNumber = found.ticket_number;
+            }
+          } catch {
+            // Fall through - will fail on detail fetch
+          }
+        }
+      }
 
-          // Return merged data - use local ID if exists, otherwise use ticket number
-          return {
-            ...mapped,
-            status: localOverride?.status || mapped.status,
-            id: localOverride?.id || id,
-          };
-        } catch (e) {
+      // Fetch from external API via proxy (which now includes local_override)
+      try {
+        const apiProposal: any = await fetchProposalByTicket(ticketNumber);
+
+        // Prefer local override provided by the backend proxy (works even after refresh)
+        const localOverride = apiProposal?.local_override || null;
+
+        // Merge data - local status takes priority if it exists
+        const mapped = mapApiProposalDetail(apiProposal, localOverride);
+
+        // Return merged data - use local ID if exists, otherwise use ticket number
+        return {
+          ...mapped,
+          status: localOverride?.status || mapped.status,
+          id: localOverride?.id || id,
+        };
+      } catch (e) {
           // Detail endpoint failed - try to use cached list data as fallback
           const cachedListData = queryClient.getQueriesData<{
             data: Proposal[];
@@ -358,7 +388,6 @@ export const useProposal = (id: string) => {
           const message = e instanceof Error ? e.message : 'Failed to fetch proposal details';
           throw new Error(message);
         }
-      }
     },
     enabled: !!id,
     retry: false,
