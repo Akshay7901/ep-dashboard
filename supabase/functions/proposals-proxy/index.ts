@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-custom-path, x-custom-method',
 };
 
 const API_BASE_URL = 'https://api.ethicspress.com';
@@ -80,7 +80,11 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const path = url.pathname;
+    // Check for custom path header (used when invoking from Supabase client)
+    const customPath = req.headers.get('x-custom-path');
+    const customMethod = req.headers.get('x-custom-method');
+    const path = customPath || url.pathname;
+    const method = customMethod || req.method;
 
     // Get authorization token from request headers
     const authHeader = req.headers.get('authorization');
@@ -95,81 +99,81 @@ serve(async (req) => {
 
     const headers = buildUpstreamHeaders(req, authHeader);
 
-    // Route: GET /proposals-proxy/peer-reviewers - List peer reviewers
-    if (path.endsWith('/peer-reviewers') && req.method === 'GET') {
+    // Route: GET /peer-reviewers - List peer reviewers
+    if (path.endsWith('/peer-reviewers') && method === 'GET') {
       console.log('Fetching peer reviewers list');
       return await proxyRequest('GET', `${API_BASE_URL}/api/proposals/users/peer-reviewers`, headers);
     }
 
-    // Route: POST /proposals-proxy/peer-reviewers - Create peer reviewer
-    if (path.endsWith('/peer-reviewers') && req.method === 'POST') {
+    // Route: POST /peer-reviewers - Create peer reviewer
+    if (path.endsWith('/peer-reviewers') && method === 'POST') {
       const body = await req.text();
       console.log('Creating peer reviewer');
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/users/peer-reviewers`, headers, body);
     }
 
-    // Route: DELETE /proposals-proxy/peer-reviewers/:id - Delete peer reviewer
+    // Route: DELETE /peer-reviewers/:id - Delete peer reviewer
     const peerReviewerDeleteMatch = path.match(/\/peer-reviewers\/([^\/]+)$/);
-    if (peerReviewerDeleteMatch && req.method === 'DELETE') {
+    if (peerReviewerDeleteMatch && method === 'DELETE') {
       const reviewerId = peerReviewerDeleteMatch[1];
       console.log(`Deleting peer reviewer: ${reviewerId}`);
       return await proxyRequest('DELETE', `${API_BASE_URL}/api/proposals/users/peer-reviewers/${encodeURIComponent(reviewerId)}`, headers);
     }
 
-    // Route: GET /proposals-proxy/comments/:ticket - Get proposal comments
+    // Route: GET /comments/:ticket - Get proposal comments
     const commentsGetMatch = path.match(/\/comments\/([^\/]+)$/);
-    if (commentsGetMatch && req.method === 'GET') {
+    if (commentsGetMatch && method === 'GET') {
       const ticketNumber = commentsGetMatch[1];
       console.log(`Fetching comments for: ${ticketNumber}`);
       return await proxyRequest('GET', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, headers);
     }
 
-    // Route: POST /proposals-proxy/comments/:ticket - Add comment to proposal
+    // Route: POST /comments/:ticket - Add comment to proposal
     const commentsPostMatch = path.match(/\/comments\/([^\/]+)$/);
-    if (commentsPostMatch && req.method === 'POST') {
+    if (commentsPostMatch && method === 'POST') {
       const ticketNumber = commentsPostMatch[1];
       const body = await req.text();
       console.log(`Adding comment to: ${ticketNumber}`);
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, headers, body);
     }
 
-    // Route: POST /proposals-proxy/assign/:ticket - Assign proposal to peer reviewers
+    // Route: POST /assign/:ticket - Assign proposal to peer reviewers
     const assignMatch = path.match(/\/assign\/([^\/]+)$/);
-    if (assignMatch && req.method === 'POST') {
+    if (assignMatch && method === 'POST') {
       const ticketNumber = assignMatch[1];
       const body = await req.text();
       console.log(`Assigning proposal: ${ticketNumber}`);
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, headers, body);
     }
 
-    // Route: PATCH /proposals-proxy/status/:ticket - Update proposal status
+    // Route: PATCH /status/:ticket - Update proposal status
     const statusMatch = path.match(/\/status\/([^\/]+)$/);
-    if (statusMatch && req.method === 'PATCH') {
+    if (statusMatch && method === 'PATCH') {
       const ticketNumber = statusMatch[1];
       const body = await req.text();
       console.log(`Updating status for: ${ticketNumber}`);
       return await proxyRequest('PATCH', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/status`, headers, body);
     }
 
-    // Route: POST /proposals-proxy/revise/:ticket - Create proposal revision
+    // Route: POST /revise/:ticket - Create proposal revision
     const reviseMatch = path.match(/\/revise\/([^\/]+)$/);
-    if (reviseMatch && req.method === 'POST') {
+    if (reviseMatch && method === 'POST') {
       const ticketNumber = reviseMatch[1];
       const body = await req.text();
       console.log(`Creating revision for: ${ticketNumber}`);
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/revise`, headers, body);
     }
 
-    // Route: DELETE /proposals-proxy/proposal/:ticket - Delete proposal
+    // Route: DELETE /proposal/:ticket - Delete proposal
     const deleteMatch = path.match(/\/proposal\/([^\/]+)$/);
-    if (deleteMatch && req.method === 'DELETE') {
+    if (deleteMatch && method === 'DELETE') {
       const ticketNumber = deleteMatch[1];
       console.log(`Deleting proposal: ${ticketNumber}`);
       return await proxyRequest('DELETE', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}`, headers);
     }
 
     // Default route: Original GET proposals behavior
-    if (req.method === 'GET') {
+    if (method === 'GET') {
       const ticketNumber = url.searchParams.get('ticket');
       const limit = url.searchParams.get('limit') || '50';
       const offset = url.searchParams.get('offset') || '0';
