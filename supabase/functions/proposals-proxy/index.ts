@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,22 @@ function buildUpstreamHeaders(req: Request, authHeader: string): Record<string, 
   return headers;
 }
 
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status,
+  });
+}
+
+function errorResponse(message: string, status: number, upstream?: unknown): Response {
+  return jsonResponse(
+    upstream
+      ? { error: message, upstream }
+      : { error: message },
+    status
+  );
+}
+
 // Generic proxy request handler
 async function proxyRequest(
   method: string,
@@ -34,7 +51,7 @@ async function proxyRequest(
     method,
     headers,
   };
-  
+
   if (body && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
     fetchOptions.body = body;
   }
@@ -49,27 +66,56 @@ async function proxyRequest(
       body: responseText,
     });
 
-    return new Response(
-      JSON.stringify({
-        error: `Upstream API error (${response.status})`,
-        upstream: {
-          status: response.status,
-          url: apiUrl,
-          body: responseText,
-        },
-      }),
+    return errorResponse(
+      `Upstream API error (${response.status})`,
+      response.status,
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: response.status,
+        url: apiUrl,
+        body: responseText,
       }
     );
   }
 
   const data = responseText ? JSON.parse(responseText) : null;
-  return new Response(JSON.stringify(data), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    status: 200,
-  });
+  return jsonResponse(data, 200);
+}
+
+type LocalOverride = {
+  id: string;
+  status: string;
+  contract_sent?: boolean | null;
+  contract_sent_at?: string | null;
+  finalised_at?: string | null;
+  finalised_by?: string | null;
+  value?: number | null;
+  updated_at?: string | null;
+  ticket_number?: string | null;
+};
+
+async function getLocalOverrideByTicket(ticketNumber: string): Promise<LocalOverride | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn('Missing backend env vars for local override lookup');
+    return null;
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('id,status,contract_sent,contract_sent_at,finalised_at,finalised_by,value,updated_at,ticket_number')
+    .eq('ticket_number', ticketNumber)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Local override lookup failed', { ticketNumber, error });
+    return null;
+  }
+
+  return (data as LocalOverride | null) ?? null;
 }
 
 serve(async (req) => {
@@ -88,13 +134,10 @@ serve(async (req) => {
 
     // Get authorization token from request headers
     const authHeader = req.headers.get('authorization');
-    
+
     if (!authHeader) {
       console.error('No authorization token provided');
-      return new Response(
-        JSON.stringify({ error: 'Authorization token is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
+      return errorResponse('Authorization token is required', 401);
     }
 
     const headers = buildUpstreamHeaders(req, authHeader);
@@ -178,35 +221,42 @@ serve(async (req) => {
       const limit = url.searchParams.get('limit') || '50';
       const offset = url.searchParams.get('offset') || '0';
 
-      let apiUrl: string;
-      
       if (ticketNumber) {
         const safeTicket = encodeURIComponent(ticketNumber);
-        apiUrl = `${API_BASE_URL}/api/proposals/${safeTicket}`;
+        const apiUrl = `${API_BASE_URL}/api/proposals/${safeTicket}`;
         console.log(`Fetching proposal details: ${ticketNumber}`);
-      } else {
-        apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
-        console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
+
+        // Get upstream details
+        const upstreamRes = await proxyRequest('GET', apiUrl, headers);
+        if (!upstreamRes.ok) return upstreamRes;
+
+        const upstreamData = await upstreamRes.json().catch(() => null) as any;
+
+        // Merge in local workflow override (status + local UUID), so refresh shows correct actions
+        const localOverride = await getLocalOverrideByTicket(ticketNumber);
+
+        if (upstreamData && localOverride) {
+          upstreamData.status = localOverride.status; // overrides external 'new'/'under_review' etc
+          upstreamData.local_override = localOverride;
+        } else if (upstreamData) {
+          upstreamData.local_override = null;
+        }
+
+        return jsonResponse(upstreamData, 200);
       }
 
+      // List endpoint (unchanged)
+      const apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
+      console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
       return await proxyRequest('GET', apiUrl, headers);
     }
 
     // Method not supported for this path
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed or invalid path' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
-    );
+    return errorResponse('Method not allowed or invalid path', 405);
 
   } catch (error: unknown) {
     console.error('Error fetching proposals:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch proposals';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    return errorResponse(errorMessage, 500);
   }
 });
