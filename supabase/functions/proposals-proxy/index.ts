@@ -88,6 +88,7 @@ async function proxyRequest(
     }
   }
   return jsonResponse(data, 200);
+}
 
 type LocalOverride = {
   id: string;
