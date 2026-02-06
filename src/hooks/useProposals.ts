@@ -242,24 +242,12 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch proposals only from external API
+      // Fetch proposals from external API (which now includes local_override from backend proxy)
       const apiData = await fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
-      // Fetch all local overrides for these proposals
-      const ticketNumbers = apiData.proposals.map(p => p.ticket_number);
-      const { data: localOverrides } = await supabase
-        .from('proposals')
-        .select('*')
-        .in('ticket_number', ticketNumbers);
-      
-      // Create a map of ticket_number -> local override
-      const overrideMap = new Map(
-        (localOverrides || []).map(o => [o.ticket_number, o])
-      );
-
-      // Map API proposals with local overrides
-      let proposals = apiData.proposals.map(apiProposal => {
-        const localOverride = overrideMap.get(apiProposal.ticket_number);
+      // Map API proposals - use local_override provided by the backend proxy
+      let proposals = apiData.proposals.map((apiProposal: any) => {
+        const localOverride = apiProposal.local_override || null;
         return mapApiProposal(apiProposal, localOverride);
       });
 

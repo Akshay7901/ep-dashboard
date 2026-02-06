@@ -93,7 +93,7 @@ type LocalOverride = {
   ticket_number?: string | null;
 };
 
-async function getLocalOverrideByTicket(ticketNumber: string): Promise<LocalOverride | null> {
+function getSupabaseClient() {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -102,7 +102,12 @@ async function getLocalOverrideByTicket(ticketNumber: string): Promise<LocalOver
     return null;
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
+
+async function getLocalOverrideByTicket(ticketNumber: string): Promise<LocalOverride | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
 
   const { data, error } = await supabase
     .from('proposals')
@@ -116,6 +121,32 @@ async function getLocalOverrideByTicket(ticketNumber: string): Promise<LocalOver
   }
 
   return (data as LocalOverride | null) ?? null;
+}
+
+async function getLocalOverridesByTickets(ticketNumbers: string[]): Promise<Map<string, LocalOverride>> {
+  const map = new Map<string, LocalOverride>();
+  if (ticketNumbers.length === 0) return map;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return map;
+
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('id,status,contract_sent,contract_sent_at,finalised_at,finalised_by,value,updated_at,ticket_number')
+    .in('ticket_number', ticketNumbers);
+
+  if (error) {
+    console.error('Local overrides lookup failed', { error });
+    return map;
+  }
+
+  for (const row of (data || [])) {
+    if (row.ticket_number) {
+      map.set(row.ticket_number, row as LocalOverride);
+    }
+  }
+
+  return map;
 }
 
 serve(async (req) => {
@@ -245,10 +276,31 @@ serve(async (req) => {
         return jsonResponse(upstreamData, 200);
       }
 
-      // List endpoint (unchanged)
+      // List endpoint - merge local overrides for each proposal
       const apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
       console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
-      return await proxyRequest('GET', apiUrl, headers);
+
+      const upstreamRes = await proxyRequest('GET', apiUrl, headers);
+      if (!upstreamRes.ok) return upstreamRes;
+
+      const upstreamData = await upstreamRes.json().catch(() => null) as any;
+
+      if (upstreamData?.proposals && Array.isArray(upstreamData.proposals)) {
+        const ticketNumbers = upstreamData.proposals.map((p: any) => p.ticket_number).filter(Boolean);
+        const overrideMap = await getLocalOverridesByTickets(ticketNumbers);
+
+        for (const proposal of upstreamData.proposals) {
+          const override = overrideMap.get(proposal.ticket_number);
+          if (override) {
+            proposal.status = override.status;
+            proposal.local_override = override;
+          } else {
+            proposal.local_override = null;
+          }
+        }
+      }
+
+      return jsonResponse(upstreamData, 200);
     }
 
     // Method not supported for this path
