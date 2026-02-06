@@ -202,7 +202,10 @@ const ProposalDetails: React.FC = () => {
 
                 <OverviewItem label="Expected Completion" value={proposal.expected_completion_date} />
 
-                <OverviewItem label="Status" value={proposal.status} />
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                </div>
               </CardContent>
             </Card>
 
