@@ -77,9 +77,17 @@ async function proxyRequest(
     );
   }
 
-  const data = responseText ? JSON.parse(responseText) : null;
+  let data: unknown = null;
+  if (responseText && responseText.trim().length > 0) {
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      // Upstream sometimes returns plain text (or non-JSON) even on 200s.
+      // Never crash the function—just pass through raw text.
+      data = { raw: responseText };
+    }
+  }
   return jsonResponse(data, 200);
-}
 
 type LocalOverride = {
   id: string;
