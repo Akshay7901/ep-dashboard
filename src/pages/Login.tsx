@@ -44,7 +44,7 @@ const Login: React.FC = () => {
         title: "Welcome back!",
         description: "You have successfully logged in."
       });
-      navigate("/dashboard");
+      navigate("/proposals");
     } catch (error: any) {
       toast({
         variant: "destructive",
