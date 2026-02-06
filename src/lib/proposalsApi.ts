@@ -142,7 +142,7 @@ export const assignmentsApi = {
       method: 'POST',
       headers: {
         ...buildHeaders(),
-        'x-custom-path': `/proposals/${ticketNumber}/assign`,
+        'x-custom-path': `/assign/${ticketNumber}`,
       },
       body: assignment,
     });
