@@ -435,19 +435,34 @@ export const useUpdateProposalStatus = () => {
     onSuccess: (data, variables) => {
       const lookupTicket = variables.ticketNumber || variables.proposalData?.ticket_number || variables.id;
       
-      // Invalidate all proposals list queries
-      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      // Directly update the proposal cache with the new status
+      // This is necessary because RLS blocks direct Supabase queries from the frontend
+      queryClient.setQueryData(['proposal', lookupTicket], (oldData: Proposal | undefined) => {
+        if (oldData) {
+          return {
+            ...oldData,
+            status: data.newStatus,
+            id: data.localId || oldData.id,
+          };
+        }
+        return oldData;
+      });
       
-      // Invalidate the specific proposal query by ticket number
-      queryClient.invalidateQueries({ queryKey: ['proposal', lookupTicket] });
-      
-      // Also invalidate by local ID if we have one
+      // Also update by local ID if we have one
       if (data?.localId) {
-        queryClient.invalidateQueries({ queryKey: ['proposal', data.localId] });
+        queryClient.setQueryData(['proposal', data.localId], (oldData: Proposal | undefined) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              status: data.newStatus,
+            };
+          }
+          return oldData;
+        });
       }
       
-      // Force refetch the current proposal to get updated local status
-      queryClient.refetchQueries({ queryKey: ['proposal', lookupTicket] });
+      // Invalidate proposals list to refresh status in the list view
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
       
       toast({
         title: 'Status updated',
