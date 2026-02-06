@@ -83,16 +83,37 @@ export const peerReviewersApi = {
         'x-custom-method': 'DELETE',
       },
     });
-    
-    // Check if response contains an error (409 conflict comes back in data)
-    if (data?.error || data?.upstream) {
-      const upstreamError = data.upstream || data;
-      const err = new Error(data.error || 'Failed to delete peer reviewer') as any;
+
+    // For non-2xx responses, supabase-js surfaces the payload via `error`.
+    // We still want to extract the upstream JSON so the UI can show a helpful message.
+    if (error) {
+      const err: any = new Error(error.message || 'Failed to delete peer reviewer');
+      err.original = error;
+
+      try {
+        const response: Response | undefined = (error as any)?.context?.response;
+        if (response) {
+          const text = await response.clone().text();
+          const parsed = text ? JSON.parse(text) : null;
+          if (parsed) {
+            err.upstream = parsed.upstream || parsed;
+            err.status = response.status;
+          }
+        }
+      } catch {
+        // ignore parsing errors; fall back to message-based handling
+      }
+
+      throw err;
+    }
+
+    // Some backends return 200 with an embedded error
+    if ((data as any)?.error || (data as any)?.upstream) {
+      const upstreamError = (data as any).upstream || data;
+      const err: any = new Error((data as any).error || 'Failed to delete peer reviewer');
       err.upstream = upstreamError;
       throw err;
     }
-    
-    if (error) throw error;
   },
 };
  
