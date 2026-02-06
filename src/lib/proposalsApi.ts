@@ -23,9 +23,9 @@
    notes?: string;
  }
  
- export interface AssignmentRequest {
-   reviewer_ids: string[];
- }
+export interface AssignmentRequest {
+  reviewer_emails: string[];
+}
  
  // Get auth token from localStorage
  const getAuthToken = (): string | null => {
