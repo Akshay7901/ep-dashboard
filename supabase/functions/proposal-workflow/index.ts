@@ -81,49 +81,49 @@ serve(async (req) => {
     }
 
     if (action === 'updateStatus') {
-      // Update proposal status
-      if (!proposalData?.id && !ticketNumber) {
-        return new Response(JSON.stringify({ error: 'Missing proposal ID or ticket number' }), {
+      // Update proposal status - always use ticketNumber to look up the proposal
+      const lookupTicket = ticketNumber || proposalData?.ticket_number;
+      
+      if (!lookupTicket) {
+        return new Response(JSON.stringify({ error: 'Missing ticket number' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      let proposalId = proposalData?.id;
+      let proposalId: string | null = null;
 
-      // If we have a ticket number, find or create the local record
-      if (ticketNumber && !proposalId) {
-        const { data: existing } = await supabase
+      // Always look up by ticket number first (never trust proposalData.id as it may be the ticket number string)
+      const { data: existing } = await supabase
+        .from('proposals')
+        .select('id')
+        .eq('ticket_number', lookupTicket)
+        .maybeSingle();
+
+      if (existing) {
+        proposalId = existing.id;
+      } else if (proposalData) {
+        // Create new record first
+        const { data: newProposal, error: insertError } = await supabase
           .from('proposals')
+          .insert({
+            ticket_number: lookupTicket,
+            name: proposalData.name || proposalData.title || 'Untitled',
+            author_name: proposalData.author_name || proposalData.author || 'Unknown',
+            author_email: proposalData.author_email || proposalData.email || 'unknown@email.com',
+            status: previousStatus || 'submitted',
+          })
           .select('id')
-          .eq('ticket_number', ticketNumber)
-          .maybeSingle();
+          .single();
 
-        if (existing) {
-          proposalId = existing.id;
-        } else if (proposalData) {
-          // Create new record first
-          const { data: newProposal, error: insertError } = await supabase
-            .from('proposals')
-            .insert({
-              ticket_number: ticketNumber,
-              name: proposalData.name || proposalData.title || 'Untitled',
-              author_name: proposalData.author_name || proposalData.author || 'Unknown',
-              author_email: proposalData.author_email || proposalData.email || 'unknown@email.com',
-              status: previousStatus || 'submitted',
-            })
-            .select('id')
-            .single();
-
-          if (insertError) {
-            console.error('Insert error:', insertError);
-            return new Response(JSON.stringify({ error: insertError.message }), {
-              status: 500,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-          proposalId = newProposal.id;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          return new Response(JSON.stringify({ error: insertError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
+        proposalId = newProposal.id;
       }
 
       if (!proposalId) {

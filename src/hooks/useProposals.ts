@@ -375,10 +375,16 @@ export const useUpdateProposalStatus = () => {
       const token = localStorage.getItem('auth_token');
       
       // Use edge function to bypass RLS (since we use external API auth)
+      // Always pass ticketNumber - never pass ticket number string as 'id' (which expects UUID)
       const response = await supabase.functions.invoke('proposal-workflow', {
         body: {
           action: 'updateStatus',
-          proposalData: proposalData || { id },
+          proposalData: proposalData ? {
+            ...proposalData,
+            ticket_number: ticketNumber || id,
+          } : {
+            ticket_number: ticketNumber || id,
+          },
           status,
           previousStatus,
           ticketNumber: ticketNumber || id,
