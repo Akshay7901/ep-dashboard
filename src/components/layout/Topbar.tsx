@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, LayoutDashboard, FileText, LogOut, ChevronDown } from 'lucide-react';
+import { Bell, FileText, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ interface TopbarProps {
 }
 
 const navItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Proposals', href: '/proposals', icon: FileText },
 ];
 
