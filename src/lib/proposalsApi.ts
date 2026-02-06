@@ -74,18 +74,26 @@ export const peerReviewersApi = {
      return data;
    },
  
-   delete: async (reviewerId: string): Promise<void> => {
-     const { error } = await supabase.functions.invoke('proposals-proxy', {
-       method: 'POST',
-       headers: {
-         ...buildHeaders(),
-         'x-custom-path': `/peer-reviewers/${reviewerId}`,
-         'x-custom-method': 'DELETE',
-       },
-     });
-     
-     if (error) throw error;
-   },
+  delete: async (reviewerId: string): Promise<void> => {
+    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
+      method: 'POST',
+      headers: {
+        ...buildHeaders(),
+        'x-custom-path': `/peer-reviewers/${reviewerId}`,
+        'x-custom-method': 'DELETE',
+      },
+    });
+    
+    // Check if response contains an error (409 conflict comes back in data)
+    if (data?.error || data?.upstream) {
+      const upstreamError = data.upstream || data;
+      const err = new Error(data.error || 'Failed to delete peer reviewer') as any;
+      err.upstream = upstreamError;
+      throw err;
+    }
+    
+    if (error) throw error;
+  },
 };
  
 // Comments API
