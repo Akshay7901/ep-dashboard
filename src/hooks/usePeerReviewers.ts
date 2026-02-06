@@ -6,11 +6,19 @@
    const queryClient = useQueryClient();
    const { toast } = useToast();
  
-   const reviewersQuery = useQuery({
-     queryKey: ['peer-reviewers'],
-     queryFn: peerReviewersApi.list,
-     staleTime: 60000,
-   });
+  const reviewersQuery = useQuery({
+    queryKey: ['peer-reviewers'],
+    queryFn: async () => {
+      const result = await peerReviewersApi.list();
+      // Handle graceful upstream errors (403/404 returned as 200 with error field)
+      if (result && typeof result === 'object' && 'error' in result) {
+        console.warn('Peer reviewers API returned error:', result);
+        return []; // Return empty array on permission errors
+      }
+      return result;
+    },
+    staleTime: 60000,
+  });
  
    const createMutation = useMutation({
      mutationFn: (reviewer: { email: string; name: string }) => 
