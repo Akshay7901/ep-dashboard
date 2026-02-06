@@ -245,8 +245,23 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
       // Fetch proposals only from external API
       const apiData = await fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
-      // Map API proposals
-      let proposals = apiData.proposals.map(mapApiProposal);
+      // Fetch all local overrides for these proposals
+      const ticketNumbers = apiData.proposals.map(p => p.ticket_number);
+      const { data: localOverrides } = await supabase
+        .from('proposals')
+        .select('*')
+        .in('ticket_number', ticketNumbers);
+      
+      // Create a map of ticket_number -> local override
+      const overrideMap = new Map(
+        (localOverrides || []).map(o => [o.ticket_number, o])
+      );
+
+      // Map API proposals with local overrides
+      let proposals = apiData.proposals.map(apiProposal => {
+        const localOverride = overrideMap.get(apiProposal.ticket_number);
+        return mapApiProposal(apiProposal, localOverride);
+      });
 
       // Client-side filtering for search
       if (search) {
@@ -271,6 +286,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
         totalPages: Math.ceil(apiData.total / limit),
       };
     },
+    staleTime: 0, // Always refetch to get latest local status
   });
 };
 
@@ -291,10 +307,15 @@ export const useProposal = (id: string) => {
 
           // Get local override data if it exists (status, contract_sent, etc.)
           const localOverride = await getLocalOverride(id);
-
+          
+          // Merge data - local status takes priority if it exists
+          const mapped = mapApiProposalDetail(apiProposal, localOverride);
+          
           // Return merged data - use local ID if exists, otherwise use ticket number
           return {
-            ...mapApiProposalDetail(apiProposal, localOverride),
+            ...mapped,
+            // Ensure local status overrides API status when local record exists
+            status: localOverride?.status || mapped.status,
             id: localOverride?.id || id, // Use local UUID if synced, otherwise ticket number
           };
         } catch (e) {
@@ -315,6 +336,7 @@ export const useProposal = (id: string) => {
                 return {
                   ...cachedProposal,
                   ...(localOverride || {}),
+                  status: localOverride?.status || cachedProposal.status,
                   id: localOverride?.id || id,
                   _isPartialData: true, // Flag to indicate this is fallback data
                   _detailFetchError: true,
@@ -334,6 +356,7 @@ export const useProposal = (id: string) => {
               return {
                 ...mapped,
                 ...(localOverride || {}),
+                status: localOverride?.status || mapped.status,
                 id: localOverride?.id || id,
                 _isPartialData: true,
                 _detailFetchError: true,
@@ -351,6 +374,7 @@ export const useProposal = (id: string) => {
     },
     enabled: !!id,
     retry: false,
+    staleTime: 0, // Always refetch to get latest local status
   });
 };
 
@@ -374,6 +398,8 @@ export const useUpdateProposalStatus = () => {
       // Get auth token
       const token = localStorage.getItem('auth_token');
       
+      const lookupTicket = ticketNumber || proposalData?.ticket_number || id;
+      
       // Use edge function to bypass RLS (since we use external API auth)
       // Always pass ticketNumber - never pass ticket number string as 'id' (which expects UUID)
       const response = await supabase.functions.invoke('proposal-workflow', {
@@ -381,13 +407,13 @@ export const useUpdateProposalStatus = () => {
           action: 'updateStatus',
           proposalData: proposalData ? {
             ...proposalData,
-            ticket_number: ticketNumber || id,
+            ticket_number: lookupTicket,
           } : {
-            ticket_number: ticketNumber || id,
+            ticket_number: lookupTicket,
           },
           status,
           previousStatus,
-          ticketNumber: ticketNumber || id,
+          ticketNumber: lookupTicket,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -400,14 +426,29 @@ export const useUpdateProposalStatus = () => {
         throw new Error(response.data.error);
       }
 
-      return { localId: response.data?.id };
+      return { 
+        localId: response.data?.id,
+        ticketNumber: lookupTicket,
+        newStatus: status,
+      };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      const lookupTicket = variables.ticketNumber || variables.proposalData?.ticket_number || variables.id;
+      
+      // Invalidate all proposals list queries
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
-      queryClient.invalidateQueries({ queryKey: ['proposal'] });
+      
+      // Invalidate the specific proposal query by ticket number
+      queryClient.invalidateQueries({ queryKey: ['proposal', lookupTicket] });
+      
+      // Also invalidate by local ID if we have one
       if (data?.localId) {
         queryClient.invalidateQueries({ queryKey: ['proposal', data.localId] });
       }
+      
+      // Force refetch the current proposal to get updated local status
+      queryClient.refetchQueries({ queryKey: ['proposal', lookupTicket] });
+      
       toast({
         title: 'Status updated',
         description: 'Proposal status has been updated successfully.',
