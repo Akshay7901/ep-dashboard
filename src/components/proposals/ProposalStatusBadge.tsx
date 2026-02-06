@@ -32,31 +32,31 @@ const statusConfig: Record<ProposalStatus, {
   under_review: {
     label: 'In Review',
     variant: 'secondary',
-    className: 'bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47] rounded-full px-4',
+    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
     icon: Clock,
   },
   approved: {
     label: 'Contract Sent',
     variant: 'secondary',
-    className: 'bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47] rounded-full px-4',
+    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
     icon: CheckCircle2,
   },
   finalised: {
     label: 'Finalised',
     variant: 'secondary',
-    className: 'bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47] rounded-full px-4',
+    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
     icon: FileCheck,
   },
   rejected: {
     label: 'Declined',
     variant: 'destructive',
-    className: 'bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47] rounded-full px-4',
+    className: 'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c] rounded-full px-4',
     icon: XCircle,
   },
   locked: {
     label: 'Locked',
     variant: 'secondary',
-    className: 'bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47] rounded-full px-4',
+    className: 'bg-gray-600 text-white hover:bg-gray-600 border-gray-600 rounded-full px-4',
     icon: Lock,
   },
 };
