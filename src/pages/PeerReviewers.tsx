@@ -39,7 +39,6 @@ const PeerReviewers: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    expertise: '',
   });
 
   const handleAddReviewer = () => {
@@ -50,7 +49,7 @@ const PeerReviewers: React.FC = () => {
       {
         onSuccess: () => {
           setIsAddDialogOpen(false);
-          setFormData({ name: '', email: '', expertise: '' });
+          setFormData({ name: '', email: '' });
         },
       }
     );
@@ -130,9 +129,6 @@ const PeerReviewers: React.FC = () => {
                   <div className="space-y-1">
                     <p className="font-medium text-foreground">{reviewer.name || reviewer.email.split('@')[0]}</p>
                     <p className="text-sm text-muted-foreground">{reviewer.email}</p>
-                    {(reviewer as any).expertise && (
-                      <p className="text-sm text-muted-foreground">{(reviewer as any).expertise}</p>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm">
@@ -182,15 +178,6 @@ const PeerReviewers: React.FC = () => {
                 placeholder="e.g., m.zhang@university.edu"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="expertise">Area of Expertise (optional)</Label>
-              <Input
-                id="expertise"
-                placeholder="e.g., Climate Science & Environmental Studies"
-                value={formData.expertise}
-                onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
               />
             </div>
           </div>
