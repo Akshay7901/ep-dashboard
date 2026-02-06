@@ -26,9 +26,9 @@
      },
    });
  
-   const assignMutation = useMutation({
-     mutationFn: (reviewerIds: string[]) => 
-       assignmentsApi.assign(ticketNumber!, { reviewer_ids: reviewerIds }),
+  const assignMutation = useMutation({
+    mutationFn: (reviewerEmails: string[]) => 
+      assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails }),
      onSuccess: () => {
        queryClient.invalidateQueries({ queryKey: ['proposals'] });
        queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });

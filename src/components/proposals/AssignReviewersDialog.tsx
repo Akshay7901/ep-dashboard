@@ -13,12 +13,12 @@
  import { Loader2, UserPlus } from 'lucide-react';
  import { usePeerReviewers } from '@/hooks/usePeerReviewers';
  
- interface AssignReviewersDialogProps {
-   open: boolean;
-   onOpenChange: (open: boolean) => void;
-   onAssign: (reviewerIds: string[]) => void;
-   isLoading: boolean;
- }
+interface AssignReviewersDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAssign: (reviewerEmails: string[]) => void;
+  isLoading: boolean;
+}
  
  const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
    open,
@@ -37,10 +37,14 @@
      );
    };
  
-   const handleSubmit = (e: React.FormEvent) => {
-     e.preventDefault();
-     onAssign(selectedReviewers);
-   };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Convert selected reviewer IDs to emails
+    const selectedEmails = reviewers
+      .filter((r) => selectedReviewers.includes(r.id))
+      .map((r) => r.email);
+    onAssign(selectedEmails);
+  };
  
    return (
      <Dialog open={open} onOpenChange={onOpenChange}>
