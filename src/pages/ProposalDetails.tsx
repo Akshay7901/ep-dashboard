@@ -63,7 +63,7 @@ const ProposalDetails: React.FC = () => {
   const { isReviewer1, isReviewer2 } = useAuth();
   const { reviewers } = usePeerReviewers();
   const { defaultEmail } = useDefaultReviewer();
-  const [selectedReviewer, setSelectedReviewer] = useState<string>('');
+  const [selectedReviewer, setSelectedReviewer] = useState<string>("");
 
   const [documentPreview, setDocumentPreview] = useState<{
     url: string;
@@ -74,12 +74,12 @@ const ProposalDetails: React.FC = () => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'accept' | 'decline' | null>(null);
+  const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
 
   // Set default reviewer when data loads
   React.useEffect(() => {
     if (defaultEmail && reviewers.length > 0 && !selectedReviewer) {
-      const found = reviewers.find(r => r.email === defaultEmail);
+      const found = reviewers.find((r) => r.email === defaultEmail);
       if (found) {
         setSelectedReviewer(found.email);
       }
@@ -136,21 +136,21 @@ const ProposalDetails: React.FC = () => {
   const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning;
 
   const revertToNew = () => {
-    const ticketNumber = proposal.ticket_number || id || '';
+    const ticketNumber = proposal.ticket_number || id || "";
 
     // 1) First clear reviewer assignments by sending empty array
     assignReviewers([], {
       onSuccess: () => {
         // 2) Then revert upstream status to 'new'
         upstreamUpdateStatus(
-          { status: 'new', notes: 'Reverted to new status' },
+          { status: "new", notes: "Reverted to new status" },
           {
             onSuccess: () => {
               // 3) Reset local workflow override back to submitted
               workflowStatus.mutate(
                 {
-                  id: localId || id || '',
-                  status: 'submitted',
+                  id: localId || id || "",
+                  status: "submitted",
                   previousStatus: proposal.status,
                   ticketNumber,
                   proposalData: {
@@ -165,22 +165,22 @@ const ProposalDetails: React.FC = () => {
                   onSuccess: () => {
                     setIsRevertDialogOpen(false);
                   },
-                }
+                },
               );
             },
-          }
+          },
         );
       },
       onError: () => {
         // If clearing assignments fails, still try to update status
         upstreamUpdateStatus(
-          { status: 'new', notes: 'Reverted to new status' },
+          { status: "new", notes: "Reverted to new status" },
           {
             onSuccess: () => {
               workflowStatus.mutate(
                 {
-                  id: localId || id || '',
-                  status: 'submitted',
+                  id: localId || id || "",
+                  status: "submitted",
                   previousStatus: proposal.status,
                   ticketNumber,
                   proposalData: {
@@ -195,10 +195,10 @@ const ProposalDetails: React.FC = () => {
                   onSuccess: () => {
                     setIsRevertDialogOpen(false);
                   },
-                }
+                },
               );
             },
-          }
+          },
         );
       },
     });
@@ -211,7 +211,7 @@ const ProposalDetails: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Back */}
 
-        <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}> 
+        <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </Button>
@@ -241,8 +241,8 @@ const ProposalDetails: React.FC = () => {
                   <SelectContent>
                     {reviewers.map((reviewer) => (
                       <SelectItem key={reviewer.id} value={reviewer.email}>
-                        {reviewer.name || reviewer.email.split('@')[0]}
-                        {reviewer.email === defaultEmail && ' (Default)'}
+                        {reviewer.name || reviewer.email.split("@")[0]}
+                        {reviewer.email === defaultEmail && " (Default)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -251,17 +251,15 @@ const ProposalDetails: React.FC = () => {
             )}
 
             {/* Show status badge after initial submission */}
-            {proposal.status !== 'submitted' && (
-              <ProposalStatusBadge status={proposal.status} showIcon={false} />
-            )}
+            {proposal.status !== "submitted" && <ProposalStatusBadge status={proposal.status} showIcon={false} />}
 
             {/* Action buttons for submitted proposals */}
-            {proposal.status === 'submitted' && (
+            {proposal.status === "submitted" && (
               <>
                 <Button
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-[#3d5a47"
                   onClick={() => {
-                    setPendingAction('accept');
+                    setPendingAction("accept");
                     setIsAssignDialogOpen(true);
                   }}
                   disabled={workflowStatus.isPending}
@@ -280,12 +278,8 @@ const ProposalDetails: React.FC = () => {
             )}
 
             {/* Revert action for Reviewer 1 when under review */}
-            {isReviewer1 && proposal.status === 'under_review' && (
-              <Button
-                variant="outline"
-                onClick={() => setIsRevertDialogOpen(true)}
-                disabled={isBusy}
-              >
+            {isReviewer1 && proposal.status === "under_review" && (
+              <Button variant="outline" onClick={() => setIsRevertDialogOpen(true)} disabled={isBusy}>
                 Revert to New
               </Button>
             )}
@@ -417,9 +411,7 @@ const ProposalDetails: React.FC = () => {
                     <FileText className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">{proposal.cv_file_name || "CV Document"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        PDF • {proposal.cv_file_size || "Unknown size"}
-                      </p>
+                      <p className="text-sm text-muted-foreground">PDF • {proposal.cv_file_size || "Unknown size"}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -458,10 +450,7 @@ const ProposalDetails: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 {proposal.keywords ? (
                   proposal.keywords.split(",").map((keyword: string, i: number) => (
-                    <span
-                      key={i}
-                      className="bg-muted text-foreground text-sm px-3 py-1 rounded-md border"
-                    >
+                    <span key={i} className="bg-muted text-foreground text-sm px-3 py-1 rounded-md border">
                       {keyword.trim()}
                     </span>
                   ))
@@ -594,8 +583,8 @@ const ProposalDetails: React.FC = () => {
               // Then update status to under_review (local workflow)
               workflowStatus.mutate(
                 {
-                  id: localId || id || '',
-                  status: 'under_review',
+                  id: localId || id || "",
+                  status: "under_review",
                   previousStatus: proposal.status,
                   ticketNumber: proposal.ticket_number || id,
                   proposalData: {
@@ -611,7 +600,7 @@ const ProposalDetails: React.FC = () => {
                     setIsAssignDialogOpen(false);
                     setPendingAction(null);
                   },
-                }
+                },
               );
             },
           });
@@ -626,8 +615,8 @@ const ProposalDetails: React.FC = () => {
         onConfirm={() => {
           workflowStatus.mutate(
             {
-              id: localId || id || '',
-              status: 'rejected',
+              id: localId || id || "",
+              status: "rejected",
               previousStatus: proposal.status,
               ticketNumber: proposal.ticket_number || id,
               proposalData: {
@@ -642,7 +631,7 @@ const ProposalDetails: React.FC = () => {
               onSuccess: () => {
                 setIsDeclineDialogOpen(false);
               },
-            }
+            },
           );
         }}
         isLoading={workflowStatus.isPending}
