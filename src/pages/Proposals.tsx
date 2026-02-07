@@ -1,113 +1,119 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import ProposalStatusBadge from '@/components/proposals/ProposalStatusBadge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ProposalStatus } from '@/types';
-import { Search, Loader2, Users } from 'lucide-react';
-import { useProposals } from '@/hooks/useProposals';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
-import logo from '@/assets/logo.jpg';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProposalStatus } from "@/types";
+import { Search, Loader2, Users } from "lucide-react";
+import { useProposals } from "@/hooks/useProposals";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.jpg";
 const ITEMS_PER_PAGE = 10;
 const statusOptions: {
-  value: ProposalStatus | 'all';
+  value: ProposalStatus | "all";
   label: string;
-}[] = [{
-  value: 'all',
-  label: 'All Statuses'
-}, {
-  value: 'submitted',
-  label: 'New'
-}, {
-  value: 'under_review',
-  label: 'In Review'
-}, {
-  value: 'approved',
-  label: 'Contract Sent'
-}, {
-  value: 'finalised',
-  label: 'Finalised'
-}, {
-  value: 'rejected',
-  label: 'Declined'
-}, {
-  value: 'locked',
-  label: 'Locked'
-}];
+}[] = [
+  {
+    value: "all",
+    label: "All Statuses",
+  },
+  {
+    value: "submitted",
+    label: "New",
+  },
+  {
+    value: "under_review",
+    label: "In Review",
+  },
+  {
+    value: "approved",
+    label: "Contract Sent",
+  },
+  {
+    value: "finalised",
+    label: "Finalised",
+  },
+  {
+    value: "rejected",
+    label: "Declined",
+  },
+  {
+    value: "locked",
+    label: "Locked",
+  },
+];
 interface StatusChipProps {
   count: number;
   label: string;
-  variant: 'default' | 'new' | 'review' | 'contract' | 'declined';
+  variant: "default" | "new" | "review" | "contract" | "declined";
   isActive?: boolean;
   onClick?: () => void;
 }
-const StatusChip: React.FC<StatusChipProps> = ({
-  count,
-  label,
-  variant,
-  isActive,
-  onClick
-}) => {
+const StatusChip: React.FC<StatusChipProps> = ({ count, label, variant, isActive, onClick }) => {
   const variantStyles = {
-    default: 'bg-muted text-foreground border-border',
-    new: 'bg-[#3d5a47] text-white border-[#3d5a47]',
-    review: 'bg-[#2d3748] text-white border-[#2d3748]',
-    contract: 'bg-[#2d3748] text-white border-[#2d3748]',
-    declined: 'bg-[#9b2c2c] text-white border-[#9b2c2c]'
+    default: "bg-muted text-foreground border-border",
+    new: "bg-[#3d5a47] text-white border-[#3d5a47]",
+    review: "bg-[#2d3748] text-white border-[#2d3748]",
+    contract: "bg-[#2d3748] text-white border-[#2d3748]",
+    declined: "bg-[#9b2c2c] text-white border-[#9b2c2c]",
   };
-  return <button onClick={onClick} className={cn("inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded", variantStyles[variant], isActive && 'ring-2 ring-offset-2 ring-primary')}>
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded",
+        variantStyles[variant],
+        isActive && "ring-2 ring-offset-2 ring-primary",
+      )}
+    >
       {count} {label}
-    </button>;
+    </button>
+  );
 };
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    isAnyReviewer
-  } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { isAnyReviewer } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
-  const {
-    data,
-    isLoading,
-    error
-  } = useProposals({
+  const { data, isLoading, error } = useProposals({
     page: 1,
     limit: 100,
     // Fetch more to calculate counts
     search: searchQuery,
-    status: 'all' // Always fetch all for counts, filter client-side
+    status: "all", // Always fetch all for counts, filter client-side
   });
 
   // Calculate status counts
   const statusCounts = React.useMemo(() => {
-    if (!data?.data) return {
-      total: 0,
-      new: 0,
-      review: 0,
-      contract: 0,
-      declined: 0
-    };
+    if (!data?.data)
+      return {
+        total: 0,
+        new: 0,
+        review: 0,
+        contract: 0,
+        declined: 0,
+      };
     return {
       total: data.data.length,
-      new: data.data.filter(p => p.status === 'submitted').length,
-      review: data.data.filter(p => p.status === 'under_review').length,
-      contract: data.data.filter(p => p.status === 'approved').length,
-      declined: data.data.filter(p => p.status === 'rejected').length
+      new: data.data.filter((p) => p.status === "submitted").length,
+      review: data.data.filter((p) => p.status === "under_review").length,
+      contract: data.data.filter((p) => p.status === "approved").length,
+      declined: data.data.filter((p) => p.status === "rejected").length,
     };
   }, [data?.data]);
 
   // Filter proposals based on status
   const filteredProposals = React.useMemo(() => {
     if (!data?.data) return [];
-    if (statusFilter === 'all') return data.data;
-    return data.data.filter(p => p.status === statusFilter);
+    if (statusFilter === "all") return data.data;
+    return data.data.filter((p) => p.status === statusFilter);
   }, [data?.data, statusFilter]);
 
   // Paginate results
@@ -121,14 +127,15 @@ const Proposals: React.FC = () => {
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as ProposalStatus | 'all');
+    setStatusFilter(value as ProposalStatus | "all");
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleViewMore = () => {
-    setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+    setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
   };
   if (!isAnyReviewer) {
-    return <DashboardLayout title="Proposals">
+    return (
+      <DashboardLayout title="Proposals">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground text-center">
@@ -138,7 +145,8 @@ const Proposals: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-      </DashboardLayout>;
+      </DashboardLayout>
+    );
   }
   return (
     <DashboardLayout title="Proposals">
@@ -146,17 +154,11 @@ const Proposals: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="Proposal Intake Logo"
-              className="h-8 w-auto"
-            />
-            <h1 className="text-2xl font-bold text-foreground">
-              Proposal Intake
-            </h1>
+            <img src={logo} alt="Proposal Intake Logo" className="h-8 w-auto" />
+            <h1 className="text-2xl font-bold text-foreground">Proposal Intake</h1>
           </div>
 
-          <Button variant="outline" className="gap-2" onClick={() => navigate('/peer-reviewers')}>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
             <Users className="h-4 w-4" />
             Peer Reviewers
           </Button>
@@ -164,11 +166,41 @@ const Proposals: React.FC = () => {
 
         {/* Status Summary Chips */}
         <div className="flex flex-wrap items-center gap-3">
-          <StatusChip count={statusCounts.total} label="Proposals" variant="default" isActive={statusFilter === 'all'} onClick={() => handleStatusChange('all')} />
-          <StatusChip count={statusCounts.new} label="New" variant="new" isActive={statusFilter === 'submitted'} onClick={() => handleStatusChange('submitted')} />
-          <StatusChip count={statusCounts.review} label="In Review" variant="review" isActive={statusFilter === 'under_review'} onClick={() => handleStatusChange('under_review')} />
-          <StatusChip count={statusCounts.contract} label="Contract Sent" variant="contract" isActive={statusFilter === 'approved'} onClick={() => handleStatusChange('approved')} />
-          <StatusChip count={statusCounts.declined} label="Declined" variant="declined" isActive={statusFilter === 'rejected'} onClick={() => handleStatusChange('rejected')} />
+          <StatusChip
+            count={statusCounts.total}
+            label="Proposals"
+            variant="default"
+            isActive={statusFilter === "all"}
+            onClick={() => handleStatusChange("all")}
+          />
+          <StatusChip
+            count={statusCounts.new}
+            label="New"
+            variant="new"
+            isActive={statusFilter === "submitted"}
+            onClick={() => handleStatusChange("submitted")}
+          />
+          <StatusChip
+            count={statusCounts.review}
+            label="In Review"
+            variant="review"
+            isActive={statusFilter === "under_review"}
+            onClick={() => handleStatusChange("under_review")}
+          />
+          <StatusChip
+            count={statusCounts.contract}
+            label="Contract Sent"
+            variant="contract"
+            isActive={statusFilter === "approved"}
+            onClick={() => handleStatusChange("approved")}
+          />
+          <StatusChip
+            count={statusCounts.declined}
+            label="Declined"
+            variant="declined"
+            isActive={statusFilter === "rejected"}
+            onClick={() => handleStatusChange("rejected")}
+          />
         </div>
 
         {/* Filters Row */}
@@ -183,13 +215,19 @@ const Proposals: React.FC = () => {
                 <SelectItem value="author">Author</SelectItem>
                 <SelectItem value="title">Title</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="country">Country</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Type here" value={searchQuery} onChange={handleSearchChange} className="pl-10 bg-background" />
+            <Input
+              placeholder="Type here"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-10 bg-background"
+            />
           </div>
 
           <Select value={statusFilter} onValueChange={handleStatusChange}>
@@ -197,9 +235,11 @@ const Proposals: React.FC = () => {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map(option => <SelectItem key={option.value} value={option.value}>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
-                </SelectItem>)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -209,26 +249,33 @@ const Proposals: React.FC = () => {
           <h2 className="text-lg font-semibold text-foreground">Recent Submissions</h2>
 
           {/* Loading state */}
-          {isLoading && <div className="flex justify-center py-12">
+          {isLoading && (
+            <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>}
+            </div>
+          )}
 
           {/* Error state */}
-          {error && <Card>
+          {error && (
+            <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-destructive">Error loading proposals. Please try again.</p>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           {/* Empty state */}
-          {!isLoading && !error && displayedProposals.length === 0 && <Card>
+          {!isLoading && !error && displayedProposals.length === 0 && (
+            <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">No proposals found.</p>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           {/* Proposals Table */}
-          {!isLoading && !error && displayedProposals.length > 0 && <>
+          {!isLoading && !error && displayedProposals.length > 0 && (
+            <>
               <Card className="overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -251,35 +298,39 @@ const Proposals: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayedProposals.map(proposal => <TableRow key={proposal.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleProposalClick(proposal.id)}>
+                    {displayedProposals.map((proposal) => (
+                      <TableRow
+                        key={proposal.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleProposalClick(proposal.id)}
+                      >
                         <TableCell className="font-medium text-foreground max-w-xs">
                           <span className="line-clamp-2">{proposal.name}</span>
                         </TableCell>
+                        <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
+                        <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {proposal.author_name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {proposal.author_email}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {/* Country would come from address field if available */}
-                          —
+                          {/* Country would come from address field if available */}—
                         </TableCell>
                         <TableCell className="text-right">
                           <ProposalStatusBadge status={proposal.status} showIcon={false} />
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </Card>
 
               {/* View More Button */}
-              {hasMore && <div className="flex justify-center pt-4">
+              {hasMore && (
+                <div className="flex justify-center pt-4">
                   <Button variant="outline" onClick={handleViewMore} className="px-8">
                     View More
                   </Button>
-                </div>}
-            </>}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </DashboardLayout>
