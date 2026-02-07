@@ -1,5 +1,4 @@
 import React from 'react';
-import Topbar from './Topbar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,8 +8,6 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Topbar title={title} />
-      
       <main className="flex-1 overflow-y-auto p-4 lg:p-8">
         <div className="animate-fade-in">
           {children}
