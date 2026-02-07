@@ -244,13 +244,31 @@ serve(async (req) => {
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, headers, body);
     }
 
-    // Route: POST /assign/:ticket - Assign proposal to peer reviewers
+    // Route: POST|PUT|PATCH|DELETE /assign/:ticket - Assign/unassign proposal
     const assignMatch = path.match(/\/assign\/([^\/]+)$/);
-    if (assignMatch && method === 'POST') {
+    if (assignMatch && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
       const ticketNumber = assignMatch[1];
       const body = await req.text();
-      console.log(`Assigning proposal: ${ticketNumber}`);
-      return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, headers, body);
+      console.log(`${method} assign for proposal: ${ticketNumber}`);
+      return await proxyRequest(method, `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, headers, body || undefined);
+    }
+
+    // Route: DELETE /assign/:ticket/:email - Remove specific reviewer assignment
+    const assignDeleteMatch = path.match(/\/assign\/([^\/]+)\/([^\/]+)$/);
+    if (assignDeleteMatch && method === 'DELETE') {
+      const ticketNumber = assignDeleteMatch[1];
+      const reviewerEmail = assignDeleteMatch[2];
+      console.log(`Removing reviewer ${reviewerEmail} from proposal: ${ticketNumber}`);
+      return await proxyRequest('DELETE', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign/${encodeURIComponent(reviewerEmail)}`, headers);
+    }
+
+    // Route: POST /unassign/:ticket - Unassign proposal from reviewers
+    const unassignMatch = path.match(/\/unassign\/([^\/]+)$/);
+    if (unassignMatch && method === 'POST') {
+      const ticketNumber = unassignMatch[1];
+      const body = await req.text();
+      console.log(`Unassigning proposal: ${ticketNumber}`);
+      return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/unassign`, headers, body || undefined);
     }
 
     // Route: PATCH /status/:ticket - Update proposal status
