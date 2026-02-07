@@ -274,10 +274,34 @@ const ProposalDetails: React.FC = () => {
                 <Button
                   className="bg-[#3d5a47]"
                   onClick={() => {
-                    setPendingAction("accept");
-                    setIsAssignDialogOpen(true);
+                    if (!selectedReviewer) {
+                      // No reviewer selected — open dialog as fallback
+                      setPendingAction("accept");
+                      setIsAssignDialogOpen(true);
+                      return;
+                    }
+                    // Directly assign the selected reviewer
+                    assignReviewers([selectedReviewer], {
+                      onSuccess: () => {
+                        workflowStatus.mutate(
+                          {
+                            id: localId || id || "",
+                            status: "under_review",
+                            previousStatus: proposal.status,
+                            ticketNumber: proposal.ticket_number || id,
+                            proposalData: {
+                              id: localId || undefined,
+                              name: proposal.name,
+                              author_name: proposal.author_name,
+                              author_email: proposal.author_email,
+                              ticket_number: proposal.ticket_number || id,
+                            },
+                          },
+                        );
+                      },
+                    });
                   }}
-                  disabled={workflowStatus.isPending}
+                  disabled={workflowStatus.isPending || isAssigning}
                 >
                   Submit for review
                 </Button>
