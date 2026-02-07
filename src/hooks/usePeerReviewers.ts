@@ -39,23 +39,35 @@
      },
    });
  
-  const deleteMutation = useMutation({
-    mutationFn: (reviewerId: string) => peerReviewersApi.delete(reviewerId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['peer-reviewers'] });
-      toast({
-        title: 'Peer Reviewer Deleted',
-        description: 'The peer reviewer has been removed.',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete peer reviewer',
-        variant: 'destructive',
-      });
-    },
-  });
+   const deleteMutation = useMutation({
+     mutationFn: (reviewerId: string) => peerReviewersApi.delete(reviewerId),
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['peer-reviewers'] });
+       toast({
+         title: 'Peer Reviewer Deleted',
+         description: 'The peer reviewer has been removed.',
+       });
+     },
+     onError: (error: any) => {
+       // Parse 409 conflict errors for active assignments
+       const upstream = error?.upstream?.body || error?.upstream;
+       const assignmentCount = upstream?.total_assignments;
+       
+       if (assignmentCount) {
+         toast({
+           title: 'Cannot Delete Reviewer',
+           description: `This reviewer has ${assignmentCount} active proposal assignment(s). Please expand the reviewer card and unassign all proposals first.`,
+           variant: 'destructive',
+         });
+       } else {
+         toast({
+           title: 'Error',
+           description: error.message || 'Failed to delete peer reviewer',
+           variant: 'destructive',
+         });
+       }
+     },
+   });
  
    return {
    reviewers: Array.isArray(reviewersQuery.data) ? reviewersQuery.data : [],
