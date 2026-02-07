@@ -25,8 +25,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, X, Star } from "lucide-react";
+import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, ArrowRightLeft, Star } from "lucide-react";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import { useReviewerAssignments } from "@/hooks/useReviewerAssignments";
@@ -46,7 +47,8 @@ const PeerReviewers: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedReviewer, setSelectedReviewer] = useState<{ id: string; name: string } | null>(null);
   const [expandedReviewers, setExpandedReviewers] = useState<Set<string>>(new Set());
-  const [unassigningTicket, setUnassigningTicket] = useState<string | null>(null);
+  const [reassigningTicket, setReassigningTicket] = useState<string | null>(null);
+  const [reassignTarget, setReassignTarget] = useState<Record<string, string>>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -70,37 +72,44 @@ const PeerReviewers: React.FC = () => {
     return assignmentMap?.get(email) || [];
   };
 
-  const handleUnassign = async (ticketNumber: string) => {
-    setUnassigningTicket(ticketNumber);
-    try {
-      // Step 1: Set upstream status to 'new' which may auto-clear assignments
-      await statusApi.update(ticketNumber, { status: "new", notes: "Unassigned reviewer" });
+  const handleReassign = async (ticketNumber: string, currentReviewerEmail: string) => {
+    const targetEmail = reassignTarget[ticketNumber];
+    if (!targetEmail) {
+      toast({
+        title: "Select a reviewer",
+        description: "Please select a reviewer to re-assign this proposal to.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // Step 2: Also try explicit unassign via DELETE (may not be supported, so don't fail on error)
-      try {
-        await assignmentsApi.unassign(ticketNumber);
-      } catch {
-        // DELETE /assign may not be supported by upstream API — status change to 'new' should suffice
-        console.log('DELETE unassign not supported, relying on status change to clear assignment');
-      }
+    setReassigningTicket(ticketNumber);
+    try {
+      // Re-assign the proposal to the new reviewer
+      await assignmentsApi.assign(ticketNumber, { reviewer_emails: [targetEmail] });
 
       toast({
-        title: "Reviewer Unassigned",
-        description: `Removed assignment from proposal ${ticketNumber}`,
+        title: "Proposal Re-assigned",
+        description: `Proposal ${ticketNumber} has been re-assigned successfully.`,
       });
 
-      // Refresh data
+      // Clear selection and refresh
+      setReassignTarget((prev) => {
+        const next = { ...prev };
+        delete next[ticketNumber];
+        return next;
+      });
       queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
       queryClient.invalidateQueries({ queryKey: ["proposals"] });
       queryClient.invalidateQueries({ queryKey: ["peer-reviewers"] });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to unassign reviewer",
+        description: error.message || "Failed to re-assign proposal",
         variant: "destructive",
       });
     } finally {
-      setUnassigningTicket(null);
+      setReassigningTicket(null);
     }
   };
 
@@ -244,7 +253,7 @@ const PeerReviewers: React.FC = () => {
                         {assignments.map((assignment) => (
                           <div
                             key={assignment.ticket_number}
-                            className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2"
+                            className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2"
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -255,22 +264,46 @@ const PeerReviewers: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0 ml-2"
-                              onClick={() => handleUnassign(assignment.ticket_number)}
-                              disabled={unassigningTicket === assignment.ticket_number}
-                            >
-                              {unassigningTicket === assignment.ticket_number ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <X className="h-4 w-4 mr-1" />
-                                  Unassign
-                                </>
-                              )}
-                            </Button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Select
+                                value={reassignTarget[assignment.ticket_number] || ""}
+                                onValueChange={(val) =>
+                                  setReassignTarget((prev) => ({ ...prev, [assignment.ticket_number]: val }))
+                                }
+                              >
+                                <SelectTrigger className="w-40 h-8 text-xs">
+                                  <SelectValue placeholder="Re-assign to..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {reviewers
+                                    .filter((r) => r.email !== reviewer.email)
+                                    .map((r) => (
+                                      <SelectItem key={r.id} value={r.email}>
+                                        {r.name || r.email.split("@")[0]}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8"
+                                onClick={() => handleReassign(assignment.ticket_number, reviewer.email)}
+                                disabled={
+                                  reassigningTicket === assignment.ticket_number ||
+                                  !reassignTarget[assignment.ticket_number]
+                                }
+                              >
+                                {reassigningTicket === assignment.ticket_number ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <>
+                                    <ArrowRightLeft className="h-3 w-3 mr-1" />
+                                    Re-assign
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
