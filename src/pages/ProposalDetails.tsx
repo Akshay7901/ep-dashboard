@@ -38,6 +38,7 @@ import {
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder, UserCircle } from "lucide-react";
 
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +61,7 @@ const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
   const { isReviewer1, isReviewer2 } = useAuth();
   const { reviewers } = usePeerReviewers();
   const { defaultEmail } = useDefaultReviewer();
@@ -170,6 +172,9 @@ const ProposalDetails: React.FC = () => {
             {
               onSuccess: () => {
                 setIsRevertDialogOpen(false);
+                // Invalidate reviewer-assignments so Peer Reviewers page reflects the change
+                queryClient.invalidateQueries({ queryKey: ['reviewer-assignments'] });
+                queryClient.invalidateQueries({ queryKey: ['proposals'] });
               },
             },
           );
