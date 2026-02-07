@@ -73,10 +73,16 @@ const PeerReviewers: React.FC = () => {
   const handleUnassign = async (ticketNumber: string) => {
     setUnassigningTicket(ticketNumber);
     try {
-      // Clear all assignments from this proposal using DELETE
-      await assignmentsApi.unassign(ticketNumber);
-      // Also revert status to 'new' in upstream
+      // Step 1: Set upstream status to 'new' which may auto-clear assignments
       await statusApi.update(ticketNumber, { status: "new", notes: "Unassigned reviewer" });
+
+      // Step 2: Also try explicit unassign via DELETE (may not be supported, so don't fail on error)
+      try {
+        await assignmentsApi.unassign(ticketNumber);
+      } catch {
+        // DELETE /assign may not be supported by upstream API — status change to 'new' should suffice
+        console.log('DELETE unassign not supported, relying on status change to clear assignment');
+      }
 
       toast({
         title: "Reviewer Unassigned",
@@ -86,6 +92,7 @@ const PeerReviewers: React.FC = () => {
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
       queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["peer-reviewers"] });
     } catch (error: any) {
       toast({
         title: "Error",

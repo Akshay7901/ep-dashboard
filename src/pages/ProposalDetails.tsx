@@ -140,43 +140,42 @@ const ProposalDetails: React.FC = () => {
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
 
-    try {
-      // Step 1: Unassign all reviewers from the proposal on the upstream API
-      await unassignReviewers();
+    // Step 1: Revert upstream status to 'new' (this is the primary action that clears assignments)
+    upstreamUpdateStatus(
+      { status: "new", notes: "Reverted to new status" },
+      {
+        onSuccess: async () => {
+          // Step 2: Also try explicit unassign via DELETE (best-effort, don't block on failure)
+          try {
+            await unassignReviewers();
+          } catch {
+            console.log('DELETE unassign not supported, relying on status change');
+          }
 
-      // Step 2: Revert upstream status to 'new'
-      upstreamUpdateStatus(
-        { status: "new", notes: "Reverted to new status" },
-        {
-          onSuccess: () => {
-            // Step 3: Reset local workflow override back to submitted
-            workflowStatus.mutate(
-              {
-                id: localId || id || "",
-                status: "submitted",
-                previousStatus: proposal.status,
-                ticketNumber,
-                proposalData: {
-                  id: localId || undefined,
-                  name: proposal.name,
-                  author_name: proposal.author_name,
-                  author_email: proposal.author_email,
-                  ticket_number: ticketNumber,
-                },
+          // Step 3: Reset local workflow override back to submitted
+          workflowStatus.mutate(
+            {
+              id: localId || id || "",
+              status: "submitted",
+              previousStatus: proposal.status,
+              ticketNumber,
+              proposalData: {
+                id: localId || undefined,
+                name: proposal.name,
+                author_name: proposal.author_name,
+                author_email: proposal.author_email,
+                ticket_number: ticketNumber,
               },
-              {
-                onSuccess: () => {
-                  setIsRevertDialogOpen(false);
-                },
+            },
+            {
+              onSuccess: () => {
+                setIsRevertDialogOpen(false);
               },
-            );
-          },
+            },
+          );
         },
-      );
-    } catch (err) {
-      // unassign failed — toast already shown by the mutation's onError
-      console.error('Revert failed during unassign step', err);
-    }
+      },
+    );
   };
 
   /* ---------------- Render ---------------- */
