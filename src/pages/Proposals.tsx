@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProposalStatus } from "@/types";
-import { Search, Loader2, Users } from "lucide-react";
+import { Search, Loader2, Users, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,7 +87,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, variant, isActive
 };
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
-  const { isAnyReviewer } = useAuth();
+  const { isAnyReviewer, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
@@ -168,10 +168,16 @@ const Proposals: React.FC = () => {
             <h1 className="text-2xl font-bold text-foreground">Proposal Intake</h1>
           </div>
 
-          <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
-            <Users className="h-4 w-4" />
-            Peer Reviewers
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
+              <Users className="h-4 w-4" />
+              Peer Reviewers
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => { logout(); navigate("/login"); }}>
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Status Summary Chips */}
