@@ -30,8 +30,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, X } from 'lucide-react';
+import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, X, Star } from 'lucide-react';
 import { usePeerReviewers } from '@/hooks/usePeerReviewers';
+import { useDefaultReviewer } from '@/hooks/useDefaultReviewer';
 import { useReviewerAssignments } from '@/hooks/useReviewerAssignments';
 import { assignmentsApi, statusApi } from '@/lib/proposalsApi';
 import { useQueryClient } from '@tanstack/react-query';
@@ -42,6 +43,7 @@ const PeerReviewers: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { reviewers, isLoading, createReviewer, isCreating, deleteReviewer, isDeleting } = usePeerReviewers();
+  const { isDefault, setDefault } = useDefaultReviewer();
   const { data: assignmentMap, isLoading: isLoadingAssignments } = useReviewerAssignments();
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -216,9 +218,23 @@ const PeerReviewers: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
+                        {isDefault(reviewer.email) ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-primary text-primary-foreground"
+                          >
+                            Default
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDefault(reviewer.email)}
+                          >
+                            Set as default
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
