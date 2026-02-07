@@ -29,7 +29,7 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
 };
 
 // Map API proposal to internal Proposal structure (list view - basic)
-const mapApiProposal = (apiProposal: ApiProposal, localOverride?: any): Proposal => ({
+const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
   id: localOverride?.id || apiProposal.ticket_number,
   name: apiProposal.title,
   author_name: apiProposal.corresponding_author,
@@ -46,6 +46,7 @@ const mapApiProposal = (apiProposal: ApiProposal, localOverride?: any): Proposal
   updated_at: localOverride?.updated_at || apiProposal.submitted_at,
   ticket_number: apiProposal.ticket_number,
   current_revision: apiProposal.current_revision,
+  address: apiProposal.address || null,
 });
 
 // Map API proposal detail to internal Proposal structure (detail view - full)

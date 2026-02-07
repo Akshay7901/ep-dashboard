@@ -309,7 +309,7 @@ serve(async (req) => {
         return jsonResponse(upstreamData, 200);
       }
 
-      // List endpoint - merge local overrides for each proposal
+      // List endpoint - merge local overrides and fetch address/country for each proposal
       const apiUrl = `${API_BASE_URL}/api/proposals?limit=${limit}&offset=${offset}`;
       console.log(`Fetching proposals list: limit=${limit}, offset=${offset}`);
 
@@ -322,6 +322,26 @@ serve(async (req) => {
         const ticketNumbers = upstreamData.proposals.map((p: any) => p.ticket_number).filter(Boolean);
         const overrideMap = await getLocalOverridesByTickets(ticketNumbers);
 
+        // Fetch detail for each proposal in parallel to get address/country
+        const detailPromises = upstreamData.proposals.map(async (p: any) => {
+          try {
+            const detailRes = await fetch(
+              `${API_BASE_URL}/api/proposals/${encodeURIComponent(p.ticket_number)}`,
+              { method: 'GET', headers }
+            );
+            if (detailRes.ok) {
+              const detail = await detailRes.json();
+              return { ticket_number: p.ticket_number, address: detail?.current_data?.address || null };
+            }
+          } catch {
+            // ignore individual failures
+          }
+          return { ticket_number: p.ticket_number, address: null };
+        });
+
+        const details = await Promise.all(detailPromises);
+        const addressMap = new Map(details.map((d: any) => [d.ticket_number, d.address]));
+
         for (const proposal of upstreamData.proposals) {
           const override = overrideMap.get(proposal.ticket_number);
           if (override) {
@@ -330,6 +350,8 @@ serve(async (req) => {
           } else {
             proposal.local_override = null;
           }
+          // Attach address from detail response
+          proposal.address = addressMap.get(proposal.ticket_number) || null;
         }
       }
 
