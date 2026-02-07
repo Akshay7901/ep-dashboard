@@ -76,6 +76,6 @@ export const useReviewerAssignments = () => {
 
       return assignmentMap;
     },
-    staleTime: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds — keep fresh for responsive assignment updates
   });
 };
