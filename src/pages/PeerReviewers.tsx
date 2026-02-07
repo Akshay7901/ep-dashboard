@@ -152,10 +152,7 @@ const PeerReviewers: React.FC = () => {
         </p>
 
         {/* Add New Reviewer Button */}
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          className="w-full bg-[#3d5a47] hover:bg-primary/90 text-primary-foreground"
-        >
+        <Button onClick={() => setIsAddDialogOpen(true)} className="w-full bg-[#3d5a47]  text-primary-foreground">
           <Plus className="h-4 w-4 mr-2" />
           Add New Reviewer
         </Button>
