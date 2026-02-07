@@ -73,8 +73,8 @@ const PeerReviewers: React.FC = () => {
   const handleUnassign = async (ticketNumber: string) => {
     setUnassigningTicket(ticketNumber);
     try {
-      // Clear all assignments from this proposal
-      await assignmentsApi.assign(ticketNumber, { reviewer_emails: [] });
+      // Clear all assignments from this proposal using DELETE
+      await assignmentsApi.unassign(ticketNumber);
       // Also revert status to 'new' in upstream
       await statusApi.update(ticketNumber, { status: "new", notes: "Unassigned reviewer" });
 

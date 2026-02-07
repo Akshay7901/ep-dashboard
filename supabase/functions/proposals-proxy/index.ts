@@ -253,6 +253,14 @@ serve(async (req) => {
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, headers, body);
     }
 
+    // Route: DELETE /assign/:ticket - Unassign all reviewers from proposal
+    const unassignMatch = path.match(/\/assign\/([^\/]+)$/);
+    if (unassignMatch && method === 'DELETE') {
+      const ticketNumber = unassignMatch[1];
+      console.log(`Unassigning reviewers from proposal: ${ticketNumber}`);
+      return await proxyRequest('DELETE', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, headers);
+    }
+
     // Route: PATCH /status/:ticket - Update proposal status
     const statusMatch = path.match(/\/status\/([^\/]+)$/);
     if (statusMatch && method === 'PATCH') {

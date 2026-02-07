@@ -178,6 +178,26 @@ export const assignmentsApi = {
     
     if (error) throw error;
   },
+
+  unassign: async (ticketNumber: string): Promise<void> => {
+    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
+      method: 'POST',
+      headers: {
+        ...buildHeaders(),
+        'x-custom-path': `/assign/${ticketNumber}`,
+        'x-custom-method': 'DELETE',
+      },
+    });
+    
+    if (error) throw error;
+    // Check for wrapped upstream errors
+    if ((data as any)?.error || (data as any)?.upstream) {
+      const upstreamError = (data as any).upstream || data;
+      const err: any = new Error((data as any).error || 'Failed to unassign reviewers');
+      err.upstream = upstreamError;
+      throw err;
+    }
+  },
 };
 
 // Revisions API
