@@ -105,6 +105,8 @@ const ProposalDetails: React.FC = () => {
     isUpdatingStatus: isUpdatingUpstream,
     assignReviewers,
     isAssigning,
+    unassignReviewers,
+    isUnassigning,
   } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading ---------------- */
@@ -133,40 +135,48 @@ const ProposalDetails: React.FC = () => {
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f) => f.trim()) : [];
 
-  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning;
+  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
 
-  const revertToNew = () => {
+  const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
 
-    // Revert upstream status to 'new' (the API handles clearing assignments when status is set to 'new')
-    upstreamUpdateStatus(
-      { status: "new", notes: "Reverted to new status" },
-      {
-        onSuccess: () => {
-          // Reset local workflow override back to submitted
-          workflowStatus.mutate(
-            {
-              id: localId || id || "",
-              status: "submitted",
-              previousStatus: proposal.status,
-              ticketNumber,
-              proposalData: {
-                id: localId || undefined,
-                name: proposal.name,
-                author_name: proposal.author_name,
-                author_email: proposal.author_email,
-                ticket_number: ticketNumber,
+    try {
+      // Step 1: Unassign all reviewers from the proposal on the upstream API
+      await unassignReviewers();
+
+      // Step 2: Revert upstream status to 'new'
+      upstreamUpdateStatus(
+        { status: "new", notes: "Reverted to new status" },
+        {
+          onSuccess: () => {
+            // Step 3: Reset local workflow override back to submitted
+            workflowStatus.mutate(
+              {
+                id: localId || id || "",
+                status: "submitted",
+                previousStatus: proposal.status,
+                ticketNumber,
+                proposalData: {
+                  id: localId || undefined,
+                  name: proposal.name,
+                  author_name: proposal.author_name,
+                  author_email: proposal.author_email,
+                  ticket_number: ticketNumber,
+                },
               },
-            },
-            {
-              onSuccess: () => {
-                setIsRevertDialogOpen(false);
+              {
+                onSuccess: () => {
+                  setIsRevertDialogOpen(false);
+                },
               },
-            },
-          );
+            );
+          },
         },
-      },
-    );
+      );
+    } catch (err) {
+      // unassign failed — toast already shown by the mutation's onError
+      console.error('Revert failed during unassign step', err);
+    }
   };
 
   /* ---------------- Render ---------------- */
