@@ -234,16 +234,15 @@ const ProposalDetails: React.FC = () => {
             {proposal.status !== "submitted" && (
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <ProposalStatusBadge status={proposal.status} showIcon={false} />
-                {proposal.status === "rejected" &&
-                  (() => {
-                    const declineLog = logs.find((l: any) => l.new_status === "rejected");
-                    const declineDate = declineLog?.created_at || proposal.updated_at;
-                    return declineDate ? (
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(declineDate), "do MMMM yyyy")}
-                      </span>
-                    ) : null;
-                  })()}
+                {proposal.status === "rejected" && (() => {
+                  const declineLog = logs.find((l: any) => l.new_status === "rejected");
+                  const declineDate = declineLog?.created_at || proposal.updated_at;
+                  return declineDate ? (
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(declineDate), "do MMMM yyyy")}
+                    </span>
+                  ) : null;
+                })()}
               </div>
             )}
           </div>
@@ -284,19 +283,21 @@ const ProposalDetails: React.FC = () => {
                     // Directly assign the selected reviewer
                     assignReviewers([selectedReviewer], {
                       onSuccess: () => {
-                        workflowStatus.mutate({
-                          id: localId || id || "",
-                          status: "under_review",
-                          previousStatus: proposal.status,
-                          ticketNumber: proposal.ticket_number || id,
-                          proposalData: {
-                            id: localId || undefined,
-                            name: proposal.name,
-                            author_name: proposal.author_name,
-                            author_email: proposal.author_email,
-                            ticket_number: proposal.ticket_number || id,
+                        workflowStatus.mutate(
+                          {
+                            id: localId || id || "",
+                            status: "under_review",
+                            previousStatus: proposal.status,
+                            ticketNumber: proposal.ticket_number || id,
+                            proposalData: {
+                              id: localId || undefined,
+                              name: proposal.name,
+                              author_name: proposal.author_name,
+                              author_email: proposal.author_email,
+                              ticket_number: proposal.ticket_number || id,
+                            },
                           },
-                        });
+                        );
                       },
                     });
                   }}
@@ -318,7 +319,7 @@ const ProposalDetails: React.FC = () => {
             {/* Revert action for Reviewer 1 when under review */}
             {isReviewer1 && proposal.status === "under_review" && (
               <Button variant="outline" onClick={() => setIsRevertDialogOpen(true)} disabled={isBusy}>
-                Reassign
+                Revert to New
               </Button>
             )}
           </div>
