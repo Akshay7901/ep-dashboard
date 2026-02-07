@@ -229,58 +229,58 @@ const ProposalDetails: React.FC = () => {
             </p>
           </div>
 
-          {/* Reviewer Dropdown */}
-          {reviewers.length > 0 && (
-            <div className="flex items-center gap-3">
-              <UserCircle className="h-5 w-5 text-muted-foreground" />
-              <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
-                <SelectTrigger className="w-64 bg-background">
-                  <SelectValue placeholder="Select a reviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {reviewers.map((reviewer) => (
-                    <SelectItem key={reviewer.id} value={reviewer.email}>
-                      {reviewer.name || reviewer.email.split('@')[0]}
-                      {reviewer.email === defaultEmail && ' (Default)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Reviewer + Actions row */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {reviewers.length > 0 && (
+              <>
+                <UserCircle className="h-5 w-5 text-muted-foreground" />
+                <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
+                  <SelectTrigger className="w-56 bg-background">
+                    <SelectValue placeholder="Select a reviewer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {reviewers.map((reviewer) => (
+                      <SelectItem key={reviewer.id} value={reviewer.email}>
+                        {reviewer.name || reviewer.email.split('@')[0]}
+                        {reviewer.email === defaultEmail && ' (Default)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
 
-          {/* Show status badge after initial submission */}
-          {proposal.status !== 'submitted' && (
-            <ProposalStatusBadge status={proposal.status} showIcon={false} />
-          )}
+            {/* Show status badge after initial submission */}
+            {proposal.status !== 'submitted' && (
+              <ProposalStatusBadge status={proposal.status} showIcon={false} />
+            )}
 
-          {/* Only show action buttons for submitted proposals */}
-          {proposal.status === 'submitted' && (
-            <div className="flex gap-3">
-              <Button
-                className="bg-primary hover:bg-primary/90"
-                onClick={() => {
-                  setPendingAction('accept');
-                  setIsAssignDialogOpen(true);
-                }}
-                disabled={workflowStatus.isPending}
-              >
-                Accept for Review
-              </Button>
+            {/* Action buttons for submitted proposals */}
+            {proposal.status === 'submitted' && (
+              <>
+                <Button
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => {
+                    setPendingAction('accept');
+                    setIsAssignDialogOpen(true);
+                  }}
+                  disabled={workflowStatus.isPending}
+                >
+                  Submit for review
+                </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setIsDeclineDialogOpen(true)}
-                disabled={workflowStatus.isPending}
-              >
-                Decline
-              </Button>
-            </div>
-          )}
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeclineDialogOpen(true)}
+                  disabled={workflowStatus.isPending}
+                >
+                  Decline
+                </Button>
+              </>
+            )}
 
-          {/* Revert action for Reviewer 1 when under review */}
-          {isReviewer1 && proposal.status === 'under_review' && (
-            <div>
+            {/* Revert action for Reviewer 1 when under review */}
+            {isReviewer1 && proposal.status === 'under_review' && (
               <Button
                 variant="outline"
                 onClick={() => setIsRevertDialogOpen(true)}
@@ -288,8 +288,8 @@ const ProposalDetails: React.FC = () => {
               >
                 Revert to New
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
