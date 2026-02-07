@@ -236,7 +236,7 @@ const ProposalDetails: React.FC = () => {
                 <ProposalStatusBadge status={proposal.status} showIcon={false} />
                 {proposal.status === "rejected" && (() => {
                   const declineLog = logs.find((l: any) => l.new_status === "rejected");
-                  const declineDate = declineLog?.created_at;
+                  const declineDate = declineLog?.created_at || proposal.updated_at;
                   return declineDate ? (
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(declineDate), "do MMMM yyyy")}
