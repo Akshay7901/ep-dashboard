@@ -234,11 +234,15 @@ const ProposalDetails: React.FC = () => {
             {proposal.status !== "submitted" && (
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <ProposalStatusBadge status={proposal.status} showIcon={false} />
-                {proposal.status === "rejected" && proposal.updated_at && (
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(proposal.updated_at), "do MMMM yyyy")}
-                  </span>
-                )}
+                {proposal.status === "rejected" && (() => {
+                  const declineLog = logs.find((l: any) => l.new_status === "rejected");
+                  const declineDate = declineLog?.created_at;
+                  return declineDate ? (
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(declineDate), "do MMMM yyyy")}
+                    </span>
+                  ) : null;
+                })()}
               </div>
             )}
           </div>
