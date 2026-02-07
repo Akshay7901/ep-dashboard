@@ -9,10 +9,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProposalStatus } from "@/types";
 import { Search, Loader2, Users } from "lucide-react";
+import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.jpg";
+
+// Helper to extract country from an address string (typically last segment)
+const extractCountry = (address?: string | null): string | null => {
+  if (!address) return null;
+  const parts = address.split(',').map(p => p.trim()).filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : null;
+};
+
 const ITEMS_PER_PAGE = 10;
 const statusOptions: {
   value: ProposalStatus | "all";
@@ -292,6 +301,9 @@ const Proposals: React.FC = () => {
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                         Country
                       </TableHead>
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                        Date Submitted
+                      </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide text-right">
                         Status
                       </TableHead>
@@ -310,7 +322,10 @@ const Proposals: React.FC = () => {
                         <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {/* Country would come from address field if available */}—
+                          {extractCountry(proposal.address) || '—'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {proposal.created_at ? format(new Date(proposal.created_at), 'MMM d, yyyy') : '—'}
                         </TableCell>
                         <TableCell className="text-right">
                           <ProposalStatusBadge status={proposal.status} showIcon={false} />
