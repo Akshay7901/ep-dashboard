@@ -35,12 +35,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder, UserCircle } from "lucide-react";
 
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
 
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePeerReviewers } from "@/hooks/usePeerReviewers";
+import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ---------------- Helpers ---------------- */
 
@@ -58,6 +61,9 @@ const ProposalDetails: React.FC = () => {
   const navigate = useNavigate();
 
   const { isReviewer1, isReviewer2 } = useAuth();
+  const { reviewers } = usePeerReviewers();
+  const { defaultEmail } = useDefaultReviewer();
+  const [selectedReviewer, setSelectedReviewer] = useState<string>('');
 
   const [documentPreview, setDocumentPreview] = useState<{
     url: string;
@@ -69,6 +75,16 @@ const ProposalDetails: React.FC = () => {
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'accept' | 'decline' | null>(null);
+
+  // Set default reviewer when data loads
+  React.useEffect(() => {
+    if (defaultEmail && reviewers.length > 0 && !selectedReviewer) {
+      const found = reviewers.find(r => r.email === defaultEmail);
+      if (found) {
+        setSelectedReviewer(found.email);
+      }
+    }
+  }, [defaultEmail, reviewers, selectedReviewer]);
 
   /* ---------------- Data ---------------- */
 
@@ -212,6 +228,26 @@ const ProposalDetails: React.FC = () => {
               Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : ""}
             </p>
           </div>
+
+          {/* Reviewer Dropdown */}
+          {reviewers.length > 0 && (
+            <div className="flex items-center gap-3">
+              <UserCircle className="h-5 w-5 text-muted-foreground" />
+              <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
+                <SelectTrigger className="w-64 bg-background">
+                  <SelectValue placeholder="Select a reviewer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {reviewers.map((reviewer) => (
+                    <SelectItem key={reviewer.id} value={reviewer.email}>
+                      {reviewer.name || reviewer.email.split('@')[0]}
+                      {reviewer.email === defaultEmail && ' (Default)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Show status badge after initial submission */}
           {proposal.status !== 'submitted' && (
