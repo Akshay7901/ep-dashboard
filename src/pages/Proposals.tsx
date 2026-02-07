@@ -15,11 +15,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.jpg";
 
-// Helper to extract country from an address string (typically last segment)
+// Helper to extract country from structured address string (e.g. "... Country: Australia ;")
 const extractCountry = (address?: string | null): string | null => {
   if (!address) return null;
-  const parts = address.split(',').map(p => p.trim()).filter(Boolean);
-  return parts.length > 0 ? parts[parts.length - 1] : null;
+  const match = address.match(/Country:\s*([^;]+)/i);
+  const country = match?.[1]?.trim();
+  return country || null;
 };
 
 const ITEMS_PER_PAGE = 10;
