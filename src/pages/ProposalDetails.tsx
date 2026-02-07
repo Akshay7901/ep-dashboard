@@ -138,70 +138,35 @@ const ProposalDetails: React.FC = () => {
   const revertToNew = () => {
     const ticketNumber = proposal.ticket_number || id || "";
 
-    // 1) First clear reviewer assignments by sending empty array
-    assignReviewers([], {
-      onSuccess: () => {
-        // 2) Then revert upstream status to 'new'
-        upstreamUpdateStatus(
-          { status: "new", notes: "Reverted to new status" },
-          {
-            onSuccess: () => {
-              // 3) Reset local workflow override back to submitted
-              workflowStatus.mutate(
-                {
-                  id: localId || id || "",
-                  status: "submitted",
-                  previousStatus: proposal.status,
-                  ticketNumber,
-                  proposalData: {
-                    id: localId || undefined,
-                    name: proposal.name,
-                    author_name: proposal.author_name,
-                    author_email: proposal.author_email,
-                    ticket_number: ticketNumber,
-                  },
-                },
-                {
-                  onSuccess: () => {
-                    setIsRevertDialogOpen(false);
-                  },
-                },
-              );
+    // Revert upstream status to 'new' (the API handles clearing assignments when status is set to 'new')
+    upstreamUpdateStatus(
+      { status: "new", notes: "Reverted to new status" },
+      {
+        onSuccess: () => {
+          // Reset local workflow override back to submitted
+          workflowStatus.mutate(
+            {
+              id: localId || id || "",
+              status: "submitted",
+              previousStatus: proposal.status,
+              ticketNumber,
+              proposalData: {
+                id: localId || undefined,
+                name: proposal.name,
+                author_name: proposal.author_name,
+                author_email: proposal.author_email,
+                ticket_number: ticketNumber,
+              },
             },
-          },
-        );
-      },
-      onError: () => {
-        // If clearing assignments fails, still try to update status
-        upstreamUpdateStatus(
-          { status: "new", notes: "Reverted to new status" },
-          {
-            onSuccess: () => {
-              workflowStatus.mutate(
-                {
-                  id: localId || id || "",
-                  status: "submitted",
-                  previousStatus: proposal.status,
-                  ticketNumber,
-                  proposalData: {
-                    id: localId || undefined,
-                    name: proposal.name,
-                    author_name: proposal.author_name,
-                    author_email: proposal.author_email,
-                    ticket_number: ticketNumber,
-                  },
-                },
-                {
-                  onSuccess: () => {
-                    setIsRevertDialogOpen(false);
-                  },
-                },
-              );
+            {
+              onSuccess: () => {
+                setIsRevertDialogOpen(false);
+              },
             },
-          },
-        );
+          );
+        },
       },
-    });
+    );
   };
 
   /* ---------------- Render ---------------- */
