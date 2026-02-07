@@ -214,7 +214,7 @@ const PeerReviewers: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         {isDefault(reviewer.email) ? (
-                          <Button variant="default" size="sm" className="bg-primary text-primary-foreground">
+                          <Button variant="default" size="sm" className="bg-[#45556c] text-primary-foreground">
                             Default
                           </Button>
                         ) : (
