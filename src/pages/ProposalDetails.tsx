@@ -219,14 +219,28 @@ const ProposalDetails: React.FC = () => {
         {/* Header */}
 
         <div className="space-y-4">
-          <div>
-            <h1 className="text-3xl font-semibold">{proposal.name}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-semibold">{proposal.name}</h1>
 
-            <p className="text-lg text-muted-foreground italic mt-1">{proposal.sub_title}</p>
+              <p className="text-lg text-muted-foreground italic mt-1">{proposal.sub_title}</p>
 
-            <p className="text-sm text-muted-foreground mt-2">
-              Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : ""}
-            </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : ""}
+              </p>
+            </div>
+
+            {/* Status badge with date for non-submitted statuses */}
+            {proposal.status !== "submitted" && (
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                {proposal.status === "rejected" && proposal.updated_at && (
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(proposal.updated_at), "do MMMM yyyy")}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Reviewer + Actions row */}
@@ -249,9 +263,6 @@ const ProposalDetails: React.FC = () => {
                 </Select>
               </>
             )}
-
-            {/* Show status badge after initial submission */}
-            {proposal.status !== "submitted" && <ProposalStatusBadge status={proposal.status} showIcon={false} />}
 
             {/* Action buttons for submitted proposals */}
             {proposal.status === "submitted" && (
