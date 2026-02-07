@@ -257,7 +257,7 @@ const ProposalDetails: React.FC = () => {
             {proposal.status === "submitted" && (
               <>
                 <Button
-                  className="bg-[#3d5a47"
+                  className="bg-[#3d5a47]"
                   onClick={() => {
                     setPendingAction("accept");
                     setIsAssignDialogOpen(true);
