@@ -149,7 +149,7 @@ const PeerReviewers: React.FC = () => {
         {/* Back Link */}
         <button
           onClick={() => navigate("/proposals")}
-          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-[#3d5a47] hover:text-[#2d4a37] hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
           Back to Home
