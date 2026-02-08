@@ -151,7 +151,7 @@ const ProposalDetails: React.FC = () => {
           try {
             await unassignReviewers();
           } catch {
-            console.log('DELETE unassign not supported, relying on status change');
+            console.log("DELETE unassign not supported, relying on status change");
           }
 
           // Step 3: Reset local workflow override back to submitted
@@ -173,8 +173,8 @@ const ProposalDetails: React.FC = () => {
               onSuccess: () => {
                 setIsRevertDialogOpen(false);
                 // Invalidate reviewer-assignments so Peer Reviewers page reflects the change
-                queryClient.invalidateQueries({ queryKey: ['reviewer-assignments'] });
-                queryClient.invalidateQueries({ queryKey: ['proposals'] });
+                queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
+                queryClient.invalidateQueries({ queryKey: ["proposals"] });
               },
             },
           );
@@ -190,7 +190,7 @@ const ProposalDetails: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Back */}
 
-        <Button variant="ghost" size="sm" className="text-[#3d5a47] hover:text-[#2d4a37]" onClick={() => navigate("/proposals")}>
+        <Button variant="ghost" size="sm" className="text-[#3d5a47]" onClick={() => navigate("/proposals")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </Button>
