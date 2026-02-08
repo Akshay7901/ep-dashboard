@@ -190,7 +190,7 @@ const ProposalDetails: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Back */}
 
-        <Button variant="ghost" size="sm" onClick={() => navigate("/proposals")}>
+        <Button variant="ghost" size="sm" className="text-[#3d5a47] hover:text-[#2d4a37]" onClick={() => navigate("/proposals")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </Button>
