@@ -32,13 +32,13 @@ const statusConfig: Record<ProposalStatus, {
   under_review: {
     label: 'In Review',
     variant: 'secondary',
-    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
+    className: 'bg-[#45556c] text-white hover:bg-[#45556c] border-[#45556c] rounded-full px-4',
     icon: Clock,
   },
   approved: {
     label: 'Contract Sent',
     variant: 'secondary',
-    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
+    className: 'bg-[#1d293d] text-white hover:bg-[#1d293d] border-[#1d293d] rounded-full px-4',
     icon: CheckCircle2,
   },
   finalised: {
