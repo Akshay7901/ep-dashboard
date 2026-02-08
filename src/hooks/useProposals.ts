@@ -147,7 +147,17 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
     throw new Error(errorData.error || 'Failed to fetch proposals');
   }
 
-  return response.json();
+  const result = await response.json();
+
+  // Check for wrapped upstream 401 (expired token) – trigger re-auth
+  if (result?.upstream?.status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+
+  return result;
 };
 
 // Helper function to fetch single proposal by ticket number (returns full detail)
@@ -173,7 +183,17 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
     throw new Error(errorData.error || 'Failed to fetch proposal');
   }
 
-  return response.json();
+  const result = await response.json();
+
+  // Check for wrapped upstream 401 (expired token) – trigger re-auth
+  if (result?.upstream?.status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+
+  return result;
 };
 
 // Helper function to fetch local proposal by UUID
