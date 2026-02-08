@@ -69,7 +69,7 @@ async function proxyRequest(
     // IMPORTANT: Some clients/platforms treat non-2xx responses as a runtime error and can blank-screen.
     // For upstream 4xx errors (business-rule conflicts, permission issues), return 200 with a
     // structured payload so the frontend can show a friendly message without the function being flagged.
-    if (response.status === 400 || response.status === 403 || response.status === 404 || response.status === 405 || response.status === 409) {
+    if ([400, 401, 403, 404, 405, 409].includes(response.status)) {
       let parsedBody: unknown = responseText;
       try {
         parsedBody = responseText ? JSON.parse(responseText) : null;
