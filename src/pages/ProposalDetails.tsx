@@ -187,7 +187,7 @@ const ProposalDetails: React.FC = () => {
 
   return (
     <DashboardLayout title="Proposal Details">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Back */}
 
         <Button variant="ghost" size="sm" className="text-[#3d5a47]" onClick={() => navigate("/proposals")}>
