@@ -211,13 +211,13 @@ const ProposalDetails: React.FC = () => {
 
             {/* Status badge with date for non-submitted statuses */}
             {proposal.status !== "submitted" && (
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col items-end gap-1 shrink-0">
                 <ProposalStatusBadge status={proposal.status} showIcon={false} />
                 {(() => {
                   const statusLog = logs.find((l: any) => l.new_status === proposal.status);
                   const statusDate = statusLog?.created_at || proposal.updated_at;
                   return statusDate ? (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {format(new Date(statusDate), "do MMMM yyyy")}
                     </span>
                   ) : null;
