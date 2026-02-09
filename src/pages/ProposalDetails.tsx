@@ -205,9 +205,21 @@ const ProposalDetails: React.FC = () => {
 
               <p className="text-lg text-muted-foreground italic mt-1">{proposal.sub_title}</p>
 
-              <p className="text-sm text-muted-foreground mt-2">
-                Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : ""}
-              </p>
+              {(() => {
+                const acceptedLog = logs.find((l: any) => l.new_status === "under_review");
+                if (acceptedLog) {
+                  return (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Accepted for review {format(new Date(acceptedLog.created_at), "MMMM d, yyyy")}
+                    </p>
+                  );
+                }
+                return (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : ""}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Status badge with date for non-submitted statuses */}
