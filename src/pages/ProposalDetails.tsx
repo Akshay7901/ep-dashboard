@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder, UserCircle } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, BarChart, Folder, UserCircle, Calendar } from "lucide-react";
 
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
@@ -209,12 +209,27 @@ const ProposalDetails: React.FC = () => {
               </p>
             </div>
 
-            {/* Status badge with date for non-submitted statuses */}
+            {/* Status badge with date */}
             {proposal.status !== "submitted" && (
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <ProposalStatusBadge status={proposal.status} showIcon={false} />
-                {proposal.status === "rejected" &&
-                  (() => {
+                {(() => {
+                  // For under_review: show assigned_at date from assigned reviewers
+                  if (proposal.status === "under_review") {
+                    const assignedReviewers = (proposal as any).assigned_reviewers || [];
+                    const firstAssignment = assignedReviewers[0];
+                    const assignedDate = firstAssignment?.assigned_at;
+                    if (assignedDate) {
+                      return (
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(assignedDate), "do MMMM yyyy")}
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+                  // For rejected: show decline date
+                  if (proposal.status === "rejected") {
                     const declineLog = logs.find((l: any) => l.new_status === "rejected");
                     const declineDate = declineLog?.created_at || proposal.updated_at;
                     return declineDate ? (
@@ -222,14 +237,36 @@ const ProposalDetails: React.FC = () => {
                         {format(new Date(declineDate), "do MMMM yyyy")}
                       </span>
                     ) : null;
-                  })()}
+                  }
+                  return null;
+                })()}
               </div>
             )}
           </div>
 
           {/* Reviewer + Actions row */}
           <div className="flex items-center gap-3 flex-wrap">
-            {reviewers.length > 0 && (
+            {/* Show assigned reviewer chip when under review */}
+            {proposal.status === "under_review" && (() => {
+              const assignedReviewers = (proposal as any).assigned_reviewers || [];
+              if (assignedReviewers.length > 0) {
+                return assignedReviewers.map((reviewer: any, idx: number) => {
+                  const reviewerEmail = reviewer.email || reviewer;
+                  const matchedReviewer = reviewers.find((r) => r.email === reviewerEmail);
+                  const displayName = matchedReviewer?.name || reviewerEmail.split("@")[0];
+                  return (
+                    <div key={idx} className="flex items-center gap-2 bg-muted rounded-md px-3 py-1.5 border">
+                      <UserCircle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{displayName}</span>
+                    </div>
+                  );
+                });
+              }
+              return null;
+            })()}
+
+            {/* Show reviewer dropdown only for submitted proposals */}
+            {proposal.status === "submitted" && reviewers.length > 0 && (
               <>
                 <UserCircle className="h-5 w-5 text-muted-foreground" />
                 <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
@@ -255,12 +292,10 @@ const ProposalDetails: React.FC = () => {
                   className="bg-[#3d5a47]"
                   onClick={() => {
                     if (!selectedReviewer) {
-                      // No reviewer selected — open dialog as fallback
                       setPendingAction("accept");
                       setIsAssignDialogOpen(true);
                       return;
                     }
-                    // Directly assign the selected reviewer
                     assignReviewers([selectedReviewer], {
                       onSuccess: () => {
                         workflowStatus.mutate({
@@ -294,7 +329,7 @@ const ProposalDetails: React.FC = () => {
               </>
             )}
 
-            {/* Revert action for Reviewer 1 when under review */}
+            {/* Reassign action for Reviewer 1 when under review */}
             {isReviewer1 && proposal.status === "under_review" && (
               <Button variant="outline" onClick={() => setIsRevertDialogOpen(true)} disabled={isBusy}>
                 Reassign
