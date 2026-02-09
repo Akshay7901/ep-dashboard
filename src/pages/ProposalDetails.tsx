@@ -119,7 +119,7 @@ const ProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isReviewer1, isReviewer2 } = useAuth();
+  const { isReviewer1, isReviewer2, isAnyReviewer } = useAuth();
   const { reviewers } = usePeerReviewers();
   const { defaultEmail } = useDefaultReviewer();
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
@@ -189,7 +189,7 @@ const ProposalDetails: React.FC = () => {
 
   const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
 
-  const showReviewForm = isReviewer2 && proposal.status === "under_review";
+  const showReviewForm = isAnyReviewer && proposal.status === "under_review";
 
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
