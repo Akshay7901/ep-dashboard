@@ -237,39 +237,41 @@ const ProposalDetails: React.FC = () => {
     <div className="space-y-6">
       {/* Proposal Header */}
       <div>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
-            {proposal.sub_title && (
-              <p className="text-base text-muted-foreground mt-1">
-                {proposal.sub_title}
-              </p>
-            )}
+        <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
+        {proposal.sub_title && (
+          <p className="text-base text-muted-foreground mt-1 italic">
+            {proposal.sub_title}
+          </p>
+        )}
+        {isReviewer1 ? (
+          <p className="text-sm text-muted-foreground mt-2">
+            Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : "—"}
+          </p>
+        ) : (
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {proposal.corresponding_author_name || proposal.author_name}
+              </span>
+              {proposal.institution && (
+                <>
+                  <span>•</span>
+                  <span>{proposal.institution}</span>
+                </>
+              )}
+              {proposal.word_count && (
+                <>
+                  <span>•</span>
+                  <span>{proposal.word_count} words</span>
+                </>
+              )}
+            </div>
+            <PeerReviewStatusBadge status={proposal.status} />
           </div>
-          <PeerReviewStatusBadge status={proposal.status} />
-        </div>
-
-        {/* Author summary line */}
-        <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">
-            {proposal.corresponding_author_name || proposal.author_name}
-          </span>
-          {proposal.institution && (
-            <>
-              <span>•</span>
-              <span>{proposal.institution}</span>
-            </>
-          )}
-          {proposal.word_count && (
-            <>
-              <span>•</span>
-              <span>{proposal.word_count} words</span>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Reviewer + Actions row (for reviewer_1 / submitted) */}
+      {/* Reviewer + Actions row (for reviewer_1 only) */}
       {isReviewer1 && (
         <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && (
@@ -350,242 +352,436 @@ const ProposalDetails: React.FC = () => {
         </div>
       )}
 
-      {/* Tabs */}
-      <Tabs defaultValue="book">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Book Info</span>
-          </TabsTrigger>
-          <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Author Info</span>
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
-            <Folder className="h-4 w-4" />
-            <span className="hidden sm:inline">Supporting Documents</span>
-          </TabsTrigger>
-          <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Log</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* ============ TABS — ROLE-SPECIFIC ============ */}
+      {isReviewer1 ? (
+        /* ---------- DECISION REVIEWER TABS ---------- */
+        <Tabs defaultValue="book">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Book Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Author Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="market" className="gap-1.5 text-xs sm:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Market</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
+              <Folder className="h-4 w-4" />
+              <span className="hidden sm:inline">Supporting Documents</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* ---- BOOK INFO ---- */}
-        <TabsContent value="book" className="space-y-2 mt-4">
-          <Accordion type="multiple" defaultValue={["overview"]} className="space-y-1">
-            {/* Proposal Overview */}
-            <AccordionItem value="overview" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-base font-semibold">
-                Proposal Overview
-              </AccordionTrigger>
-              <AccordionContent className="space-y-1 pb-4">
-                <DetailRow label="Type of Book" value={proposal.book_type} />
-                <DetailRow label="Main Title" value={proposal.name} />
-                <DetailRow label="Subtitle" value={proposal.sub_title} />
-                <DetailRow label="Completion Date" value={proposal.expected_completion_date} />
-                <DetailRow label="Word Count" value={proposal.word_count} />
-                <DetailRow
-                  label="Keywords"
-                  value={proposal.keywords}
-                />
-                <ContentBlock label="Blurb" value={proposal.short_description} />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Table of Contents */}
-            <AccordionItem value="toc" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-base font-semibold">
-                Table of Contents
-              </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <div className="bg-muted/30 rounded-lg p-4 text-sm leading-relaxed whitespace-pre-line border-l-4 border-primary/30">
-                  {proposal.table_of_contents || "No table of contents available"}
+          {/* ---- BOOK INFO (Decision Reviewer) ---- */}
+          <TabsContent value="book" className="space-y-4 mt-4">
+            {/* Overview Grid */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Overview</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Book Type</p>
+                  <p className="text-sm font-medium">{proposal.book_type || "—"}</p>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Market Position */}
-            <AccordionItem value="market" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-base font-semibold">
-                Market Position
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pb-4">
-                <ContentBlock
-                  label="Similar Works"
-                  value={(proposal as any).similar_works || (proposal as any).competing_books}
-                />
-                <ContentBlock
-                  label="Previous Reviews"
-                  value={(proposal as any).previous_reviews || proposal.marketing_info}
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Manuscript Details */}
-            <AccordionItem value="manuscript" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-base font-semibold">
-                Manuscript Details
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pb-4">
-                <DetailRow label="Co-Authors/Editors" value={proposal.co_authors_editors || "None"} />
-                <ContentBlock
-                  label="Figures & Tables"
-                  value={proposal.figures_tables_count || proposal.detailed_description}
-                />
-                <ContentBlock
-                  label="Permissions"
-                  value={proposal.permissions_required}
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Additional Information */}
-            <AccordionItem value="additional" className="border rounded-lg px-4">
-              <AccordionTrigger className="text-base font-semibold">
-                Additional Information
-              </AccordionTrigger>
-              <AccordionContent className="space-y-4 pb-4">
-                <ContentBlock
-                  label="Societies & Bodies"
-                  value={(proposal as any).societies_research_bodies || (proposal as any).professional_societies}
-                />
-                <ContentBlock
-                  label="Suggested Referees"
-                  value={proposal.referees_reviewers}
-                />
-                <ContentBlock
-                  label="Additional Notes"
-                  value={proposal.additional_info}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </TabsContent>
-
-        {/* ---- AUTHOR INFO ---- */}
-        <TabsContent value="author" className="space-y-6 mt-4">
-          <div className="flex items-center gap-3">
-            <h3 className="text-xl font-semibold">
-              {proposal.corresponding_author_name || proposal.author_name || "N/A"}
-            </h3>
-            <Badge className="bg-primary text-primary-foreground text-xs rounded-md uppercase tracking-wide">
-              Author
-            </Badge>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="text-base font-medium">Contact Information</h4>
-            <div className="grid md:grid-cols-2 gap-x-12 gap-y-4">
-              <DetailRow label="Email" value={proposal.author_email || (proposal as any).email} />
-              <DetailRow label="Institution" value={proposal.institution} />
-              <DetailRow label="Job Title" value={proposal.job_title} />
-              <DetailRow label="Address" value={proposal.address} />
-              <DetailRow label="Country" value={extractCountry(proposal.address)} />
-              {proposal.secondary_email &&
-                proposal.secondary_email !== proposal.author_email && (
-                  <DetailRow label="Secondary Email" value={proposal.secondary_email} />
-                )}
-            </div>
-          </div>
-
-          {proposal.biography && (
-            <div className="space-y-3">
-              <h4 className="text-base font-medium">Biography</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                {proposal.biography}
-              </p>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ---- SUPPORTING DOCUMENTS ---- */}
-        <TabsContent value="documents" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Supporting Documents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {files.length === 0 && (
-                <p className="text-sm text-muted-foreground">No files uploaded</p>
-              )}
-              <div className="space-y-3">
-                {files.map((url: string, i: number) => {
-                  const name = url.split("/").pop() || "File";
-                  const isPdf = url.endsWith(".pdf");
-                  const isWord = url.endsWith(".doc") || url.endsWith(".docx");
-                  return (
-                    <div
-                      key={i}
-                      className="flex justify-between items-center border rounded-md px-3 py-2"
-                    >
-                      <div className="flex gap-2 items-center">
-                        <FileText className="h-4 w-4" />
-                        {name}
-                      </div>
-                      <div className="flex gap-2">
-                        {(isPdf || isWord) && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() =>
-                              setDocumentPreview({
-                                url,
-                                name,
-                                type: isPdf ? "pdf" : "word",
-                              })
-                            }
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button size="icon" variant="ghost" asChild>
-                          <a href={url} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Word Count</p>
+                  <p className="text-sm font-medium">{proposal.word_count || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Expected Completion</p>
+                  <p className="text-sm font-medium">{proposal.expected_completion_date || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Country</p>
+                  <p className="text-sm font-medium">{extractCountry(proposal.address) || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Status</p>
+                  <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
 
-        {/* ---- LOG ---- */}
-        <TabsContent value="log" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workflow Log</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {logs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No workflow events yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {logs.map((log: any) => (
-                    <div key={log.id} className="flex items-start gap-3 text-sm border-b pb-3 last:border-0">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                      <div className="flex-1">
-                        <p className="font-medium">{log.action}</p>
-                        {log.new_status && (
-                          <p className="text-muted-foreground text-xs">
-                            Status → {log.new_status}
-                          </p>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {/* Collapsible sections */}
+            <Accordion type="multiple" defaultValue={["blurb"]} className="space-y-1">
+              <AccordionItem value="blurb" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Blurb</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.short_description || "No blurb available"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="toc" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">TOC</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.table_of_contents || "No table of contents available"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="detail" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Detail: Figures, Tables, Photos
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.figures_tables_count || proposal.detailed_description || "No details available"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="permissions" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Permissions Required
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.permissions_required || "No permissions required"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+
+              {proposal.additional_info && (
+                <AccordionItem value="additional" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold">
+                    Additional Information
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <p className="text-sm leading-relaxed whitespace-pre-line">
+                      {proposal.additional_info}
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </Accordion>
+          </TabsContent>
+
+          {/* ---- AUTHOR INFO (Decision Reviewer) ---- */}
+          <TabsContent value="author" className="space-y-6 mt-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-semibold">
+                {proposal.corresponding_author_name || proposal.author_name || "N/A"}
+              </h3>
+              <Badge className="bg-primary text-primary-foreground text-xs rounded-md uppercase tracking-wide">
+                Author
+              </Badge>
+            </div>
+            <div className="space-y-4">
+              <h4 className="text-base font-medium">Contact Information</h4>
+              <div className="grid md:grid-cols-2 gap-x-12 gap-y-4">
+                <DetailRow label="Email" value={proposal.author_email || (proposal as any).email} />
+                <DetailRow label="Institution" value={proposal.institution} />
+                <DetailRow label="Job Title" value={proposal.job_title} />
+                <DetailRow label="Address" value={proposal.address} />
+                <DetailRow label="Country" value={extractCountry(proposal.address)} />
+                {proposal.secondary_email &&
+                  proposal.secondary_email !== proposal.author_email && (
+                    <DetailRow label="Secondary Email" value={proposal.secondary_email} />
+                  )}
+              </div>
+            </div>
+            {proposal.biography && (
+              <div className="space-y-3">
+                <h4 className="text-base font-medium">Biography</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {proposal.biography}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ---- MARKET (Decision Reviewer) ---- */}
+          <TabsContent value="market" className="space-y-4 mt-4">
+            <Accordion type="multiple" defaultValue={["similar", "reviews"]} className="space-y-1">
+              <AccordionItem value="similar" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Similar Works</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {(proposal as any).similar_works || (proposal as any).competing_books || proposal.detailed_description || "No information available"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="reviews" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Previous Reviews</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {(proposal as any).previous_reviews || proposal.marketing_info || "No information available"}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+              {proposal.referees_reviewers && (
+                <AccordionItem value="referees" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold">Suggested Referees</AccordionTrigger>
+                  <AccordionContent className="pb-4">
+                    <p className="text-sm leading-relaxed whitespace-pre-line">
+                      {proposal.referees_reviewers}
+                    </p>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
+          </TabsContent>
+
+          {/* ---- SUPPORTING DOCUMENTS (Decision Reviewer) ---- */}
+          <TabsContent value="documents" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Supporting Documents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {files.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No files uploaded</p>
+                )}
+                <div className="space-y-3">
+                  {files.map((url: string, i: number) => {
+                    const name = url.split("/").pop() || "File";
+                    const isPdf = url.endsWith(".pdf");
+                    const isWord = url.endsWith(".doc") || url.endsWith(".docx");
+                    return (
+                      <div key={i} className="flex justify-between items-center border rounded-md px-3 py-2">
+                        <div className="flex gap-2 items-center">
+                          <FileText className="h-4 w-4" />
+                          {name}
+                        </div>
+                        <div className="flex gap-2">
+                          {(isPdf || isWord) && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setDocumentPreview({ url, name, type: isPdf ? "pdf" : "word" })}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button size="icon" variant="ghost" asChild>
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        /* ---------- PEER REVIEWER TABS ---------- */
+        <Tabs defaultValue="book">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Book Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Author Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
+              <Folder className="h-4 w-4" />
+              <span className="hidden sm:inline">Supporting Documents</span>
+            </TabsTrigger>
+            <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Log</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ---- BOOK INFO (Peer Reviewer) ---- */}
+          <TabsContent value="book" className="space-y-2 mt-4">
+            <Accordion type="multiple" defaultValue={["overview"]} className="space-y-1">
+              <AccordionItem value="overview" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Proposal Overview
+                </AccordionTrigger>
+                <AccordionContent className="space-y-1 pb-4">
+                  <DetailRow label="Type of Book" value={proposal.book_type} />
+                  <DetailRow label="Main Title" value={proposal.name} />
+                  <DetailRow label="Subtitle" value={proposal.sub_title} />
+                  <DetailRow label="Completion Date" value={proposal.expected_completion_date} />
+                  <DetailRow label="Word Count" value={proposal.word_count} />
+                  <DetailRow label="Keywords" value={proposal.keywords} />
+                  <ContentBlock label="Blurb" value={proposal.short_description} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="toc" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Table of Contents
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="bg-muted/30 rounded-lg p-4 text-sm leading-relaxed whitespace-pre-line border-l-4 border-primary/30">
+                    {proposal.table_of_contents || "No table of contents available"}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="market" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Market Position
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pb-4">
+                  <ContentBlock
+                    label="Similar Works"
+                    value={(proposal as any).similar_works || (proposal as any).competing_books}
+                  />
+                  <ContentBlock
+                    label="Previous Reviews"
+                    value={(proposal as any).previous_reviews || proposal.marketing_info}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="manuscript" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Manuscript Details
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pb-4">
+                  <DetailRow label="Co-Authors/Editors" value={proposal.co_authors_editors || "None"} />
+                  <ContentBlock
+                    label="Figures & Tables"
+                    value={proposal.figures_tables_count || proposal.detailed_description}
+                  />
+                  <ContentBlock label="Permissions" value={proposal.permissions_required} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="additional" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">
+                  Additional Information
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pb-4">
+                  <ContentBlock
+                    label="Societies & Bodies"
+                    value={(proposal as any).societies_research_bodies || (proposal as any).professional_societies}
+                  />
+                  <ContentBlock label="Suggested Referees" value={proposal.referees_reviewers} />
+                  <ContentBlock label="Additional Notes" value={proposal.additional_info} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </TabsContent>
+
+          {/* ---- AUTHOR INFO (Peer Reviewer) ---- */}
+          <TabsContent value="author" className="space-y-6 mt-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-semibold">
+                {proposal.corresponding_author_name || proposal.author_name || "N/A"}
+              </h3>
+              <Badge className="bg-primary text-primary-foreground text-xs rounded-md uppercase tracking-wide">
+                Author
+              </Badge>
+            </div>
+            <div className="space-y-4">
+              <h4 className="text-base font-medium">Contact Information</h4>
+              <div className="grid md:grid-cols-2 gap-x-12 gap-y-4">
+                <DetailRow label="Email" value={proposal.author_email || (proposal as any).email} />
+                <DetailRow label="Institution" value={proposal.institution} />
+                <DetailRow label="Job Title" value={proposal.job_title} />
+                <DetailRow label="Address" value={proposal.address} />
+                <DetailRow label="Country" value={extractCountry(proposal.address)} />
+                {proposal.secondary_email &&
+                  proposal.secondary_email !== proposal.author_email && (
+                    <DetailRow label="Secondary Email" value={proposal.secondary_email} />
+                  )}
+              </div>
+            </div>
+            {proposal.biography && (
+              <div className="space-y-3">
+                <h4 className="text-base font-medium">Biography</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {proposal.biography}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ---- SUPPORTING DOCUMENTS (Peer Reviewer) ---- */}
+          <TabsContent value="documents" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Supporting Documents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {files.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No files uploaded</p>
+                )}
+                <div className="space-y-3">
+                  {files.map((url: string, i: number) => {
+                    const name = url.split("/").pop() || "File";
+                    const isPdf = url.endsWith(".pdf");
+                    const isWord = url.endsWith(".doc") || url.endsWith(".docx");
+                    return (
+                      <div key={i} className="flex justify-between items-center border rounded-md px-3 py-2">
+                        <div className="flex gap-2 items-center">
+                          <FileText className="h-4 w-4" />
+                          {name}
+                        </div>
+                        <div className="flex gap-2">
+                          {(isPdf || isWord) && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setDocumentPreview({ url, name, type: isPdf ? "pdf" : "word" })}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button size="icon" variant="ghost" asChild>
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ---- LOG (Peer Reviewer) ---- */}
+          <TabsContent value="log" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Workflow Log</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {logs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No workflow events yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {logs.map((log: any) => (
+                      <div key={log.id} className="flex items-start gap-3 text-sm border-b pb-3 last:border-0">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="font-medium">{log.action}</p>
+                          {log.new_status && (
+                            <p className="text-muted-foreground text-xs">
+                              Status → {log.new_status}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 
@@ -600,7 +796,7 @@ const ProposalDetails: React.FC = () => {
           className="inline-flex items-center gap-1 text-sm text-[#3d5a47] hover:text-[#2d4a37] hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
         {showReviewForm && (
