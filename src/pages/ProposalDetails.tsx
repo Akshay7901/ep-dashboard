@@ -337,12 +337,14 @@ const ProposalDetails: React.FC = () => {
                 <CardTitle>Overview</CardTitle>
               </CardHeader>
 
-              <CardContent className="grid sm:grid-cols-4 gap-6">
+              <CardContent className="grid sm:grid-cols-5 gap-6">
                 <OverviewItem label="Book Type" value={proposal.book_type} />
 
                 <OverviewItem label="Word Count" value={proposal.word_count} />
 
                 <OverviewItem label="Expected Completion" value={proposal.expected_completion_date} />
+
+                <OverviewItem label="Country" value={proposal.country} />
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
