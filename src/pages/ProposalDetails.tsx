@@ -282,7 +282,7 @@ const ProposalDetails: React.FC = () => {
       </div>
 
       {/* Reviewer + Actions row (for reviewer_1 only) */}
-      {isReviewer1 && (
+      {isReviewer1 && proposal.status !== "rejected" && (
         <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && (
             <>
