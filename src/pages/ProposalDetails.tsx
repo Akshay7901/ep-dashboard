@@ -834,7 +834,7 @@ const ProposalDetails: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto">{rightPanel}</div>
+        <div>{rightPanel}</div>
       )}
 
       {/* Dialogs */}
