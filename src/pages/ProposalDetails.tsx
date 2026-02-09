@@ -627,7 +627,7 @@ const ProposalDetails: React.FC = () => {
       {showReviewForm ? (
         <div className="grid grid-cols-2 gap-0 items-start">
           {/* Left Panel — Review Form */}
-          <div className="pr-6 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin">
+          <div className="pr-6">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} onSave={() => refetch()} />
           </div>
 
