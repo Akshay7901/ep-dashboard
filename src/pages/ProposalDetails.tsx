@@ -259,12 +259,12 @@ const ProposalDetails: React.FC = () => {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <span className="text-sm font-medium">
+                  <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium min-w-[14rem]">
                     {(() => {
                       const assigned = reviewers.find((r) => r.email === selectedReviewer);
                       return assigned ? (assigned.name || assigned.email.split("@")[0]) : selectedReviewer || "N/A";
                     })()}
-                  </span>
+                  </div>
                 )}
               </>
             )}
