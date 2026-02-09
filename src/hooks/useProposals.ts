@@ -47,7 +47,6 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
   ticket_number: apiProposal.ticket_number,
   current_revision: apiProposal.current_revision,
   address: apiProposal.address || null,
-  assigned_reviewers: apiProposal.assigned_reviewers || apiProposal.reviewers || [],
 });
 
 // Map API proposal detail to internal Proposal structure (detail view - full)
@@ -100,7 +99,6 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: an
     additional_info: currentData.additional_info || null,
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
-    assigned_reviewers: apiProposal.assigned_reviewers || apiProposal.reviewers || [],
   };
 };
 

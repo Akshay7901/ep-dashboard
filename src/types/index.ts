@@ -102,8 +102,6 @@ export interface ApiProposal {
 // API response proposal structure (detail view - includes current_data)
 export interface ApiProposalDetail extends ApiProposal {
   current_data?: ApiProposalCurrentData;
-  assigned_reviewers?: AssignedReviewer[];
-  reviewers?: AssignedReviewer[];
   revisions?: Array<{
     action: string;
     created_at: string;
@@ -116,12 +114,6 @@ export interface ApiProposalsResponse {
   total: number;
   limit: number;
   offset: number;
-}
-
-// Assigned reviewer info from external API
-export interface AssignedReviewer {
-  email: string;
-  assigned_at?: string;
 }
 
 // Internal proposal structure (mapped from API)
@@ -173,8 +165,6 @@ export interface Proposal {
   additional_info?: string | null;
   corresponding_author_name?: string | null;
   referrer_url?: string | null;
-  // Assigned reviewers from external API
-  assigned_reviewers?: AssignedReviewer[];
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
