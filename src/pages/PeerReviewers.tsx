@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, ArrowRightLeft, Star } from "lucide-react";
+import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, ArrowRightLeft, Star, Calendar } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import { useReviewerAssignments } from "@/hooks/useReviewerAssignments";
@@ -262,6 +263,12 @@ const PeerReviewers: React.FC = () => {
                                 <p className="text-xs text-muted-foreground">
                                   {assignment.ticket_number} • {assignment.author}
                                 </p>
+                                {assignment.assigned_at && (
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <Calendar className="h-3 w-3" />
+                                    Assigned on: {format(parseISO(assignment.assigned_at), 'dd MMM yyyy')}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
