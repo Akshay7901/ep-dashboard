@@ -180,10 +180,6 @@ const Proposals: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
-              <Users className="h-4 w-4" />
-              Peer Reviewers
-            </Button>
             <Button variant="outline" className="gap-2" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="h-4 w-4" />
               Logout
