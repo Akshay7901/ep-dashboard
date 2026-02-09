@@ -191,7 +191,7 @@ const ProposalDetails: React.FC = () => {
 
   const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
 
-  const showReviewForm = isAnyReviewer;
+  const showReviewForm = isReviewer2;
 
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
