@@ -56,7 +56,28 @@ async function proxyRequest(
     fetchOptions.body = body;
   }
 
-  const response = await fetch(apiUrl, fetchOptions);
+  let response: globalThis.Response;
+  try {
+    response = await fetch(apiUrl, fetchOptions);
+  } catch (networkError: unknown) {
+    // Network-level errors (HTTP2 connection errors, timeouts, DNS failures, etc.)
+    // Return a structured 200 response so the frontend can handle it gracefully
+    // instead of crashing the edge function with a 500.
+    const errMsg = networkError instanceof Error ? networkError.message : String(networkError);
+    console.error(`Network error proxying ${method} ${apiUrl}:`, errMsg);
+    return jsonResponse(
+      {
+        error: `Network error communicating with upstream API`,
+        upstream: {
+          status: 0,
+          url: apiUrl,
+          body: errMsg,
+        },
+      },
+      200
+    );
+  }
+
   const responseText = await response.text();
 
   if (!response.ok) {
