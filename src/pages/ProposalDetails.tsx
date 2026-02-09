@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { extractCountry } from "@/lib/extractCountry";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
@@ -344,7 +345,7 @@ const ProposalDetails: React.FC = () => {
 
                 <OverviewItem label="Expected Completion" value={proposal.expected_completion_date} />
 
-                <OverviewItem label="Country" value={proposal.country} />
+                <OverviewItem label="Country" value={extractCountry(proposal.address)} />
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
