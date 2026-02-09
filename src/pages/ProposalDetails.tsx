@@ -237,17 +237,27 @@ const ProposalDetails: React.FC = () => {
     <div className="space-y-6">
       {/* Proposal Header */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
-        {proposal.sub_title && (
-          <p className="text-base text-muted-foreground mt-1 italic">
-            {proposal.sub_title}
-          </p>
-        )}
-        {isReviewer1 ? (
-          <p className="text-sm text-muted-foreground mt-2">
-            Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : "—"}
-          </p>
-        ) : (
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
+            {proposal.sub_title && (
+              <p className="text-base text-muted-foreground mt-1 italic">
+                {proposal.sub_title}
+              </p>
+            )}
+          </div>
+          {isReviewer1 && proposal.status !== "submitted" && (
+            <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
+              <ProposalStatusBadge status={proposal.status} showIcon={false} />
+              <span className="text-sm text-muted-foreground">
+                {proposal.updated_at
+                  ? format(new Date(proposal.updated_at), "do MMMM yyyy")
+                  : "—"}
+              </span>
+            </div>
+          )}
+        </div>
+        {isReviewer1 ? null : (
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
