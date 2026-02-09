@@ -28,6 +28,17 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
   return statusMap[apiStatus] || 'submitted';
 };
 
+// Extract earliest assigned_at from assigned_reviewers array
+const extractAssignedAt = (assignedReviewers: any): string | null => {
+  if (!Array.isArray(assignedReviewers) || assignedReviewers.length === 0) return null;
+  const dates = assignedReviewers
+    .map((r: any) => r.assigned_at)
+    .filter(Boolean);
+  if (dates.length === 0) return null;
+  // Return the earliest assignment date
+  return dates.sort()[0];
+};
+
 // Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
   id: localOverride?.id || apiProposal.ticket_number,
@@ -47,6 +58,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
   ticket_number: apiProposal.ticket_number,
   current_revision: apiProposal.current_revision,
   address: apiProposal.address || null,
+  assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
 });
 
 // Map API proposal detail to internal Proposal structure (detail view - full)

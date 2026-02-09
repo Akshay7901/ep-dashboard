@@ -165,6 +165,8 @@ export interface Proposal {
   additional_info?: string | null;
   corresponding_author_name?: string | null;
   referrer_url?: string | null;
+  // Assignment data
+  assigned_at?: string | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
