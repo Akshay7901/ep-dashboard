@@ -100,7 +100,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, variant, isActive
 
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
-  const { isAnyReviewer, logout } = useAuth();
+  const { isAnyReviewer, isReviewer1, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
@@ -180,6 +180,12 @@ const Proposals: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {isReviewer1 && (
+              <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
+                <Users className="h-4 w-4" />
+                Peer Reviewers
+              </Button>
+            )}
             <Button variant="outline" className="gap-2" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="h-4 w-4" />
               Logout
