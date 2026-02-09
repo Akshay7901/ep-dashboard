@@ -1,13 +1,13 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
-import PeerReviewCommentsForm from "@/components/proposals/PeerReviewCommentsForm";
+import PeerReviewCommentsForm, { type PeerReviewCommentsFormHandle } from "@/components/proposals/PeerReviewCommentsForm";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
 import DeclineProposalDialog from "@/components/proposals/DeclineProposalDialog";
@@ -123,6 +123,8 @@ const ProposalDetails: React.FC = () => {
   const { reviewers } = usePeerReviewers();
   const { defaultEmail } = useDefaultReviewer();
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
+
+  const reviewFormRef = useRef<PeerReviewCommentsFormHandle>(null);
 
   const [documentPreview, setDocumentPreview] = useState<{
     url: string;
@@ -603,13 +605,17 @@ const ProposalDetails: React.FC = () => {
 
         {showReviewForm && (
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              onClick={() => reviewFormRef.current?.saveDraft()}
+              disabled={reviewFormRef.current?.isSaving}
+            >
               Save Draft
             </Button>
             <Button
-              size="sm"
               className="bg-[#2d3748] hover:bg-[#2d3748]/90 text-white"
-              disabled
+              onClick={() => reviewFormRef.current?.submitReview()}
+              disabled={reviewFormRef.current?.isSaving || !reviewFormRef.current?.canSubmit}
             >
               Submit Review
             </Button>
@@ -619,15 +625,15 @@ const ProposalDetails: React.FC = () => {
 
       {/* Two-Panel or Single-Panel Layout */}
       {showReviewForm ? (
-        <div className="flex gap-6 items-start">
+        <div className="grid grid-cols-2 gap-0 items-start">
           {/* Left Panel — Review Form */}
-          <div className="w-[420px] shrink-0 sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2 scrollbar-thin">
-            <PeerReviewCommentsForm proposal={proposal} onSave={() => refetch()} />
+          <div className="pr-6 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin">
+            <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} onSave={() => refetch()} />
           </div>
 
           {/* Right Panel — Proposal Details */}
-          <div className="flex-1 min-w-0 border-l pl-6">
-            <h2 className="text-xl font-bold text-foreground mb-6">Proposal Details</h2>
+          <div className="pl-6 border-l">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
         </div>

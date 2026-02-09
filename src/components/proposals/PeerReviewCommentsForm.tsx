@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,14 @@ interface PeerReviewCommentsFormProps {
   proposal: Proposal;
   existingAssessment?: Record<string, any>;
   onSave?: () => void;
+}
+
+export interface PeerReviewCommentsFormHandle {
+  saveDraft: () => Promise<void>;
+  submitReview: () => Promise<void>;
+  isSaving: boolean;
+  canSubmit: boolean;
+  progress: number;
 }
 
 const REVIEW_FIELDS = [
@@ -105,11 +113,11 @@ const RECOMMENDATION_OPTIONS = [
   },
 ];
 
-const PeerReviewCommentsForm: React.FC<PeerReviewCommentsFormProps> = ({
+const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(({
   proposal,
   existingAssessment,
   onSave,
-}) => {
+}, ref) => {
   const addComment = useAddComment();
 
   const [formData, setFormData] = useState<Record<string, string>>(
@@ -170,6 +178,15 @@ const PeerReviewCommentsForm: React.FC<PeerReviewCommentsFormProps> = ({
     }
   };
 
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    saveDraft: () => handleSave(false),
+    submitReview: () => handleSave(true),
+    isSaving,
+    canSubmit: !!formData.recommendation,
+    progress,
+  }), [isSaving, formData.recommendation, progress]);
+
   if (isSubmitted) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center space-y-4">
@@ -186,15 +203,15 @@ const PeerReviewCommentsForm: React.FC<PeerReviewCommentsFormProps> = ({
     <div className="space-y-8">
       {/* Header with progress */}
       <div>
-        <h2 className="text-xl font-bold text-foreground">
-          Peer review comments
-        </h2>
-        <div className="flex items-center gap-3 mt-3">
-          <Progress value={progress} className="flex-1 h-2" />
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-foreground">
+            Peer review comments
+          </h2>
           <span className="text-sm text-muted-foreground whitespace-nowrap">
             {progress}% Complete
           </span>
         </div>
+        <Progress value={progress} className="mt-3 h-2" />
       </div>
 
       {/* Form Fields */}
@@ -245,26 +262,8 @@ const PeerReviewCommentsForm: React.FC<PeerReviewCommentsFormProps> = ({
         </RadioGroup>
       </div>
 
-      {/* Bottom Action Buttons */}
-      <div className="flex items-center gap-3 pt-4 border-t">
-        <Button
-          variant="outline"
-          onClick={() => handleSave(false)}
-          disabled={isSaving}
-          className="flex-1"
-        >
-          Save Draft
-        </Button>
-        <Button
-          onClick={() => handleSave(true)}
-          disabled={isSaving || !formData.recommendation}
-          className="flex-1 bg-[#2d3748] hover:bg-[#2d3748]/90 text-white"
-        >
-          Submit Review
-        </Button>
-      </div>
     </div>
   );
-};
+});
 
 export default PeerReviewCommentsForm;
