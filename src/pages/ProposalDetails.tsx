@@ -317,7 +317,7 @@ const ProposalDetails: React.FC = () => {
 
             {/* Revert action for Reviewer 1 when under review */}
             {isReviewer1 && proposal.status === "under_review" && (
-              <Button variant="outline" onClick={() => setIsRevertDialogOpen(true)} disabled={isBusy}>
+              <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
                 Reassign
               </Button>
             )}
