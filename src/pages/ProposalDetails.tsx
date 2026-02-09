@@ -50,7 +50,7 @@ const ContentBlock = ({
   if (!value) return null;
   return <div className="space-y-2">
       <p className="text-sm text-muted-foreground italic">{label}:</p>
-      <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line border-l-4 border-[#752315] border-0 rounded-none">
+      <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line rounded-none">
         {value}
       </div>
     </div>;
@@ -566,7 +566,7 @@ const ProposalDetails: React.FC = () => {
                   Table of Contents
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  <div className="bg-muted/30 rounded-lg p-4 text-sm leading-relaxed whitespace-pre-line border-l-4 border-primary/30">
+                  <div className="bg-muted/30 rounded-lg p-4 text-sm leading-relaxed whitespace-pre-line">
                     {proposal.table_of_contents || "No table of contents available"}
                   </div>
                 </AccordionContent>
