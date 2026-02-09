@@ -330,7 +330,7 @@ serve(async (req) => {
         const ticketNumbers = upstreamData.proposals.map((p: any) => p.ticket_number).filter(Boolean);
         const overrideMap = await getLocalOverridesByTickets(ticketNumbers);
 
-        // Fetch detail for each proposal in parallel to get address/country
+        // Fetch detail for each proposal in parallel to get address/country and assigned_reviewers
         const detailPromises = upstreamData.proposals.map(async (p: any) => {
           try {
             const detailRes = await fetch(
@@ -339,16 +339,20 @@ serve(async (req) => {
             );
             if (detailRes.ok) {
               const detail = await detailRes.json();
-              return { ticket_number: p.ticket_number, address: detail?.current_data?.address || null };
+              return {
+                ticket_number: p.ticket_number,
+                address: detail?.current_data?.address || null,
+                assigned_reviewers: detail?.assigned_reviewers || null,
+              };
             }
           } catch {
             // ignore individual failures
           }
-          return { ticket_number: p.ticket_number, address: null };
+          return { ticket_number: p.ticket_number, address: null, assigned_reviewers: null };
         });
 
         const details = await Promise.all(detailPromises);
-        const addressMap = new Map(details.map((d: any) => [d.ticket_number, d.address]));
+        const detailsMap = new Map(details.map((d: any) => [d.ticket_number, d]));
 
         for (const proposal of upstreamData.proposals) {
           const override = overrideMap.get(proposal.ticket_number);
@@ -358,8 +362,10 @@ serve(async (req) => {
           } else {
             proposal.local_override = null;
           }
-          // Attach address from detail response
-          proposal.address = addressMap.get(proposal.ticket_number) || null;
+          // Attach detail data from detail response
+          const detail = detailsMap.get(proposal.ticket_number);
+          proposal.address = detail?.address || null;
+          proposal.assigned_reviewers = detail?.assigned_reviewers || null;
         }
       }
 

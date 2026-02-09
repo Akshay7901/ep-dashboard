@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { ProposalStatus } from "@/types";
 import { Search, Loader2, Users, LogOut } from "lucide-react";
 import { format } from "date-fns";
@@ -14,63 +14,81 @@ import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.jpg";
-
 import { extractCountry } from "@/lib/extractCountry";
 
 const ITEMS_PER_PAGE = 10;
+
+// Peer Review Dashboard status filter options
 const statusOptions: {
   value: ProposalStatus | "all";
   label: string;
 }[] = [
-  {
-    value: "all",
-    label: "All Statuses",
-  },
-  {
-    value: "submitted",
-    label: "New",
-  },
-  {
-    value: "under_review",
-    label: "In Review",
-  },
-  {
-    value: "approved",
-    label: "Contract Sent",
-  },
-  {
-    value: "finalised",
-    label: "Finalised",
-  },
-  {
-    value: "rejected",
-    label: "Declined",
-  },
-  {
-    value: "locked",
-    label: "Locked",
-  },
+  { value: "all", label: "All Statuses" },
+  { value: "submitted", label: "Pending Review" },
+  { value: "under_review", label: "In Progress" },
+  { value: "approved", label: "Completed" },
+  { value: "finalised", label: "Completed" },
+  { value: "rejected", label: "Declined" },
+  { value: "locked", label: "Locked" },
 ];
+
+// Peer Review status badge config
+const peerReviewStatusConfig: Record<string, { label: string; className: string }> = {
+  submitted: {
+    label: "Pending Review",
+    className: "bg-[#c4940a] text-white hover:bg-[#c4940a] border-[#c4940a]",
+  },
+  under_review: {
+    label: "In Progress",
+    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]",
+  },
+  approved: {
+    label: "Completed",
+    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]",
+  },
+  finalised: {
+    label: "Completed",
+    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]",
+  },
+  rejected: {
+    label: "Declined",
+    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]",
+  },
+  locked: {
+    label: "Locked",
+    className: "bg-gray-600 text-white hover:bg-gray-600 border-gray-600",
+  },
+};
+
+const PeerReviewStatusBadge: React.FC<{ status: ProposalStatus }> = ({ status }) => {
+  const config = peerReviewStatusConfig[status] || peerReviewStatusConfig.submitted;
+  return (
+    <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs")}>
+      {config.label}
+    </Badge>
+  );
+};
+
 interface StatusChipProps {
   count: number;
   label: string;
-  variant: "default" | "new" | "review" | "contract" | "declined";
+  variant: "default" | "pending" | "inProgress" | "completed";
   isActive?: boolean;
   onClick?: () => void;
 }
+
 const StatusChip: React.FC<StatusChipProps> = ({ count, label, variant, isActive, onClick }) => {
   const variantStyles = {
-    default: "bg-muted text-foreground border-border",
-    new: "bg-[#3d5a47] text-white border-[#3d5a47]",
-    review: "bg-[#2d3748] text-white border-[#2d3748]",
-    contract: "bg-[#2d3748] text-white border-[#2d3748]",
-    declined: "bg-[#9b2c2c] text-white border-[#9b2c2c]",
+    default: "bg-[#2d3748] text-white border-[#2d3748]",
+    pending: "bg-[#c4940a] text-white border-[#c4940a]",
+    inProgress: "bg-[#9b2c2c] text-white border-[#9b2c2c]",
+    completed: "bg-[#3d5a47] text-white border-[#3d5a47]",
   };
   return (
     <button
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded",
+        "inline-flex items-center gap-2 px-5 py-2 text-sm font-medium border transition-all rounded-full",
         variantStyles[variant],
         isActive && "ring-2 ring-offset-2 ring-primary",
       )}
@@ -79,6 +97,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, variant, isActive
     </button>
   );
 };
+
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
   const { isAnyReviewer, logout } = useAuth();
@@ -89,27 +108,19 @@ const Proposals: React.FC = () => {
   const { data, isLoading, error } = useProposals({
     page: 1,
     limit: 100,
-    // Fetch more to calculate counts
     search: searchQuery,
-    status: "all", // Always fetch all for counts, filter client-side
+    status: "all",
   });
 
   // Calculate status counts
   const statusCounts = React.useMemo(() => {
     if (!data?.data)
-      return {
-        total: 0,
-        new: 0,
-        review: 0,
-        contract: 0,
-        declined: 0,
-      };
+      return { total: 0, pending: 0, inProgress: 0, completed: 0 };
     return {
       total: data.data.length,
-      new: data.data.filter((p) => p.status === "submitted").length,
-      review: data.data.filter((p) => p.status === "under_review").length,
-      contract: data.data.filter((p) => p.status === "approved").length,
-      declined: data.data.filter((p) => p.status === "rejected").length,
+      pending: data.data.filter((p) => p.status === "submitted").length,
+      inProgress: data.data.filter((p) => p.status === "under_review").length,
+      completed: data.data.filter((p) => p.status === "approved" || p.status === "finalised").length,
     };
   }, [data?.data]);
 
@@ -117,12 +128,16 @@ const Proposals: React.FC = () => {
   const filteredProposals = React.useMemo(() => {
     if (!data?.data) return [];
     if (statusFilter === "all") return data.data;
+    if (statusFilter === "approved") {
+      return data.data.filter((p) => p.status === "approved" || p.status === "finalised");
+    }
     return data.data.filter((p) => p.status === statusFilter);
   }, [data?.data, statusFilter]);
 
   // Paginate results
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
+
   const handleProposalClick = (id: string) => {
     navigate(`/proposals/${id}`);
   };
@@ -137,9 +152,10 @@ const Proposals: React.FC = () => {
   const handleViewMore = () => {
     setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
   };
+
   if (!isAnyReviewer) {
     return (
-      <DashboardLayout title="Proposals">
+      <DashboardLayout title="Peer Review Dashboard">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground text-center">
@@ -152,14 +168,15 @@ const Proposals: React.FC = () => {
       </DashboardLayout>
     );
   }
+
   return (
-    <DashboardLayout title="Proposals">
+    <DashboardLayout title="Peer Review Dashboard">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Proposal Intake Logo" className="h-8 w-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Proposal Intake</h1>
+            <img src={logo} alt="Peer Review Logo" className="h-10 w-auto" />
+            <h1 className="text-2xl font-bold text-foreground">Peer Review Dashboard</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -178,38 +195,31 @@ const Proposals: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           <StatusChip
             count={statusCounts.total}
-            label="Proposals"
+            label="Assigned"
             variant="default"
             isActive={statusFilter === "all"}
             onClick={() => handleStatusChange("all")}
           />
           <StatusChip
-            count={statusCounts.new}
-            label="New"
-            variant="new"
+            count={statusCounts.pending}
+            label="Pending"
+            variant="pending"
             isActive={statusFilter === "submitted"}
             onClick={() => handleStatusChange("submitted")}
           />
           <StatusChip
-            count={statusCounts.review}
-            label="In Review"
-            variant="review"
+            count={statusCounts.inProgress}
+            label="In Progress"
+            variant="inProgress"
             isActive={statusFilter === "under_review"}
             onClick={() => handleStatusChange("under_review")}
           />
           <StatusChip
-            count={statusCounts.contract}
-            label="Contract Sent"
-            variant="contract"
+            count={statusCounts.completed}
+            label="Completed"
+            variant="completed"
             isActive={statusFilter === "approved"}
             onClick={() => handleStatusChange("approved")}
-          />
-          <StatusChip
-            count={statusCounts.declined}
-            label="Declined"
-            variant="declined"
-            isActive={statusFilter === "rejected"}
-            onClick={() => handleStatusChange("rejected")}
           />
         </div>
 
@@ -254,10 +264,8 @@ const Proposals: React.FC = () => {
           </Select>
         </div>
 
-        {/* Recent Submissions */}
+        {/* Proposals Table */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Recent Submissions</h2>
-
           {/* Loading state */}
           {isLoading && (
             <div className="flex justify-center py-12">
@@ -283,7 +291,7 @@ const Proposals: React.FC = () => {
             </Card>
           )}
 
-          {/* Proposals Table */}
+          {/* Table */}
           {!isLoading && !error && displayedProposals.length > 0 && (
             <>
               <Card className="overflow-hidden">
@@ -303,7 +311,10 @@ const Proposals: React.FC = () => {
                         Country
                       </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                        Date Submitted
+                        Submitted
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                        Assigned On
                       </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide text-right">
                         Status
@@ -323,13 +334,20 @@ const Proposals: React.FC = () => {
                         <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {extractCountry(proposal.address) || '—'}
+                          {extractCountry(proposal.address) || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {proposal.created_at ? format(new Date(proposal.created_at), 'MMM d, yyyy') : '—'}
+                          {proposal.created_at
+                            ? format(new Date(proposal.created_at), "MMM d, yyyy")
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {proposal.assigned_at
+                            ? format(new Date(proposal.assigned_at), "MMM d, yyyy")
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                          <PeerReviewStatusBadge status={proposal.status} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -352,4 +370,5 @@ const Proposals: React.FC = () => {
     </DashboardLayout>
   );
 };
+
 export default Proposals;
