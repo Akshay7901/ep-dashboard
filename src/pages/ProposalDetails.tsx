@@ -244,19 +244,28 @@ const ProposalDetails: React.FC = () => {
             {reviewers.length > 0 && (
               <>
                 <UserCircle className="h-5 w-5 text-muted-foreground" />
-                <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
-                  <SelectTrigger className="w-56 bg-background">
-                    <SelectValue placeholder="Select a reviewer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {reviewers.map((reviewer) => (
-                      <SelectItem key={reviewer.id} value={reviewer.email}>
-                        {reviewer.name || reviewer.email.split("@")[0]}
-                        {reviewer.email === defaultEmail && " (Default)"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {proposal.status === "submitted" ? (
+                  <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
+                    <SelectTrigger className="w-56 bg-background">
+                      <SelectValue placeholder="Select a reviewer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reviewers.map((reviewer) => (
+                        <SelectItem key={reviewer.id} value={reviewer.email}>
+                          {reviewer.name || reviewer.email.split("@")[0]}
+                          {reviewer.email === defaultEmail && " (Default)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-sm font-medium">
+                    {(() => {
+                      const assigned = reviewers.find((r) => r.email === selectedReviewer);
+                      return assigned ? (assigned.name || assigned.email.split("@")[0]) : selectedReviewer || "N/A";
+                    })()}
+                  </span>
+                )}
               </>
             )}
 
