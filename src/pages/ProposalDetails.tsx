@@ -729,7 +729,7 @@ const ProposalDetails: React.FC = () => {
           </div>
 
           {/* Right Panel — Proposal Details */}
-          <div className="pl-6 border-l">
+          <div className="pl-6">
             <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
