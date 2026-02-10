@@ -18,13 +18,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare } from "lucide-react";
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
+import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 
 /* ---------------- Helpers ---------------- */
 
@@ -327,7 +328,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book Info</span>
@@ -342,7 +343,16 @@ const ProposalDetails: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
-              <span className="hidden sm:inline">Supporting Documents</span>
+              <span className="hidden sm:inline">Documents</span>
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="gap-1.5 text-xs sm:text-sm">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Reviews</span>
+              {comments.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
+                  {comments.length}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -526,6 +536,10 @@ const ProposalDetails: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          {/* ---- REVIEWS (Decision Reviewer) ---- */}
+          <TabsContent value="reviews" className="mt-4">
+            <ReviewCommentsDisplay comments={comments as any} isReviewer1={true} />
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
