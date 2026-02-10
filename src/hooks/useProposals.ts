@@ -59,6 +59,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
   current_revision: apiProposal.current_revision,
   address: apiProposal.address || null,
   assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
+  assigned_reviewers: Array.isArray(apiProposal.assigned_reviewers) ? apiProposal.assigned_reviewers : null,
 });
 
 // Map API proposal detail to internal Proposal structure (detail view - full)

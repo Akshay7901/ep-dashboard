@@ -167,6 +167,7 @@ export interface Proposal {
   referrer_url?: string | null;
   // Assignment data
   assigned_at?: string | null;
+  assigned_reviewers?: Array<{ email: string; name?: string; assigned_at?: string }> | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
