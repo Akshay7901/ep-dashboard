@@ -40,27 +40,34 @@ const extractAssignedAt = (assignedReviewers: any): string | null => {
 };
 
 // Map API proposal to internal Proposal structure (list view - basic)
-const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => ({
-  id: localOverride?.id || apiProposal.ticket_number,
-  name: apiProposal.title,
-  author_name: apiProposal.corresponding_author,
-  author_email: apiProposal.email,
-  author_phone: null,
-  description: null,
-  status: localOverride?.status || mapApiStatus(apiProposal.status),
-  value: localOverride?.value || null,
-  contract_sent: localOverride?.contract_sent || false,
-  contract_sent_at: localOverride?.contract_sent_at || null,
-  finalised_at: localOverride?.finalised_at || null,
-  finalised_by: localOverride?.finalised_by || null,
-  created_at: apiProposal.submitted_at,
-  updated_at: localOverride?.updated_at || apiProposal.submitted_at,
-  ticket_number: apiProposal.ticket_number,
-  current_revision: apiProposal.current_revision,
-  address: apiProposal.address || null,
-  assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-  assigned_reviewers: Array.isArray(apiProposal.assigned_reviewers) ? apiProposal.assigned_reviewers : null,
-});
+const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
+  const hasAssignedReviewers = Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0;
+  // If API status is "new" but reviewers are assigned, treat as "under_review"
+  const inferredStatus = localOverride?.status
+    || (apiProposal.status === 'new' && hasAssignedReviewers ? 'under_review' : mapApiStatus(apiProposal.status));
+
+  return {
+    id: localOverride?.id || apiProposal.ticket_number,
+    name: apiProposal.title,
+    author_name: apiProposal.corresponding_author,
+    author_email: apiProposal.email,
+    author_phone: null,
+    description: null,
+    status: inferredStatus,
+    value: localOverride?.value || null,
+    contract_sent: localOverride?.contract_sent || false,
+    contract_sent_at: localOverride?.contract_sent_at || null,
+    finalised_at: localOverride?.finalised_at || null,
+    finalised_by: localOverride?.finalised_by || null,
+    created_at: apiProposal.submitted_at,
+    updated_at: localOverride?.updated_at || apiProposal.submitted_at,
+    ticket_number: apiProposal.ticket_number,
+    current_revision: apiProposal.current_revision,
+    address: apiProposal.address || null,
+    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
+    assigned_reviewers: hasAssignedReviewers ? apiProposal.assigned_reviewers : null,
+  };
+};
 
 // Map API proposal detail to internal Proposal structure (detail view - full)
 const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: any): Proposal => {
