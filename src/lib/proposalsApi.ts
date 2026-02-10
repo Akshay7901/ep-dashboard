@@ -200,6 +200,29 @@ export const assignmentsApi = {
   },
 };
 
+// Reassign API
+export const reassignApi = {
+  reassign: async (ticketNumber: string, body: { from_reviewer_email: string; to_reviewer_email: string }): Promise<any> => {
+    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
+      method: 'POST',
+      headers: {
+        ...buildHeaders(),
+        'x-custom-path': `/reassign/${ticketNumber}`,
+      },
+      body,
+    });
+
+    if (error) throw error;
+    if ((data as any)?.error || (data as any)?.upstream) {
+      const upstreamError = (data as any).upstream || data;
+      const err: any = new Error((data as any).error || 'Failed to reassign proposal');
+      err.upstream = upstreamError;
+      throw err;
+    }
+    return data;
+  },
+};
+
 // Revisions API
 export const revisionsApi = {
   create: async (ticketNumber: string, revisionData: Record<string, unknown>): Promise<void> => {

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { statusApi, assignmentsApi, proposalApi } from '@/lib/proposalsApi';
+import { statusApi, assignmentsApi, proposalApi, reassignApi } from '@/lib/proposalsApi';
 import { useToast } from '@/hooks/use-toast';
 
 export const useProposalActions = (ticketNumber: string | undefined) => {
@@ -79,6 +79,26 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
     },
   });
 
+  const reassignMutation = useMutation({
+    mutationFn: ({ fromEmail, toEmail }: { fromEmail: string; toEmail: string }) =>
+      reassignApi.reassign(ticketNumber!, { from_reviewer_email: fromEmail, to_reviewer_email: toEmail }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
+      toast({
+        title: 'Proposal Reassigned',
+        description: 'The proposal has been reassigned to the new reviewer.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to reassign proposal',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     updateStatus: updateStatusMutation.mutate,
     isUpdatingStatus: updateStatusMutation.isPending,
@@ -88,5 +108,8 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
     isUnassigning: unassignMutation.isPending,
     deleteProposal: deleteProposalMutation.mutate,
     isDeleting: deleteProposalMutation.isPending,
+    reassignProposal: reassignMutation.mutate,
+    reassignProposalAsync: reassignMutation.mutateAsync,
+    isReassigning: reassignMutation.isPending,
   };
 };
