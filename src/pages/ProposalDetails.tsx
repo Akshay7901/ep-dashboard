@@ -136,14 +136,6 @@ const ProposalDetails: React.FC = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const addComment = useAddComment();
 
-  // Set default reviewer when data loads
-  React.useEffect(() => {
-    if (defaultEmail && reviewers.length > 0 && !selectedReviewer) {
-      const found = reviewers.find(r => r.email === defaultEmail);
-      if (found) setSelectedReviewer(found.email);
-    }
-  }, [defaultEmail, reviewers, selectedReviewer]);
-
   /* ---------------- Data ---------------- */
 
   const {
@@ -153,6 +145,23 @@ const ProposalDetails: React.FC = () => {
     refetch
   } = useProposal(id || "");
   const localId = proposal?.id || "";
+
+  // Set reviewer: prefer already-assigned reviewer, then default, then empty
+  React.useEffect(() => {
+    if (reviewers.length > 0 && !selectedReviewer) {
+      const assignedEmails = proposal?.assigned_reviewers?.map(r => r.email) || [];
+      const assignedMatch = assignedEmails.length > 0
+        ? reviewers.find(r => assignedEmails.includes(r.email))
+        : null;
+
+      if (assignedMatch) {
+        setSelectedReviewer(assignedMatch.email);
+      } else if (defaultEmail) {
+        const found = reviewers.find(r => r.email === defaultEmail);
+        if (found) setSelectedReviewer(found.email);
+      }
+    }
+  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
