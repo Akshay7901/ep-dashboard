@@ -258,6 +258,50 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'getComments') {
+      const { proposalId: pid } = body;
+      if (!pid) {
+        return new Response(JSON.stringify({ error: 'Missing proposalId' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let localPid = pid;
+
+      if (!uuidRegex.test(pid)) {
+        const { data: existing } = await supabase
+          .from('proposals')
+          .select('id')
+          .eq('ticket_number', pid)
+          .maybeSingle();
+        if (!existing) {
+          return new Response(JSON.stringify({ comments: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        localPid = existing.id;
+      }
+
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('reviewer_comments')
+        .select('*')
+        .eq('proposal_id', localPid)
+        .order('created_at', { ascending: false });
+
+      if (commentsError) {
+        return new Response(JSON.stringify({ error: commentsError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ comments: commentsData || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

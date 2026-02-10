@@ -533,19 +533,15 @@ export const useProposalComments = (proposalId: string) => {
   return useQuery({
     queryKey: ['proposal-comments', proposalId],
     queryFn: async () => {
-      // Only query comments for local proposals (UUIDs)
-      if (!isUUID(proposalId)) {
-        return [] as ReviewerComment[];
-      }
+      if (!proposalId) return [] as ReviewerComment[];
 
-      const { data, error } = await supabase
-        .from('reviewer_comments')
-        .select('*')
-        .eq('proposal_id', proposalId)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.functions.invoke('proposal-workflow', {
+        body: { action: 'getComments', proposalId },
+      });
 
       if (error) throw error;
-      return data as ReviewerComment[];
+      if (data?.error) throw new Error(data.error);
+      return (data?.comments || []) as ReviewerComment[];
     },
     enabled: !!proposalId,
   });
