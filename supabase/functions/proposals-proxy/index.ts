@@ -265,6 +265,15 @@ serve(async (req) => {
       return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, headers, body);
     }
 
+    // Route: POST /reassign/:ticket - Reassign proposal to another peer reviewer
+    const reassignMatch = path.match(/\/reassign\/([^\/]+)$/);
+    if (reassignMatch && method === 'POST') {
+      const ticketNumber = reassignMatch[1];
+      const body = await req.text();
+      console.log(`Reassigning proposal: ${ticketNumber}`);
+      return await proxyRequest('POST', `${API_BASE_URL}/api/proposals/${encodeURIComponent(ticketNumber)}/reassign`, headers, body);
+    }
+
     // Route: POST /assign/:ticket - Assign proposal to peer reviewers
     const assignMatch = path.match(/\/assign\/([^\/]+)$/);
     if (assignMatch && method === 'POST') {
