@@ -119,6 +119,8 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: an
     additional_info: currentData.additional_info || null,
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
+    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
+    assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) ? (apiProposal as any).assigned_reviewers : null,
   };
 };
 
@@ -371,11 +373,25 @@ export const useProposal = (id: string) => {
         // Merge data - local status takes priority if it exists
         const mapped = mapApiProposalDetail(apiProposal, localOverride);
 
+        // Try to get assigned_reviewers from cached list data (detail API doesn't return it)
+        let assignedReviewers = mapped.assigned_reviewers;
+        if (!assignedReviewers) {
+          const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
+          for (const [, queryData] of cachedListData) {
+            const cached = queryData?.data?.find(p => p.ticket_number === ticketNumber);
+            if (cached?.assigned_reviewers) {
+              assignedReviewers = cached.assigned_reviewers;
+              break;
+            }
+          }
+        }
+
         // Return merged data - use local ID if exists, otherwise use ticket number
         return {
           ...mapped,
           status: localOverride?.status || mapped.status,
           id: localOverride?.id || id,
+          assigned_reviewers: assignedReviewers,
         };
       } catch (e) {
           // Detail endpoint failed - try to use cached list data as fallback
