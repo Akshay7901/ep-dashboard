@@ -576,7 +576,8 @@ export const useAddComment = () => {
        localProposalId = await ensureLocalProposal(apiProposal);
      }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
