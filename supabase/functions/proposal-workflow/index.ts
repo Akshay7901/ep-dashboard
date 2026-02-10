@@ -155,7 +155,7 @@ serve(async (req) => {
     }
 
     if (action === 'saveComment') {
-      const { proposalId, commentText, reviewFormData, duplicateOf, reviewerEmail } = body;
+      const { proposalId, commentText, reviewFormData, duplicateOf, reviewerEmail, ticketNumber: commentTicket } = body;
       
       if (!proposalId) {
         return new Response(JSON.stringify({ error: 'Missing proposalId' }), {
@@ -166,20 +166,21 @@ serve(async (req) => {
 
       // Resolve proposal: if not UUID, look up by ticket number and ensure local record
       let localProposalId = proposalId;
+      let resolvedTicket = commentTicket || '';
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
       if (!uuidRegex.test(proposalId)) {
-        // It's a ticket number, find or create local record
+        resolvedTicket = resolvedTicket || proposalId;
         const { data: existing } = await supabase
           .from('proposals')
-          .select('id')
+          .select('id, ticket_number')
           .eq('ticket_number', proposalId)
           .maybeSingle();
 
         if (existing) {
           localProposalId = existing.id;
+          resolvedTicket = existing.ticket_number || resolvedTicket;
         } else {
-          // Create a minimal local record
           const { data: newProposal, error: insertError } = await supabase
             .from('proposals')
             .insert({
@@ -200,10 +201,19 @@ serve(async (req) => {
           }
           localProposalId = newProposal.id;
         }
+      } else {
+        // UUID provided - look up ticket_number
+        if (!resolvedTicket) {
+          const { data: existing } = await supabase
+            .from('proposals')
+            .select('ticket_number')
+            .eq('id', proposalId)
+            .maybeSingle();
+          resolvedTicket = existing?.ticket_number || '';
+        }
       }
 
-      // Generate a deterministic UUID v5-like ID from email for reviewer_id
-      // Use a simple hash-to-UUID approach
+      // Generate a deterministic UUID from email for reviewer_id
       const reviewerId = await emailToUuid(reviewerEmail || 'unknown');
 
       // Upsert: check if a comment from this reviewer already exists for this proposal
@@ -215,7 +225,6 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingComment) {
-        // Update existing
         const { error: updateError } = await supabase
           .from('reviewer_comments')
           .update({
@@ -233,7 +242,6 @@ serve(async (req) => {
           });
         }
       } else {
-        // Insert new
         const { error: insertError } = await supabase
           .from('reviewer_comments')
           .insert({
@@ -253,13 +261,44 @@ serve(async (req) => {
         }
       }
 
+      // Also POST to external API if we have a ticket number and auth token
+      if (resolvedTicket && authHeader) {
+        try {
+          const API_BASE_URL = 'https://api.ethicspress.com';
+          const externalBody = JSON.stringify({
+            comment: commentText || '',
+            review_form_data: reviewFormData || {},
+            reviewer_email: reviewerEmail || '',
+          });
+          const extRes = await fetch(
+            `${API_BASE_URL}/api/proposals/${encodeURIComponent(resolvedTicket)}/comments`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': authHeader,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: externalBody,
+            }
+          );
+          if (!extRes.ok) {
+            console.error('External comment POST failed:', extRes.status, await extRes.text().catch(() => ''));
+          } else {
+            console.log('Comment synced to external API');
+          }
+        } catch (extErr) {
+          console.error('Failed to sync comment to external API:', extErr);
+        }
+      }
+
       return new Response(JSON.stringify({ success: true, localProposalId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'getComments') {
-      const { proposalId: pid } = body;
+      const { proposalId: pid, ticketNumber: commentsTicket } = body;
       if (!pid) {
         return new Response(JSON.stringify({ error: 'Missing proposalId' }), {
           status: 400,
@@ -269,11 +308,13 @@ serve(async (req) => {
 
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let localPid = pid;
+      let resolvedTicket = commentsTicket || '';
 
       if (!uuidRegex.test(pid)) {
+        resolvedTicket = resolvedTicket || pid;
         const { data: existing } = await supabase
           .from('proposals')
-          .select('id')
+          .select('id, ticket_number')
           .eq('ticket_number', pid)
           .maybeSingle();
         if (!existing) {
@@ -282,8 +323,19 @@ serve(async (req) => {
           });
         }
         localPid = existing.id;
+        resolvedTicket = existing.ticket_number || resolvedTicket;
+      } else {
+        if (!resolvedTicket) {
+          const { data: existing } = await supabase
+            .from('proposals')
+            .select('ticket_number')
+            .eq('id', pid)
+            .maybeSingle();
+          resolvedTicket = existing?.ticket_number || '';
+        }
       }
 
+      // Fetch local comments
       const { data: commentsData, error: commentsError } = await supabase
         .from('reviewer_comments')
         .select('*')
@@ -297,7 +349,34 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ comments: commentsData || [] }), {
+      // Also fetch external API comments if we have ticket and auth
+      let externalComments: any[] = [];
+      if (resolvedTicket && authHeader) {
+        try {
+          const API_BASE_URL = 'https://api.ethicspress.com';
+          const extRes = await fetch(
+            `${API_BASE_URL}/api/proposals/${encodeURIComponent(resolvedTicket)}/comments`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': authHeader,
+                'Accept': 'application/json',
+              },
+            }
+          );
+          if (extRes.ok) {
+            const extData = await extRes.json();
+            externalComments = Array.isArray(extData) ? extData : (extData?.comments || []);
+          }
+        } catch (extErr) {
+          console.error('Failed to fetch external comments:', extErr);
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        comments: commentsData || [], 
+        externalComments 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

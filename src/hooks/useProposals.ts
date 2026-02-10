@@ -529,14 +529,16 @@ export const useUpdateProposalStatus = () => {
   });
 };
 
-export const useProposalComments = (proposalId: string) => {
+export const useProposalComments = (proposalId: string, ticketNumber?: string) => {
   return useQuery({
     queryKey: ['proposal-comments', proposalId],
     queryFn: async () => {
       if (!proposalId) return [] as ReviewerComment[];
 
+      const token = localStorage.getItem('auth_token');
       const { data, error } = await supabase.functions.invoke('proposal-workflow', {
-        body: { action: 'getComments', proposalId },
+        body: { action: 'getComments', proposalId, ticketNumber },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       if (error) throw error;
@@ -556,6 +558,7 @@ export const useAddComment = () => {
       commentText,
       reviewFormData,
       duplicateOf,
+      ticketNumber,
     }: {
       proposalId: string;
       commentText?: string;
@@ -567,6 +570,7 @@ export const useAddComment = () => {
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error('Not authenticated');
 
+      const token = localStorage.getItem('auth_token');
       const { data, error } = await supabase.functions.invoke('proposal-workflow', {
         body: {
           action: 'saveComment',
@@ -575,7 +579,9 @@ export const useAddComment = () => {
           reviewFormData: reviewFormData || {},
           duplicateOf,
           reviewerEmail: user.email,
+          ticketNumber,
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       if (error) throw error;
