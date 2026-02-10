@@ -1,0 +1,1 @@
+ALTER TABLE public.reviewer_comments DROP CONSTRAINT reviewer_comments_reviewer_id_fkey;
