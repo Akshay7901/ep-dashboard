@@ -19,7 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList } from "lucide-react";
-import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus } from "@/hooks/useProposals";
+import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,6 +132,8 @@ const ProposalDetails: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
   const [showingSummary, setShowingSummary] = useState(false);
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
+  const [isConfirming, setIsConfirming] = useState(false);
+  const addComment = useAddComment();
 
   // Set default reviewer when data loads
   React.useEffect(() => {
@@ -737,12 +739,26 @@ const ProposalDetails: React.FC = () => {
             proposal={proposal}
             formData={summaryFormData}
             onGoBack={() => setShowingSummary(false)}
-            onConfirmSubmit={() => {
-              reviewFormRef.current?.confirmSubmit().then(() => {
-                setShowingSummary(false);
-              });
+            onConfirmSubmit={async () => {
+              setIsConfirming(true);
+              try {
+                await addComment.mutateAsync({
+                  proposalId: proposal.id,
+                  commentText: summaryFormData.otherComments || '',
+                  reviewFormData: {
+                    ...summaryFormData,
+                    submittedForAuthorization: true,
+                    submittedAt: new Date().toISOString(),
+                  },
+                });
+                navigate('/proposals');
+              } catch (err) {
+                console.error('Submit failed:', err);
+              } finally {
+                setIsConfirming(false);
+              }
             }}
-            isSubmitting={reviewFormRef.current?.isSaving || false}
+            isSubmitting={isConfirming}
           />
         ) : (
           <div className="grid grid-cols-2 gap-0 items-start">
