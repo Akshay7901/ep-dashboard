@@ -41,7 +41,7 @@ interface AssignReviewersDialogProps {
     e.preventDefault();
     // Convert selected reviewer IDs to emails
     const selectedEmails = reviewers
-      .filter((r) => selectedReviewers.includes(r.id))
+      .filter((r) => selectedReviewers.includes(String(r.id)))
       .map((r) => r.email);
     onAssign(selectedEmails);
   };
@@ -75,13 +75,13 @@ interface AssignReviewersDialogProps {
                    key={reviewer.id}
                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50"
                  >
-                   <Checkbox
-                     id={reviewer.id}
-                     checked={selectedReviewers.includes(reviewer.id)}
-                     onCheckedChange={() => handleToggle(reviewer.id)}
-                   />
-                    <Label
-                      htmlFor={reviewer.id}
+                    <Checkbox
+                      id={String(reviewer.id)}
+                      checked={selectedReviewers.includes(String(reviewer.id))}
+                      onCheckedChange={() => handleToggle(String(reviewer.id))}
+                    />
+                     <Label
+                       htmlFor={String(reviewer.id)}
                       className="flex-1 cursor-pointer"
                     >
                       <span className="flex items-center gap-2">
