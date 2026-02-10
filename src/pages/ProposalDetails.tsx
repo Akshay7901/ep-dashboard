@@ -155,7 +155,7 @@ const ProposalDetails: React.FC = () => {
   const localId = proposal?.id || "";
   const {
     data: comments = []
-  } = useProposalComments(localId);
+  } = useProposalComments(localId, proposal?.ticket_number || id);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -764,6 +764,7 @@ const ProposalDetails: React.FC = () => {
                     submittedForAuthorization: true,
                     submittedAt: new Date().toISOString(),
                   },
+                  ticketNumber: proposal.ticket_number || id,
                 });
                 navigate('/proposals');
               } catch (err) {
