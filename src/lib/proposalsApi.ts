@@ -1,12 +1,13 @@
  import { supabase } from '@/integrations/supabase/client';
  
  // Types for API responses
- export interface PeerReviewer {
-   id: string;
-   email: string;
-   name: string;
-   created_at?: string;
- }
+export interface PeerReviewer {
+  id: string;
+  email: string;
+  name: string;
+  created_at?: string;
+  assigned_proposals_count?: number;
+}
  
  export interface ProposalComment {
    id: string;

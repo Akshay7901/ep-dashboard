@@ -11,8 +11,8 @@
  import { Checkbox } from '@/components/ui/checkbox';
  import { Label } from '@/components/ui/label';
  import { Loader2, UserPlus } from 'lucide-react';
- import { usePeerReviewers } from '@/hooks/usePeerReviewers';
- 
+  import { Badge } from '@/components/ui/badge';
+  import { usePeerReviewers } from '@/hooks/usePeerReviewers';
 interface AssignReviewersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -80,15 +80,20 @@ interface AssignReviewersDialogProps {
                      checked={selectedReviewers.includes(reviewer.id)}
                      onCheckedChange={() => handleToggle(reviewer.id)}
                    />
-                   <Label
-                     htmlFor={reviewer.id}
-                     className="flex-1 cursor-pointer"
-                   >
-                     <span className="font-medium">{reviewer.name}</span>
-                     <span className="block text-sm text-muted-foreground">
-                       {reviewer.email}
-                     </span>
-                   </Label>
+                    <Label
+                      htmlFor={reviewer.id}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{reviewer.name}</span>
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {reviewer.assigned_proposals_count ?? 0} assigned
+                        </Badge>
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        {reviewer.email}
+                      </span>
+                    </Label>
                  </div>
                ))}
              </div>
