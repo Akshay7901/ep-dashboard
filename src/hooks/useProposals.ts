@@ -565,34 +565,27 @@ export const useAddComment = () => {
       commentText?: string;
       reviewFormData?: Record<string, any>;
       duplicateOf?: string;
-     ticketNumber?: string;
-   }) => {
-     let localProposalId = proposalId;
-     
-     // If the proposal ID is not a UUID (it's a ticket number), we need to ensure a local record exists
-     if (!isUUID(proposalId)) {
-       // Fetch the full proposal from API to create local record
-       const apiProposal = await fetchProposalByTicket(proposalId);
-       localProposalId = await ensureLocalProposal(apiProposal);
-     }
-
+      ticketNumber?: string;
+    }) => {
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('reviewer_comments')
-        .insert({
-         proposal_id: localProposalId,
-          reviewer_id: user.id,
-          comment_text: commentText,
-          review_form_data: reviewFormData || {},
-          is_duplicate_of: duplicateOf,
-        });
+      const { data, error } = await supabase.functions.invoke('proposal-workflow', {
+        body: {
+          action: 'saveComment',
+          proposalId,
+          commentText: commentText || '',
+          reviewFormData: reviewFormData || {},
+          duplicateOf,
+          reviewerEmail: user.email,
+        },
+      });
 
       if (error) throw error;
-     
-     return { localProposalId };
+      if (data?.error) throw new Error(data.error);
+
+      return { localProposalId: data?.localProposalId || proposalId };
     },
    onSuccess: (data) => {
      if (data?.localProposalId) {

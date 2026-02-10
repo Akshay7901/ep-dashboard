@@ -7,13 +7,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get auth token from header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
@@ -22,16 +20,14 @@ serve(async (req) => {
       });
     }
 
-    // Parse request body
-    const { action, proposalData, status, previousStatus, ticketNumber } = await req.json();
+    const body = await req.json();
+    const { action, proposalData, status, previousStatus, ticketNumber } = body;
 
-    // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (action === 'ensureProposal') {
-      // Ensure a local proposal record exists
       if (!proposalData || !proposalData.ticket_number) {
         return new Response(JSON.stringify({ error: 'Missing proposal data' }), {
           status: 400,
@@ -39,7 +35,6 @@ serve(async (req) => {
         });
       }
 
-      // Check if proposal already exists by ticket number
       const { data: existing } = await supabase
         .from('proposals')
         .select('id')
@@ -52,7 +47,6 @@ serve(async (req) => {
         });
       }
 
-      // Create new local proposal record
       const { data: newProposal, error: insertError } = await supabase
         .from('proposals')
         .insert({
@@ -81,7 +75,6 @@ serve(async (req) => {
     }
 
     if (action === 'updateStatus') {
-      // Update proposal status - always use ticketNumber to look up the proposal
       const lookupTicket = ticketNumber || proposalData?.ticket_number;
       
       if (!lookupTicket) {
@@ -93,7 +86,6 @@ serve(async (req) => {
 
       let proposalId: string | null = null;
 
-      // Always look up by ticket number first (never trust proposalData.id as it may be the ticket number string)
       const { data: existing } = await supabase
         .from('proposals')
         .select('id')
@@ -103,7 +95,6 @@ serve(async (req) => {
       if (existing) {
         proposalId = existing.id;
       } else if (proposalData) {
-        // Create new record first
         const { data: newProposal, error: insertError } = await supabase
           .from('proposals')
           .insert({
@@ -133,7 +124,6 @@ serve(async (req) => {
         });
       }
 
-      // Update the status
       const updateData: Record<string, unknown> = { status };
       if (status === 'locked') {
         updateData.finalised_at = new Date().toISOString();
@@ -152,7 +142,6 @@ serve(async (req) => {
         });
       }
 
-      // Log the workflow action
       await supabase.from('workflow_logs').insert({
         proposal_id: proposalId,
         action: `Status changed from ${previousStatus} to ${status}`,
@@ -161,6 +150,110 @@ serve(async (req) => {
       });
 
       return new Response(JSON.stringify({ success: true, id: proposalId }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'saveComment') {
+      const { proposalId, commentText, reviewFormData, duplicateOf, reviewerEmail } = body;
+      
+      if (!proposalId) {
+        return new Response(JSON.stringify({ error: 'Missing proposalId' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Resolve proposal: if not UUID, look up by ticket number and ensure local record
+      let localProposalId = proposalId;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (!uuidRegex.test(proposalId)) {
+        // It's a ticket number, find or create local record
+        const { data: existing } = await supabase
+          .from('proposals')
+          .select('id')
+          .eq('ticket_number', proposalId)
+          .maybeSingle();
+
+        if (existing) {
+          localProposalId = existing.id;
+        } else {
+          // Create a minimal local record
+          const { data: newProposal, error: insertError } = await supabase
+            .from('proposals')
+            .insert({
+              ticket_number: proposalId,
+              name: 'Untitled',
+              author_name: 'Unknown',
+              author_email: 'unknown@email.com',
+              status: 'submitted',
+            })
+            .select('id')
+            .single();
+
+          if (insertError) {
+            return new Response(JSON.stringify({ error: insertError.message }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          localProposalId = newProposal.id;
+        }
+      }
+
+      // Generate a deterministic UUID v5-like ID from email for reviewer_id
+      // Use a simple hash-to-UUID approach
+      const reviewerId = await emailToUuid(reviewerEmail || 'unknown');
+
+      // Upsert: check if a comment from this reviewer already exists for this proposal
+      const { data: existingComment } = await supabase
+        .from('reviewer_comments')
+        .select('id')
+        .eq('proposal_id', localProposalId)
+        .eq('reviewer_id', reviewerId)
+        .maybeSingle();
+
+      if (existingComment) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('reviewer_comments')
+          .update({
+            comment_text: commentText || '',
+            review_form_data: reviewFormData || {},
+            is_duplicate_of: duplicateOf || null,
+            submitted_for_authorization: reviewFormData?.submittedForAuthorization || false,
+          })
+          .eq('id', existingComment.id);
+
+        if (updateError) {
+          return new Response(JSON.stringify({ error: updateError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } else {
+        // Insert new
+        const { error: insertError } = await supabase
+          .from('reviewer_comments')
+          .insert({
+            proposal_id: localProposalId,
+            reviewer_id: reviewerId,
+            comment_text: commentText || '',
+            review_form_data: reviewFormData || {},
+            is_duplicate_of: duplicateOf || null,
+            submitted_for_authorization: reviewFormData?.submittedForAuthorization || false,
+          });
+
+        if (insertError) {
+          return new Response(JSON.stringify({ error: insertError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, localProposalId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -177,3 +270,16 @@ serve(async (req) => {
     });
   }
 });
+
+// Convert email to a deterministic UUID-format string
+async function emailToUuid(email: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email.toLowerCase().trim());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = new Uint8Array(hashBuffer);
+  const hex = Array.from(hashArray.slice(0, 16))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  // Format as UUID v4-like
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${(parseInt(hex[16], 16) & 0x3 | 0x8).toString(16)}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
