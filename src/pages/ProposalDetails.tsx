@@ -278,6 +278,7 @@ const ProposalDetails: React.FC = () => {
                     {reviewers.map(reviewer => <SelectItem key={reviewer.id} value={reviewer.email}>
                         {reviewer.name || reviewer.email.split("@")[0]}
                         {reviewer.email === defaultEmail && " (Default)"}
+                        {" "}({reviewer.assigned_proposals_count ?? 0})
                       </SelectItem>)}
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
