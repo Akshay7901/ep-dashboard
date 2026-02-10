@@ -7,6 +7,7 @@ import { extractCountry } from "@/lib/extractCountry";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import PeerReviewCommentsForm, { type PeerReviewCommentsFormHandle } from "@/components/proposals/PeerReviewCommentsForm";
+import PeerReviewSummary from "@/components/proposals/PeerReviewSummary";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
 import DeclineProposalDialog from "@/components/proposals/DeclineProposalDialog";
@@ -129,6 +130,8 @@ const ProposalDetails: React.FC = () => {
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
+  const [showingSummary, setShowingSummary] = useState(false);
+  const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
 
   // Set default reviewer when data loads
   React.useEffect(() => {
@@ -711,29 +714,48 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {showReviewForm && <div className="flex items-center gap-3">
+        {showReviewForm && !showingSummary && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
-            <Button className="bg-[#2d3748] hover:bg-[#2d3748]/90 text-white" onClick={() => reviewFormRef.current?.submitReview()} disabled={reviewFormRef.current?.isSaving || !reviewFormRef.current?.canSubmit}>
+            <Button className="bg-[#2d3748] hover:bg-[#2d3748]/90 text-white" onClick={() => {
+              const ref = reviewFormRef.current;
+              if (ref) {
+                setSummaryFormData({ ...ref.formData });
+                setShowingSummary(true);
+              }
+            }} disabled={reviewFormRef.current?.isSaving}>
               Submit Review
             </Button>
           </div>}
       </div>
 
-      {/* Two-Panel or Single-Panel Layout */}
-      {showReviewForm ? <div className="grid grid-cols-2 gap-0 items-start">
-          {/* Left Panel — Review Form */}
-          <div className="pr-6">
-            <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} onSave={() => refetch()} />
+      {/* Two-Panel, Summary, or Single-Panel Layout */}
+      {showReviewForm ? (
+        showingSummary ? (
+          <PeerReviewSummary
+            proposal={proposal}
+            formData={summaryFormData}
+            onGoBack={() => setShowingSummary(false)}
+            onConfirmSubmit={() => {
+              reviewFormRef.current?.confirmSubmit().then(() => {
+                setShowingSummary(false);
+              });
+            }}
+            isSubmitting={reviewFormRef.current?.isSaving || false}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-0 items-start">
+            <div className="pr-6">
+              <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} onSave={() => refetch()} />
+            </div>
+            <div className="pl-6">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+              {rightPanel}
+            </div>
           </div>
-
-          {/* Right Panel — Proposal Details */}
-          <div className="pl-6">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
-            {rightPanel}
-          </div>
-        </div> : <div>{rightPanel}</div>}
+        )
+      ) : <div>{rightPanel}</div>}
 
       {/* Dialogs */}
       <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
