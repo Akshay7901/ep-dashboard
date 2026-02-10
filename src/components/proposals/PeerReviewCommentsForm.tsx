@@ -17,13 +17,9 @@ interface PeerReviewCommentsFormProps {
 export interface PeerReviewCommentsFormHandle {
   saveDraft: () => Promise<void>;
   submitReview: () => Promise<void>;
-  confirmSubmit: () => Promise<void>;
   isSaving: boolean;
   canSubmit: boolean;
   progress: number;
-  formData: Record<string, string>;
-  showingSummary: boolean;
-  setShowingSummary: (v: boolean) => void;
 }
 
 const REVIEW_FIELDS = [
@@ -143,7 +139,6 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   const [isSubmitted, setIsSubmitted] = useState(
     !!existingAssessment?.submittedForAuthorization
   );
-  const [showingSummary, setShowingSummary] = useState(false);
 
   // Calculate progress
   const progress = useMemo(() => {
@@ -186,15 +181,11 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     saveDraft: () => handleSave(false),
-    submitReview: async () => { setShowingSummary(true); },
-    confirmSubmit: () => handleSave(true),
+    submitReview: () => handleSave(true),
     isSaving,
     canSubmit: !!formData.recommendation,
     progress,
-    formData,
-    showingSummary,
-    setShowingSummary,
-  }), [isSaving, formData, progress, showingSummary]);
+  }), [isSaving, formData.recommendation, progress]);
 
   if (isSubmitted) {
     return (
