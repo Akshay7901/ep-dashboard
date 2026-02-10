@@ -386,6 +386,11 @@ const Proposals: React.FC = () => {
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                         {isReviewer1 ? "Date Submitted" : "Submitted"}
                       </TableHead>
+                      {isReviewer1 && (
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                          Assigned To
+                        </TableHead>
+                      )}
                       {isReviewer2 && (
                         <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                           Assigned On
@@ -416,6 +421,13 @@ const Proposals: React.FC = () => {
                             ? format(new Date(proposal.created_at), "MMM d, yyyy")
                             : "—"}
                         </TableCell>
+                        {isReviewer1 && (
+                          <TableCell className="text-muted-foreground text-sm">
+                            {proposal.assigned_reviewers && proposal.assigned_reviewers.length > 0
+                              ? proposal.assigned_reviewers.map((r) => r.name || r.email).join(", ")
+                              : "—"}
+                          </TableCell>
+                        )}
                         {isReviewer2 && (
                           <TableCell className="text-muted-foreground">
                             {proposal.assigned_at
