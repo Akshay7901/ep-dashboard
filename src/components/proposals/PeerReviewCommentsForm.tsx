@@ -263,7 +263,27 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
               </div>
             </label>
           ))}
-        </RadioGroup>
+      </RadioGroup>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-2">
+        <Button
+          variant="outline"
+          onClick={() => handleSave(false)}
+          disabled={isSaving}
+          className="flex-1"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save Draft
+        </Button>
+        <Button
+          onClick={() => handleSave(true)}
+          disabled={isSaving || !formData.recommendation}
+          className="flex-1 bg-[#3d5a47] hover:bg-[#2e4536] text-white"
+        >
+          Submit Review
+        </Button>
       </div>
 
     </div>
