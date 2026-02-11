@@ -299,7 +299,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         <Button
           onClick={() => handleSave(true)}
           disabled={isSaving}
-          className="flex-1 bg-[#2f4b40] hover:opacity-90 text-white"
+          className="flex-1 bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
         >
           Submit Review
         </Button>
