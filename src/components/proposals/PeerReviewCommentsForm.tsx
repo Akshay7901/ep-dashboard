@@ -205,7 +205,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     submitReview: async () => {},
     confirmSubmit: () => handleSave(true),
     isSaving,
-    canSubmit: !!formData.recommendation,
+    canSubmit: true,
     progress,
     formData,
   }), [isSaving, formData, progress]);
@@ -298,7 +298,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         </Button>
         <Button
           onClick={() => handleSave(true)}
-          disabled={isSaving || !formData.recommendation}
+          disabled={isSaving}
           className="flex-1 bg-[#2f4b40] hover:opacity-90 text-white"
         >
           Submit Review
