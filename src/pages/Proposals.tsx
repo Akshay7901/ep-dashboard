@@ -50,19 +50,19 @@ const peerStatusOptions: { value: ProposalStatus | "all"; label: string }[] = [
 const peerReviewStatusConfig: Record<string, { label: string; className: string }> = {
   submitted: {
     label: "Pending Review",
-    className: "bg-[#c4940a] text-white hover:bg-[#c4940a] border-[#c4940a]",
+    className: "bg-[#7a2626] text-white hover:bg-[#7a2626] border-[#7a2626]",
   },
   under_review: {
     label: "In Progress",
-    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]",
+    className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]",
   },
   approved: {
     label: "Completed",
-    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]",
+    className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]",
   },
   finalised: {
     label: "Completed",
-    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]",
+    className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]",
   },
   rejected: {
     label: "Declined",
@@ -267,28 +267,28 @@ const Proposals: React.FC = () => {
             <StatusChip
               count={statusCounts.total}
               label="Assigned"
-              colorClass="bg-[#2d3748] text-white border-[#2d3748]"
+              colorClass="bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]"
               isActive={statusFilter === "all"}
               onClick={() => handleStatusChange("all")}
             />
             <StatusChip
               count={statusCounts.pending}
               label="Pending"
-              colorClass="bg-[#c4940a] text-white border-[#c4940a]"
+              colorClass="bg-[#7a2626] text-white border-[#7a2626]"
               isActive={statusFilter === "submitted"}
               onClick={() => handleStatusChange("submitted")}
             />
             <StatusChip
               count={statusCounts.inProgress}
               label="In Progress"
-              colorClass="bg-[#9b2c2c] text-white border-[#9b2c2c]"
+              colorClass="bg-[#f2a627] text-white border-[#f2a627]"
               isActive={statusFilter === "under_review"}
               onClick={() => handleStatusChange("under_review")}
             />
             <StatusChip
               count={statusCounts.completed}
               label="Completed"
-              colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
+              colorClass="bg-[#93a316] text-white border-[#93a316]"
               isActive={statusFilter === "approved"}
               onClick={() => handleStatusChange("approved")}
             />
