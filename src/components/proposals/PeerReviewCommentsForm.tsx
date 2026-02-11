@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Save } from "lucide-react";
 import { Proposal } from "@/types";
 import { useAddComment } from "@/hooks/useProposals";
+import { commentsApi } from "@/lib/proposalsApi";
 
 interface PeerReviewCommentsFormProps {
   proposal: Proposal;
@@ -160,15 +161,33 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   const handleSave = async (submitForAuthorization: boolean = false) => {
     setIsSaving(true);
     try {
+      // Build the review payload
+      const reviewPayload = {
+        ...formData,
+        submittedForAuthorization: submitForAuthorization,
+        submittedAt: new Date().toISOString(),
+      };
+
+      // Save to local workflow (Supabase)
       await addComment.mutateAsync({
         proposalId: proposal.id,
         commentText: formData.otherComments || "",
-        reviewFormData: {
-          ...formData,
-          submittedForAuthorization: submitForAuthorization,
-          submittedAt: new Date().toISOString(),
-        },
+        reviewFormData: reviewPayload,
+        ticketNumber: proposal.ticket_number || undefined,
       });
+
+      // Also post to external comments API if ticket_number is available
+      if (proposal.ticket_number) {
+        const commentSummary = submitForAuthorization
+          ? `[Peer Review Submitted] Recommendation: ${formData.recommendation || 'N/A'}`
+          : `[Draft Saved] Recommendation: ${formData.recommendation || 'Not yet selected'}`;
+        try {
+          await commentsApi.add(proposal.ticket_number, { comment: commentSummary });
+        } catch (e) {
+          console.warn("Failed to post to external comments API:", e);
+        }
+      }
+
       if (submitForAuthorization) {
         setIsSubmitted(true);
       }
