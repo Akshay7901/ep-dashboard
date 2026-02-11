@@ -704,28 +704,100 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
 
           {/* ---- LOG (Peer Reviewer) ---- */}
-          <TabsContent value="log" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Workflow Log</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {logs.length === 0 ? <p className="text-sm text-muted-foreground">No workflow events yet.</p> : <div className="space-y-3">
-                    {logs.map((log: any) => <div key={log.id} className="flex items-start gap-3 text-sm border-b pb-3 last:border-0">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <div className="flex-1">
-                          <p className="font-medium">{log.action}</p>
-                          {log.new_status && <p className="text-muted-foreground text-xs">
-                              Status → {log.new_status}
-                            </p>}
+          <TabsContent value="log" className="mt-4 space-y-6">
+            <Accordion type="multiple" defaultValue={["status", "timeline"]} className="space-y-1">
+              {/* Current Status */}
+              <AccordionItem value="status" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Current Status</AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-3">
+                  <div className="flex gap-4 py-1">
+                    <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
+                    <span className="text-sm font-medium">
+                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                    </span>
+                  </div>
+                  {(() => {
+                    const assignedDate = proposal.assigned_at || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+                    if (assignedDate) {
+                      return (
+                        <div className="flex gap-4 py-1">
+                          <span className="text-sm text-muted-foreground w-28 shrink-0">Assigned On:</span>
+                          <span className="text-sm font-medium">{format(new Date(assignedDate), "MMM d, yyyy")}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
-                        </span>
-                      </div>)}
-                  </div>}
-              </CardContent>
-            </Card>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <div className="pt-1">
+                    <PeerReviewStatusBadge status={proposal.status} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Activity Timeline */}
+              <AccordionItem value="timeline" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Activity Timeline</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  {(() => {
+                    const timelineEvents: { title: string; date: string; actor: string; color: string }[] = [];
+
+                    // Proposal submitted event
+                    const submittedDate = proposal.submitted_at || proposal.created_at;
+                    if (submittedDate) {
+                      timelineEvents.push({
+                        title: "Proposal Submitted",
+                        date: format(new Date(submittedDate), "MMM d, yyyy"),
+                        actor: proposal.corresponding_author_name || proposal.author_name || "Author",
+                        color: "bg-green-500",
+                      });
+                    }
+
+                    // Workflow log events
+                    for (const log of ([...logs] as any[]).reverse()) {
+                      let title = log.action;
+                      let color = "bg-muted-foreground";
+                      if (log.new_status === "under_review" || log.action?.toLowerCase().includes("assign")) {
+                        title = "Assigned to Peer Reviewer";
+                        color = "bg-blue-500";
+                      } else if (log.new_status === "approved") {
+                        title = "Review Completed";
+                        color = "bg-green-500";
+                      } else if (log.new_status === "rejected") {
+                        title = "Proposal Declined";
+                        color = "bg-destructive";
+                      } else if (log.new_status === "submitted") {
+                        title = "Reverted to New";
+                        color = "bg-muted-foreground";
+                      }
+                      timelineEvents.push({
+                        title,
+                        date: format(new Date(log.created_at), "MMM d, yyyy"),
+                        actor: "System",
+                        color,
+                      });
+                    }
+
+                    if (timelineEvents.length === 0) {
+                      return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {[...timelineEvents].reverse().map((evt, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evt.color}`} />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{evt.title}</p>
+                              <p className="text-xs text-muted-foreground">{evt.date} • {evt.actor}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
         </Tabs>)}
     </div>;
