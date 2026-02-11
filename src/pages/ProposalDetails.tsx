@@ -786,11 +786,11 @@ const ProposalDetails: React.FC = () => {
             isSubmitting={isConfirming}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-0 items-start">
-            <div className="pr-6">
+          <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
               <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} />
             </div>
-            <div className="pl-6">
+            <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
               <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
               {rightPanel}
             </div>
