@@ -291,7 +291,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           variant="outline"
           onClick={() => handleSave(false)}
           disabled={isSaving}
-          className="flex-1"
+          className="flex-1 bg-[#2f4b40] text-white border-[#2f4b40] hover:bg-[#2f4b40] hover:text-white hover:opacity-90"
         >
           <Save className="h-4 w-4 mr-2" />
           Save Draft
@@ -299,7 +299,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         <Button
           onClick={() => handleSave(true)}
           disabled={isSaving || !formData.recommendation}
-          className="flex-1 bg-[#3d5a47] hover:bg-[#2e4536] text-white"
+          className="flex-1 bg-[#2f4b40] text-white hover:bg-[#2f4b40] hover:opacity-90"
         >
           Submit Review
         </Button>
