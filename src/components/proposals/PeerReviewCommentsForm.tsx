@@ -13,6 +13,7 @@ interface PeerReviewCommentsFormProps {
   proposal: Proposal;
   existingAssessment?: Record<string, any>;
   onSave?: () => void;
+  onSubmitReview?: (formData: Record<string, string>) => void;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -120,6 +121,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   proposal,
   existingAssessment,
   onSave,
+  onSubmitReview,
 }, ref) => {
   const addComment = useAddComment();
 
@@ -297,7 +299,13 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           Save Draft
         </Button>
         <Button
-          onClick={() => handleSave(true)}
+          onClick={() => {
+            if (onSubmitReview) {
+              onSubmitReview({ ...formData });
+            } else {
+              handleSave(true);
+            }
+          }}
           disabled={isSaving}
           className="flex-1 bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
         >
