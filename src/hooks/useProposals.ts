@@ -42,9 +42,16 @@ const extractAssignedAt = (assignedReviewers: any): string | null => {
 // Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
   const hasAssignedReviewers = Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0;
-  // If API status is "new" but reviewers are assigned, treat as "under_review"
+  const hasLocalAssignment = localOverride?.assigned_reviewer_emails?.length > 0;
+  // If API status is "new" but reviewers are assigned (API or local), treat as "under_review"
   const inferredStatus = localOverride?.status
-    || (apiProposal.status === 'new' && hasAssignedReviewers ? 'under_review' : mapApiStatus(apiProposal.status));
+    || (apiProposal.status === 'new' && (hasAssignedReviewers || hasLocalAssignment) ? 'under_review' : mapApiStatus(apiProposal.status));
+
+  const assignedReviewers = hasAssignedReviewers
+    ? apiProposal.assigned_reviewers
+    : hasLocalAssignment
+      ? localOverride.assigned_reviewer_emails.map((email: string) => ({ email }))
+      : null;
 
   return {
     id: localOverride?.id || apiProposal.ticket_number,
@@ -65,7 +72,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
     assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-    assigned_reviewers: hasAssignedReviewers ? apiProposal.assigned_reviewers : null,
+    assigned_reviewers: assignedReviewers,
   };
 };
 
@@ -380,7 +387,7 @@ export const useProposal = (id: string) => {
         // Merge data - local status takes priority if it exists
         const mapped = mapApiProposalDetail(apiProposal, localOverride);
 
-        // Get assigned_reviewers from the detail response, cached list data, or fresh list fetch
+        // Get assigned_reviewers from the detail response, cached list data, or local DB
         let assignedReviewers = (apiProposal as any)?.assigned_reviewers || mapped.assigned_reviewers;
         if (!assignedReviewers) {
           // Try cache first
@@ -393,24 +400,9 @@ export const useProposal = (id: string) => {
             }
           }
         }
-        // If still no assigned_reviewers, fetch list with details to get assignment info
-        if (!assignedReviewers) {
-          try {
-            const listData = await fetchProposalsFromProxy(500, 0);
-            const listProposal = listData.proposals?.find((p: any) => p.ticket_number === ticketNumber);
-            if (listProposal) {
-              // Fetch detail for this specific proposal to get assigned_reviewers
-              try {
-                const detailForAssignment = await fetchProposalByTicket(ticketNumber);
-                assignedReviewers = (detailForAssignment as any)?.assigned_reviewers || null;
-              } catch {
-                // Use list-level data if available
-                assignedReviewers = (listProposal as any).assigned_reviewers || null;
-              }
-            }
-          } catch {
-            // Ignore - will show dropdown as fallback
-          }
+        // If still no assigned_reviewers, check local DB for persisted assignment
+        if (!assignedReviewers && localOverride?.assigned_reviewer_emails?.length > 0) {
+          assignedReviewers = localOverride.assigned_reviewer_emails.map((email: string) => ({ email }));
         }
 
         // Return merged data - use local ID if exists, otherwise use ticket number
