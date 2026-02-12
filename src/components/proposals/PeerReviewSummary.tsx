@@ -94,7 +94,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
           Go Back
         </Button>
         <Button
-          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={onConfirmSubmit}
           disabled={isSubmitting || !formData.recommendation}
         >
