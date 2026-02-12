@@ -306,6 +306,7 @@ const ProposalDetails: React.FC = () => {
           }
           assignReviewers([selectedReviewer], {
             onSuccess: () => {
+              setSelectedReviewer(selectedReviewer);
               workflowStatus.mutate({
                 id: localId || id || "",
                 status: "under_review",
@@ -916,6 +917,7 @@ const ProposalDetails: React.FC = () => {
     }} onAssign={reviewerIds => {
       assignReviewers(reviewerIds, {
         onSuccess: () => {
+          if (reviewerIds.length > 0) setSelectedReviewer(reviewerIds[0]);
           workflowStatus.mutate({
             id: localId || id || "",
             status: "under_review",
