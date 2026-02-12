@@ -70,19 +70,19 @@ const PeerReviewStatusBadge: React.FC<{
   }> = {
     submitted: {
       label: "Pending Review",
-      className: "bg-[#7a2626] text-white hover:bg-[#7a2626] border-[#7a2626]"
+      className: "bg-[#c4940a] text-white hover:bg-[#c4940a] border-[#c4940a]"
     },
     under_review: {
       label: "In Progress",
-      className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]"
+      className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]"
     },
     approved: {
       label: "Completed",
-      className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]"
+      className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]"
     },
     finalised: {
       label: "Completed",
-      className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]"
+      className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]"
     },
     rejected: {
       label: "Declined",
@@ -146,7 +146,7 @@ const ProposalDetails: React.FC = () => {
   } = useProposal(id || "");
   const localId = proposal?.id || "";
 
-  // Set reviewer: only pre-select if already assigned, never auto-select default
+  // Set reviewer: prefer already-assigned reviewer, then default, then empty
   React.useEffect(() => {
     if (reviewers.length > 0 && !selectedReviewer) {
       const assignedEmails = proposal?.assigned_reviewers?.map(r => r.email) || [];
@@ -156,9 +156,12 @@ const ProposalDetails: React.FC = () => {
 
       if (assignedMatch) {
         setSelectedReviewer(assignedMatch.email);
+      } else if (defaultEmail) {
+        const found = reviewers.find(r => r.email === defaultEmail);
+        if (found) setSelectedReviewer(found.email);
       }
     }
-  }, [reviewers, selectedReviewer, proposal?.assigned_reviewers]);
+  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
@@ -289,10 +292,8 @@ const ProposalDetails: React.FC = () => {
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            // Check selectedReviewer first, then fall back to assigned_reviewers from proposal
-            const emailToShow = selectedReviewer || proposal.assigned_reviewers?.[0]?.email || "";
-            const assigned = reviewers.find(r => r.email === emailToShow);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : emailToShow || "N/A";
+            const assigned = reviewers.find(r => r.email === selectedReviewer);
+            return assigned ? assigned.name || assigned.email.split("@")[0] : selectedReviewer || "N/A";
           })()}
                 </div>}
             </>}
@@ -306,7 +307,6 @@ const ProposalDetails: React.FC = () => {
           }
           assignReviewers([selectedReviewer], {
             onSuccess: () => {
-              setSelectedReviewer(selectedReviewer);
               workflowStatus.mutate({
                 id: localId || id || "",
                 status: "under_review",
@@ -917,7 +917,6 @@ const ProposalDetails: React.FC = () => {
     }} onAssign={reviewerIds => {
       assignReviewers(reviewerIds, {
         onSuccess: () => {
-          if (reviewerIds.length > 0) setSelectedReviewer(reviewerIds[0]);
           workflowStatus.mutate({
             id: localId || id || "",
             status: "under_review",
