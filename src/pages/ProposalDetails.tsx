@@ -480,7 +480,6 @@ const ProposalDetails: React.FC = () => {
                 <DetailRow label="Email" value={proposal.author_email || (proposal as any).email} />
                 <DetailRow label="Institution" value={proposal.institution} />
                 <DetailRow label="Job Title" value={proposal.job_title} />
-                <DetailRow label="Address" value={proposal.address} />
                 <DetailRow label="Country" value={extractCountry(proposal.address)} />
                 {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <DetailRow label="Secondary Email" value={proposal.secondary_email} />}
               </div>
@@ -665,7 +664,6 @@ const ProposalDetails: React.FC = () => {
                 <DetailRow label="Email" value={proposal.author_email || (proposal as any).email} />
                 <DetailRow label="Institution" value={proposal.institution} />
                 <DetailRow label="Job Title" value={proposal.job_title} />
-                <DetailRow label="Address" value={proposal.address} />
                 <DetailRow label="Country" value={extractCountry(proposal.address)} />
                 {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <DetailRow label="Secondary Email" value={proposal.secondary_email} />}
               </div>
