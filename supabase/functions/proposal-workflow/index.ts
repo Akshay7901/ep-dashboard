@@ -128,6 +128,10 @@ serve(async (req) => {
       if (status === 'locked') {
         updateData.finalised_at = new Date().toISOString();
       }
+      // Save assigned reviewer emails if provided
+      if (body.assignedReviewerEmails !== undefined) {
+        updateData.assigned_reviewer_emails = body.assignedReviewerEmails;
+      }
 
       const { error: updateError } = await supabase
         .from('proposals')
