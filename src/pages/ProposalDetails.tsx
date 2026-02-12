@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
+import { useReviewerAssignments } from "@/hooks/useReviewerAssignments";
 
 /* ---------------- Helpers ---------------- */
 
@@ -115,11 +116,22 @@ const ProposalDetails: React.FC = () => {
     isAnyReviewer
   } = useAuth();
   const {
-    reviewers
+    reviewers: rawReviewers
   } = usePeerReviewers();
   const {
     defaultEmail
   } = useDefaultReviewer();
+  const { data: assignmentMap } = useReviewerAssignments();
+
+  // Enrich reviewers with accurate local assignment counts
+  const reviewers = React.useMemo(() => {
+    if (!rawReviewers) return [];
+    return rawReviewers.map(r => ({
+      ...r,
+      assigned_proposals_count: assignmentMap?.get(r.email)?.length ?? 0,
+    }));
+  }, [rawReviewers, assignmentMap]);
+
   const [selectedReviewer, setSelectedReviewer] = useState<string>("");
   const reviewFormRef = useRef<PeerReviewCommentsFormHandle>(null);
   const [documentPreview, setDocumentPreview] = useState<{
