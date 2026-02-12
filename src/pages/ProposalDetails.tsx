@@ -227,6 +227,7 @@ const ProposalDetails: React.FC = () => {
           }
         }, {
           onSuccess: () => {
+            setSelectedReviewer("");
             setIsRevertDialogOpen(false);
             queryClient.invalidateQueries({
               queryKey: ["reviewer-assignments"]
@@ -340,10 +341,7 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {isActuallyAssigned && <Button variant="outline" onClick={() => {
-              setReassignTarget("");
-              setIsReassignDialogOpen(true);
-            }} disabled={isBusy}>
+          {isActuallyAssigned && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
               Reassign
             </Button>}
         </div>;
