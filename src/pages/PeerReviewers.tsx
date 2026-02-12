@@ -31,7 +31,7 @@ import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, ArrowR
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import { useReviewerAssignments } from "@/hooks/useReviewerAssignments";
-import { assignmentsApi, statusApi } from "@/lib/proposalsApi";
+import { assignmentsApi, statusApi, reassignApi } from "@/lib/proposalsApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,8 +85,26 @@ const PeerReviewers: React.FC = () => {
 
     setReassigningTicket(ticketNumber);
     try {
-      // Re-assign the proposal to the new reviewer
-      await assignmentsApi.assign(ticketNumber, { reviewer_emails: [targetEmail] });
+      // Re-assign the proposal using the proper reassign endpoint
+      await reassignApi.reassign(ticketNumber, {
+        from_reviewer_email: currentReviewerEmail,
+        to_reviewer_email: targetEmail,
+      });
+
+      // Update local assigned_reviewer_emails to reflect the reassignment
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.functions.invoke("proposal-workflow", {
+          body: {
+            action: "updateStatus",
+            ticketNumber,
+            status: undefined,
+            assignedReviewerEmails: [targetEmail],
+          },
+        });
+      } catch {
+        // Best-effort local sync
+      }
 
       toast({
         title: "Proposal Re-assigned",
