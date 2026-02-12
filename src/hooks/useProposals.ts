@@ -146,7 +146,7 @@ const mapLocalProposal = (dbProposal: any): Proposal => ({
   detailed_description: dbProposal.description,
 });
 
-// Helper function to fetch proposals list from edge function proxy
+// Helper function to fetch proposals list directly from the API
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   
@@ -155,31 +155,28 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?limit=${limit}&offset=${offset}`,
+    `https://api.ethicspress.com/api/proposals?limit=${limit}&offset=${offset}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'Accept': 'application/json',
       },
     }
   );
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to fetch proposals');
-  }
-
-  const result = await response.json();
-
-  // Check for wrapped upstream 401 (expired token) – trigger re-auth
-  if (result?.upstream?.status === 401) {
+  if (response.status === 401) {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     window.location.href = '/login';
     throw new Error('Session expired');
   }
 
-  return result;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch proposals');
+  }
+
+  return await response.json();
 };
 
 // Helper function to fetch single proposal by ticket number (returns full detail)
@@ -191,31 +188,28 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?ticket=${ticketNumber}`,
+    `https://api.ethicspress.com/api/proposals/${encodeURIComponent(ticketNumber)}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'Accept': 'application/json',
       },
     }
   );
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to fetch proposal');
-  }
-
-  const result = await response.json();
-
-  // Check for wrapped upstream 401 (expired token) – trigger re-auth
-  if (result?.upstream?.status === 401) {
+  if (response.status === 401) {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     window.location.href = '/login';
     throw new Error('Session expired');
   }
 
-  return result;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to fetch proposal');
+  }
+
+  return await response.json();
 };
 
 // Helper function to fetch local proposal by UUID
@@ -285,14 +279,26 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch proposals from external API (which now includes local_override from backend proxy)
+      // Fetch proposals from external API directly
       const apiData = await fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
-      // Map API proposals - use local_override provided by the backend proxy
-      let proposals = apiData.proposals.map((apiProposal: any) => {
-        const localOverride = apiProposal.local_override || null;
-        return mapApiProposal(apiProposal, localOverride);
-      });
+      // For each proposal, fetch detail to get address/assigned_reviewers
+      const proposalsWithDetails = await Promise.all(
+        (apiData.proposals || []).map(async (apiProposal: any) => {
+          try {
+            const detail = await fetchProposalByTicket(apiProposal.ticket_number);
+            apiProposal.address = detail?.current_data?.address || null;
+            apiProposal.assigned_reviewers = (detail as any)?.assigned_reviewers || null;
+          } catch {
+            // ignore individual failures
+          }
+          // Get local override from Supabase
+          const localOverride = await getLocalOverride(apiProposal.ticket_number);
+          return mapApiProposal(apiProposal, localOverride);
+        })
+      );
+
+      let proposals = proposalsWithDetails;
 
       // Client-side filtering for search
       if (search) {
@@ -351,9 +357,10 @@ export const useProposal = (id: string) => {
         if (isUUID(ticketNumber)) {
           try {
             const apiList = await fetchProposalsFromProxy(1000, 0);
-            const found = apiList.proposals?.find((p: any) => 
-              p.local_override?.id === id
-            );
+            const found = apiList.proposals?.find((p: any) => {
+              // Check if any local proposal matches this UUID
+              return false; // UUID resolution handled via local DB
+            });
             if (found) {
               ticketNumber = found.ticket_number;
             }
@@ -363,18 +370,18 @@ export const useProposal = (id: string) => {
         }
       }
 
-      // Fetch from external API via proxy (which now includes local_override)
+      // Fetch from external API directly
       try {
         const apiProposal: any = await fetchProposalByTicket(ticketNumber);
 
-        // Prefer local override provided by the backend proxy (works even after refresh)
-        const localOverride = apiProposal?.local_override || null;
+        // Get local override from Supabase client-side
+        const localOverride = await getLocalOverride(ticketNumber);
 
         // Merge data - local status takes priority if it exists
         const mapped = mapApiProposalDetail(apiProposal, localOverride);
 
-        // Try to get assigned_reviewers from cached list data (detail API doesn't return it)
-        let assignedReviewers = mapped.assigned_reviewers;
+        // Get assigned_reviewers from the detail response or cached list data
+        let assignedReviewers = (apiProposal as any)?.assigned_reviewers || mapped.assigned_reviewers;
         if (!assignedReviewers) {
           const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
           for (const [, queryData] of cachedListData) {

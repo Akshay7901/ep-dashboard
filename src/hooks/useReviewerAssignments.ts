@@ -29,13 +29,13 @@ export const useReviewerAssignments = () => {
         throw new Error('Not authenticated');
       }
 
-      // Fetch all proposals which include assignment info
+      // Fetch all proposals directly from the API
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?limit=500&offset=0`,
+        `https://api.ethicspress.com/api/proposals?limit=500&offset=0`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Accept': 'application/json',
           },
         }
       );
