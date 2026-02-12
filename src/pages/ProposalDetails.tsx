@@ -279,7 +279,8 @@ const ProposalDetails: React.FC = () => {
       {isReviewer1 && proposal.status !== "rejected" && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
-              {proposal.status === "submitted" ? <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
+              {proposal.status === "submitted" && !selectedReviewer ? (
+                <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
                   <SelectTrigger className="w-56 bg-background">
                     <SelectValue placeholder="Select a reviewer" />
                   </SelectTrigger>
@@ -290,12 +291,20 @@ const ProposalDetails: React.FC = () => {
                         {" "}({reviewer.assigned_proposals_count ?? 0})
                       </SelectItem>)}
                   </SelectContent>
-                </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
+                </Select>
+              ) : (
+                <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            const assigned = reviewers.find(r => r.email === selectedReviewer);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : selectedReviewer || "N/A";
-          })()}
-                </div>}
+                    const assigned = reviewers.find(r => r.email === selectedReviewer);
+                    return assigned ? assigned.name || assigned.email.split("@")[0] : selectedReviewer || "N/A";
+                  })()}
+                </div>
+              )}
+              {proposal.status === "submitted" && selectedReviewer && (
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setSelectedReviewer("")}>
+                  Change
+                </Button>
+              )}
             </>}
 
           {proposal.status === "submitted" && <>
