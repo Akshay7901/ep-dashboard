@@ -380,9 +380,10 @@ export const useProposal = (id: string) => {
         // Merge data - local status takes priority if it exists
         const mapped = mapApiProposalDetail(apiProposal, localOverride);
 
-        // Get assigned_reviewers from the detail response or cached list data
+        // Get assigned_reviewers from the detail response, cached list data, or fresh list fetch
         let assignedReviewers = (apiProposal as any)?.assigned_reviewers || mapped.assigned_reviewers;
         if (!assignedReviewers) {
+          // Try cache first
           const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
           for (const [, queryData] of cachedListData) {
             const cached = queryData?.data?.find(p => p.ticket_number === ticketNumber);
@@ -390,6 +391,25 @@ export const useProposal = (id: string) => {
               assignedReviewers = cached.assigned_reviewers;
               break;
             }
+          }
+        }
+        // If still no assigned_reviewers, fetch list with details to get assignment info
+        if (!assignedReviewers) {
+          try {
+            const listData = await fetchProposalsFromProxy(500, 0);
+            const listProposal = listData.proposals?.find((p: any) => p.ticket_number === ticketNumber);
+            if (listProposal) {
+              // Fetch detail for this specific proposal to get assigned_reviewers
+              try {
+                const detailForAssignment = await fetchProposalByTicket(ticketNumber);
+                assignedReviewers = (detailForAssignment as any)?.assigned_reviewers || null;
+              } catch {
+                // Use list-level data if available
+                assignedReviewers = (listProposal as any).assigned_reviewers || null;
+              }
+            }
+          } catch {
+            // Ignore - will show dropdown as fallback
           }
         }
 
