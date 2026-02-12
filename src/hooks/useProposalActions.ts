@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { statusApi, assignmentsApi, proposalApi, reassignApi } from '@/lib/proposalsApi';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useProposalActions = (ticketNumber: string | undefined) => {
   const queryClient = useQueryClient();
@@ -27,8 +28,15 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   const assignMutation = useMutation({
-    mutationFn: (reviewerEmails: string[]) =>
-      assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails }),
+    mutationFn: async (reviewerEmails: string[]) => {
+      await assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails });
+      // Persist assigned reviewer emails locally (API has no GET for assignments)
+      if (ticketNumber) {
+        await (supabase.from('proposals') as any)
+          .update({ assigned_reviewer_emails: reviewerEmails })
+          .eq('ticket_number', ticketNumber);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
@@ -47,7 +55,15 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   const unassignMutation = useMutation({
-    mutationFn: () => assignmentsApi.unassign(ticketNumber!),
+    mutationFn: async () => {
+      await assignmentsApi.unassign(ticketNumber!);
+      // Clear local assignment data
+      if (ticketNumber) {
+        await (supabase.from('proposals') as any)
+          .update({ assigned_reviewer_emails: [] })
+          .eq('ticket_number', ticketNumber);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
