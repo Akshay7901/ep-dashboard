@@ -127,33 +127,9 @@ const Proposals: React.FC = () => {
 
   /* ---------- Derived data ---------- */
 
-  // For peer reviewers, only show proposals assigned to them
-  const userEmail = React.useMemo(() => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user.email?.toLowerCase() || '';
-      }
-    } catch {}
-    return '';
-  }, []);
-
-  const baseProposals = React.useMemo(() => {
-    if (!data?.data) return [];
-    if (!isReviewer2) return data.data;
-    // Peer reviewers only see proposals assigned to them
-    return data.data.filter((p) => {
-      if (!p.assigned_reviewers || !Array.isArray(p.assigned_reviewers)) return false;
-      return p.assigned_reviewers.some(
-        (r: any) => (r.email || r).toLowerCase() === userEmail
-      );
-    });
-  }, [data?.data, isReviewer2, userEmail]);
-
   const statusCounts = React.useMemo(() => {
-    if (baseProposals.length === 0) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
-    const d = baseProposals;
+    if (!data?.data) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
+    const d = data.data;
     return {
       total: d.length,
       // Decision reviewer counts
@@ -166,15 +142,16 @@ const Proposals: React.FC = () => {
       inProgress: d.filter((p) => p.status === "under_review").length,
       completed: d.filter((p) => p.status === "approved" || p.status === "finalised").length,
     };
-  }, [baseProposals]);
+  }, [data?.data]);
 
   const filteredProposals = React.useMemo(() => {
-    if (statusFilter === "all") return baseProposals;
+    if (!data?.data) return [];
+    if (statusFilter === "all") return data.data;
     if (statusFilter === "approved") {
-      return baseProposals.filter((p) => p.status === "approved" || p.status === "finalised");
+      return data.data.filter((p) => p.status === "approved" || p.status === "finalised");
     }
-    return baseProposals.filter((p) => p.status === statusFilter);
-  }, [baseProposals, statusFilter]);
+    return data.data.filter((p) => p.status === statusFilter);
+  }, [data?.data, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
