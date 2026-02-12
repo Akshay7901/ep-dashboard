@@ -147,23 +147,29 @@ const ProposalDetails: React.FC = () => {
   const localId = proposal?.id || "";
 
   // Set reviewer: prefer already-assigned reviewer, then default, then empty
+  // Re-derive whenever proposal assignment data changes
+  const assignedEmailsKey = JSON.stringify(
+    (proposal as any)?.assigned_reviewer_emails
+    || proposal?.assigned_reviewers?.map((r: any) => r.email)
+    || []
+  );
   React.useEffect(() => {
-    if (reviewers.length > 0 && !selectedReviewer) {
-      const assignedEmails = proposal?.assigned_reviewers?.map((r: any) => r.email)
-        || (proposal as any)?.assigned_reviewer_emails
-        || [];
-      const assignedMatch = assignedEmails.length > 0
-        ? reviewers.find(r => assignedEmails.includes(r.email))
-        : null;
+    if (reviewers.length === 0) return;
+    const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+      || proposal?.assigned_reviewers?.map((r: any) => r.email)
+      || [];
+    const assignedMatch = assignedEmails.length > 0
+      ? reviewers.find(r => assignedEmails.includes(r.email))
+      : null;
 
-      if (assignedMatch) {
-        setSelectedReviewer(assignedMatch.email);
-      } else if (defaultEmail) {
-        const found = reviewers.find(r => r.email === defaultEmail);
-        if (found) setSelectedReviewer(found.email);
-      }
+    if (assignedMatch) {
+      setSelectedReviewer(assignedMatch.email);
+    } else if (!selectedReviewer && defaultEmail) {
+      const found = reviewers.find(r => r.email === defaultEmail);
+      if (found) setSelectedReviewer(found.email);
     }
-  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers, (proposal as any)?.assigned_reviewer_emails]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultEmail, reviewers, assignedEmailsKey]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
