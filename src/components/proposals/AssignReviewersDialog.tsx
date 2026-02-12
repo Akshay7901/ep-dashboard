@@ -13,7 +13,6 @@
  import { Loader2, UserPlus } from 'lucide-react';
   import { Badge } from '@/components/ui/badge';
   import { usePeerReviewers } from '@/hooks/usePeerReviewers';
-  import { useReviewerAssignments } from '@/hooks/useReviewerAssignments';
 
 interface AssignReviewersDialogProps {
   open: boolean;
@@ -29,17 +28,7 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
   isLoading,
 }) => {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
-  const { reviewers: rawReviewers, isLoading: isLoadingReviewers } = usePeerReviewers();
-  const { data: assignmentMap } = useReviewerAssignments();
-
-  // Enrich reviewers with accurate local assignment counts
-  const reviewers = React.useMemo(() => {
-    if (!rawReviewers) return [];
-    return rawReviewers.map(r => ({
-      ...r,
-      assigned_proposals_count: assignmentMap?.get(r.email)?.length ?? 0,
-    }));
-  }, [rawReviewers, assignmentMap]);
+  const { reviewers, isLoading: isLoadingReviewers } = usePeerReviewers();
  
    const handleToggle = (reviewerId: string) => {
      setSelectedReviewers((prev) =>
