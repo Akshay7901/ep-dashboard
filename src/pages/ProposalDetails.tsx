@@ -300,11 +300,6 @@ const ProposalDetails: React.FC = () => {
                   })()}
                 </div>
               )}
-              {proposal.status === "submitted" && selectedReviewer && (
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setSelectedReviewer("")}>
-                  Change
-                </Button>
-              )}
             </>}
 
           {proposal.status === "submitted" && <>
