@@ -274,7 +274,7 @@ const ProposalDetails: React.FC = () => {
 
       {/* Reviewer + Actions row (for reviewer_1 only) */}
       {isReviewer1 && proposal.status !== "rejected" && (() => {
-          const isActuallyAssigned = proposal?.assigned_reviewers?.length > 0;
+          const isActuallyAssigned = (proposal?.assigned_reviewers?.length > 0) || (proposal.status !== "submitted");
           const isNew = proposal.status === "submitted" && !isActuallyAssigned;
           return <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
