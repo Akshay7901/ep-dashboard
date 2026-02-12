@@ -127,31 +127,46 @@ const Proposals: React.FC = () => {
 
   /* ---------- Derived data ---------- */
 
+  const { user } = useAuth();
+
+  // For peer reviewers, filter to only show proposals assigned to them
+  const roleFilteredProposals = React.useMemo(() => {
+    if (!data?.data) return [];
+    if (isReviewer1) return data.data;
+    // Peer reviewer: only show proposals where their email is in assigned_reviewers
+    const userEmail = user?.email?.toLowerCase();
+    if (!userEmail) return [];
+    return data.data.filter((p) => {
+      const assignedEmails = (p as any).assigned_reviewer_emails
+        || p.assigned_reviewers?.map((r: any) => r.email)
+        || [];
+      return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
+    });
+  }, [data?.data, isReviewer1, user?.email]);
+
   const statusCounts = React.useMemo(() => {
-    if (!data?.data) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
-    const d = data.data;
+    if (!roleFilteredProposals.length) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
+    const d = roleFilteredProposals;
     return {
       total: d.length,
-      // Decision reviewer counts
       newCount: d.filter((p) => p.status === "submitted").length,
       inReview: d.filter((p) => p.status === "under_review").length,
       contractSent: d.filter((p) => p.status === "approved").length,
       declined: d.filter((p) => p.status === "rejected").length,
-      // Peer reviewer counts
       pending: d.filter((p) => p.status === "submitted").length,
       inProgress: d.filter((p) => p.status === "under_review").length,
       completed: d.filter((p) => p.status === "approved" || p.status === "finalised").length,
     };
-  }, [data?.data]);
+  }, [roleFilteredProposals]);
 
   const filteredProposals = React.useMemo(() => {
-    if (!data?.data) return [];
-    if (statusFilter === "all") return data.data;
+    if (!roleFilteredProposals.length) return [];
+    if (statusFilter === "all") return roleFilteredProposals;
     if (statusFilter === "approved") {
-      return data.data.filter((p) => p.status === "approved" || p.status === "finalised");
+      return roleFilteredProposals.filter((p) => p.status === "approved" || p.status === "finalised");
     }
-    return data.data.filter((p) => p.status === statusFilter);
-  }, [data?.data, statusFilter]);
+    return roleFilteredProposals.filter((p) => p.status === statusFilter);
+  }, [roleFilteredProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
