@@ -149,7 +149,9 @@ const ProposalDetails: React.FC = () => {
   // Set reviewer: prefer already-assigned reviewer, then default, then empty
   React.useEffect(() => {
     if (reviewers.length > 0 && !selectedReviewer) {
-      const assignedEmails = proposal?.assigned_reviewers?.map(r => r.email) || [];
+      const assignedEmails = proposal?.assigned_reviewers?.map((r: any) => r.email)
+        || (proposal as any)?.assigned_reviewer_emails
+        || [];
       const assignedMatch = assignedEmails.length > 0
         ? reviewers.find(r => assignedEmails.includes(r.email))
         : null;
@@ -161,7 +163,7 @@ const ProposalDetails: React.FC = () => {
         if (found) setSelectedReviewer(found.email);
       }
     }
-  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers]);
+  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers, (proposal as any)?.assigned_reviewer_emails]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
@@ -222,7 +224,8 @@ const ProposalDetails: React.FC = () => {
             author_name: proposal.author_name,
             author_email: proposal.author_email,
             ticket_number: ticketNumber
-          }
+          },
+          assignedReviewerEmails: [],
         }, {
           onSuccess: () => {
             setIsRevertDialogOpen(false);
@@ -318,7 +321,8 @@ const ProposalDetails: React.FC = () => {
                   author_name: proposal.author_name,
                   author_email: proposal.author_email,
                   ticket_number: proposal.ticket_number || id
-                }
+                },
+                assignedReviewerEmails: [selectedReviewer],
               });
             }
           });

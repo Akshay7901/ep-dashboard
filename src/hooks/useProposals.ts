@@ -397,11 +397,17 @@ export const useProposal = (id: string) => {
           }
         }
 
+        // Fallback: use assigned_reviewer_emails from local override
+        if (!assignedReviewers && localOverride?.assigned_reviewer_emails?.length > 0) {
+          assignedReviewers = localOverride.assigned_reviewer_emails.map((email: string) => ({ email }));
+        }
+
         return {
           ...mapped,
           status: localOverride?.status || mapped.status,
           id: localOverride?.id || id,
           assigned_reviewers: assignedReviewers,
+          assigned_reviewer_emails: localOverride?.assigned_reviewer_emails || null,
         };
       } catch (e) {
         // Detail endpoint failed - try cached list data
@@ -468,12 +474,14 @@ export const useUpdateProposalStatus = () => {
       previousStatus,
       ticketNumber,
       proposalData,
+      assignedReviewerEmails,
     }: { 
       id: string; 
       status: ProposalStatus; 
       previousStatus: ProposalStatus;
       ticketNumber?: string;
       proposalData?: Partial<Proposal>;
+      assignedReviewerEmails?: string[];
     }) => {
       const token = localStorage.getItem('auth_token');
       
@@ -491,6 +499,7 @@ export const useUpdateProposalStatus = () => {
           status,
           previousStatus,
           ticketNumber: lookupTicket,
+          assignedReviewerEmails,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
