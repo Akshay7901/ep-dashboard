@@ -155,7 +155,7 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=${limit}&offset=${offset}`,
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?limit=${limit}&offset=${offset}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -191,7 +191,7 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
   }
 
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?ticket=${ticketNumber}`,
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?ticket=${ticketNumber}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,

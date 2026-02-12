@@ -44,7 +44,7 @@ export interface AssignmentRequest {
 // Peer Reviewers API
 export const peerReviewersApi = {
   list: async (): Promise<PeerReviewer[]> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
+    const { data, error } = await supabase.functions.invoke('api', {
       method: 'GET',
       headers: {
         ...buildHeaders(),
@@ -62,12 +62,12 @@ export const peerReviewersApi = {
   },
  
    create: async (reviewer: { email: string; name: string }): Promise<PeerReviewer> => {
-     const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-       method: 'POST',
-       headers: {
-         ...buildHeaders(),
-         'x-custom-path': '/peer-reviewers',
-       },
+      const { data, error } = await supabase.functions.invoke('api', {
+        method: 'POST',
+        headers: {
+          ...buildHeaders(),
+          'x-custom-path': '/peer-reviewers',
+        },
        body: reviewer,
      });
      
@@ -76,13 +76,13 @@ export const peerReviewersApi = {
    },
  
   delete: async (reviewerId: string): Promise<void> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/peer-reviewers/${reviewerId}`,
-        'x-custom-method': 'DELETE',
-      },
+    const { data, error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/peer-reviewers/${reviewerId}`,
+         'x-custom-method': 'DELETE',
+       },
     });
 
     // For non-2xx responses, supabase-js surfaces the payload via `error`.
@@ -121,12 +121,12 @@ export const peerReviewersApi = {
 // Comments API
 export const commentsApi = {
   list: async (ticketNumber: string): Promise<ProposalComment[]> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'GET',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/comments/${ticketNumber}`,
-      },
+    const { data, error } = await supabase.functions.invoke('api', {
+       method: 'GET',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/comments/${ticketNumber}`,
+       },
     });
     
     if (error) throw error;
@@ -134,12 +134,12 @@ export const commentsApi = {
   },
 
   add: async (ticketNumber: string, comment: { comment: string }): Promise<ProposalComment> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/comments/${ticketNumber}`,
-      },
+    const { data, error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/comments/${ticketNumber}`,
+       },
       body: comment,
     });
     
@@ -151,13 +151,13 @@ export const commentsApi = {
 // Status API
 export const statusApi = {
   update: async (ticketNumber: string, statusUpdate: StatusUpdate): Promise<void> => {
-    const { error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/status/${ticketNumber}`,
-        'x-custom-method': 'PATCH',
-      },
+    const { error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/status/${ticketNumber}`,
+         'x-custom-method': 'PATCH',
+       },
       body: statusUpdate,
     });
     
@@ -168,12 +168,12 @@ export const statusApi = {
 // Assignments API
 export const assignmentsApi = {
   assign: async (ticketNumber: string, assignment: AssignmentRequest): Promise<void> => {
-    const { error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/assign/${ticketNumber}`,
-      },
+    const { error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/assign/${ticketNumber}`,
+       },
       body: assignment,
     });
     
@@ -181,13 +181,13 @@ export const assignmentsApi = {
   },
 
   unassign: async (ticketNumber: string): Promise<void> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/assign/${ticketNumber}`,
-        'x-custom-method': 'DELETE',
-      },
+    const { data, error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/assign/${ticketNumber}`,
+         'x-custom-method': 'DELETE',
+       },
     });
     
     if (error) throw error;
@@ -204,12 +204,12 @@ export const assignmentsApi = {
 // Reassign API
 export const reassignApi = {
   reassign: async (ticketNumber: string, body: { from_reviewer_email: string; to_reviewer_email: string }): Promise<any> => {
-    const { data, error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/reassign/${ticketNumber}`,
-      },
+    const { data, error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/reassign/${ticketNumber}`,
+       },
       body,
     });
 
@@ -227,12 +227,12 @@ export const reassignApi = {
 // Revisions API
 export const revisionsApi = {
   create: async (ticketNumber: string, revisionData: Record<string, unknown>): Promise<void> => {
-    const { error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/revise/${ticketNumber}`,
-      },
+    const { error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/revise/${ticketNumber}`,
+       },
       body: revisionData,
     });
     
@@ -243,13 +243,13 @@ export const revisionsApi = {
 // Delete Proposal API
 export const proposalApi = {
   delete: async (ticketNumber: string): Promise<void> => {
-    const { error } = await supabase.functions.invoke('proposals-proxy', {
-      method: 'POST',
-      headers: {
-        ...buildHeaders(),
-        'x-custom-path': `/proposal/${ticketNumber}`,
-        'x-custom-method': 'DELETE',
-      },
+    const { error } = await supabase.functions.invoke('api', {
+       method: 'POST',
+       headers: {
+         ...buildHeaders(),
+         'x-custom-path': `/proposal/${ticketNumber}`,
+         'x-custom-method': 'DELETE',
+       },
     });
     
     if (error) throw error;

@@ -31,7 +31,7 @@ export const useReviewerAssignments = () => {
 
       // Fetch all proposals which include assignment info
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=500&offset=0`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api?limit=500&offset=0`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
