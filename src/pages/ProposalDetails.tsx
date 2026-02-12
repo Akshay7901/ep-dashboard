@@ -1,7 +1,6 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
@@ -109,7 +108,6 @@ const ProposalDetails: React.FC = () => {
     id: string;
   }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const {
     isReviewer1,
@@ -303,7 +301,8 @@ const ProposalDetails: React.FC = () => {
           {proposal.status === "submitted" && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
           if (!selectedReviewer) {
-            toast({ title: "Select a reviewer", description: "Please select a peer reviewer from the dropdown first.", variant: "destructive" });
+            setPendingAction("accept");
+            setIsAssignDialogOpen(true);
             return;
           }
           assignReviewers([selectedReviewer], {
