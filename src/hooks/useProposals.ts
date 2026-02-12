@@ -312,7 +312,12 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
           apiProposal.status = localOverride.status;
         }
 
-        return mapApiProposal(apiProposal, localOverride);
+        const mapped = mapApiProposal(apiProposal, localOverride);
+        // Attach local assigned_reviewer_emails for peer reviewer filtering
+        if (localOverride?.assigned_reviewer_emails) {
+          (mapped as any).assigned_reviewer_emails = localOverride.assigned_reviewer_emails;
+        }
+        return mapped;
       });
 
       // Client-side filtering for search
