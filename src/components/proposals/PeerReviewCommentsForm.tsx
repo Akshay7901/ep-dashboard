@@ -14,6 +14,7 @@ interface PeerReviewCommentsFormProps {
   existingAssessment?: Record<string, any>;
   onSave?: () => void;
   onSubmitReview?: (formData: Record<string, string>) => void;
+  onDraftSaved?: () => void;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -122,6 +123,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   existingAssessment,
   onSave,
   onSubmitReview,
+  onDraftSaved,
 }, ref) => {
   const addComment = useAddComment();
 
@@ -192,6 +194,8 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
 
       if (submitForAuthorization) {
         setIsSubmitted(true);
+      } else {
+        onDraftSaved?.();
       }
       onSave?.();
     } catch (error) {

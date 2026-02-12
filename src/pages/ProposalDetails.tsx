@@ -882,7 +882,23 @@ const ProposalDetails: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
-              <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} />
+              <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
+                if (proposal.status === 'submitted') {
+                  workflowStatus.mutate({
+                    id: localId || id || "",
+                    status: "under_review",
+                    previousStatus: proposal.status,
+                    ticketNumber: proposal.ticket_number || id,
+                    proposalData: {
+                      id: localId || undefined,
+                      name: proposal.name,
+                      author_name: proposal.author_name,
+                      author_email: proposal.author_email,
+                      ticket_number: proposal.ticket_number || id,
+                    },
+                  });
+                }
+              }} />
             </div>
             <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
               <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
