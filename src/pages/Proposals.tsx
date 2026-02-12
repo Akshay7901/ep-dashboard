@@ -137,9 +137,10 @@ const Proposals: React.FC = () => {
     const userEmail = user?.email?.toLowerCase();
     if (!userEmail) return [];
     return data.data.filter((p) => {
-      const assignedEmails = (p as any).assigned_reviewer_emails
-        || p.assigned_reviewers?.map((r: any) => r.email)
-        || [];
+      const localEmails = (p as any).assigned_reviewer_emails;
+      const apiEmails = p.assigned_reviewers?.map((r: any) => r.email);
+      // Use local emails if non-empty, otherwise fall back to API emails
+      const assignedEmails = (localEmails && localEmails.length > 0) ? localEmails : (apiEmails || []);
       return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
     });
   }, [data?.data, isReviewer1, user?.email]);
