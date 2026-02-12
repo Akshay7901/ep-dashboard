@@ -233,49 +233,45 @@ const fetchLocalProposal = async (id: string): Promise<Proposal> => {
   return mapLocalProposal(data);
 };
 
-// Helper to find or create local record for API proposal
+// Helper to find or create local record for API proposal (via edge function)
 const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<string> => {
-  // Check if we already have a local record for this ticket
-  // Using raw filter to avoid type issues with new ticket_number column
-  const { data: existing } = await (supabase
-    .from('proposals')
-    .select('*')
-    .eq('ticket_number', apiProposal.ticket_number)
-    .maybeSingle() as any);
+  // Check if we already have a local record via edge function
+  const { data } = await supabase.functions.invoke('proposal-workflow', {
+    body: { action: 'getLocalProposal', ticketNumber: apiProposal.ticket_number },
+  });
 
-  if (existing) {
-    return existing.id;
+  if (data?.proposal) {
+    return data.proposal.id;
   }
 
-  // Create a new local record synced from API
+  // Create via updateStatus action which handles upsert
   const currentData = apiProposal.current_data || {};
-  const insertData = {
-    name: currentData.main_title || apiProposal.title,
-    author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
-    author_email: currentData.email || apiProposal.email,
-    description: currentData.short_description || null,
-    status: mapApiStatus(apiProposal.status),
-    ticket_number: apiProposal.ticket_number,
-  };
-  
-  const { data: newRecord, error } = await (supabase
-    .from('proposals')
-    .insert(insertData)
-    .select('id')
-    .single() as any);
+  const { data: result } = await supabase.functions.invoke('proposal-workflow', {
+    body: {
+      action: 'updateStatus',
+      proposalData: {
+        id: apiProposal.ticket_number,
+        name: currentData.main_title || apiProposal.title,
+        author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
+        author_email: currentData.email || apiProposal.email,
+        ticket_number: apiProposal.ticket_number,
+      },
+      status: mapApiStatus(apiProposal.status),
+      previousStatus: null,
+      ticketNumber: apiProposal.ticket_number,
+    },
+  });
 
-  if (error) throw error;
-  return newRecord.id;
+  return result?.id || apiProposal.ticket_number;
 };
 
-// Get local override data for a ticket number
+// Get local override data for a ticket number (via edge function to bypass RLS)
 const getLocalOverride = async (ticketNumber: string) => {
-  const { data } = await (supabase
-    .from('proposals')
-    .select('*')
-    .eq('ticket_number', ticketNumber)
-    .maybeSingle() as any);
-  return data;
+  const { data, error } = await supabase.functions.invoke('proposal-workflow', {
+    body: { action: 'getLocalProposal', ticketNumber },
+  });
+  if (error) return null;
+  return data?.proposal || null;
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {

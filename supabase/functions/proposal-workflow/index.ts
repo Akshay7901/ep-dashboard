@@ -421,6 +421,44 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'getLocalProposal') {
+      const { ticketNumber: lookupTicket } = body;
+      if (!lookupTicket) {
+        return new Response(JSON.stringify({ error: 'Missing ticketNumber' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data } = await supabase
+        .from('proposals')
+        .select('*')
+        .eq('ticket_number', lookupTicket)
+        .maybeSingle();
+
+      return new Response(JSON.stringify({ proposal: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'getLocalProposals') {
+      const { ticketNumbers } = body;
+      if (!Array.isArray(ticketNumbers) || ticketNumbers.length === 0) {
+        return new Response(JSON.stringify({ proposals: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data } = await supabase
+        .from('proposals')
+        .select('*')
+        .in('ticket_number', ticketNumbers);
+
+      return new Response(JSON.stringify({ proposals: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
