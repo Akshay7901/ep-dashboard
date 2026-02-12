@@ -42,16 +42,9 @@ const extractAssignedAt = (assignedReviewers: any): string | null => {
 // Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
   const hasAssignedReviewers = Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0;
-  const hasLocalAssignment = Array.isArray(localOverride?.assigned_reviewer_emails) && localOverride.assigned_reviewer_emails.length > 0;
-  // If API status is "new" but reviewers are assigned (API or local), treat as "under_review"
+  // If API status is "new" but reviewers are assigned, treat as "under_review"
   const inferredStatus = localOverride?.status
-    || (apiProposal.status === 'new' && (hasAssignedReviewers || hasLocalAssignment) ? 'under_review' : mapApiStatus(apiProposal.status));
-
-  const assignedReviewers = hasAssignedReviewers
-    ? apiProposal.assigned_reviewers
-    : hasLocalAssignment
-      ? localOverride.assigned_reviewer_emails.map((email: string) => ({ email }))
-      : null;
+    || (apiProposal.status === 'new' && hasAssignedReviewers ? 'under_review' : mapApiStatus(apiProposal.status));
 
   return {
     id: localOverride?.id || apiProposal.ticket_number,
@@ -72,7 +65,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
     assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-    assigned_reviewers: assignedReviewers,
+    assigned_reviewers: hasAssignedReviewers ? apiProposal.assigned_reviewers : null,
   };
 };
 
@@ -153,7 +146,7 @@ const mapLocalProposal = (dbProposal: any): Proposal => ({
   detailed_description: dbProposal.description,
 });
 
-// Helper function to fetch proposals list directly from the API
+// Helper function to fetch proposals list from edge function proxy
 const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   
@@ -162,28 +155,31 @@ const fetchProposalsFromProxy = async (limit: number, offset: number): Promise<A
   }
 
   const response = await fetch(
-    `https://api.ethicspress.com/api/proposals?limit=${limit}&offset=${offset}`,
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=${limit}&offset=${offset}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
     }
   );
-
-  if (response.status === 401) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-    throw new Error('Session expired');
-  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch proposals');
   }
 
-  return await response.json();
+  const result = await response.json();
+
+  // Check for wrapped upstream 401 (expired token) – trigger re-auth
+  if (result?.upstream?.status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+
+  return result;
 };
 
 // Helper function to fetch single proposal by ticket number (returns full detail)
@@ -195,28 +191,31 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
   }
 
   const response = await fetch(
-    `https://api.ethicspress.com/api/proposals/${encodeURIComponent(ticketNumber)}`,
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?ticket=${ticketNumber}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
     }
   );
-
-  if (response.status === 401) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-    throw new Error('Session expired');
-  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch proposal');
   }
 
-  return await response.json();
+  const result = await response.json();
+
+  // Check for wrapped upstream 401 (expired token) – trigger re-auth
+  if (result?.upstream?.status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+
+  return result;
 };
 
 // Helper function to fetch local proposal by UUID
@@ -233,45 +232,49 @@ const fetchLocalProposal = async (id: string): Promise<Proposal> => {
   return mapLocalProposal(data);
 };
 
-// Helper to find or create local record for API proposal (via edge function)
+// Helper to find or create local record for API proposal
 const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<string> => {
-  // Check if we already have a local record via edge function
-  const { data } = await supabase.functions.invoke('proposal-workflow', {
-    body: { action: 'getLocalProposal', ticketNumber: apiProposal.ticket_number },
-  });
+  // Check if we already have a local record for this ticket
+  // Using raw filter to avoid type issues with new ticket_number column
+  const { data: existing } = await (supabase
+    .from('proposals')
+    .select('*')
+    .eq('ticket_number', apiProposal.ticket_number)
+    .maybeSingle() as any);
 
-  if (data?.proposal) {
-    return data.proposal.id;
+  if (existing) {
+    return existing.id;
   }
 
-  // Create via updateStatus action which handles upsert
+  // Create a new local record synced from API
   const currentData = apiProposal.current_data || {};
-  const { data: result } = await supabase.functions.invoke('proposal-workflow', {
-    body: {
-      action: 'updateStatus',
-      proposalData: {
-        id: apiProposal.ticket_number,
-        name: currentData.main_title || apiProposal.title,
-        author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
-        author_email: currentData.email || apiProposal.email,
-        ticket_number: apiProposal.ticket_number,
-      },
-      status: mapApiStatus(apiProposal.status),
-      previousStatus: null,
-      ticketNumber: apiProposal.ticket_number,
-    },
-  });
+  const insertData = {
+    name: currentData.main_title || apiProposal.title,
+    author_name: currentData.corresponding_author_name || apiProposal.corresponding_author,
+    author_email: currentData.email || apiProposal.email,
+    description: currentData.short_description || null,
+    status: mapApiStatus(apiProposal.status),
+    ticket_number: apiProposal.ticket_number,
+  };
+  
+  const { data: newRecord, error } = await (supabase
+    .from('proposals')
+    .insert(insertData)
+    .select('id')
+    .single() as any);
 
-  return result?.id || apiProposal.ticket_number;
+  if (error) throw error;
+  return newRecord.id;
 };
 
-// Get local override data for a ticket number (via edge function to bypass RLS)
+// Get local override data for a ticket number
 const getLocalOverride = async (ticketNumber: string) => {
-  const { data, error } = await supabase.functions.invoke('proposal-workflow', {
-    body: { action: 'getLocalProposal', ticketNumber },
-  });
-  if (error) return null;
-  return data?.proposal || null;
+  const { data } = await (supabase
+    .from('proposals')
+    .select('*')
+    .eq('ticket_number', ticketNumber)
+    .maybeSingle() as any);
+  return data;
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
@@ -282,26 +285,14 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch proposals from external API directly
+      // Fetch proposals from external API (which now includes local_override from backend proxy)
       const apiData = await fetchProposalsFromProxy(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
-      // For each proposal, fetch detail to get address/assigned_reviewers
-      const proposalsWithDetails = await Promise.all(
-        (apiData.proposals || []).map(async (apiProposal: any) => {
-          try {
-            const detail = await fetchProposalByTicket(apiProposal.ticket_number);
-            apiProposal.address = detail?.current_data?.address || null;
-            apiProposal.assigned_reviewers = (detail as any)?.assigned_reviewers || null;
-          } catch {
-            // ignore individual failures
-          }
-          // Get local override from Supabase
-          const localOverride = await getLocalOverride(apiProposal.ticket_number);
-          return mapApiProposal(apiProposal, localOverride);
-        })
-      );
-
-      let proposals = proposalsWithDetails;
+      // Map API proposals - use local_override provided by the backend proxy
+      let proposals = apiData.proposals.map((apiProposal: any) => {
+        const localOverride = apiProposal.local_override || null;
+        return mapApiProposal(apiProposal, localOverride);
+      });
 
       // Client-side filtering for search
       if (search) {
@@ -356,43 +347,34 @@ export const useProposal = (id: string) => {
           }
         }
 
-        // If still a UUID (not found in cache), look up from local DB via edge function
-        if (isUUID(ticketNumber)) {
-          try {
-            const { data: lookupData } = await supabase.functions.invoke('proposal-workflow', {
-              body: { action: 'getLocalProposalById', proposalId: id },
-            });
-            if (lookupData?.proposal?.ticket_number) {
-              ticketNumber = lookupData.proposal.ticket_number;
-            }
-          } catch {
-            // Fall through
-          }
-        }
-
-        // Last resort: fetch full list and match
+        // If still a UUID (not found in cache), fetch list to find it
         if (isUUID(ticketNumber)) {
           try {
             const apiList = await fetchProposalsFromProxy(1000, 0);
-            // Can't match UUID to ticket from API alone, so this is a dead end
+            const found = apiList.proposals?.find((p: any) => 
+              p.local_override?.id === id
+            );
+            if (found) {
+              ticketNumber = found.ticket_number;
+            }
           } catch {
             // Fall through - will fail on detail fetch
           }
         }
       }
 
-      // Fetch from external API directly
+      // Fetch from external API via proxy (which now includes local_override)
       try {
         const apiProposal: any = await fetchProposalByTicket(ticketNumber);
 
-        // Get local override from Supabase client-side
-        const localOverride = await getLocalOverride(ticketNumber);
+        // Prefer local override provided by the backend proxy (works even after refresh)
+        const localOverride = apiProposal?.local_override || null;
 
         // Merge data - local status takes priority if it exists
         const mapped = mapApiProposalDetail(apiProposal, localOverride);
 
-        // Get assigned_reviewers: API first, then cache, then local DB
-        let assignedReviewers = (apiProposal as any)?.assigned_reviewers || mapped.assigned_reviewers;
+        // Try to get assigned_reviewers from cached list data (detail API doesn't return it)
+        let assignedReviewers = mapped.assigned_reviewers;
         if (!assignedReviewers) {
           const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
           for (const [, queryData] of cachedListData) {
@@ -402,10 +384,6 @@ export const useProposal = (id: string) => {
               break;
             }
           }
-        }
-        // Fallback to locally persisted assignment data
-        if (!assignedReviewers && Array.isArray(localOverride?.assigned_reviewer_emails) && localOverride.assigned_reviewer_emails.length > 0) {
-          assignedReviewers = localOverride.assigned_reviewer_emails.map((email: string) => ({ email }));
         }
 
         // Return merged data - use local ID if exists, otherwise use ticket number

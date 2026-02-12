@@ -1,14 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { statusApi, assignmentsApi, proposalApi, reassignApi } from '@/lib/proposalsApi';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-
-// Helper to save assignment data via edge function (bypasses RLS)
-const saveAssignmentLocally = async (ticketNumber: string, reviewerEmails: string[]) => {
-  await supabase.functions.invoke('proposal-workflow', {
-    body: { action: 'saveAssignment', ticketNumber, reviewerEmails },
-  });
-};
 
 export const useProposalActions = (ticketNumber: string | undefined) => {
   const queryClient = useQueryClient();
@@ -35,13 +27,8 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   const assignMutation = useMutation({
-    mutationFn: async (reviewerEmails: string[]) => {
-      await assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails });
-      // Persist via edge function (service role bypasses RLS)
-      if (ticketNumber) {
-        await saveAssignmentLocally(ticketNumber, reviewerEmails);
-      }
-    },
+    mutationFn: (reviewerEmails: string[]) => 
+      assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
@@ -60,13 +47,7 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   const unassignMutation = useMutation({
-    mutationFn: async () => {
-      await assignmentsApi.unassign(ticketNumber!);
-      // Clear via edge function
-      if (ticketNumber) {
-        await saveAssignmentLocally(ticketNumber, []);
-      }
-    },
+    mutationFn: () => assignmentsApi.unassign(ticketNumber!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
