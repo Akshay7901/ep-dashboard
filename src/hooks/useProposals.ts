@@ -356,17 +356,25 @@ export const useProposal = (id: string) => {
           }
         }
 
-        // If still a UUID (not found in cache), fetch list to find it
+        // If still a UUID (not found in cache), look up from local DB via edge function
+        if (isUUID(ticketNumber)) {
+          try {
+            const { data: lookupData } = await supabase.functions.invoke('proposal-workflow', {
+              body: { action: 'getLocalProposalById', proposalId: id },
+            });
+            if (lookupData?.proposal?.ticket_number) {
+              ticketNumber = lookupData.proposal.ticket_number;
+            }
+          } catch {
+            // Fall through
+          }
+        }
+
+        // Last resort: fetch full list and match
         if (isUUID(ticketNumber)) {
           try {
             const apiList = await fetchProposalsFromProxy(1000, 0);
-            const found = apiList.proposals?.find((p: any) => {
-              // Check if any local proposal matches this UUID
-              return false; // UUID resolution handled via local DB
-            });
-            if (found) {
-              ticketNumber = found.ticket_number;
-            }
+            // Can't match UUID to ticket from API alone, so this is a dead end
           } catch {
             // Fall through - will fail on detail fetch
           }

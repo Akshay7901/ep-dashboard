@@ -421,6 +421,26 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'getLocalProposalById') {
+      const { proposalId } = body;
+      if (!proposalId) {
+        return new Response(JSON.stringify({ error: 'Missing proposalId' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data } = await supabase
+        .from('proposals')
+        .select('*')
+        .eq('id', proposalId)
+        .maybeSingle();
+
+      return new Response(JSON.stringify({ proposal: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'getLocalProposal') {
       const { ticketNumber: lookupTicket } = body;
       if (!lookupTicket) {
