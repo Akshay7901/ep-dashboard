@@ -274,8 +274,8 @@ const ProposalDetails: React.FC = () => {
 
       {/* Reviewer + Actions row (for reviewer_1 only) */}
       {isReviewer1 && proposal.status !== "rejected" && (() => {
-          const hasAssignedReviewer = (proposal?.assigned_reviewers?.length > 0) || selectedReviewer;
-          const isNew = proposal.status === "submitted" && !hasAssignedReviewer;
+          const isActuallyAssigned = proposal?.assigned_reviewers?.length > 0;
+          const isNew = proposal.status === "submitted" && !isActuallyAssigned;
           return <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
@@ -327,7 +327,7 @@ const ProposalDetails: React.FC = () => {
               });
             }
           });
-        }} disabled={workflowStatus.isPending || isAssigning}>
+        }} disabled={workflowStatus.isPending || isAssigning || !selectedReviewer}>
                 Submit for review
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={workflowStatus.isPending}>
@@ -335,7 +335,7 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {hasAssignedReviewer && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
+          {isActuallyAssigned && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
               Reassign
             </Button>}
         </div>;
