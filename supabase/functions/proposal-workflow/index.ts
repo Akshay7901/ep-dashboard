@@ -402,6 +402,18 @@ serve(async (req) => {
           .from('proposals')
           .update({ assigned_reviewer_emails: reviewerEmails })
           .eq('id', existing.id);
+      } else {
+        // Create a minimal local record so assignment persists
+        await supabase
+          .from('proposals')
+          .insert({
+            ticket_number: assignTicket,
+            assigned_reviewer_emails: reviewerEmails,
+            name: assignTicket,
+            author_name: 'Unknown',
+            author_email: 'unknown@unknown.com',
+            status: 'under_review',
+          });
       }
 
       return new Response(JSON.stringify({ success: true }), {
