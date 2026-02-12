@@ -381,6 +381,34 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'saveAssignment') {
+      const { ticketNumber: assignTicket, reviewerEmails } = body;
+      if (!assignTicket || !Array.isArray(reviewerEmails)) {
+        return new Response(JSON.stringify({ error: 'Missing ticketNumber or reviewerEmails' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Ensure local proposal record exists
+      const { data: existing } = await supabase
+        .from('proposals')
+        .select('id')
+        .eq('ticket_number', assignTicket)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('proposals')
+          .update({ assigned_reviewer_emails: reviewerEmails })
+          .eq('id', existing.id);
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
