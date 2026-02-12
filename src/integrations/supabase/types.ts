@@ -84,6 +84,7 @@ export type Database = {
       }
       proposals: {
         Row: {
+          assigned_reviewer_emails: string[] | null
           author_email: string
           author_name: string
           author_phone: string | null
@@ -101,6 +102,7 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          assigned_reviewer_emails?: string[] | null
           author_email: string
           author_name: string
           author_phone?: string | null
@@ -118,6 +120,7 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          assigned_reviewer_emails?: string[] | null
           author_email?: string
           author_name?: string
           author_phone?: string | null
