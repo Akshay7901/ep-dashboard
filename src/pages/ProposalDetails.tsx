@@ -816,7 +816,7 @@ const ProposalDetails: React.FC = () => {
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
-            <Button className="bg-[#2d3748] hover:bg-[#2d3748]/90 text-white" onClick={() => {
+            <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
               const ref = reviewFormRef.current;
               if (ref) {
                 setSummaryFormData({ ...ref.formData });
