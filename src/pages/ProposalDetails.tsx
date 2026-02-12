@@ -289,8 +289,10 @@ const ProposalDetails: React.FC = () => {
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            const assigned = reviewers.find(r => r.email === selectedReviewer);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : selectedReviewer || "N/A";
+            // Check selectedReviewer first, then fall back to assigned_reviewers from proposal
+            const emailToShow = selectedReviewer || proposal.assigned_reviewers?.[0]?.email || "";
+            const assigned = reviewers.find(r => r.email === emailToShow);
+            return assigned ? assigned.name || assigned.email.split("@")[0] : emailToShow || "N/A";
           })()}
                 </div>}
             </>}
