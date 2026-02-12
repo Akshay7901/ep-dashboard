@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare } from "lucide-react";
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
@@ -130,6 +131,8 @@ const ProposalDetails: React.FC = () => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
+  const [isReassignDialogOpen, setIsReassignDialogOpen] = useState(false);
+  const [reassignTarget, setReassignTarget] = useState<string>("");
   const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
   const [showingSummary, setShowingSummary] = useState(false);
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
@@ -172,7 +175,9 @@ const ProposalDetails: React.FC = () => {
     assignReviewers,
     isAssigning,
     unassignReviewers,
-    isUnassigning
+    isUnassigning,
+    reassignProposalAsync,
+    isReassigning
   } = useProposalActions(proposal?.ticket_number || id);
 
   /* ---------------- Loading / Error ---------------- */
@@ -194,7 +199,7 @@ const ProposalDetails: React.FC = () => {
   /* ---------------- Derived values ---------------- */
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
-  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
+  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning || isReassigning;
   const showReviewForm = isReviewer2;
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
@@ -335,7 +340,10 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {isActuallyAssigned && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
+          {isActuallyAssigned && <Button variant="outline" onClick={() => {
+              setReassignTarget("");
+              setIsReassignDialogOpen(true);
+            }} disabled={isBusy}>
               Reassign
             </Button>}
         </div>;
@@ -982,6 +990,77 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reassign Dialog */}
+      <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5" />
+              Reassign Peer Reviewer
+            </DialogTitle>
+            <DialogDescription>
+              Select a new peer reviewer to reassign this proposal to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-64 overflow-y-auto py-2">
+            {reviewers.map((reviewer) => {
+              const currentEmail = proposal?.assigned_reviewers?.[0]?.email || selectedReviewer;
+              const isCurrent = reviewer.email === currentEmail;
+              return (
+                <div
+                  key={reviewer.id}
+                  className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    reassignTarget === reviewer.email
+                      ? "border-primary bg-primary/5"
+                      : isCurrent
+                      ? "border-muted bg-muted/30 opacity-60"
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => !isCurrent && setReassignTarget(reviewer.email)}
+                >
+                  <div className="flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium">{reviewer.name || reviewer.email.split("@")[0]}</span>
+                      {isCurrent && (
+                        <Badge variant="outline" className="text-xs">Current</Badge>
+                      )}
+                      <Badge variant="outline" className="text-xs font-normal">
+                        {reviewer.assigned_proposals_count ?? 0} assigned
+                      </Badge>
+                    </span>
+                    <span className="block text-sm text-muted-foreground">{reviewer.email}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReassignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!reassignTarget || isReassigning}
+              onClick={async () => {
+                const fromEmail = proposal?.assigned_reviewers?.[0]?.email || selectedReviewer;
+                if (!fromEmail || !reassignTarget) return;
+                try {
+                  await reassignProposalAsync({ fromEmail, toEmail: reassignTarget });
+                  setSelectedReviewer(reassignTarget);
+                  setIsReassignDialogOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                  queryClient.invalidateQueries({ queryKey: ["proposal", proposal?.ticket_number || id] });
+                  queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
+                } catch {
+                  // Error handled by mutation
+                }
+              }}
+            >
+              {isReassigning ? "Reassigning..." : "Reassign"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>;
 };
 export default ProposalDetails;
