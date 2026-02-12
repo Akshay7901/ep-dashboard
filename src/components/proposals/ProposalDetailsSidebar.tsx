@@ -1,4 +1,5 @@
 import React from "react";
+import { extractCountry } from "@/lib/extractCountry";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -69,7 +70,7 @@ export default function ProposalDetailsSidebar({ proposal }: { proposal: any }) 
             <InfoRow label="Phone" value={proposal.author_phone} />
             <InfoRow label="Job Title" value={proposal.job_title} />
             <InfoRow label="Institution" value={proposal.institution} />
-            <InfoRow label="Address" value={proposal.address} />
+            <InfoRow label="Country" value={extractCountry(proposal.address)} />
           </CardContent>
         </Card>
 
