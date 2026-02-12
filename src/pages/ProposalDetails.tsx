@@ -70,19 +70,19 @@ const PeerReviewStatusBadge: React.FC<{
   }> = {
     submitted: {
       label: "Pending Review",
-      className: "bg-[#c4940a] text-white hover:bg-[#c4940a] border-[#c4940a]"
+      className: "bg-[#7a2626] text-white hover:bg-[#7a2626] border-[#7a2626]"
     },
     under_review: {
       label: "In Progress",
-      className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]"
+      className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]"
     },
     approved: {
       label: "Completed",
-      className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]"
+      className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]"
     },
     finalised: {
       label: "Completed",
-      className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]"
+      className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]"
     },
     rejected: {
       label: "Declined",
