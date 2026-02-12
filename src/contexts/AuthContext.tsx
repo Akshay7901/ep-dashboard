@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, AuthState, LoginCredentials, ForgotPasswordRequest } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -60,15 +61,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
-    const response = await supabase.functions.invoke('auth-login', {
-      body: { email: credentials.email, password: credentials.password },
+    const response = await fetch(`${API_BASE_URL}/api/proposals/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: credentials.email, access_code: credentials.password }),
     });
 
-    if (response.error) {
-      throw { message: response.error.message || 'Login failed', status: 401 };
-    }
+    const data = await response.json();
 
-    const data = response.data;
+    if (!response.ok) {
+      throw { message: data.message || data.error || 'Login failed', status: response.status };
+    }
     
     if (!data.token) {
       throw { message: data.error || 'Login failed', status: 401 };

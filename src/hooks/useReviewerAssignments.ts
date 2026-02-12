@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import api from '@/lib/api';
 
 interface ReviewerAssignment {
   ticket_number: string;
@@ -29,22 +29,8 @@ export const useReviewerAssignments = () => {
         throw new Error('Not authenticated');
       }
 
-      // Fetch all proposals which include assignment info
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/proposals-proxy?limit=500&offset=0`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch proposals');
-      }
-
-      const data = await response.json();
+      // Fetch all proposals directly from API
+      const { data } = await api.get('/api/proposals?limit=500&offset=0');
       const proposals = data.proposals || [];
 
       // Build a map of reviewer email -> assigned proposals
