@@ -3,6 +3,13 @@ import { statusApi, assignmentsApi, proposalApi, reassignApi } from '@/lib/propo
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper to save assignment data via edge function (bypasses RLS)
+const saveAssignmentLocally = async (ticketNumber: string, reviewerEmails: string[]) => {
+  await supabase.functions.invoke('proposal-workflow', {
+    body: { action: 'saveAssignment', ticketNumber, reviewerEmails },
+  });
+};
+
 export const useProposalActions = (ticketNumber: string | undefined) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -30,11 +37,9 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   const assignMutation = useMutation({
     mutationFn: async (reviewerEmails: string[]) => {
       await assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails });
-      // Persist assigned reviewer emails locally (API has no GET for assignments)
+      // Persist via edge function (service role bypasses RLS)
       if (ticketNumber) {
-        await (supabase.from('proposals') as any)
-          .update({ assigned_reviewer_emails: reviewerEmails })
-          .eq('ticket_number', ticketNumber);
+        await saveAssignmentLocally(ticketNumber, reviewerEmails);
       }
     },
     onSuccess: () => {
@@ -57,11 +62,9 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   const unassignMutation = useMutation({
     mutationFn: async () => {
       await assignmentsApi.unassign(ticketNumber!);
-      // Clear local assignment data
+      // Clear via edge function
       if (ticketNumber) {
-        await (supabase.from('proposals') as any)
-          .update({ assigned_reviewer_emails: [] })
-          .eq('ticket_number', ticketNumber);
+        await saveAssignmentLocally(ticketNumber, []);
       }
     },
     onSuccess: () => {
