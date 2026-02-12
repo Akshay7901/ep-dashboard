@@ -848,6 +848,28 @@ const ProposalDetails: React.FC = () => {
                   },
                   ticketNumber: proposal.ticket_number || id,
                 });
+
+                // Update proposal status to approved (completed)
+                await new Promise<void>((resolve, reject) => {
+                  workflowStatus.mutate({
+                    id: localId || id || "",
+                    status: "approved",
+                    previousStatus: proposal.status,
+                    ticketNumber: proposal.ticket_number || id,
+                    proposalData: {
+                      id: localId || undefined,
+                      name: proposal.name,
+                      author_name: proposal.author_name,
+                      author_email: proposal.author_email,
+                      ticket_number: proposal.ticket_number || id,
+                    },
+                  }, {
+                    onSuccess: () => resolve(),
+                    onError: (err) => reject(err),
+                  });
+                });
+
+                queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 navigate('/proposals');
               } catch (err) {
                 console.error('Submit failed:', err);
