@@ -225,30 +225,42 @@ const ensureLocalProposal = async (apiProposal: ApiProposalDetail): Promise<stri
   return newRecord.id;
 };
 
-// Get local override data for a ticket number
+// Get local override data for a ticket number (via edge function to bypass RLS)
 const getLocalOverride = async (ticketNumber: string) => {
-  const { data } = await (supabase
-    .from('proposals')
-    .select('*')
-    .eq('ticket_number', ticketNumber)
-    .maybeSingle() as any);
-  return data;
+  try {
+    const { data, error } = await supabase.functions.invoke('proposal-workflow', {
+      body: { action: 'getOverride', ticketNumber },
+    });
+    if (error) {
+      console.error('getLocalOverride error:', error);
+      return null;
+    }
+    return data?.data || null;
+  } catch {
+    return null;
+  }
 };
 
-// Get local overrides for multiple ticket numbers
+// Get local overrides for multiple ticket numbers (via edge function to bypass RLS)
 const getLocalOverrides = async (ticketNumbers: string[]): Promise<Map<string, any>> => {
   const map = new Map();
   if (ticketNumbers.length === 0) return map;
 
-  const { data } = await (supabase
-    .from('proposals')
-    .select('id,status,contract_sent,contract_sent_at,finalised_at,finalised_by,value,updated_at,ticket_number')
-    .in('ticket_number', ticketNumbers) as any);
-
-  for (const row of (data || [])) {
-    if (row.ticket_number) {
-      map.set(row.ticket_number, row);
+  try {
+    const { data, error } = await supabase.functions.invoke('proposal-workflow', {
+      body: { action: 'getOverrides', ticketNumbers },
+    });
+    if (error) {
+      console.error('getLocalOverrides error:', error);
+      return map;
     }
+    for (const row of (data?.data || [])) {
+      if (row.ticket_number) {
+        map.set(row.ticket_number, row);
+      }
+    }
+  } catch {
+    // Fall through
   }
 
   return map;

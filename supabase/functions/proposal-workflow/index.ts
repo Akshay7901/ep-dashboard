@@ -385,6 +385,43 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'getOverride') {
+      const { ticketNumber: overrideTicket } = body;
+      if (!overrideTicket) {
+        return new Response(JSON.stringify({ data: null }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: overrideData } = await supabase
+        .from('proposals')
+        .select('*')
+        .eq('ticket_number', overrideTicket)
+        .maybeSingle();
+
+      return new Response(JSON.stringify({ data: overrideData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'getOverrides') {
+      const { ticketNumbers: overrideTickets } = body;
+      if (!overrideTickets || overrideTickets.length === 0) {
+        return new Response(JSON.stringify({ data: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: overridesData } = await supabase
+        .from('proposals')
+        .select('id,status,contract_sent,contract_sent_at,finalised_at,finalised_by,value,updated_at,ticket_number,assigned_reviewer_emails')
+        .in('ticket_number', overrideTickets);
+
+      return new Response(JSON.stringify({ data: overridesData || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
