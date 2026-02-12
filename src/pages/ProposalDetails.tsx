@@ -273,10 +273,13 @@ const ProposalDetails: React.FC = () => {
       </div>
 
       {/* Reviewer + Actions row (for reviewer_1 only) */}
-      {isReviewer1 && proposal.status !== "rejected" && <div className="flex items-center gap-3 flex-wrap">
+      {isReviewer1 && proposal.status !== "rejected" && (() => {
+          const hasAssignedReviewer = (proposal?.assigned_reviewers?.length > 0) || selectedReviewer;
+          const isNew = proposal.status === "submitted" && !hasAssignedReviewer;
+          return <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
-              {proposal.status === "submitted" && !selectedReviewer ? (
+              {isNew ? (
                 <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
                   <SelectTrigger className="w-56 bg-background">
                     <SelectValue placeholder="Select a reviewer" />
@@ -292,14 +295,15 @@ const ProposalDetails: React.FC = () => {
               ) : (
                 <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-                    const assigned = reviewers.find(r => r.email === selectedReviewer);
-                    return assigned ? assigned.name || assigned.email.split("@")[0] : selectedReviewer || "N/A";
+                    const assignedEmail = proposal?.assigned_reviewers?.[0]?.email || selectedReviewer;
+                    const assigned = reviewers.find(r => r.email === assignedEmail);
+                    return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
                   })()}
                 </div>
               )}
             </>}
 
-          {proposal.status === "submitted" && <>
+          {isNew && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
           if (!selectedReviewer) {
             setPendingAction("accept");
@@ -331,10 +335,11 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {proposal.status === "under_review" && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
+          {hasAssignedReviewer && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
               Reassign
             </Button>}
-        </div>}
+        </div>;
+        })()}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
