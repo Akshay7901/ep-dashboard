@@ -146,7 +146,7 @@ const ProposalDetails: React.FC = () => {
   } = useProposal(id || "");
   const localId = proposal?.id || "";
 
-  // Set reviewer: prefer already-assigned reviewer, then default, then empty
+  // Set reviewer: only pre-select if already assigned, never auto-select default
   React.useEffect(() => {
     if (reviewers.length > 0 && !selectedReviewer) {
       const assignedEmails = proposal?.assigned_reviewers?.map(r => r.email) || [];
@@ -156,12 +156,9 @@ const ProposalDetails: React.FC = () => {
 
       if (assignedMatch) {
         setSelectedReviewer(assignedMatch.email);
-      } else if (defaultEmail) {
-        const found = reviewers.find(r => r.email === defaultEmail);
-        if (found) setSelectedReviewer(found.email);
       }
     }
-  }, [defaultEmail, reviewers, selectedReviewer, proposal?.assigned_reviewers]);
+  }, [reviewers, selectedReviewer, proposal?.assigned_reviewers]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
