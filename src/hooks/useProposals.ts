@@ -582,17 +582,28 @@ export const useProposalComments = (proposalId: string, ticketNumber?: string) =
   return useQuery({
     queryKey: ['proposal-comments', proposalId],
     queryFn: async () => {
-      if (!proposalId) return [] as ReviewerComment[];
+      const tn = ticketNumber || proposalId;
+      if (!tn) return [] as ReviewerComment[];
 
-      const token = localStorage.getItem('auth_token');
-      const { data, error } = await supabase.functions.invoke('proposal-workflow', {
-        body: { action: 'getComments', proposalId, ticketNumber },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`);
+      const apiComments = data?.comments || data || [];
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return (data?.comments || []) as ReviewerComment[];
+      // Map API comments to ReviewerComment shape for ReviewCommentsDisplay
+      return apiComments.map((c: any) => ({
+        id: c.id || crypto.randomUUID(),
+        proposal_id: proposalId,
+        reviewer_id: c.author_email || '',
+        comment_text: c.comment || c.comment_text || '',
+        review_form_data: c.review_form_data || {},
+        submitted_for_authorization: c.submitted_for_authorization || false,
+        is_duplicate_of: null,
+        created_at: c.created_at || new Date().toISOString(),
+        updated_at: c.updated_at || c.created_at || new Date().toISOString(),
+        // Preserve extra fields for display
+        author: c.author,
+        author_email: c.author_email,
+        role: c.role,
+      })) as ReviewerComment[];
     },
     enabled: !!proposalId,
   });
