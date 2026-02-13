@@ -585,25 +585,64 @@ export const useProposalComments = (proposalId: string, ticketNumber?: string) =
       const tn = ticketNumber || proposalId;
       if (!tn) return [] as ReviewerComment[];
 
-      const { data } = await api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`);
-      const apiComments = data?.comments || data || [];
+      // Fetch from BOTH sources in parallel:
+      // 1. External API comments (visible to decision reviewer)
+      // 2. Local Supabase comments (contains review_form_data for peer reviewer drafts)
+      const [apiResult, localResult] = await Promise.all([
+        api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`).catch(() => ({ data: [] })),
+        supabase.functions.invoke('proposal-workflow', {
+          body: { action: 'getComments', proposalId, ticketNumber: tn },
+        }).catch(() => ({ data: null, error: null })),
+      ]);
 
-      // Map API comments to ReviewerComment shape for ReviewCommentsDisplay
-      return apiComments.map((c: any) => ({
-        id: c.id || crypto.randomUUID(),
-        proposal_id: proposalId,
-        reviewer_id: c.author_email || '',
-        comment_text: c.comment || c.comment_text || '',
+      const apiComments = apiResult.data?.comments || apiResult.data || [];
+      const localComments = (localResult as any)?.data?.comments || [];
+
+      // Merge: use local comments as base (they have review_form_data),
+      // then add any API-only comments
+      const localMap = new Map<string, any>();
+      for (const lc of localComments) {
+        localMap.set(lc.id, lc);
+      }
+
+      // Start with local comments (they have review_form_data)
+      const merged: ReviewerComment[] = localComments.map((c: any) => ({
+        id: c.id,
+        proposal_id: c.proposal_id || proposalId,
+        reviewer_id: c.reviewer_id || '',
+        comment_text: c.comment_text || '',
         review_form_data: c.review_form_data || {},
         submitted_for_authorization: c.submitted_for_authorization || false,
-        is_duplicate_of: null,
+        is_duplicate_of: c.is_duplicate_of || null,
         created_at: c.created_at || new Date().toISOString(),
         updated_at: c.updated_at || c.created_at || new Date().toISOString(),
-        // Preserve extra fields for display
-        author: c.author,
-        author_email: c.author_email,
-        role: c.role,
-      })) as ReviewerComment[];
+      }));
+
+      // Add API comments that aren't already in local
+      for (const ac of apiComments) {
+        const alreadyExists = merged.some(m => 
+          m.comment_text === (ac.comment || ac.comment_text) && 
+          Math.abs(new Date(m.created_at).getTime() - new Date(ac.created_at).getTime()) < 60000
+        );
+        if (!alreadyExists) {
+          merged.push({
+            id: ac.id || crypto.randomUUID(),
+            proposal_id: proposalId,
+            reviewer_id: ac.author_email || '',
+            comment_text: ac.comment || ac.comment_text || '',
+            review_form_data: ac.review_form_data || {},
+            submitted_for_authorization: ac.submitted_for_authorization || false,
+            is_duplicate_of: null,
+            created_at: ac.created_at || new Date().toISOString(),
+            updated_at: ac.updated_at || ac.created_at || new Date().toISOString(),
+            author: ac.author,
+            author_email: ac.author_email,
+            role: ac.role,
+          } as any);
+        }
+      }
+
+      return merged;
     },
     enabled: !!proposalId,
   });
