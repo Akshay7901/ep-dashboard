@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
@@ -562,8 +562,41 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
           {/* ---- REVIEWS (Decision Reviewer) ---- */}
-          <TabsContent value="reviews" className="mt-4">
+          <TabsContent value="reviews" className="mt-4 space-y-4">
             <ReviewCommentsDisplay comments={comments as any} isReviewer1={true} />
+            
+            {/* Action buttons for decision reviewer */}
+            {proposal.status === "under_review" && comments.length > 0 && (
+              <Card className="border-green-500/20 bg-green-500/5">
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Peer reviewer has submitted their assessment. Review the comments above and approve if ready.
+                  </p>
+                  <Button
+                    className="bg-[#3d5a47] hover:bg-[#2d4a37] text-white"
+                    onClick={() => {
+                      workflowStatus.mutate({
+                        id: localId || id || "",
+                        status: "approved",
+                        previousStatus: proposal.status,
+                        ticketNumber: proposal.ticket_number || id,
+                        proposalData: {
+                          id: localId || undefined,
+                          name: proposal.name,
+                          author_name: proposal.author_name,
+                          author_email: proposal.author_email,
+                          ticket_number: proposal.ticket_number || id,
+                        },
+                      });
+                    }}
+                    disabled={isBusy}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Approve & Send Contract
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">

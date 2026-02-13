@@ -270,7 +270,7 @@ serve(async (req) => {
         try {
           const API_BASE_URL = 'https://api.ethicspress.com';
           const externalBody = JSON.stringify({
-            comment: commentText || '',
+            comment_text: commentText || '',
             review_form_data: reviewFormData || {},
             reviewer_email: reviewerEmail || '',
           });
