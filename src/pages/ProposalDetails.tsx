@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
+import { commentsApi } from "@/lib/proposalsApi";
 
 /* ---------------- Helpers ---------------- */
 
@@ -861,27 +862,21 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
-                // Update proposal status to approved (completed)
-                await new Promise<void>((resolve, reject) => {
-                  workflowStatus.mutate({
-                    id: localId || id || "",
-                    status: "approved",
-                    previousStatus: proposal.status,
-                    ticketNumber: proposal.ticket_number || id,
-                    proposalData: {
-                      id: localId || undefined,
-                      name: proposal.name,
-                      author_name: proposal.author_name,
-                      author_email: proposal.author_email,
-                      ticket_number: proposal.ticket_number || id,
-                    },
-                  }, {
-                    onSuccess: () => resolve(),
-                    onError: (err) => reject(err),
-                  });
-                });
+                // Also post a summary to the external comments API
+                const ticketNum = proposal.ticket_number || id || "";
+                if (ticketNum) {
+                  try {
+                    const commentSummary = `[Peer Review Submitted] Recommendation: ${summaryFormData.recommendation || 'N/A'}`;
+                    await commentsApi.add(ticketNum, { comment: commentSummary });
+                  } catch (e) {
+                    console.warn("Failed to post to external comments API:", e);
+                  }
+                }
 
+                // Keep status as under_review (do NOT set to approved/contract sent)
+                // The decision reviewer will decide next steps
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
                 navigate('/proposals');
               } catch (err) {
                 console.error('Submit failed:', err);
