@@ -57,7 +57,7 @@ export const commentsApi = {
   },
 
   add: async (ticketNumber: string, comment: { comment: string }): Promise<ProposalComment> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, comment);
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, { comment_text: comment.comment });
     return data;
   },
 };
