@@ -208,13 +208,18 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     saveDraft: () => handleSave(false),
-    submitReview: async () => {},
+    submitReview: async () => {
+      // Use the same flow as the bottom button: open summary screen
+      if (onSubmitReview) {
+        onSubmitReview({ ...formData });
+      }
+    },
     confirmSubmit: () => handleSave(true),
     isSaving,
     canSubmit: true,
     progress,
     formData,
-  }), [isSaving, formData, progress]);
+  }), [isSaving, formData, progress, onSubmitReview]);
 
   if (isSubmitted) {
     return (
