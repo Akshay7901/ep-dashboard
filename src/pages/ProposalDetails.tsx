@@ -956,6 +956,9 @@ const ProposalDetails: React.FC = () => {
           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
             <PeerReviewReadOnly
               formData={(submittedReview as any).review_form_data || {}}
+              onStartFresh={() => {
+                // Clear pre-loaded data by resetting to empty form
+              }}
             />
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
