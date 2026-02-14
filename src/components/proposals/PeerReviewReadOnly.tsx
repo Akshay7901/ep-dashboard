@@ -106,16 +106,16 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
             Peer review comments
           </h2>
           <div className="flex items-center gap-3">
-            {onStartFresh && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onStartFresh}
-                className="rounded-full"
-              >
+            {onStartFresh &&
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onStartFresh}
+              className="rounded-full">
+
                 Start Fresh
               </Button>
-            )}
+            }
             <span className="text-sm text-muted-foreground whitespace-nowrap">
               {progress}% Complete
             </span>
@@ -125,12 +125,12 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
       </div>
 
       {/* Submitted indicator */}
-      {formData.submittedForAuthorization && (
-        <div className="flex items-center gap-2 p-3 bg-[#3d5a47]/10 border border-[#3d5a47]/30 rounded-lg">
-          <CheckCircle className="h-5 w-5 text-[#3d5a47]" />
-          <span className="text-sm font-medium text-[#3d5a47]">Review Submitted</span>
-        </div>
-      )}
+      {formData.submittedForAuthorization
+
+
+
+
+      }
 
 
       {/* Reviewer 1's Comments Pre-loaded alert */}
