@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
+import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
 import { commentsApi } from "@/lib/proposalsApi";
 
 /* ---------------- Helpers ---------------- */
@@ -208,6 +209,12 @@ const ProposalDetails: React.FC = () => {
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
   const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
+
+  // Check if there's a submitted peer review (for decision reviewer split layout)
+  const submittedReview = comments.find(
+    (c: any) => c.review_form_data?.submittedForAuthorization
+  );
+  const hasSubmittedReview = isReviewer1 && !!submittedReview;
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
     upstreamUpdateStatus({
@@ -906,8 +913,6 @@ const ProposalDetails: React.FC = () => {
                   }
                 }
 
-                // Keep status as under_review (do NOT set to approved/contract sent)
-                // The decision reviewer will decide next steps
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
                 navigate('/proposals');
@@ -946,6 +951,18 @@ const ProposalDetails: React.FC = () => {
             </div>
           </div>
         )
+      ) : hasSubmittedReview ? (
+        <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+          <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+            <PeerReviewReadOnly
+              formData={(submittedReview as any).review_form_data || {}}
+            />
+          </div>
+          <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+            {rightPanel}
+          </div>
+        </div>
       ) : <div>{rightPanel}</div>}
 
       {/* Dialogs */}
