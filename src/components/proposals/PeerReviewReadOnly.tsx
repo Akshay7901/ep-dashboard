@@ -5,73 +5,73 @@ import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 const REVIEW_FIELDS = [
-  {
-    key: "scope",
-    label: "Scope",
-    description: "Does this fit within the scope of EUP's publishing remit?",
-  },
-  {
-    key: "purposeAndValue",
-    label: "Purpose and Value",
-    description:
-      "What's going to be useful about this book? Will this book make any likely contribution to future research? Or to practice?",
-  },
-  {
-    key: "title",
-    label: "Title",
-    description: "Is it descriptive of the content?",
-  },
-  {
-    key: "originality",
-    label: "Originality and Points of Difference",
-    description:
-      "What is new about the book? How does it differ from other titles in the field?",
-  },
-  {
-    key: "credibility",
-    label: "Credibility",
-    description:
-      "Does the author have credible qualifications/experience to present this material?",
-  },
-  {
-    key: "structure",
-    label: "Structure",
-    description: "Does the chapter list look logical and comprehensive?",
-  },
-  {
-    key: "clarity",
-    label: "Clarity, Structure and Quality of Writing",
-    description: null,
-  },
-  {
-    key: "otherComments",
-    label: "Other Comments",
-    description: null,
-  },
-  {
-    key: "redFlags",
-    label: "Red Flags",
-    description: null,
-  },
-];
+{
+  key: "scope",
+  label: "Scope",
+  description: "Does this fit within the scope of EUP's publishing remit?"
+},
+{
+  key: "purposeAndValue",
+  label: "Purpose and Value",
+  description:
+  "What's going to be useful about this book? Will this book make any likely contribution to future research? Or to practice?"
+},
+{
+  key: "title",
+  label: "Title",
+  description: "Is it descriptive of the content?"
+},
+{
+  key: "originality",
+  label: "Originality and Points of Difference",
+  description:
+  "What is new about the book? How does it differ from other titles in the field?"
+},
+{
+  key: "credibility",
+  label: "Credibility",
+  description:
+  "Does the author have credible qualifications/experience to present this material?"
+},
+{
+  key: "structure",
+  label: "Structure",
+  description: "Does the chapter list look logical and comprehensive?"
+},
+{
+  key: "clarity",
+  label: "Clarity, Structure and Quality of Writing",
+  description: null
+},
+{
+  key: "otherComments",
+  label: "Other Comments",
+  description: null
+},
+{
+  key: "redFlags",
+  label: "Red Flags",
+  description: null
+}];
 
-const RECOMMENDATION_MAP: Record<string, { label: string; className: string }> = {
+
+const RECOMMENDATION_MAP: Record<string, {label: string;className: string;}> = {
   proceed: {
     label: "Proceed",
-    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47]",
+    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47]"
   },
   minor_revision: {
     label: "Minor Revision",
-    className: "bg-[#c4940a] text-white hover:bg-[#c4940a]",
+    className: "bg-[#c4940a] text-white hover:bg-[#c4940a]"
   },
   major_revision: {
     label: "Major Revision",
-    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c]",
+    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c]"
   },
   reject: {
     label: "Reject",
-    className: "bg-foreground text-background hover:bg-foreground",
-  },
+    className: "bg-foreground text-background hover:bg-foreground"
+  }
 };
 
 interface PeerReviewReadOnlyProps {
@@ -81,7 +81,7 @@ interface PeerReviewReadOnlyProps {
 
 const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
   formData,
-  reviewerName,
+  reviewerName
 }) => {
   // Calculate progress (same logic as form)
   const totalFields = REVIEW_FIELDS.length + 1;
@@ -90,7 +90,7 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
     if (formData[field.key]?.trim()) filledFields++;
   }
   if (formData.recommendation) filledFields++;
-  const progress = Math.round((filledFields / totalFields) * 100);
+  const progress = Math.round(filledFields / totalFields * 100);
 
   const recommendation = RECOMMENDATION_MAP[formData.recommendation];
 
@@ -110,15 +110,15 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
       </div>
 
       {/* Submitted indicator */}
-      {formData.submittedForAuthorization && (
-        <div className="flex items-center gap-2 p-3 bg-[#3d5a47]/10 border border-[#3d5a47]/20 rounded-lg">
-          <CheckCircle className="h-4 w-4 text-[#3d5a47]" />
-          <span className="text-sm font-medium text-[#3d5a47]">
-            Review submitted
-            {reviewerName ? ` by ${reviewerName}` : ""}
-          </span>
-        </div>
-      )}
+      {formData.submittedForAuthorization
+
+
+
+
+
+
+
+      }
 
       {/* Reviewer 1's Comments Pre-loaded alert */}
       <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
@@ -143,46 +143,46 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
         return (
           <div key={field.key} className="space-y-2">
             <Label className="text-base font-semibold">{field.label}</Label>
-            {field.description && (
-              <p className="text-sm text-muted-foreground italic">
+            {field.description &&
+            <p className="text-sm text-muted-foreground italic">
                 {field.description}
               </p>
-            )}
+            }
             <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line rounded-lg border">
               {value}
             </div>
-          </div>
-        );
+          </div>);
+
       })}
 
       {/* Recommendation */}
-      {formData.recommendation && (
-        <div className="space-y-3">
+      {formData.recommendation &&
+      <div className="space-y-3">
           <Label className="text-base font-semibold">Recommendation</Label>
           <div className="flex items-center gap-2">
-            {recommendation ? (
-              <Badge className={`${recommendation.className} rounded-full px-4 py-1 text-sm`}>
+            {recommendation ?
+          <Badge className={`${recommendation.className} rounded-full px-4 py-1 text-sm`}>
                 {recommendation.label}
-              </Badge>
-            ) : (
-              <Badge variant="outline">{formData.recommendation}</Badge>
-            )}
+              </Badge> :
+
+          <Badge variant="outline">{formData.recommendation}</Badge>
+          }
           </div>
         </div>
-      )}
+      }
 
       {/* Red flags warning */}
-      {formData.redFlags?.trim() && (
-        <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+      {formData.redFlags?.trim() &&
+      <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
           <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
           <div>
             <span className="text-sm font-medium text-destructive">Red Flags Noted</span>
             <p className="text-sm text-foreground mt-1">{formData.redFlags}</p>
           </div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default PeerReviewReadOnly;
