@@ -160,7 +160,7 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
                 {field.description}
               </p>
             }
-            <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line rounded-lg border">
+            <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line rounded-lg border text-destructive">
               {value}
             </div>
           </div>);
