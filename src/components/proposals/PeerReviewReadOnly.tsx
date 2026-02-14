@@ -1,5 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, CheckCircle } from "lucide-react";
@@ -77,11 +78,13 @@ const RECOMMENDATION_MAP: Record<string, {label: string;className: string;}> = {
 interface PeerReviewReadOnlyProps {
   formData: Record<string, any>;
   reviewerName?: string;
+  onStartFresh?: () => void;
 }
 
 const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
   formData,
-  reviewerName
+  reviewerName,
+  onStartFresh
 }) => {
   // Calculate progress (same logic as form)
   const totalFields = REVIEW_FIELDS.length + 1;
@@ -102,9 +105,21 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
           <h2 className="text-2xl font-bold text-foreground">
             Peer review comments
           </h2>
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {progress}% Complete
-          </span>
+          <div className="flex items-center gap-3">
+            {onStartFresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onStartFresh}
+                className="rounded-full"
+              >
+                Start Fresh
+              </Button>
+            )}
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {progress}% Complete
+            </span>
+          </div>
         </div>
         <Progress value={progress} className="mt-3 h-2" />
       </div>
