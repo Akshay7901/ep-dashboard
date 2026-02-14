@@ -120,6 +120,21 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
         </div>
       )}
 
+      {/* Reviewer 1's Comments Pre-loaded alert */}
+      <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+        <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Reviewer 1's Comments Pre-loaded
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            The form below contains Reviewer 1's comments in{" "}
+            <span className="text-destructive font-medium">red text</span>.
+            You can edit any field directly, or click "Start Fresh" above to clear all fields.
+          </p>
+        </div>
+      </div>
+
       {/* Review Fields (read-only) */}
       {REVIEW_FIELDS.map((field) => {
         const value = formData[field.key];
