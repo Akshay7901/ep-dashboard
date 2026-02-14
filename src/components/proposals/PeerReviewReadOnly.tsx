@@ -105,23 +105,22 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
           <h2 className="text-2xl font-bold text-foreground">
             Peer review comments
           </h2>
-          <div className="flex items-center gap-3">
-            {onStartFresh &&
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {progress}% Complete
+          </span>
+        </div>
+        <Progress value={progress} className="mt-3 h-2" />
+        {onStartFresh && (
+          <div className="flex justify-end mt-3">
             <Button
               variant="outline"
               size="sm"
               onClick={onStartFresh}
               className="rounded-full">
-
-                Start Fresh
-              </Button>
-            }
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {progress}% Complete
-            </span>
+              Start Fresh
+            </Button>
           </div>
-        </div>
-        <Progress value={progress} className="mt-3 h-2" />
+        )}
       </div>
 
       {/* Submitted indicator */}
