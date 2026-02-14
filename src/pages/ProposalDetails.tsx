@@ -360,7 +360,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book Info</span>
@@ -376,15 +376,6 @@ const ProposalDetails: React.FC = () => {
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Documents</span>
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="gap-1.5 text-xs sm:text-sm">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Reviews</span>
-              {comments.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 text-xs flex items-center justify-center rounded-full">
-                  {comments.length}
-                </Badge>
-              )}
             </TabsTrigger>
           </TabsList>
 
@@ -567,43 +558,6 @@ const ProposalDetails: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          {/* ---- REVIEWS (Decision Reviewer) ---- */}
-          <TabsContent value="reviews" className="mt-4 space-y-4">
-            <ReviewCommentsDisplay comments={comments as any} isReviewer1={true} />
-            
-            {/* Action buttons for decision reviewer */}
-            {proposal.status === "under_review" && comments.length > 0 && (
-              <Card className="border-green-500/20 bg-green-500/5">
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Peer reviewer has submitted their assessment. Review the comments above and approve if ready.
-                  </p>
-                  <Button
-                    className="bg-[#3d5a47] hover:bg-[#2d4a37] text-white"
-                    onClick={() => {
-                      workflowStatus.mutate({
-                        id: localId || id || "",
-                        status: "approved",
-                        previousStatus: proposal.status,
-                        ticketNumber: proposal.ticket_number || id,
-                        proposalData: {
-                          id: localId || undefined,
-                          name: proposal.name,
-                          author_name: proposal.author_name,
-                          author_email: proposal.author_email,
-                          ticket_number: proposal.ticket_number || id,
-                        },
-                      });
-                    }}
-                    disabled={isBusy}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Approve & Send Contract
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
