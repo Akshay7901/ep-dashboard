@@ -125,15 +125,13 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
       </div>
 
       {/* Submitted indicator */}
-      {formData.submittedForAuthorization
+      {formData.submittedForAuthorization && (
+        <div className="flex items-center gap-2 p-3 bg-[#3d5a47]/10 border border-[#3d5a47]/30 rounded-lg">
+          <CheckCircle className="h-5 w-5 text-[#3d5a47]" />
+          <span className="text-sm font-medium text-[#3d5a47]">Review Submitted</span>
+        </div>
+      )}
 
-
-
-
-
-
-
-      }
 
       {/* Reviewer 1's Comments Pre-loaded alert */}
       <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
