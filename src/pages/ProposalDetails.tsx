@@ -823,15 +823,24 @@ const ProposalDetails: React.FC = () => {
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
-            <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
-              const ref = reviewFormRef.current;
-              if (ref) {
-                setSummaryFormData({ ...ref.formData });
-                setShowingSummary(true);
-              }
-            }} disabled={reviewFormRef.current?.isSaving}>
-              Submit Review
-            </Button>
+            {showReviewForm ? (
+              <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
+                const ref = reviewFormRef.current;
+                if (ref) {
+                  setSummaryFormData({ ...ref.formData });
+                  setShowingSummary(true);
+                }
+              }} disabled={reviewFormRef.current?.isSaving}>
+                Submit Review
+              </Button>
+            ) : (
+              <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
+                // Placeholder for Decision Reviewer submit — API to be provided later
+                console.log("Decision Reviewer submit — pending API integration");
+              }}>
+                Submit Review
+              </Button>
+            )}
           </div>}
       </div>
 
