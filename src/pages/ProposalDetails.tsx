@@ -962,6 +962,7 @@ const ProposalDetails: React.FC = () => {
               ref={reviewFormRef}
               proposal={proposal}
               existingAssessment={(submittedReview as any).review_form_data || {}}
+              forceEditable
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
               onDraftSaved={() => {}}
