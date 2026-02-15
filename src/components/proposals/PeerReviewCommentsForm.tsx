@@ -15,6 +15,8 @@ interface PeerReviewCommentsFormProps {
   onSave?: () => void;
   onSubmitReview?: (formData: Record<string, string>) => void;
   onDraftSaved?: () => void;
+  /** When true, ignore the submittedForAuthorization flag and always show the editable form */
+  forceEditable?: boolean;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -117,7 +119,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable }, ref) => {
     const addComment = useAddComment();
 
     const [formData, setFormData] = useState<Record<string, string>>(
@@ -136,7 +138,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     );
 
     const [isSaving, setIsSaving] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(!!existingAssessment?.submittedForAuthorization);
+    const [isSubmitted, setIsSubmitted] = useState(!forceEditable && !!existingAssessment?.submittedForAuthorization);
 
     // Calculate progress
     const progress = useMemo(() => {
