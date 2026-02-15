@@ -152,7 +152,10 @@ const Proposals: React.FC = () => {
       total: d.length,
       newCount: d.filter((p) => p.status === "submitted").length,
       inReview: d.filter((p) => p.status === "under_review").length,
+      reviewReturned: d.filter((p) => p.status === "finalised").length,
       contractSent: d.filter((p) => p.status === "approved").length,
+      clarification: d.filter((p) => p.status === "locked").length,
+      accepted: d.filter((p) => p.status === "finalised").length,
       declined: d.filter((p) => p.status === "rejected").length,
       pending: d.filter((p) => p.status === "submitted").length,
       inProgress: d.filter((p) => p.status === "under_review").length,
@@ -244,7 +247,7 @@ const Proposals: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <StatusChip
               count={statusCounts.total}
-              label="Proposals"
+              label="Total"
               colorClass="bg-[#2d3748] text-white border-[#2d3748]"
               isActive={statusFilter === "all"}
               onClick={() => handleStatusChange("all")}
@@ -264,11 +267,32 @@ const Proposals: React.FC = () => {
               onClick={() => handleStatusChange("under_review")}
             />
             <StatusChip
+              count={statusCounts.reviewReturned}
+              label="Review Returned"
+              colorClass="bg-[#c05621] text-white border-[#c05621]"
+              isActive={statusFilter === "finalised"}
+              onClick={() => handleStatusChange("finalised")}
+            />
+            <StatusChip
               count={statusCounts.contractSent}
               label="Contract Sent"
               colorClass="bg-[#1d293d] text-white border-[#1d293d]"
               isActive={statusFilter === "approved"}
               onClick={() => handleStatusChange("approved")}
+            />
+            <StatusChip
+              count={statusCounts.clarification}
+              label="Clarification"
+              colorClass="bg-[#6b7280] text-white border-[#6b7280]"
+              isActive={statusFilter === "locked"}
+              onClick={() => handleStatusChange("locked")}
+            />
+            <StatusChip
+              count={statusCounts.accepted}
+              label="Accepted"
+              colorClass="bg-[#276749] text-white border-[#276749]"
+              isActive={false}
+              onClick={() => handleStatusChange("finalised")}
             />
             <StatusChip
               count={statusCounts.declined}
