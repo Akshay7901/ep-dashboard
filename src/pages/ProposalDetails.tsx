@@ -967,7 +967,7 @@ const ProposalDetails: React.FC = () => {
                 </div>
               </div>
 
-              {!startedFresh && (
+              {!startedFresh ? (
                 <>
                   <div className="flex justify-end">
                     <Button
@@ -993,6 +993,24 @@ const ProposalDetails: React.FC = () => {
                     </div>
                   </div>
                 </>
+              ) : (
+                <div className="border border-muted bg-muted/30 rounded-lg p-4 flex gap-3">
+                  <div className="shrink-0 mt-0.5">
+                    <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Reviewer 1's Comments Cleared</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      To reload reviewer 1's comments press here{" "}
+                      <button
+                        className="text-primary underline font-medium hover:opacity-80"
+                        onClick={() => setStartedFresh(false)}
+                      >
+                        reload
+                      </button>.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
 
