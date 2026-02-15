@@ -819,7 +819,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {showReviewForm && !showingSummary && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -831,11 +831,6 @@ const ProposalDetails: React.FC = () => {
               }
             }} disabled={reviewFormRef.current?.isSaving}>
               Submit Review
-            </Button>
-          </div>}
-        {hasSubmittedReview && !showReviewForm && !showingSummary && <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
-              Save Draft
             </Button>
           </div>}
       </div>
