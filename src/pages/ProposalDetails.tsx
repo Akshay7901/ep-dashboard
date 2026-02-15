@@ -136,6 +136,7 @@ const ProposalDetails: React.FC = () => {
   const [showingSummary, setShowingSummary] = useState(false);
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
   const [isConfirming, setIsConfirming] = useState(false);
+  const [startedFresh, setStartedFresh] = useState(false);
   const addComment = useAddComment();
 
   /* ---------------- Data ---------------- */
@@ -957,12 +958,51 @@ const ProposalDetails: React.FC = () => {
           />
         ) : (
         <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-          <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+            {/* Start Fresh button + info banner for decision reviewer */}
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
+                </div>
+              </div>
+
+              {!startedFresh && (
+                <>
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      className="text-[#c4940a] border-[#c4940a] hover:bg-[#c4940a]/10"
+                      onClick={() => setStartedFresh(true)}
+                    >
+                      Start Fresh
+                    </Button>
+                  </div>
+                  <div className="border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg p-4 flex gap-3">
+                    <div className="shrink-0 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#c4940a]" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Reviewer 1's Comments Pre-loaded</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        The form below contains Reviewer 1's comments in <span className="text-destructive font-medium">red text</span>.
+                        You can edit any field directly, or click "Start Fresh" above to clear all fields.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <PeerReviewCommentsForm
               ref={reviewFormRef}
               proposal={proposal}
-              existingAssessment={(submittedReview as any).review_form_data || {}}
+              existingAssessment={startedFresh ? {} : (submittedReview as any).review_form_data || {}}
               forceEditable
+              hideHeader
+              preloadedStyle={!startedFresh}
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
               onDraftSaved={() => {}}

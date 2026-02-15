@@ -17,6 +17,10 @@ interface PeerReviewCommentsFormProps {
   onDraftSaved?: () => void;
   /** When true, ignore the submittedForAuthorization flag and always show the editable form */
   forceEditable?: boolean;
+  /** When true, hide the built-in header (progress bar + title) */
+  hideHeader?: boolean;
+  /** When true, show pre-loaded text in red/destructive color */
+  preloadedStyle?: boolean;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -119,7 +123,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle }, ref) => {
     const addComment = useAddComment();
 
     const [formData, setFormData] = useState<Record<string, string>>(
@@ -233,13 +237,15 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     return (
       <div className="space-y-8">
         {/* Header with progress */}
-        <div>
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
-            <span className="text-sm text-muted-foreground whitespace-nowrap">{progress}% Complete</span>
+        {!hideHeader && (
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">{progress}% Complete</span>
+            </div>
+            <Progress value={progress} className="mt-3 h-2" />
           </div>
-          <Progress value={progress} className="mt-3 h-2" />
-        </div>
+        )}
 
         {/* Form Fields */}
         {REVIEW_FIELDS.map((field) => (
@@ -251,7 +257,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
               placeholder={field.placeholder}
               rows={3}
-              className="resize-none bg-background"
+              className={`resize-none bg-background ${preloadedStyle && formData[field.key]?.trim() ? "text-destructive" : ""}`}
             />
           </div>
         ))}
