@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -143,6 +143,16 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
 
     const [isSaving, setIsSaving] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(!forceEditable && !!existingAssessment?.submittedForAuthorization);
+
+    // Reset form data when existingAssessment prop changes (e.g. Start Fresh / Reload)
+    useEffect(() => {
+      const defaultData = {
+        scope: "", purposeAndValue: "", title: "", originality: "",
+        credibility: "", structure: "", clarity: "", otherComments: "",
+        redFlags: "", recommendation: "",
+      };
+      setFormData(existingAssessment && Object.keys(existingAssessment).length > 0 ? existingAssessment : defaultData);
+    }, [existingAssessment]);
 
     // Calculate progress
     const progress = useMemo(() => {
