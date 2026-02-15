@@ -819,7 +819,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {showReviewForm && !showingSummary && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -906,13 +906,56 @@ const ProposalDetails: React.FC = () => {
           </div>
         )
       ) : hasSubmittedReview ? (
+        showingSummary ? (
+          <PeerReviewSummary
+            proposal={proposal}
+            formData={summaryFormData}
+            onGoBack={() => setShowingSummary(false)}
+            onConfirmSubmit={async () => {
+              setIsConfirming(true);
+              try {
+                await addComment.mutateAsync({
+                  proposalId: proposal.id,
+                  commentText: summaryFormData.otherComments || '',
+                  reviewFormData: {
+                    ...summaryFormData,
+                    submittedForAuthorization: true,
+                    submittedAt: new Date().toISOString(),
+                  },
+                  ticketNumber: proposal.ticket_number || id,
+                });
+
+                const ticketNum = proposal.ticket_number || id || "";
+                if (ticketNum) {
+                  try {
+                    const commentSummary = `[Decision Review Submitted] Recommendation: ${summaryFormData.recommendation || 'N/A'}`;
+                    await commentsApi.add(ticketNum, { comment: commentSummary });
+                  } catch (e) {
+                    console.warn("Failed to post to external comments API:", e);
+                  }
+                }
+
+                queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
+                navigate('/proposals');
+              } catch (err) {
+                console.error('Submit failed:', err);
+              } finally {
+                setIsConfirming(false);
+              }
+            }}
+            isSubmitting={isConfirming}
+          />
+        ) : (
         <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
-            <PeerReviewReadOnly
-              formData={(submittedReview as any).review_form_data || {}}
-              onStartFresh={() => {
-                // Clear pre-loaded data by resetting to empty form
-              }}
+            <PeerReviewCommentsForm
+              ref={reviewFormRef}
+              proposal={proposal}
+              existingAssessment={(submittedReview as any).review_form_data || {}}
+              onSave={() => refetch()}
+              onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
+              onDraftSaved={() => {}}
             />
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
@@ -920,6 +963,7 @@ const ProposalDetails: React.FC = () => {
             {rightPanel}
           </div>
         </div>
+        )
       ) : <div>{rightPanel}</div>}
 
       {/* Dialogs */}
