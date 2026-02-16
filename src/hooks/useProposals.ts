@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import api from '@/lib/api';
+import { extractCountry } from '@/lib/extractCountry';
 import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposal, ApiProposalDetail, ApiProposalsResponse, ApiProposalStatus } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -8,6 +9,7 @@ interface UseProposalsOptions {
   page?: number;
   limit?: number;
   search?: string;
+  searchCategory?: string;
   status?: ProposalStatus | 'all';
 }
 
@@ -267,10 +269,10 @@ const getLocalOverrides = async (ticketNumbers: string[]): Promise<Map<string, a
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
-  const { page = 1, limit = 10, search = '', status = 'all' } = options;
+  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all' } = options;
 
   return useQuery({
-    queryKey: ['proposals', page, limit, search, status],
+    queryKey: ['proposals', page, limit, search, searchCategory, status],
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
@@ -320,14 +322,24 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
         return mapped;
       });
 
-      // Client-side filtering for search
+      // Client-side filtering for search — strict by selected category
       if (search) {
         const searchLower = search.toLowerCase();
-        proposals = proposals.filter(p => 
-          p.name.toLowerCase().includes(searchLower) ||
-          p.author_name.toLowerCase().includes(searchLower) ||
-          p.author_email.toLowerCase().includes(searchLower)
-        );
+        proposals = proposals.filter(p => {
+          switch (searchCategory) {
+            case 'title':
+              return p.name?.toLowerCase().includes(searchLower);
+            case 'email':
+              return p.author_email?.toLowerCase().includes(searchLower);
+            case 'country': {
+              const country = extractCountry(p.address);
+              return country?.toLowerCase().includes(searchLower) ?? false;
+            }
+            case 'author':
+            default:
+              return p.author_name?.toLowerCase().includes(searchLower);
+          }
+        });
       }
 
       // Client-side filtering for status

@@ -116,12 +116,14 @@ const Proposals: React.FC = () => {
   const navigate = useNavigate();
   const { isAnyReviewer, isReviewer1, isReviewer2, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
     page: 1,
     limit: 100,
     search: searchQuery,
+    searchCategory,
     status: "all",
   });
 
@@ -339,7 +341,7 @@ const Proposals: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Search by:</span>
-            <Select defaultValue="author">
+            <Select value={searchCategory} onValueChange={(v) => { setSearchCategory(v); setDisplayCount(ITEMS_PER_PAGE); }}>
               <SelectTrigger className="w-28 h-9 bg-background">
                 <SelectValue />
               </SelectTrigger>
