@@ -156,6 +156,13 @@ const AuthorDashboard: React.FC = () => {
             onClick={() => handleStatusChange(statusFilter === "under_review" ? "all" : "under_review")}
           />
           <StatusChip
+            count={statusCounts.peerReview}
+            label="Peer Review"
+            colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
+            isActive={statusFilter === ("peer_review" as any)}
+            onClick={() => handleStatusChange(statusFilter === ("peer_review" as any) ? "all" : ("peer_review" as any))}
+          />
+          <StatusChip
             count={statusCounts.contractReceived}
             label="Contract Received"
             colorClass="bg-[#c05621] text-white border-[#c05621]"
