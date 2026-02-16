@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,6 +86,73 @@ const DetailField = ({ label, value }: { label: string; value?: string | null })
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-medium">{value}</p>
     </div>
+  );
+};
+
+/* ---- Review feedback fields (matching PeerReviewReadOnly) ---- */
+
+const REVIEW_FEEDBACK_FIELDS = [
+  { key: "scope", label: "Scope" },
+  { key: "purposeAndValue", label: "Purpose and Value" },
+  { key: "title", label: "Title" },
+  { key: "originality", label: "Originality and Points of Difference" },
+  { key: "credibility", label: "Credibility" },
+  { key: "structure", label: "Structure and Quality" },
+  { key: "clarity", label: "Clarity, Structure and Quality of Writing" },
+  { key: "otherComments", label: "Other Comments" },
+  { key: "recommendation", label: "Recommendations" },
+];
+
+const PeerReviewFeedbackSection: React.FC<{ comments: any[] }> = ({ comments }) => {
+  // Find the first comment that has review_form_data with actual content
+  const reviewComment = comments.find((c: any) => {
+    const fd = c.review_form_data;
+    if (!fd || typeof fd !== "object") return false;
+    return REVIEW_FEEDBACK_FIELDS.some(f => fd[f.key]?.trim?.());
+  });
+
+  const formData = reviewComment?.review_form_data;
+  if (!formData) return null;
+
+  const completedDate = formData.submittedAt
+    ? format(new Date(formData.submittedAt), "MMM d, yyyy")
+    : reviewComment?.updated_at
+    ? format(new Date(reviewComment.updated_at), "MMM d, yyyy")
+    : null;
+
+  return (
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        {/* Info banner */}
+        <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
+          The feedback below forms part of the publishing decision. Our peer reviewers have carefully evaluated your proposal and provided the following assessment. Please review both the feedback and the contract terms before responding.
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
+          {completedDate && (
+            <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>
+          )}
+        </div>
+
+        {/* Review fields */}
+        {REVIEW_FEEDBACK_FIELDS.map((field) => {
+          const value = formData[field.key];
+          if (!value?.trim?.()) return null;
+
+          return (
+            <div key={field.key}>
+              <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
+              <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
+                {value}
+              </p>
+              <Separator className="mt-6" />
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -403,37 +471,42 @@ const AuthorProposalDetails: React.FC = () => {
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">
-            {/* Reviewer Comments */}
+            {/* Structured Peer Review Feedback */}
+            <PeerReviewFeedbackSection comments={comments} />
+
+            {/* Comments / Messaging */}
             <Card>
               <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Reviewer Feedback & Comments</h3>
+                <h3 className="text-lg font-semibold">Comments & Correspondence</h3>
 
                 <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                  {comments.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No feedback or comments yet. You will be notified when the review is complete.</p>
+                  {comments.filter((c: any) => c.comment_text?.trim()).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No comments yet.</p>
                   ) : (
-                    comments.map((comment: any) => {
-                      const isAuthorComment = comment.reviewer_id === user?.id || comment.reviewer_id === user?.email;
-                      return (
-                        <div
-                          key={comment.id}
-                          className={cn(
-                            "p-4 rounded-lg text-sm",
-                            isAuthorComment ? "bg-primary/10 ml-8" : "bg-muted/30 mr-8"
-                          )}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-xs text-muted-foreground">
-                              {isAuthorComment ? "You" : "Reviewer"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {comment.created_at ? format(new Date(comment.created_at), "MMM d, yyyy h:mm a") : ""}
-                            </span>
+                    comments
+                      .filter((c: any) => c.comment_text?.trim())
+                      .map((comment: any) => {
+                        const isAuthorComment = comment.reviewer_id === user?.id || comment.reviewer_id === user?.email;
+                        return (
+                          <div
+                            key={comment.id}
+                            className={cn(
+                              "p-4 rounded-lg text-sm",
+                              isAuthorComment ? "bg-primary/10 ml-8" : "bg-muted/30 mr-8"
+                            )}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-xs text-muted-foreground">
+                                {isAuthorComment ? "You" : comment.author || "Reviewer"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {comment.created_at ? format(new Date(comment.created_at), "MMM d, yyyy h:mm a") : ""}
+                              </span>
+                            </div>
+                            <p className="whitespace-pre-line">{comment.comment_text}</p>
                           </div>
-                          <p className="whitespace-pre-line">{comment.comment_text || "Review form submitted"}</p>
-                        </div>
-                      );
-                    })
+                        );
+                      })
                   )}
                 </div>
 
