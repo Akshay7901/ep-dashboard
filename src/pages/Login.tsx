@@ -44,7 +44,14 @@ const Login: React.FC = () => {
         title: "Welcome back!",
         description: "You have successfully logged in."
       });
-      navigate("/proposals");
+      // Check stored user role to determine redirect
+      const userStr = localStorage.getItem('user');
+      const userData = userStr ? JSON.parse(userStr) : null;
+      if (userData?.role === 'author') {
+        navigate("/author/proposals");
+      } else {
+        navigate("/proposals");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
