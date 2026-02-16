@@ -1,61 +1,80 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo.jpg";
+import brandLogo from "@/assets/brand-logo.webp";
 import { ProposalStatus } from "@/types";
 
 const ITEMS_PER_PAGE = 10;
 
+/* ---- Status config ---- */
+
 const authorStatusConfig: Record<string, { label: string; className: string }> = {
-  submitted: {
-    label: "Submitted",
-    className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]",
-  },
-  under_review: {
-    label: "Under Review",
-    className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]",
-  },
-  approved: {
-    label: "Contract Sent",
-    className: "bg-[#1d293d] text-white hover:bg-[#1d293d] border-[#1d293d]",
-  },
-  finalised: {
-    label: "Accepted",
-    className: "bg-[#276749] text-white hover:bg-[#276749] border-[#276749]",
-  },
-  rejected: {
-    label: "Declined",
-    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]",
-  },
-  locked: {
-    label: "Clarification Needed",
-    className: "bg-gray-600 text-white hover:bg-gray-600 border-gray-600",
-  },
+  submitted: { label: "Submitted", className: "bg-[#6b7280] text-white border-[#6b7280]" },
+  under_review: { label: "Editorial Review", className: "bg-[#3d5a47] text-white border-[#3d5a47]" },
+  approved: { label: "Contract Received", className: "bg-[#c05621] text-white border-[#c05621]" },
+  finalised: { label: "Finalised", className: "bg-[#276749] text-white border-[#276749]" },
+  rejected: { label: "Declined", className: "bg-[#1d293d] text-white border-[#1d293d]" },
+  locked: { label: "Waiting for Finalisation", className: "bg-[#2563eb] text-white border-[#2563eb]" },
+  peer_review: { label: "Peer Review", className: "bg-[#3d5a47] text-white border-[#3d5a47]" },
 };
 
 const AuthorStatusBadge: React.FC<{ status: ProposalStatus }> = ({ status }) => {
   const config = authorStatusConfig[status] || authorStatusConfig.submitted;
   return (
-    <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs")}>
+    <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs whitespace-nowrap hover:opacity-90")}>
       {config.label}
     </Badge>
   );
 };
 
+/* ---- Action Required logic ---- */
+const getActionRequired = (status: ProposalStatus): { label: string; hasAction: boolean } => {
+  switch (status) {
+    case "approved":
+    case "locked":
+      return { label: "Action Required", hasAction: true };
+    default:
+      return { label: "No action", hasAction: false };
+  }
+};
+
+/* ---- Status Chip ---- */
+interface StatusChipProps {
+  count: number;
+  label: string;
+  colorClass: string;
+  isActive?: boolean;
+  onClick?: () => void;
+}
+
+const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "inline-flex items-center gap-2 px-5 py-2 text-sm font-medium border transition-all rounded-full",
+      colorClass,
+      isActive && "ring-2 ring-offset-2 ring-primary",
+    )}
+  >
+    {count} {label}
+  </button>
+);
+
+/* ---- Main ---- */
+
 const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
@@ -71,97 +90,102 @@ const AuthorDashboard: React.FC = () => {
     if (!data?.data) return [];
     const email = user?.email?.toLowerCase();
     if (!email) return [];
-    let filtered = data.data.filter(
-      (p) => p.author_email?.toLowerCase() === email
-    );
-    // Client-side search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(q) ||
-          p.ticket_number?.toLowerCase().includes(q)
-      );
-    }
-    return filtered;
-  }, [data?.data, user?.email, searchQuery]);
+    return data.data.filter((p) => p.author_email?.toLowerCase() === email);
+  }, [data?.data, user?.email]);
 
   const statusCounts = React.useMemo(() => {
     const d = authorProposals;
     return {
       total: d.length,
       submitted: d.filter((p) => p.status === "submitted").length,
-      underReview: d.filter((p) => p.status === "under_review").length,
-      contractSent: d.filter((p) => p.status === "approved").length,
-      accepted: d.filter((p) => p.status === "finalised").length,
+      editorial: d.filter((p) => p.status === "under_review").length,
+      peerReview: 0, // derived from under_review with peer assignment — simplified for now
+      contractReceived: d.filter((p) => p.status === "approved").length,
+      waitingFinalisation: d.filter((p) => p.status === "locked").length,
+      finalised: d.filter((p) => p.status === "finalised").length,
       declined: d.filter((p) => p.status === "rejected").length,
     };
   }, [authorProposals]);
 
-  const displayedProposals = authorProposals.slice(0, displayCount);
-  const hasMore = displayCount < authorProposals.length;
+  const filteredProposals = React.useMemo(() => {
+    if (statusFilter === "all") return authorProposals;
+    return authorProposals.filter((p) => p.status === statusFilter);
+  }, [authorProposals, statusFilter]);
+
+  const displayedProposals = filteredProposals.slice(0, displayCount);
+  const hasMore = displayCount < filteredProposals.length;
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value as ProposalStatus | "all");
+    setDisplayCount(ITEMS_PER_PAGE);
+  };
 
   return (
-    <DashboardLayout title="My Proposals">
+    <DashboardLayout title="Author Dashboard">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-10 w-auto" />
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">My Proposals</h1>
-              <p className="text-sm text-muted-foreground">Welcome, {user?.name || user?.email}</p>
-            </div>
+            <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
+            <h1 className="text-2xl font-bold text-foreground">Author Dashboard</h1>
           </div>
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
+            onClick={() => { logout(); navigate("/login"); }}
           >
             <LogOut className="h-4 w-4" />
             Logout
           </Button>
         </div>
 
-        {/* Status Summary */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[
-            { label: "Total", count: statusCounts.total, color: "bg-[#2d3748]" },
-            { label: "Submitted", count: statusCounts.submitted, color: "bg-[#3d5a47]" },
-            { label: "Under Review", count: statusCounts.underReview, color: "bg-[#f2a627]" },
-            { label: "Contract Sent", count: statusCounts.contractSent, color: "bg-[#1d293d]" },
-            { label: "Accepted", count: statusCounts.accepted, color: "bg-[#276749]" },
-            { label: "Declined", count: statusCounts.declined, color: "bg-[#9b2c2c]" },
-          ].map((item) => (
-            <Card key={item.label} className="overflow-hidden">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={cn(item.color, "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg")}>
-                  {item.count}
-                </div>
-                <span className="text-sm font-medium text-foreground">{item.label}</span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by title or ticket number..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setDisplayCount(ITEMS_PER_PAGE);
-            }}
-            className="pl-10 bg-background"
+        {/* Status Chips */}
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusChip
+            count={statusCounts.submitted}
+            label="Submitted"
+            colorClass="bg-[#6b7280] text-white border-[#6b7280]"
+            isActive={statusFilter === "submitted"}
+            onClick={() => handleStatusChange(statusFilter === "submitted" ? "all" : "submitted")}
+          />
+          <StatusChip
+            count={statusCounts.editorial}
+            label="Editorial Review"
+            colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
+            isActive={statusFilter === "under_review"}
+            onClick={() => handleStatusChange(statusFilter === "under_review" ? "all" : "under_review")}
+          />
+          <StatusChip
+            count={statusCounts.contractReceived}
+            label="Contract Received"
+            colorClass="bg-[#c05621] text-white border-[#c05621]"
+            isActive={statusFilter === "approved"}
+            onClick={() => handleStatusChange(statusFilter === "approved" ? "all" : "approved")}
+          />
+          <StatusChip
+            count={statusCounts.waitingFinalisation}
+            label="Waiting for Finalisation"
+            colorClass="bg-[#2563eb] text-white border-[#2563eb]"
+            isActive={statusFilter === "locked"}
+            onClick={() => handleStatusChange(statusFilter === "locked" ? "all" : "locked")}
+          />
+          <StatusChip
+            count={statusCounts.finalised}
+            label="Finalised"
+            colorClass="bg-[#276749] text-white border-[#276749]"
+            isActive={statusFilter === "finalised"}
+            onClick={() => handleStatusChange(statusFilter === "finalised" ? "all" : "finalised")}
+          />
+          <StatusChip
+            count={statusCounts.declined}
+            label="Declined"
+            colorClass="bg-[#1d293d] text-white border-[#1d293d]"
+            isActive={statusFilter === "rejected"}
+            onClick={() => handleStatusChange(statusFilter === "rejected" ? "all" : "rejected")}
           />
         </div>
 
-        {/* Table */}
+        {/* Proposals Table */}
         <div className="space-y-4">
           {isLoading && (
             <div className="flex justify-center py-12">
@@ -170,18 +194,14 @@ const AuthorDashboard: React.FC = () => {
           )}
 
           {error && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-destructive">Error loading proposals. Please try again.</p>
-              </CardContent>
+            <Card className="py-12 text-center">
+              <p className="text-destructive">Error loading proposals. Please try again.</p>
             </Card>
           )}
 
           {!isLoading && !error && displayedProposals.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No proposals found.</p>
-              </CardContent>
+            <Card className="py-12 text-center">
+              <p className="text-muted-foreground">No proposals found.</p>
             </Card>
           )}
 
@@ -192,42 +212,51 @@ const AuthorDashboard: React.FC = () => {
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                        Ticket #
-                      </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                         Title
                       </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                        Date Submitted
+                        Submitted
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                        Status
                       </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide text-right">
-                        Status
+                        Action Required
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayedProposals.map((proposal) => (
-                      <TableRow
-                        key={proposal.id}
-                        className="cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/author/proposals/${proposal.id}`)}
-                      >
-                        <TableCell className="text-muted-foreground font-mono text-sm">
-                          {proposal.ticket_number || "—"}
-                        </TableCell>
-                        <TableCell className="font-medium text-foreground max-w-xs">
-                          <span className="line-clamp-2">{proposal.name}</span>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {proposal.created_at
-                            ? format(new Date(proposal.created_at), "MMM d, yyyy")
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <AuthorStatusBadge status={proposal.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {displayedProposals.map((proposal) => {
+                      const action = getActionRequired(proposal.status);
+                      return (
+                        <TableRow
+                          key={proposal.id}
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => navigate(`/author/proposals/${proposal.id}`)}
+                        >
+                          <TableCell className="font-medium text-foreground max-w-md">
+                            <span className="line-clamp-2">{proposal.name}</span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
+                            {proposal.created_at
+                              ? format(new Date(proposal.created_at), "MMM dd, yyyy")
+                              : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <AuthorStatusBadge status={proposal.status} />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {action.hasAction ? (
+                              <Badge variant="outline" className="rounded-full px-4 py-1 font-medium text-xs border-[#c05621] text-[#c05621]">
+                                {action.label}
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">{action.label}</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </Card>
