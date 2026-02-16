@@ -3,13 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, BookOpen, User, Folder, ClipboardList, FileText, Download, Eye, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -17,45 +16,85 @@ import { ProposalStatus } from "@/types";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import { commentsApi } from "@/lib/proposalsApi";
 import { toast } from "@/hooks/use-toast";
+import brandLogo from "@/assets/brand-logo.webp";
 
-const authorStatusConfig: Record<string, { label: string; className: string }> = {
-  submitted: { label: "Submitted", className: "bg-[#3d5a47] text-white hover:bg-[#3d5a47] border-[#3d5a47]" },
-  under_review: { label: "Under Review", className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]" },
-  approved: { label: "Contract Sent", className: "bg-[#1d293d] text-white hover:bg-[#1d293d] border-[#1d293d]" },
-  finalised: { label: "Accepted", className: "bg-[#276749] text-white hover:bg-[#276749] border-[#276749]" },
-  rejected: { label: "Declined", className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]" },
-  locked: { label: "Clarification Needed", className: "bg-gray-600 text-white hover:bg-gray-600 border-gray-600" },
+/* ---- Timeline helpers ---- */
+
+const timelineSteps = [
+  { key: "submitted", label: "Proposal Submitted" },
+  { key: "under_review", label: "Editorial Review" },
+  { key: "peer_review", label: "Peer Review" },
+  { key: "approved", label: "Contract Finalisation" },
+  { key: "locked", label: "Metadata Locked" },
+  { key: "finalised", label: "Publication" },
+];
+
+const statusOrder: Record<string, number> = {
+  submitted: 0,
+  under_review: 1,
+  peer_review: 2,
+  approved: 3,
+  locked: 4,
+  finalised: 5,
+  rejected: -1,
 };
 
-const AuthorStatusBadge: React.FC<{ status: ProposalStatus }> = ({ status }) => {
-  const config = authorStatusConfig[status] || authorStatusConfig.submitted;
-  return <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs")}>{config.label}</Badge>;
+const getTimelineProgress = (status: ProposalStatus): number => {
+  const idx = statusOrder[status] ?? 0;
+  if (idx < 0) return 0;
+  return Math.round(((idx + 1) / timelineSteps.length) * 100);
 };
 
-const DetailRow = ({ label, value }: { label: string; value?: string | null }) => {
+/* ---- Action banner config ---- */
+
+const getActionBanner = (status: ProposalStatus) => {
+  switch (status) {
+    case "approved":
+      return {
+        show: true,
+        icon: AlertCircle,
+        iconColor: "text-[#c05621]",
+        bgColor: "bg-[#c05621]/5 border-[#c05621]/20",
+        title: "Peer review complete – action required",
+        description: "Please review the feedback and contract, then respond.",
+        buttonLabel: "View & Respond",
+        buttonTab: "review",
+      };
+    case "locked":
+      return {
+        show: true,
+        icon: AlertCircle,
+        iconColor: "text-[#2563eb]",
+        bgColor: "bg-[#2563eb]/5 border-[#2563eb]/20",
+        title: "Clarification needed – action required",
+        description: "Additional information has been requested. Please respond.",
+        buttonLabel: "View & Respond",
+        buttonTab: "review",
+      };
+    default:
+      return { show: false } as any;
+  }
+};
+
+/* ---- Detail helpers ---- */
+
+const DetailField = ({ label, value }: { label: string; value?: string | null }) => {
   if (!value) return null;
   return (
-    <div className="flex gap-4 py-2">
-      <span className="text-sm text-muted-foreground w-40 shrink-0">{label}:</span>
-      <span className="text-sm font-medium flex-1">{value}</span>
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium">{value}</p>
     </div>
   );
 };
 
-const ContentBlock = ({ label, value }: { label: string; value?: string | null }) => {
-  if (!value) return null;
-  return (
-    <div className="space-y-2">
-      <p className="text-sm text-muted-foreground italic">{label}:</p>
-      <div className="bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-line rounded-none">{value}</div>
-    </div>
-  );
-};
+/* ---- Main ---- */
 
 const AuthorProposalDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("proposal");
   const [commentText, setCommentText] = useState("");
   const [isSendingComment, setIsSendingComment] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(null);
@@ -67,7 +106,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Proposal Details">
+      <DashboardLayout title="Proposal Review">
         <div className="py-20 text-center text-muted-foreground">Loading...</div>
       </DashboardLayout>
     );
@@ -75,7 +114,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   if (!proposal || error) {
     return (
-      <DashboardLayout title="Proposal Details">
+      <DashboardLayout title="Proposal Review">
         <div className="py-20 text-center space-y-4">
           <p className="text-destructive">Failed to load proposal</p>
           <Button onClick={() => refetch()}>Retry</Button>
@@ -85,14 +124,15 @@ const AuthorProposalDetails: React.FC = () => {
   }
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
+  const actionBanner = getActionBanner(proposal.status);
+  const progress = getTimelineProgress(proposal.status);
+  const currentStepIdx = statusOrder[proposal.status] ?? 0;
 
   const handleSendComment = async () => {
     if (!commentText.trim()) return;
     setIsSendingComment(true);
     try {
-      await commentsApi.add(proposal.ticket_number || id || "", {
-        comment: commentText.trim(),
-      });
+      await commentsApi.add(proposal.ticket_number || id || "", { comment: commentText.trim() });
       setCommentText("");
       toast({ title: "Comment sent", description: "Your message has been sent successfully." });
       refetch();
@@ -104,211 +144,273 @@ const AuthorProposalDetails: React.FC = () => {
   };
 
   return (
-    <DashboardLayout title="Proposal Details">
+    <DashboardLayout title="Proposal Review">
       <div className="space-y-6 max-w-5xl mx-auto">
         {/* Back button */}
         <Button variant="ghost" className="gap-2 -ml-2" onClick={() => navigate("/author/proposals")}>
           <ArrowLeft className="h-4 w-4" />
-          Back to My Proposals
+          Back to Dashboard
         </Button>
 
-        {/* Header */}
+        {/* Page Header */}
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
-            {proposal.sub_title && (
-              <p className="text-base text-muted-foreground mt-1 italic">{proposal.sub_title}</p>
-            )}
-            <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-              {proposal.ticket_number && <span className="font-mono">#{proposal.ticket_number}</span>}
-              <span>•</span>
-              <span>Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : "—"}</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
+            <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
-          <AuthorStatusBadge status={proposal.status} />
+          <div className="text-right text-sm text-muted-foreground">
+            {proposal.ticket_number && (
+              <p>Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span></p>
+            )}
+            <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
+          </div>
         </div>
 
-        {/* Status Timeline Card */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">Current Status</h3>
-            <div className="flex items-center gap-4">
-              <AuthorStatusBadge status={proposal.status} />
-              <span className="text-sm text-muted-foreground">
-                Last updated: {proposal.updated_at ? format(new Date(proposal.updated_at), "MMMM d, yyyy 'at' h:mm a") : "—"}
-              </span>
+        {/* Action Banner */}
+        {actionBanner.show && (
+          <div className={cn("flex items-center justify-between p-4 border rounded-lg", actionBanner.bgColor)}>
+            <div className="flex items-center gap-3">
+              <actionBanner.icon className={cn("h-5 w-5 shrink-0", actionBanner.iconColor)} />
+              <div>
+                <p className="text-sm font-semibold text-foreground">{actionBanner.title}</p>
+                <p className="text-xs text-muted-foreground">{actionBanner.description}</p>
+              </div>
             </div>
-            {proposal.status === "approved" && (
-              <p className="mt-3 text-sm text-[#1d293d] bg-[#1d293d]/10 p-3 rounded">
-                A contract has been sent to your email. Please review and sign it to proceed.
-              </p>
-            )}
-            {proposal.status === "locked" && (
-              <p className="mt-3 text-sm text-gray-700 bg-gray-100 p-3 rounded">
-                Additional clarification is needed. Please check the comments section below and respond.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+            <Button
+              size="sm"
+              className="bg-[#3d5a47] hover:opacity-90 text-white shrink-0"
+              onClick={() => setActiveTab("review")}
+            >
+              {actionBanner.buttonLabel}
+            </Button>
+          </div>
+        )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="book">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
-              <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Book Info</span>
+        {/* Title & Subtitle */}
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{proposal.name}</h2>
+          {proposal.sub_title && (
+            <p className="text-base text-muted-foreground mt-1">{proposal.sub_title}</p>
+          )}
+        </div>
+
+        {/* Publication Timeline */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Publication Timeline</h3>
+            <span className="text-sm text-muted-foreground">{progress}% Complete</span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="relative">
+            <div className="h-1.5 bg-muted rounded-full">
+              <div
+                className="h-1.5 bg-[#2563eb] rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Timeline steps */}
+          <div className="grid grid-cols-6 gap-2">
+            {timelineSteps.map((step, idx) => {
+              const isCompleted = currentStepIdx >= 0 && idx <= currentStepIdx;
+              const isCurrent = idx === currentStepIdx;
+              return (
+                <div key={step.key} className="flex flex-col items-center text-center gap-1.5">
+                  {isCompleted ? (
+                    <CheckCircle2 className={cn("h-6 w-6", isCurrent ? "text-[#2563eb]" : "text-[#3d5a47]")} />
+                  ) : (
+                    <Circle className="h-6 w-6 text-muted-foreground/40" />
+                  )}
+                  <span className={cn("text-[10px] leading-tight", isCompleted ? "text-foreground font-medium" : "text-muted-foreground")}>
+                    {step.label}
+                  </span>
+                  {isCompleted && proposal.created_at && idx === 0 && (
+                    <span className="text-[9px] text-muted-foreground">
+                      {format(new Date(proposal.created_at), "MMM d, yyyy")}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tabs: Proposal Information / Peer Review & Contract */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto">
+            <TabsTrigger
+              value="proposal"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
+            >
+              Proposal Information
             </TabsTrigger>
-            <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Author Info</span>
-            </TabsTrigger>
-            <TabsTrigger value="market" className="gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Market</span>
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
-              <Folder className="h-4 w-4" />
-              <span className="hidden sm:inline">Documents</span>
-            </TabsTrigger>
-            <TabsTrigger value="comments" className="gap-1.5 text-xs sm:text-sm">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Comments</span>
+            <TabsTrigger
+              value="review"
+              className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
+            >
+              Peer Review & Contract
+              {actionBanner.show && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
+              )}
             </TabsTrigger>
           </TabsList>
 
-          {/* Book Info */}
-          <TabsContent value="book" className="space-y-4 mt-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Overview</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Book Type</p>
-                  <p className="text-sm font-medium">{proposal.book_type || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Word Count</p>
-                  <p className="text-sm font-medium">{proposal.word_count || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Expected Completion</p>
-                  <p className="text-sm font-medium">{proposal.expected_completion_date || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Country</p>
-                  <p className="text-sm font-medium">{extractCountry(proposal.address) || "—"}</p>
-                </div>
-              </div>
-            </div>
+          {/* ---- PROPOSAL INFORMATION TAB ---- */}
+          <TabsContent value="proposal" className="mt-6 space-y-6">
+            <p className="text-sm text-muted-foreground italic">
+              Below is a summary of your submitted proposal. This information is read-only and cannot be edited at this stage.
+            </p>
 
-            <Accordion type="multiple" defaultValue={["blurb"]} className="space-y-1">
-              <AccordionItem value="blurb" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Blurb</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.short_description || "No blurb available"}</p>
+            {/* Author Details */}
+            <Accordion type="multiple" defaultValue={["author", "book"]} className="space-y-3">
+              <AccordionItem value="author" className="border rounded-lg px-5">
+                <AccordionTrigger className="text-base font-semibold gap-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Author Details
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DetailField label="Name" value={proposal.corresponding_author_name || proposal.author_name} />
+                    <DetailField label="Email" value={proposal.author_email} />
+                    <DetailField label="Institution" value={proposal.institution} />
+                    <DetailField label="Job Title" value={proposal.job_title} />
+                    <DetailField label="Secondary Email" value={proposal.secondary_email} />
+                    <DetailField label="Country" value={extractCountry(proposal.address)} />
+                  </div>
+                  {proposal.biography && (
+                    <div className="space-y-1 pt-2">
+                      <p className="text-xs text-muted-foreground">Biography</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.biography}</p>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="toc" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Table of Contents</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.table_of_contents || "No TOC available"}</p>
+
+              {/* Book Details */}
+              <AccordionItem value="book" className="border rounded-lg px-5">
+                <AccordionTrigger className="text-base font-semibold gap-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Book Details
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <DetailField label="Book Type" value={proposal.book_type} />
+                    <DetailField label="Word Count" value={proposal.word_count} />
+                    <DetailField label="Expected Completion" value={proposal.expected_completion_date} />
+                    <DetailField label="Figures/Tables" value={proposal.figures_tables_count} />
+                  </div>
+                  {proposal.short_description && (
+                    <div className="space-y-1 pt-2">
+                      <p className="text-xs text-muted-foreground">Blurb</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.short_description}</p>
+                    </div>
+                  )}
+                  {proposal.table_of_contents && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Table of Contents</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.table_of_contents}</p>
+                    </div>
+                  )}
+                  {proposal.detailed_description && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Detailed Description</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.detailed_description}</p>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="description" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Detailed Description</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.detailed_description || "No detailed description available"}</p>
+
+              {/* Market & Keywords */}
+              <AccordionItem value="market" className="border rounded-lg px-5">
+                <AccordionTrigger className="text-base font-semibold gap-2">
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Market & Keywords
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 space-y-4">
+                  {proposal.keywords && <DetailField label="Keywords" value={proposal.keywords} />}
+                  {proposal.marketing_info && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Marketing Information</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.marketing_info}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DetailField label="Co-Authors / Editors" value={proposal.co_authors_editors} />
+                    <DetailField label="Referees / Reviewers" value={proposal.referees_reviewers} />
+                    <DetailField label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Supporting Documents */}
+              <AccordionItem value="documents" className="border rounded-lg px-5">
+                <AccordionTrigger className="text-base font-semibold gap-2">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Supporting Documents
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-5">
+                  {files.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {files.map((file: string, index: number) => {
+                        const fileName = file.split("/").pop() || file;
+                        const isPdf = fileName.toLowerCase().endsWith(".pdf");
+                        const isWord = fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
+                        return (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{fileName}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {(isPdf || isWord) && (
+                                <Button variant="ghost" size="sm" onClick={() => setDocumentPreview({ url: file, name: fileName, type: isPdf ? "pdf" : "word" })}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" asChild>
+                                <a href={file} download target="_blank" rel="noopener noreferrer">
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           </TabsContent>
 
-          {/* Author Info */}
-          <TabsContent value="author" className="mt-4">
-            <Card>
-              <CardContent className="p-6 space-y-1">
-                <DetailRow label="Name" value={proposal.corresponding_author_name || proposal.author_name} />
-                <DetailRow label="Email" value={proposal.author_email} />
-                <DetailRow label="Secondary Email" value={proposal.secondary_email} />
-                <DetailRow label="Institution" value={proposal.institution} />
-                <DetailRow label="Job Title" value={proposal.job_title} />
-                <DetailRow label="Country" value={extractCountry(proposal.address)} />
-                <ContentBlock label="Biography" value={proposal.biography} />
-                <ContentBlock label="Co-Authors / Editors" value={proposal.co_authors_editors} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Market */}
-          <TabsContent value="market" className="mt-4">
+          {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
+          <TabsContent value="review" className="mt-6 space-y-6">
+            {/* Reviewer Comments */}
             <Card>
               <CardContent className="p-6 space-y-4">
-                <ContentBlock label="Marketing Information" value={proposal.marketing_info} />
-                <ContentBlock label="Keywords" value={proposal.keywords} />
-                <ContentBlock label="Referees / Reviewers" value={proposal.referees_reviewers} />
-                <DetailRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <h3 className="text-lg font-semibold">Reviewer Feedback & Comments</h3>
 
-          {/* Documents */}
-          <TabsContent value="documents" className="mt-4">
-            <Card>
-              <CardContent className="p-6">
-                {files.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No documents uploaded.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {files.map((file: string, index: number) => {
-                      const fileName = file.split("/").pop() || file;
-                      const isPdf = fileName.toLowerCase().endsWith(".pdf");
-                      const isWord = fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
-                      return (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
-                          <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-sm font-medium">{fileName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {(isPdf || isWord) && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  setDocumentPreview({
-                                    url: file,
-                                    name: fileName,
-                                    type: isPdf ? "pdf" : "word",
-                                  })
-                                }
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button variant="ghost" size="sm" asChild>
-                              <a href={file} download target="_blank" rel="noopener noreferrer">
-                                <Download className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Comments */}
-          <TabsContent value="comments" className="mt-4">
-            <Card>
-              <CardContent className="p-6 space-y-6">
-                <h3 className="text-lg font-semibold">Messages</h3>
-
-                {/* Existing comments */}
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
                   {comments.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No messages yet.</p>
+                    <p className="text-sm text-muted-foreground">No feedback or comments yet. You will be notified when the review is complete.</p>
                   ) : (
                     comments.map((comment: any) => {
                       const isAuthorComment = comment.reviewer_id === user?.id || comment.reviewer_id === user?.email;
@@ -321,7 +423,7 @@ const AuthorProposalDetails: React.FC = () => {
                           )}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-xs text-muted-foreground">
+                            <span className="font-semibold text-xs text-muted-foreground">
                               {isAuthorComment ? "You" : "Reviewer"}
                             </span>
                             <span className="text-xs text-muted-foreground">
@@ -335,22 +437,23 @@ const AuthorProposalDetails: React.FC = () => {
                   )}
                 </div>
 
-                {/* New comment input */}
+                {/* Reply input */}
                 <div className="space-y-3 border-t pt-4">
+                  <p className="text-sm font-medium text-foreground">Your Response</p>
                   <Textarea
-                    placeholder="Type your message here..."
+                    placeholder="Type your response here..."
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
-                    rows={3}
+                    rows={4}
                   />
                   <div className="flex justify-end">
                     <Button
                       onClick={handleSendComment}
                       disabled={!commentText.trim() || isSendingComment}
-                      className="gap-2"
+                      className="gap-2 bg-[#3d5a47] hover:opacity-90"
                     >
                       <Send className="h-4 w-4" />
-                      {isSendingComment ? "Sending..." : "Send Message"}
+                      {isSendingComment ? "Sending..." : "Send Response"}
                     </Button>
                   </div>
                 </div>
