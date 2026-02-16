@@ -197,7 +197,12 @@ const Proposals: React.FC = () => {
     return <Navigate to="/author/proposals" replace />;
   }
 
+  // If user role is not recognized as reviewer, also redirect authors or show appropriate message
   if (!isAnyReviewer) {
+    // If user exists but isn't a reviewer, redirect to author dashboard as fallback
+    if (user) {
+      return <Navigate to="/author/proposals" replace />;
+    }
     return (
       <DashboardLayout title="Dashboard">
         <Card>
