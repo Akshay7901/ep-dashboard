@@ -211,6 +211,11 @@ const ProposalDetails: React.FC = () => {
   const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
 
+  // Check if peer reviewer already submitted their review
+  const peerReviewAlreadySubmitted = isReviewer2 && comments.some(
+    (c: any) => c.review_form_data?.submittedForAuthorization
+  );
+
   // Check if there's a submitted peer review (for decision reviewer split layout)
   const submittedReview = comments.find(
     (c: any) => c.review_form_data?.submittedForAuthorization
@@ -820,7 +825,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {(showReviewForm || hasSubmittedReview) && !showingSummary && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
