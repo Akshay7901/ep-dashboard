@@ -11,18 +11,21 @@ interface AuthContextType extends AuthState {
   isReviewer1: boolean;
   isReviewer2: boolean;
   isAnyReviewer: boolean;
+  isAuthor: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Map API roles to internal roles
-const mapApiRole = (apiRole: string): 'reviewer_1' | 'reviewer_2' | null => {
+const mapApiRole = (apiRole: string): 'reviewer_1' | 'reviewer_2' | 'author' | null => {
   switch (apiRole) {
     case 'admin':
     case 'decision_reviewer':
-      return 'reviewer_1'; // Sarah - accepts/declines, sends contracts, finalizes
+      return 'reviewer_1';
     case 'peer_reviewer':
-      return 'reviewer_2'; // Amanda - completes assessment form
+      return 'reviewer_2';
+    case 'author':
+      return 'author';
     default:
       return null;
   }
@@ -121,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isReviewer1 = state.user?.role === 'reviewer_1';
   const isReviewer2 = state.user?.role === 'reviewer_2';
   const isAnyReviewer = isReviewer1 || isReviewer2;
+  const isAuthor = state.user?.role === 'author';
 
   return (
     <AuthContext.Provider 
@@ -133,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isReviewer1,
         isReviewer2,
         isAnyReviewer,
+        isAuthor,
       }}
     >
       {children}

@@ -12,6 +12,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Proposals from "./pages/Proposals";
 import ProposalDetails from "./pages/ProposalDetails";
 import PeerReviewers from "./pages/PeerReviewers";
+import AuthorDashboard from "./pages/AuthorDashboard";
+import AuthorProposalDetails from "./pages/AuthorProposalDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PeerReviewers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/author/proposals"
+              element={
+                <ProtectedRoute>
+                  <AuthorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/author/proposals/:id"
+              element={
+                <ProtectedRoute>
+                  <AuthorProposalDetails />
                 </ProtectedRoute>
               }
             />

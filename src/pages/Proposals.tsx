@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
-  const { isAnyReviewer, isReviewer1, isReviewer2, logout } = useAuth();
+  const { isAnyReviewer, isReviewer1, isReviewer2, logout, isAuthor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
@@ -191,6 +191,11 @@ const Proposals: React.FC = () => {
   const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
 
   /* ---------- Guards ---------- */
+
+  // Redirect authors to their dashboard
+  if (isAuthor) {
+    return <Navigate to="/author/proposals" replace />;
+  }
 
   if (!isAnyReviewer) {
     return (
