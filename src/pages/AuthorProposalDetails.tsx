@@ -108,7 +108,7 @@ const PeerReviewFeedbackSection: React.FC<{ comments: any[] }> = ({ comments }) 
   const reviewComment = comments.find((c: any) => {
     const fd = c.review_form_data;
     if (!fd || typeof fd !== "object") return false;
-    return REVIEW_FEEDBACK_FIELDS.some(f => fd[f.key]?.trim?.());
+    return REVIEW_FEEDBACK_FIELDS.some((f) => fd[f.key]?.trim?.());
   });
 
   const formData = reviewComment?.review_form_data;
@@ -117,23 +117,23 @@ const PeerReviewFeedbackSection: React.FC<{ comments: any[] }> = ({ comments }) 
   const completedDate = formData.submittedAt
     ? format(new Date(formData.submittedAt), "MMM d, yyyy")
     : reviewComment?.updated_at
-    ? format(new Date(reviewComment.updated_at), "MMM d, yyyy")
-    : null;
+      ? format(new Date(reviewComment.updated_at), "MMM d, yyyy")
+      : null;
 
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
         {/* Info banner */}
         <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
-          The feedback below forms part of the publishing decision. Our peer reviewers have carefully evaluated your proposal and provided the following assessment. Please review both the feedback and the contract terms before responding.
+          The feedback below forms part of the publishing decision. Our peer reviewers have carefully evaluated your
+          proposal and provided the following assessment. Please review both the feedback and the contract terms before
+          responding.
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
-          {completedDate && (
-            <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>
-          )}
+          {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
         </div>
 
         {/* Review fields */}
@@ -144,9 +144,7 @@ const PeerReviewFeedbackSection: React.FC<{ comments: any[] }> = ({ comments }) 
           return (
             <div key={field.key}>
               <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
-              <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">
-                {value}
-              </p>
+              <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
               <Separator className="mt-6" />
             </div>
           );
@@ -165,7 +163,9 @@ const AuthorProposalDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("proposal");
   const [commentText, setCommentText] = useState("");
   const [isSendingComment, setIsSendingComment] = useState(false);
-  const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(
+    null,
+  );
 
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
   const localId = proposal?.id || "";
@@ -213,7 +213,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   return (
     <DashboardLayout title="Proposal Review">
-      <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="space-y-6 max-w-7xl mx-auto">
         {/* Back button */}
         <Button variant="ghost" className="gap-2 -ml-2" onClick={() => navigate("/author/proposals")}>
           <ArrowLeft className="h-4 w-4" />
@@ -228,7 +228,9 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
           <div className="text-right text-sm text-muted-foreground">
             {proposal.ticket_number && (
-              <p>Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span></p>
+              <p>
+                Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
+              </p>
             )}
             <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
           </div>
@@ -257,9 +259,7 @@ const AuthorProposalDetails: React.FC = () => {
         {/* Title & Subtitle */}
         <div>
           <h2 className="text-xl font-bold text-foreground">{proposal.name}</h2>
-          {proposal.sub_title && (
-            <p className="text-base text-muted-foreground mt-1">{proposal.sub_title}</p>
-          )}
+          {proposal.sub_title && <p className="text-base text-muted-foreground mt-1">{proposal.sub_title}</p>}
         </div>
 
         {/* Publication Timeline */}
@@ -291,7 +291,12 @@ const AuthorProposalDetails: React.FC = () => {
                   ) : (
                     <Circle className="h-6 w-6 text-muted-foreground/40" />
                   )}
-                  <span className={cn("text-[10px] leading-tight", isCompleted ? "text-foreground font-medium" : "text-muted-foreground")}>
+                  <span
+                    className={cn(
+                      "text-[10px] leading-tight",
+                      isCompleted ? "text-foreground font-medium" : "text-muted-foreground",
+                    )}
+                  >
                     {step.label}
                   </span>
                   {isCompleted && proposal.created_at && idx === 0 && (
@@ -328,7 +333,8 @@ const AuthorProposalDetails: React.FC = () => {
           {/* ---- PROPOSAL INFORMATION TAB ---- */}
           <TabsContent value="proposal" className="mt-6 space-y-6">
             <p className="text-sm text-muted-foreground italic">
-              Below is a summary of your submitted proposal. This information is read-only and cannot be edited at this stage.
+              Below is a summary of your submitted proposal. This information is read-only and cannot be edited at this
+              stage.
             </p>
 
             {/* Author Details */}
@@ -336,8 +342,18 @@ const AuthorProposalDetails: React.FC = () => {
               <AccordionItem value="author" className="border rounded-lg px-5">
                 <AccordionTrigger className="text-base font-semibold gap-2">
                   <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <svg
+                      className="h-4 w-4 text-muted-foreground"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
                     </svg>
                     Author Details
                   </span>
@@ -354,7 +370,9 @@ const AuthorProposalDetails: React.FC = () => {
                   {proposal.biography && (
                     <div className="space-y-1 pt-2">
                       <p className="text-xs text-muted-foreground">Biography</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.biography}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
+                        {proposal.biography}
+                      </p>
                     </div>
                   )}
                 </AccordionContent>
@@ -364,8 +382,18 @@ const AuthorProposalDetails: React.FC = () => {
               <AccordionItem value="book" className="border rounded-lg px-5">
                 <AccordionTrigger className="text-base font-semibold gap-2">
                   <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <svg
+                      className="h-4 w-4 text-muted-foreground"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
                     </svg>
                     Book Details
                   </span>
@@ -380,19 +408,25 @@ const AuthorProposalDetails: React.FC = () => {
                   {proposal.short_description && (
                     <div className="space-y-1 pt-2">
                       <p className="text-xs text-muted-foreground">Blurb</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.short_description}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
+                        {proposal.short_description}
+                      </p>
                     </div>
                   )}
                   {proposal.table_of_contents && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Table of Contents</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.table_of_contents}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
+                        {proposal.table_of_contents}
+                      </p>
                     </div>
                   )}
                   {proposal.detailed_description && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Detailed Description</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.detailed_description}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
+                        {proposal.detailed_description}
+                      </p>
                     </div>
                   )}
                 </AccordionContent>
@@ -402,8 +436,18 @@ const AuthorProposalDetails: React.FC = () => {
               <AccordionItem value="market" className="border rounded-lg px-5">
                 <AccordionTrigger className="text-base font-semibold gap-2">
                   <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      className="h-4 w-4 text-muted-foreground"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                     Market & Keywords
                   </span>
@@ -413,7 +457,9 @@ const AuthorProposalDetails: React.FC = () => {
                   {proposal.marketing_info && (
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Marketing Information</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">{proposal.marketing_info}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
+                        {proposal.marketing_info}
+                      </p>
                     </div>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -440,16 +486,26 @@ const AuthorProposalDetails: React.FC = () => {
                       {files.map((file: string, index: number) => {
                         const fileName = file.split("/").pop() || file;
                         const isPdf = fileName.toLowerCase().endsWith(".pdf");
-                        const isWord = fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
+                        const isWord =
+                          fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
                         return (
-                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-muted/20"
+                          >
                             <div className="flex items-center gap-3">
                               <FileText className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">{fileName}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               {(isPdf || isWord) && (
-                                <Button variant="ghost" size="sm" onClick={() => setDocumentPreview({ url: file, name: fileName, type: isPdf ? "pdf" : "word" })}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    setDocumentPreview({ url: file, name: fileName, type: isPdf ? "pdf" : "word" })
+                                  }
+                                >
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               )}
@@ -492,7 +548,7 @@ const AuthorProposalDetails: React.FC = () => {
                             key={comment.id}
                             className={cn(
                               "p-4 rounded-lg text-sm",
-                              isAuthorComment ? "bg-primary/10 ml-8" : "bg-muted/30 mr-8"
+                              isAuthorComment ? "bg-primary/10 ml-8" : "bg-muted/30 mr-8",
                             )}
                           >
                             <div className="flex items-center justify-between mb-2">
@@ -540,7 +596,9 @@ const AuthorProposalDetails: React.FC = () => {
       {documentPreview && (
         <DocumentPreviewDialog
           open={!!documentPreview}
-          onOpenChange={(open) => { if (!open) setDocumentPreview(null); }}
+          onOpenChange={(open) => {
+            if (!open) setDocumentPreview(null);
+          }}
           documentUrl={documentPreview.url}
           fileName={documentPreview.name}
           fileType={documentPreview.type}
