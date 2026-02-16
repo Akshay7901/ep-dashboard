@@ -65,7 +65,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
     ticket_number: apiProposal.ticket_number,
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
-    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
+    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers) || (localOverride?.assigned_reviewer_emails?.length > 0 ? localOverride.updated_at : null),
     assigned_reviewers: hasAssignedReviewers ? apiProposal.assigned_reviewers : null,
   };
 };
