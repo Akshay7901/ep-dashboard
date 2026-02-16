@@ -213,7 +213,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   return (
     <DashboardLayout title="Proposal Review">
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-8xl mx-auto">
         {/* Back button */}
         <Button variant="ghost" className="gap-2 -ml-2" onClick={() => navigate("/author/proposals")}>
           <ArrowLeft className="h-4 w-4" />
