@@ -189,6 +189,27 @@ const ProposalDetails: React.FC = () => {
     isUnassigning
   } = useProposalActions(proposal?.ticket_number || id);
 
+  /* --- Auto-transition: move peer reviewer proposals from Pending → In Progress --- */
+  const hasAutoTransitioned = React.useRef(false);
+  React.useEffect(() => {
+    if (
+      hasAutoTransitioned.current ||
+      !proposal ||
+      !isReviewer2 ||
+      proposal.status !== 'submitted'
+    ) return;
+    hasAutoTransitioned.current = true;
+
+    // Silently update local status to under_review
+    workflowStatus.mutate({
+      id: proposal.id,
+      status: 'under_review',
+      previousStatus: 'submitted',
+      ticketNumber: proposal.ticket_number,
+      proposalData: proposal,
+    });
+  }, [proposal, isReviewer2]);
+
   /* ---------------- Loading / Error ---------------- */
 
   if (isLoading) {
