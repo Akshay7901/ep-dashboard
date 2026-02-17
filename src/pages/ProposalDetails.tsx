@@ -189,19 +189,6 @@ const ProposalDetails: React.FC = () => {
     isUnassigning
   } = useProposalActions(proposal?.ticket_number || id);
 
-  /* --- Auto-transition: mark proposal as opened by peer reviewer --- */
-  React.useEffect(() => {
-    if (!proposal?.ticket_number || !isReviewer2) return;
-    try {
-      const key = 'peer_reviewer_opened_proposals';
-      const stored = localStorage.getItem(key);
-      const opened: string[] = stored ? JSON.parse(stored) : [];
-      if (!opened.includes(proposal.ticket_number)) {
-        opened.push(proposal.ticket_number);
-        localStorage.setItem(key, JSON.stringify(opened));
-      }
-    } catch { /* ignore */ }
-  }, [proposal?.ticket_number, isReviewer2]);
 
   /* ---------------- Loading / Error ---------------- */
 
