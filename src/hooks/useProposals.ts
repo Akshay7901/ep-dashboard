@@ -43,9 +43,8 @@ const extractAssignedAt = (assignedReviewers: any): string | null => {
 
 // Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
-  const hasAssignedReviewers = Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0;
   const inferredStatus = localOverride?.status
-    || (apiProposal.status === 'new' && hasAssignedReviewers ? 'under_review' : mapApiStatus(apiProposal.status));
+    || mapApiStatus(apiProposal.status);
 
   return {
     id: localOverride?.id || apiProposal.ticket_number,
@@ -66,7 +65,7 @@ const mapApiProposal = (apiProposal: any, localOverride?: any): Proposal => {
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
     assigned_at: extractAssignedAt(apiProposal.assigned_reviewers) || (localOverride?.assigned_reviewer_emails?.length > 0 ? localOverride.updated_at : null),
-    assigned_reviewers: hasAssignedReviewers ? apiProposal.assigned_reviewers : null,
+    assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0) ? apiProposal.assigned_reviewers : null,
   };
 };
 
