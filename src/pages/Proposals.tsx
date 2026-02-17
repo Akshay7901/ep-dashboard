@@ -131,20 +131,42 @@ const Proposals: React.FC = () => {
 
   const { user } = useAuth();
 
+  // Helper: get set of proposal ticket numbers the peer reviewer has opened
+  const getOpenedProposals = (): Set<string> => {
+    try {
+      const stored = localStorage.getItem('peer_reviewer_opened_proposals');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  };
+
+  // For peer reviewers, compute the effective display status
+  const getPeerDisplayStatus = (proposal: any): ProposalStatus => {
+    if (proposal.status === 'under_review') {
+      const opened = getOpenedProposals();
+      if (!opened.has(proposal.ticket_number)) {
+        return 'submitted'; // Pending
+      }
+    }
+    return proposal.status;
+  };
+
   // For peer reviewers, filter to only show proposals assigned to them
   const roleFilteredProposals = React.useMemo(() => {
     if (!data?.data) return [];
     if (isReviewer1) return data.data;
-    // Peer reviewer: only show proposals where their email is in assigned_reviewers
     const userEmail = user?.email?.toLowerCase();
     if (!userEmail) return [];
-    return data.data.filter((p) => {
-      const localEmails = (p as any).assigned_reviewer_emails;
-      const apiEmails = p.assigned_reviewers?.map((r: any) => r.email);
-      // Use local emails if non-empty, otherwise fall back to API emails
-      const assignedEmails = (localEmails && localEmails.length > 0) ? localEmails : (apiEmails || []);
-      return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
-    });
+    return data.data
+      .filter((p) => {
+        const localEmails = (p as any).assigned_reviewer_emails;
+        const apiEmails = p.assigned_reviewers?.map((r: any) => r.email);
+        const assignedEmails = (localEmails && localEmails.length > 0) ? localEmails : (apiEmails || []);
+        return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
+      })
+      .map((p) => ({
+        ...p,
+        status: getPeerDisplayStatus(p),
+      }));
   }, [data?.data, isReviewer1, user?.email]);
 
   const statusCounts = React.useMemo(() => {

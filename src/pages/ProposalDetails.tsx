@@ -189,26 +189,19 @@ const ProposalDetails: React.FC = () => {
     isUnassigning
   } = useProposalActions(proposal?.ticket_number || id);
 
-  /* --- Auto-transition: move peer reviewer proposals from Pending → In Progress --- */
-  const hasAutoTransitioned = React.useRef(false);
+  /* --- Auto-transition: mark proposal as opened by peer reviewer --- */
   React.useEffect(() => {
-    if (
-      hasAutoTransitioned.current ||
-      !proposal ||
-      !isReviewer2 ||
-      proposal.status !== 'submitted'
-    ) return;
-    hasAutoTransitioned.current = true;
-
-    // Silently update local status to under_review
-    workflowStatus.mutate({
-      id: proposal.id,
-      status: 'under_review',
-      previousStatus: 'submitted',
-      ticketNumber: proposal.ticket_number,
-      proposalData: proposal,
-    });
-  }, [proposal, isReviewer2]);
+    if (!proposal?.ticket_number || !isReviewer2) return;
+    try {
+      const key = 'peer_reviewer_opened_proposals';
+      const stored = localStorage.getItem(key);
+      const opened: string[] = stored ? JSON.parse(stored) : [];
+      if (!opened.includes(proposal.ticket_number)) {
+        opened.push(proposal.ticket_number);
+        localStorage.setItem(key, JSON.stringify(opened));
+      }
+    } catch { /* ignore */ }
+  }, [proposal?.ticket_number, isReviewer2]);
 
   /* ---------------- Loading / Error ---------------- */
 
