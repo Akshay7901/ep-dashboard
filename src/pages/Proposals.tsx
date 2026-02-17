@@ -131,21 +131,44 @@ const Proposals: React.FC = () => {
 
   const { user } = useAuth();
 
-  // Helper: get set of proposal ticket numbers the peer reviewer has opened
-  const getOpenedProposals = (): Set<string> => {
+  // Track which proposals the peer reviewer has started reviewing (reactive state)
+  const [startedProposals, setStartedProposals] = React.useState<Set<string>>(() => {
     try {
-      const stored = localStorage.getItem('peer_reviewer_opened_proposals');
+      const stored = localStorage.getItem('peer_review_started');
       return stored ? new Set(JSON.parse(stored)) : new Set();
     } catch { return new Set(); }
-  };
+  });
+
+  // Listen for localStorage changes (when peer reviewer starts filling form and navigates back)
+  React.useEffect(() => {
+    const handleStorage = () => {
+      try {
+        const stored = localStorage.getItem('peer_review_started');
+        setStartedProposals(stored ? new Set(JSON.parse(stored)) : new Set());
+      } catch { /* ignore */ }
+    };
+    // Also refresh on focus (covers same-tab navigation back)
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleStorage);
+    };
+  }, []);
+
+  // Re-sync from localStorage whenever route data changes (e.g. navigating back from details)
+  React.useEffect(() => {
+    if (!isReviewer2) return;
+    try {
+      const stored = localStorage.getItem('peer_review_started');
+      setStartedProposals(stored ? new Set(JSON.parse(stored)) : new Set());
+    } catch { /* ignore */ }
+  }, [data?.data, isReviewer2]);
 
   // For peer reviewers, compute the effective display status
   const getPeerDisplayStatus = (proposal: any): ProposalStatus => {
-    if (proposal.status === 'under_review') {
-      const opened = getOpenedProposals();
-      if (!opened.has(proposal.ticket_number)) {
-        return 'submitted'; // Pending
-      }
+    if (proposal.status === 'under_review' && !startedProposals.has(proposal.ticket_number)) {
+      return 'submitted'; // Pending
     }
     return proposal.status;
   };
@@ -165,9 +188,9 @@ const Proposals: React.FC = () => {
       })
       .map((p) => ({
         ...p,
-        status: getPeerDisplayStatus(p),
+        status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
       }));
-  }, [data?.data, isReviewer1, user?.email]);
+  }, [data?.data, isReviewer1, isReviewer2, user?.email, startedProposals]);
 
   const statusCounts = React.useMemo(() => {
     if (!roleFilteredProposals.length) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };

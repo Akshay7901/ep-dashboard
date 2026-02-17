@@ -165,27 +165,27 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       return Math.round((filledFields / totalFields) * 100);
     }, [formData]);
 
-    // Mark proposal as opened for peer reviewer status tracking
-    const markAsOpened = useCallback(() => {
+    // Mark proposal as started for peer reviewer status tracking
+    const markAsStarted = useCallback(() => {
       if (!proposal?.ticket_number) return;
       try {
-        const key = 'peer_reviewer_opened_proposals';
+        const key = 'peer_review_started';
         const stored = localStorage.getItem(key);
-        const opened: string[] = stored ? JSON.parse(stored) : [];
-        if (!opened.includes(proposal.ticket_number)) {
-          opened.push(proposal.ticket_number);
-          localStorage.setItem(key, JSON.stringify(opened));
+        const started: string[] = stored ? JSON.parse(stored) : [];
+        if (!started.includes(proposal.ticket_number)) {
+          started.push(proposal.ticket_number);
+          localStorage.setItem(key, JSON.stringify(started));
         }
       } catch { /* ignore */ }
     }, [proposal?.ticket_number]);
 
     const handleFieldChange = useCallback((field: string, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
-      markAsOpened();
-    }, [markAsOpened]);
+      markAsStarted();
+    }, [markAsStarted]);
 
     const handleSave = async (submitForAuthorization: boolean = false) => {
-      markAsOpened();
+      markAsStarted();
       setIsSaving(true);
       try {
         // Build the review payload
