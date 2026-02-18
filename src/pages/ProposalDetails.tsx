@@ -232,6 +232,19 @@ const ProposalDetails: React.FC = () => {
       || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
   );
   const hasSubmittedReview = isReviewer1 && !!submittedReview;
+
+  // Check if the decision reviewer has already submitted their own review
+  // (i.e., there are 2+ comments with submittedForAuthorization, or proposal is approved/finalised)
+  const submittedReviewComments = comments.filter(
+    (c: any) => c.review_form_data?.submittedForAuthorization
+      || c.submitted_for_authorization
+      || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
+  );
+  const decisionReviewerAlreadySubmitted = isReviewer1 && (
+    submittedReviewComments.length >= 2
+    || ['approved', 'finalised', 'locked'].includes(proposal.status)
+  );
+
   const revertToNew = async () => {
     const ticketNumber = proposal.ticket_number || id || "";
     upstreamUpdateStatus({
@@ -370,7 +383,7 @@ const ProposalDetails: React.FC = () => {
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
-    <Tabs defaultValue={decisionReviewerSubmitted ? "feedback" : "book"}>
+    <Tabs defaultValue={(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? "feedback" : "book"}>
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
@@ -898,7 +911,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && !decisionReviewerAlreadySubmitted && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -1001,7 +1014,7 @@ const ProposalDetails: React.FC = () => {
           </div>
         )
       ) : hasSubmittedReview ? (
-        decisionReviewerSubmitted ? (
+        (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
           <div>{rightPanel}</div>
         ) : showingSummary ? (
           <PeerReviewSummary
