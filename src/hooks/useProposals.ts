@@ -596,64 +596,24 @@ export const useProposalComments = (proposalId: string, ticketNumber?: string) =
       const tn = ticketNumber || proposalId;
       if (!tn) return [] as ReviewerComment[];
 
-      // Fetch from BOTH sources in parallel:
-      // 1. External API comments (visible to decision reviewer)
-      // 2. Local Supabase comments (contains review_form_data for peer reviewer drafts)
-      const [apiResult, localResult] = await Promise.all([
-        api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`).catch(() => ({ data: [] })),
-        supabase.functions.invoke('proposal-workflow', {
-          body: { action: 'getComments', proposalId, ticketNumber: tn },
-        }).catch(() => ({ data: null, error: null })),
-      ]);
-
+      // Fetch comments from external API only
+      const apiResult = await api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`).catch(() => ({ data: [] }));
       const apiComments = apiResult.data?.comments || apiResult.data || [];
-      const localComments = (localResult as any)?.data?.comments || [];
 
-      // Merge: use local comments as base (they have review_form_data),
-      // then add any API-only comments
-      const localMap = new Map<string, any>();
-      for (const lc of localComments) {
-        localMap.set(lc.id, lc);
-      }
-
-      // Start with local comments (they have review_form_data)
-      const merged: ReviewerComment[] = localComments.map((c: any) => ({
-        id: c.id,
-        proposal_id: c.proposal_id || proposalId,
-        reviewer_id: c.reviewer_id || '',
-        comment_text: c.comment_text || '',
-        review_form_data: c.review_form_data || {},
-        submitted_for_authorization: c.submitted_for_authorization || false,
-        is_duplicate_of: c.is_duplicate_of || null,
-        created_at: c.created_at || new Date().toISOString(),
-        updated_at: c.updated_at || c.created_at || new Date().toISOString(),
-      }));
-
-      // Add API comments that aren't already in local
-      for (const ac of apiComments) {
-        const alreadyExists = merged.some(m => 
-          m.comment_text === (ac.comment || ac.comment_text) && 
-          Math.abs(new Date(m.created_at).getTime() - new Date(ac.created_at).getTime()) < 60000
-        );
-        if (!alreadyExists) {
-          merged.push({
-            id: ac.id || crypto.randomUUID(),
-            proposal_id: proposalId,
-            reviewer_id: ac.author_email || '',
-            comment_text: ac.comment || ac.comment_text || '',
-            review_form_data: ac.review_form_data || {},
-            submitted_for_authorization: ac.submitted_for_authorization || false,
-            is_duplicate_of: null,
-            created_at: ac.created_at || new Date().toISOString(),
-            updated_at: ac.updated_at || ac.created_at || new Date().toISOString(),
-            author: ac.author,
-            author_email: ac.author_email,
-            role: ac.role,
-          } as any);
-        }
-      }
-
-      return merged;
+      return apiComments.map((ac: any) => ({
+        id: ac.id?.toString() || crypto.randomUUID(),
+        proposal_id: proposalId,
+        reviewer_id: ac.commented_by || '',
+        comment_text: ac.text || ac.comment || ac.comment_text || '',
+        review_form_data: {},
+        submitted_for_authorization: false,
+        is_duplicate_of: null,
+        created_at: ac.created_at || new Date().toISOString(),
+        updated_at: ac.created_at || new Date().toISOString(),
+        author: ac.commented_by,
+        author_email: ac.commented_by,
+        type: ac.type,
+      } as any)) as ReviewerComment[];
     },
     enabled: !!proposalId,
   });
@@ -680,30 +640,22 @@ export const useAddComment = () => {
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user) throw new Error('Not authenticated');
 
-      const token = localStorage.getItem('auth_token');
-      const { data, error } = await supabase.functions.invoke('proposal-workflow', {
-        body: {
-          action: 'saveComment',
-          proposalId,
-          commentText: commentText || '',
-          reviewFormData: reviewFormData || {},
-          duplicateOf,
-          reviewerEmail: user.email,
-          ticketNumber,
-        },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      const tn = ticketNumber || proposalId;
+
+      // Post comment to external API
+      await api.post(`/api/proposals/${encodeURIComponent(tn)}/comments`, {
+        comment_text: commentText || '',
+        comment_type: 'internal',
+        commented_by: user.email,
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      return { localProposalId: data?.localProposalId || proposalId };
+      return { proposalId };
     },
-   onSuccess: (data) => {
-     if (data?.localProposalId) {
-       queryClient.invalidateQueries({ queryKey: ['proposal-comments', data.localProposalId] });
-     }
-     queryClient.invalidateQueries({ queryKey: ['proposal'] });
+    onSuccess: (data) => {
+      if (data?.proposalId) {
+        queryClient.invalidateQueries({ queryKey: ['proposal-comments', data.proposalId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['proposal'] });
       toast({
         title: 'Comment added',
         description: 'Your review has been saved.',
