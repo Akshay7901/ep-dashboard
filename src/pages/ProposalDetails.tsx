@@ -1197,6 +1197,10 @@ const ProposalDetails: React.FC = () => {
     }} isLoading={workflowStatus.isPending || isAssigning} />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={() => {
+      upstreamUpdateStatus({
+        status: "rejected",
+        notes: "Proposal declined",
+      });
       workflowStatus.mutate({
         id: localId || id || "",
         status: "rejected",
@@ -1214,7 +1218,7 @@ const ProposalDetails: React.FC = () => {
           setIsDeclineDialogOpen(false);
         }
       });
-    }} isLoading={workflowStatus.isPending} />
+    }} isLoading={workflowStatus.isPending || isUpdatingUpstream} />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
         <AlertDialogContent>
