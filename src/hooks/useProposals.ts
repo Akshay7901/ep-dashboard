@@ -430,12 +430,17 @@ export const useProposal = (id: string) => {
           assignedReviewers = localOverride.assigned_reviewer_emails.map((email: string) => ({ email }));
         }
 
+        // Derive assigned_at: prefer mapped value, then local override created_at (when assignment exists)
+        const assignedAt = mapped.assigned_at
+          || (localOverride?.assigned_reviewer_emails?.length > 0 ? localOverride.created_at : null);
+
         return {
           ...mapped,
           status: localOverride?.status || mapped.status,
           id: localOverride?.id || id,
           assigned_reviewers: assignedReviewers,
           assigned_reviewer_emails: localOverride?.assigned_reviewer_emails || null,
+          assigned_at: assignedAt,
         };
       } catch (e) {
         // Detail endpoint failed - try cached list data
