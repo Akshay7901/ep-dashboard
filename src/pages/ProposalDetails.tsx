@@ -1061,7 +1061,8 @@ const ProposalDetails: React.FC = () => {
             proposal={proposal}
             formData={summaryFormData}
             onGoBack={() => setShowingSummary(false)}
-            onConfirmSubmit={async () => {
+            showContractSection
+            onConfirmSubmit={async (contractType) => {
               setIsConfirming(true);
               try {
                 await addComment.mutateAsync({
@@ -1071,8 +1072,28 @@ const ProposalDetails: React.FC = () => {
                     ...summaryFormData,
                     submittedForAuthorization: true,
                     submittedAt: new Date().toISOString(),
+                    contractType: contractType || 'standard',
                   },
                   ticketNumber: proposal.ticket_number || id,
+                });
+
+                // Send contract to author directly
+                upstreamUpdateStatus({
+                  status: "approved",
+                  notes: `Decision reviewer sent contract to author (${contractType || 'standard'})`,
+                });
+                workflowStatus.mutate({
+                  id: localId || id || "",
+                  status: "approved",
+                  previousStatus: proposal.status,
+                  ticketNumber: proposal.ticket_number || id,
+                  proposalData: {
+                    id: localId || undefined,
+                    name: proposal.name,
+                    author_name: proposal.author_name,
+                    author_email: proposal.author_email,
+                    ticket_number: proposal.ticket_number || id,
+                  },
                 });
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
