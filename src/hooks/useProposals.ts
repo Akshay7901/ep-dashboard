@@ -600,20 +600,42 @@ export const useProposalComments = (proposalId: string, ticketNumber?: string) =
       const apiResult = await api.get(`/api/proposals/${encodeURIComponent(tn)}/comments`).catch(() => ({ data: [] }));
       const apiComments = apiResult.data?.comments || apiResult.data || [];
 
-      return apiComments.map((ac: any) => ({
-        id: ac.id?.toString() || crypto.randomUUID(),
-        proposal_id: proposalId,
-        reviewer_id: ac.commented_by || '',
-        comment_text: ac.text || ac.comment || ac.comment_text || '',
-        review_form_data: {},
-        submitted_for_authorization: false,
-        is_duplicate_of: null,
-        created_at: ac.created_at || new Date().toISOString(),
-        updated_at: ac.created_at || new Date().toISOString(),
-        author: ac.commented_by,
-        author_email: ac.commented_by,
-        type: ac.type,
-      } as any)) as ReviewerComment[];
+      const REVIEW_DATA_MARKER = '[PEER_REVIEW_DATA]';
+
+      return apiComments.map((ac: any) => {
+        const rawText = ac.text || ac.comment || ac.comment_text || '';
+        let reviewFormData: Record<string, any> = {};
+        let submittedForAuth = false;
+        let displayText = rawText;
+
+        // Detect serialized review form data in comment text
+        if (rawText.startsWith(REVIEW_DATA_MARKER)) {
+          try {
+            const jsonStr = rawText.slice(REVIEW_DATA_MARKER.length);
+            const parsed = JSON.parse(jsonStr);
+            reviewFormData = parsed;
+            submittedForAuth = !!parsed.submittedForAuthorization;
+            displayText = parsed.otherComments || `Recommendation: ${parsed.recommendation || 'N/A'}`;
+          } catch {
+            // Not valid JSON, treat as plain text
+          }
+        }
+
+        return {
+          id: ac.id?.toString() || crypto.randomUUID(),
+          proposal_id: proposalId,
+          reviewer_id: ac.commented_by || '',
+          comment_text: displayText,
+          review_form_data: reviewFormData,
+          submitted_for_authorization: submittedForAuth,
+          is_duplicate_of: null,
+          created_at: ac.created_at || new Date().toISOString(),
+          updated_at: ac.created_at || new Date().toISOString(),
+          author: ac.commented_by,
+          author_email: ac.commented_by,
+          type: ac.type,
+        } as any;
+      }) as ReviewerComment[];
     },
     enabled: !!proposalId,
   });
@@ -642,9 +664,17 @@ export const useAddComment = () => {
 
       const tn = ticketNumber || proposalId;
 
+      const REVIEW_DATA_MARKER = '[PEER_REVIEW_DATA]';
+
+      // If we have structured review form data, serialize it into comment_text
+      let finalCommentText = commentText || '';
+      if (reviewFormData && Object.keys(reviewFormData).length > 0) {
+        finalCommentText = REVIEW_DATA_MARKER + JSON.stringify(reviewFormData);
+      }
+
       // Post comment to external API
       await api.post(`/api/proposals/${encodeURIComponent(tn)}/comments`, {
-        comment_text: commentText || '',
+        comment_text: finalCommentText,
         comment_type: 'internal',
         commented_by: user.email,
       });

@@ -27,7 +27,7 @@ import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
-import { commentsApi } from "@/lib/proposalsApi";
+// commentsApi import removed - useAddComment now handles serialization
 
 /* ---------------- Helpers ---------------- */
 
@@ -214,12 +214,12 @@ const ProposalDetails: React.FC = () => {
 
   // Check if peer reviewer already submitted their review
   const peerReviewAlreadySubmitted = isReviewer2 && comments.some(
-    (c: any) => c.review_form_data?.submittedForAuthorization
+    (c: any) => c.review_form_data?.submittedForAuthorization || c.submitted_for_authorization
   );
 
   // Check if there's a submitted peer review (for decision reviewer split layout)
   const submittedReview = comments.find(
-    (c: any) => c.review_form_data?.submittedForAuthorization
+    (c: any) => c.review_form_data?.submittedForAuthorization || c.submitted_for_authorization
   );
   const hasSubmittedReview = isReviewer1 && !!submittedReview;
   const revertToNew = async () => {
@@ -875,17 +875,6 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
-                // Also post a summary to the external comments API
-                const ticketNum = proposal.ticket_number || id || "";
-                if (ticketNum) {
-                  try {
-                    const commentSummary = `[Peer Review Submitted] Recommendation: ${summaryFormData.recommendation || 'N/A'}`;
-                    await commentsApi.add(ticketNum, { comment: commentSummary });
-                  } catch (e) {
-                    console.warn("Failed to post to external comments API:", e);
-                  }
-                }
-
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
                 navigate('/proposals');
@@ -943,16 +932,6 @@ const ProposalDetails: React.FC = () => {
                   },
                   ticketNumber: proposal.ticket_number || id,
                 });
-
-                const ticketNum = proposal.ticket_number || id || "";
-                if (ticketNum) {
-                  try {
-                    const commentSummary = `[Decision Review Submitted] Recommendation: ${summaryFormData.recommendation || 'N/A'}`;
-                    await commentsApi.add(ticketNum, { comment: commentSummary });
-                  } catch (e) {
-                    console.warn("Failed to post to external comments API:", e);
-                  }
-                }
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });

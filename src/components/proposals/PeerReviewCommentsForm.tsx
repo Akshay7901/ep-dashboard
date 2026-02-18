@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Save } from "lucide-react";
 import { Proposal } from "@/types";
 import { useAddComment } from "@/hooks/useProposals";
-import { commentsApi } from "@/lib/proposalsApi";
+// commentsApi import removed - useAddComment now handles serialization
 
 interface PeerReviewCommentsFormProps {
   proposal: Proposal;
@@ -142,7 +142,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     );
 
     const [isSaving, setIsSaving] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(!forceEditable && !!existingAssessment?.submittedForAuthorization);
+    const [isSubmitted, setIsSubmitted] = useState(!forceEditable && !!(existingAssessment?.submittedForAuthorization || existingAssessment?.submitted_for_authorization));
 
     // Reset form data when existingAssessment prop changes (e.g. Start Fresh / Reload)
     useEffect(() => {
@@ -195,25 +195,13 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           submittedAt: new Date().toISOString(),
         };
 
-        // Save to local workflow (Supabase)
+        // Save to external API via useAddComment (serializes form data as JSON in comment_text)
         await addComment.mutateAsync({
           proposalId: proposal.id,
           commentText: formData.otherComments || "",
           reviewFormData: reviewPayload,
           ticketNumber: proposal.ticket_number || undefined,
         });
-
-        // Also post to external comments API if ticket_number is available
-        if (proposal.ticket_number) {
-          const commentSummary = submitForAuthorization
-            ? `[Peer Review Submitted] Recommendation: ${formData.recommendation || "N/A"}`
-            : `[Draft Saved] Recommendation: ${formData.recommendation || "Not yet selected"}`;
-          try {
-            await commentsApi.add(proposal.ticket_number, { comment: commentSummary });
-          } catch (e) {
-            console.warn("Failed to post to external comments API:", e);
-          }
-        }
 
         if (submitForAuthorization) {
           setIsSubmitted(true);
