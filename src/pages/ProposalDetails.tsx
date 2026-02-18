@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
+import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import PeerReviewCommentsForm, { type PeerReviewCommentsFormHandle } from "@/components/proposals/PeerReviewCommentsForm";
@@ -18,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck } from "lucide-react";
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
@@ -137,6 +138,7 @@ const ProposalDetails: React.FC = () => {
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
   const [isConfirming, setIsConfirming] = useState(false);
   const [startedFresh, setStartedFresh] = useState(false);
+  const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
   const addComment = useAddComment();
 
   /* ---------------- Data ---------------- */
@@ -368,7 +370,7 @@ const ProposalDetails: React.FC = () => {
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
-    <Tabs defaultValue="book">
+    <Tabs defaultValue={decisionReviewerSubmitted ? "feedback" : "book"}>
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
@@ -382,9 +384,9 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Log</span>
+            <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
+              <FileCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Feedback & Contract</span>
             </TabsTrigger>
           </TabsList>
 
@@ -541,101 +543,91 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* ---- LOG (Decision Reviewer) ---- */}
-          <TabsContent value="log" className="mt-4 space-y-6">
-            <Accordion type="multiple" defaultValue={["status", "timeline"]} className="space-y-1">
-              <AccordionItem value="status" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Current Status</AccordionTrigger>
-                <AccordionContent className="pb-4 space-y-3">
-                  <div className="flex gap-4 py-1">
-                    <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
-                    <span className="text-sm font-medium">
-                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
-                    </span>
-                  </div>
-                  {(() => {
-                    const assignedDate = proposal.assigned_at || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
-                    if (assignedDate) {
+          {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
+          <TabsContent value="feedback" className="mt-4 space-y-6">
+            {/* Show submitted peer review feedback */}
+            {submittedReview ? (() => {
+              const formData = (submittedReview as any).review_form_data || {};
+              const reviewFields = [
+                { label: "Scope", key: "scope" },
+                { label: "Purpose and Value", key: "purposeAndValue" },
+                { label: "Title", key: "title" },
+                { label: "Originality and Points of Difference", key: "originalityAndDifference" },
+                { label: "Credibility", key: "credibility" },
+                { label: "Structure", key: "structure" },
+                { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
+                { label: "Other Comments", key: "otherComments" },
+                { label: "Red Flags", key: "redFlags" },
+              ];
+              return (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Peer Review Feedback</CardTitle>
+                      <span className="text-sm text-muted-foreground">
+                        Completed on {format(new Date((submittedReview as any).created_at), "MMM d, yyyy")}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {reviewFields.map(({ label, key }) => {
+                      const value = formData[key];
+                      if (!value) return null;
                       return (
-                        <div className="flex gap-4 py-1">
-                          <span className="text-sm text-muted-foreground w-28 shrink-0">Assigned On:</span>
-                          <span className="text-sm font-medium">{format(new Date(assignedDate), "MMM d, yyyy")}</span>
+                        <div key={key} className="space-y-1">
+                          <p className="text-sm font-semibold">{label}</p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
+                          <Separator />
                         </div>
                       );
-                    }
-                    return null;
-                  })()}
-                  <div className="pt-1">
-                    <ProposalStatusBadge status={proposal.status} showIcon={false} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="timeline" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Activity Timeline</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  {(() => {
-                    const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
-                    const submittedDate = proposal.submitted_at || proposal.created_at;
-                    const assignedDate = proposal.assigned_at
-                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
-
-                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
-                      const screeningDateRaw = assignedDate || proposal.updated_at;
-                      if (screeningDateRaw) {
-                        timelineEvents.push({
-                          title: "Initial Screening Passed",
-                          date: format(new Date(screeningDateRaw), "MMM d, yyyy"),
-                          actor: "Commissioning Editor",
-                          color: "bg-muted-foreground",
-                          sortDate: new Date(screeningDateRaw),
-                        });
-                      }
-                    }
-
-                    if (submittedDate) {
-                      timelineEvents.push({
-                        title: "Proposal Submitted",
-                        date: format(new Date(submittedDate), "MMM d, yyyy"),
-                        actor: proposal.corresponding_author_name || proposal.author_name || "Author",
-                        color: "bg-[#3d5a47]",
-                        sortDate: new Date(submittedDate),
-                      });
-                    }
-
-                    if (assignedDate && proposal.status !== "submitted") {
-                      timelineEvents.push({
-                        title: "Assigned to Peer Reviewer",
-                        date: format(new Date(assignedDate), "MMM d, yyyy"),
-                        actor: "System",
-                        color: "bg-[#2563eb]",
-                        sortDate: new Date(assignedDate),
-                      });
-                    }
-
-                    if (timelineEvents.length === 0) {
-                      return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
-                    }
-
-                    const sorted = [...timelineEvents].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
-
-                    return (
-                      <div className="space-y-4">
-                        {sorted.map((evt, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evt.color}`} />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{evt.title}</p>
-                              <p className="text-xs text-muted-foreground">{evt.date} • {evt.actor}</p>
-                            </div>
-                          </div>
-                        ))}
+                    })}
+                    {formData.recommendation && (
+                      <div className="border border-muted rounded-lg p-4 mt-2">
+                        <p className="text-sm font-semibold">Final Recommendation</p>
+                        <p className="text-sm font-medium mt-1 capitalize">{formData.recommendation}</p>
                       </div>
-                    );
-                  })()}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })() : (
+              <Card>
+                <CardContent className="py-8">
+                  <p className="text-sm text-muted-foreground text-center">No peer review feedback available yet.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Comments & Correspondence */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Comments & Correspondence</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {comments.filter((c: any) => {
+                  const text = c.comment_text || '';
+                  return !text.startsWith('[PEER_REVIEW_DATA]') && !text.startsWith('[Peer Review Submitted]');
+                }).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No comments yet.</p>
+                ) : (
+                  comments.filter((c: any) => {
+                    const text = c.comment_text || '';
+                    return !text.startsWith('[PEER_REVIEW_DATA]') && !text.startsWith('[Peer Review Submitted]');
+                  }).map((c: any, i: number) => (
+                    <div key={c.id || i} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{c.author_email || c.reviewer_id || 'Unknown'}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {c.created_at ? format(new Date(c.created_at), "MMM d, yyyy h:mm a") : ''}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{c.comment_text}</p>
+                      {i < comments.length - 1 && <Separator className="mt-3" />}
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
@@ -906,7 +898,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -1009,7 +1001,9 @@ const ProposalDetails: React.FC = () => {
           </div>
         )
       ) : hasSubmittedReview ? (
-        showingSummary ? (
+        decisionReviewerSubmitted ? (
+          <div>{rightPanel}</div>
+        ) : showingSummary ? (
           <PeerReviewSummary
             proposal={proposal}
             formData={summaryFormData}
@@ -1030,7 +1024,8 @@ const ProposalDetails: React.FC = () => {
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
-                navigate('/proposals');
+                setDecisionReviewerSubmitted(true);
+                setShowingSummary(false);
               } catch (err) {
                 console.error('Submit failed:', err);
               } finally {
