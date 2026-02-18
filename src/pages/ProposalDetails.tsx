@@ -617,37 +617,6 @@ const ProposalDetails: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* Comments & Correspondence */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Comments & Correspondence</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {comments.filter((c: any) => {
-                  const text = c.comment_text || '';
-                  return !text.startsWith('[PEER_REVIEW_DATA]') && !text.startsWith('[Peer Review Submitted]');
-                }).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No comments yet.</p>
-                ) : (
-                  comments.filter((c: any) => {
-                    const text = c.comment_text || '';
-                    return !text.startsWith('[PEER_REVIEW_DATA]') && !text.startsWith('[Peer Review Submitted]');
-                  }).map((c: any, i: number) => (
-                    <div key={c.id || i} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{c.author_email || c.reviewer_id || 'Unknown'}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {c.created_at ? format(new Date(c.created_at), "MMM d, yyyy h:mm a") : ''}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">{c.comment_text}</p>
-                      {i < comments.length - 1 && <Separator className="mt-3" />}
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">

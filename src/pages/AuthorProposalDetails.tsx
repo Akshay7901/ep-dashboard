@@ -530,64 +530,6 @@ const AuthorProposalDetails: React.FC = () => {
             {/* Structured Peer Review Feedback */}
             <PeerReviewFeedbackSection comments={comments} />
 
-            {/* Comments / Messaging */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Comments & Correspondence</h3>
-
-                <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                  {comments.filter((c: any) => c.comment_text?.trim()).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No comments yet.</p>
-                  ) : (
-                    comments
-                      .filter((c: any) => c.comment_text?.trim())
-                      .map((comment: any) => {
-                        const isAuthorComment = comment.reviewer_id === user?.id || comment.reviewer_id === user?.email;
-                        return (
-                          <div
-                            key={comment.id}
-                            className={cn(
-                              "p-4 rounded-lg text-sm",
-                              isAuthorComment ? "bg-primary/10 ml-8" : "bg-muted/30 mr-8",
-                            )}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-xs text-muted-foreground">
-                                {isAuthorComment ? "You" : comment.author || "Reviewer"}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {comment.created_at ? format(new Date(comment.created_at), "MMM d, yyyy h:mm a") : ""}
-                              </span>
-                            </div>
-                            <p className="whitespace-pre-line">{comment.comment_text}</p>
-                          </div>
-                        );
-                      })
-                  )}
-                </div>
-
-                {/* Reply input */}
-                <div className="space-y-3 border-t pt-4">
-                  <p className="text-sm font-medium text-foreground">Your Response</p>
-                  <Textarea
-                    placeholder="Type your response here..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    rows={4}
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSendComment}
-                      disabled={!commentText.trim() || isSendingComment}
-                      className="gap-2 bg-[#3d5a47] hover:opacity-90"
-                    >
-                      <Send className="h-4 w-4" />
-                      {isSendingComment ? "Sending..." : "Send Response"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>
