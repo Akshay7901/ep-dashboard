@@ -287,6 +287,8 @@ const ProposalDetails: React.FC = () => {
 
   /* ======================== RIGHT PANEL CONTENT ======================== */
 
+  const isPostSubmission = decisionReviewerSubmitted || decisionReviewerAlreadySubmitted;
+
   const rightPanel = <div className="space-y-6">
       {/* Proposal Header */}
       <div>
@@ -296,24 +298,48 @@ const ProposalDetails: React.FC = () => {
             {proposal.sub_title && <p className="text-base text-muted-foreground mt-1 italic">
                 {proposal.sub_title}
               </p>}
+            {/* Submitted date - shown in post-submission state */}
+            {isPostSubmission && proposal.created_at && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Submitted {format(new Date(proposal.created_at), "MMMM d, yyyy")}
+              </p>
+            )}
           </div>
           <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-            <ProposalStatusBadge status={proposal.status} showIcon={false} />
+            <ProposalStatusBadge status={isPostSubmission ? "approved" : proposal.status} showIcon={false} />
+            {/* Date next to badge in post-submission */}
+            {isPostSubmission && (
+              <span className="text-sm text-muted-foreground">
+                {format(new Date(), "do MMMM yyyy")}
+              </span>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
-          <span className="font-medium text-foreground">
-            {proposal.corresponding_author_name || proposal.author_name}
-          </span>
-          {proposal.institution && <>
-              <span>•</span>
-              <span>{proposal.institution}</span>
-            </>}
-          {proposal.word_count && <>
-              <span>•</span>
-              <span>{proposal.word_count} words</span>
-            </>}
-        </div>
+        {/* Author & reviewer info */}
+        {isPostSubmission ? (
+          <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-2 border rounded-full px-3 py-1.5 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">
+                {proposal.corresponding_author_name || proposal.author_name}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
+            <span className="font-medium text-foreground">
+              {proposal.corresponding_author_name || proposal.author_name}
+            </span>
+            {proposal.institution && <>
+                <span>•</span>
+                <span>{proposal.institution}</span>
+              </>}
+            {proposal.word_count && <>
+                <span>•</span>
+                <span>{proposal.word_count} words</span>
+              </>}
+          </div>
+        )}
       </div>
 
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
@@ -434,7 +460,7 @@ const ProposalDetails: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
-                  <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                  <ProposalStatusBadge status={isPostSubmission ? "approved" : proposal.status} showIcon={false} />
                 </div>
               </div>
             </div>
@@ -1009,6 +1035,25 @@ const ProposalDetails: React.FC = () => {
                     submittedAt: new Date().toISOString(),
                   },
                   ticketNumber: proposal.ticket_number || id,
+                });
+
+                // Update status to approved (Contract Sent)
+                upstreamUpdateStatus({
+                  status: "approved",
+                  notes: "Decision reviewer submitted review",
+                });
+                workflowStatus.mutate({
+                  id: localId || id || "",
+                  status: "approved",
+                  previousStatus: proposal.status,
+                  ticketNumber: proposal.ticket_number || id,
+                  proposalData: {
+                    id: localId || undefined,
+                    name: proposal.name,
+                    author_name: proposal.author_name,
+                    author_email: proposal.author_email,
+                    ticket_number: proposal.ticket_number || id,
+                  },
                 });
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
