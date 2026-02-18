@@ -1000,10 +1000,10 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
-                // Update local status to 'approved' so peer reviewer dashboard shows "Completed"
+                // Update status to 'finalised' so it appears under "Review Returned" for Decision Reviewer
                 workflowStatus.mutate({
                   id: localId || id || "",
-                  status: "approved",
+                  status: "finalised",
                   previousStatus: proposal.status,
                   ticketNumber: proposal.ticket_number || id,
                   proposalData: {
