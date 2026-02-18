@@ -282,29 +282,23 @@ const ProposalDetails: React.FC = () => {
                 {proposal.sub_title}
               </p>}
           </div>
-          {isReviewer1 && proposal.status !== "submitted" && <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-              <ProposalStatusBadge status={proposal.status} showIcon={false} />
-              <span className="text-sm text-muted-foreground">
-                {proposal.updated_at ? format(new Date(proposal.updated_at), "do MMMM yyyy") : "—"}
-              </span>
-            </div>}
+          <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
+            <ProposalStatusBadge status={proposal.status} showIcon={false} />
+          </div>
         </div>
-        {isReviewer1 ? null : <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">
-                {proposal.corresponding_author_name || proposal.author_name}
-              </span>
-              {proposal.institution && <>
-                  <span>•</span>
-                  <span>{proposal.institution}</span>
-                </>}
-              {proposal.word_count && <>
-                  <span>•</span>
-                  <span>{proposal.word_count} words</span>
-                </>}
-            </div>
-            <PeerReviewStatusBadge status={proposal.status} />
-          </div>}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
+          <span className="font-medium text-foreground">
+            {proposal.corresponding_author_name || proposal.author_name}
+          </span>
+          {proposal.institution && <>
+              <span>•</span>
+              <span>{proposal.institution}</span>
+            </>}
+          {proposal.word_count && <>
+              <span>•</span>
+              <span>{proposal.word_count} words</span>
+            </>}
+        </div>
       </div>
 
       {/* Reviewer + Actions row (for reviewer_1 only) */}
@@ -378,19 +372,19 @@ const ProposalDetails: React.FC = () => {
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Book Info</span>
+              <span className="hidden sm:inline">Book info</span>
             </TabsTrigger>
             <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Author Info</span>
             </TabsTrigger>
-            <TabsTrigger value="market" className="gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Market</span>
-            </TabsTrigger>
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
-              <span className="hidden sm:inline">Documents</span>
+              <span className="hidden sm:inline">Supporting Documents</span>
+            </TabsTrigger>
+            <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Log</span>
             </TabsTrigger>
           </TabsList>
 
@@ -506,35 +500,7 @@ const ProposalDetails: React.FC = () => {
               </div>}
           </TabsContent>
 
-          {/* ---- MARKET (Decision Reviewer) ---- */}
-          <TabsContent value="market" className="space-y-4 mt-4">
-            <Accordion type="multiple" defaultValue={["similar", "reviews"]} className="space-y-1">
-              <AccordionItem value="similar" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Similar Works</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-line">
-                    {(proposal as any).similar_works || (proposal as any).competing_books || proposal.detailed_description || "No information available"}
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="reviews" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Previous Reviews</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-line">
-                    {(proposal as any).previous_reviews || proposal.marketing_info || "No information available"}
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-              {proposal.referees_reviewers && <AccordionItem value="referees" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-base font-semibold">Suggested Referees</AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    <p className="text-sm leading-relaxed whitespace-pre-line">
-                      {proposal.referees_reviewers}
-                    </p>
-                  </AccordionContent>
-                </AccordionItem>}
-            </Accordion>
-          </TabsContent>
+          
 
           {/* ---- SUPPORTING DOCUMENTS (Decision Reviewer) ---- */}
           <TabsContent value="documents" className="mt-4">
@@ -573,6 +539,103 @@ const ProposalDetails: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ---- LOG (Decision Reviewer) ---- */}
+          <TabsContent value="log" className="mt-4 space-y-6">
+            <Accordion type="multiple" defaultValue={["status", "timeline"]} className="space-y-1">
+              <AccordionItem value="status" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Current Status</AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-3">
+                  <div className="flex gap-4 py-1">
+                    <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
+                    <span className="text-sm font-medium">
+                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                    </span>
+                  </div>
+                  {(() => {
+                    const assignedDate = proposal.assigned_at || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+                    if (assignedDate) {
+                      return (
+                        <div className="flex gap-4 py-1">
+                          <span className="text-sm text-muted-foreground w-28 shrink-0">Assigned On:</span>
+                          <span className="text-sm font-medium">{format(new Date(assignedDate), "MMM d, yyyy")}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <div className="pt-1">
+                    <ProposalStatusBadge status={proposal.status} showIcon={false} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="timeline" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Activity Timeline</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  {(() => {
+                    const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
+                    const submittedDate = proposal.submitted_at || proposal.created_at;
+                    const assignedDate = proposal.assigned_at
+                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+
+                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
+                      const screeningDateRaw = assignedDate || proposal.updated_at;
+                      if (screeningDateRaw) {
+                        timelineEvents.push({
+                          title: "Initial Screening Passed",
+                          date: format(new Date(screeningDateRaw), "MMM d, yyyy"),
+                          actor: "Commissioning Editor",
+                          color: "bg-muted-foreground",
+                          sortDate: new Date(screeningDateRaw),
+                        });
+                      }
+                    }
+
+                    if (submittedDate) {
+                      timelineEvents.push({
+                        title: "Proposal Submitted",
+                        date: format(new Date(submittedDate), "MMM d, yyyy"),
+                        actor: proposal.corresponding_author_name || proposal.author_name || "Author",
+                        color: "bg-[#3d5a47]",
+                        sortDate: new Date(submittedDate),
+                      });
+                    }
+
+                    if (assignedDate && proposal.status !== "submitted") {
+                      timelineEvents.push({
+                        title: "Assigned to Peer Reviewer",
+                        date: format(new Date(assignedDate), "MMM d, yyyy"),
+                        actor: "System",
+                        color: "bg-[#2563eb]",
+                        sortDate: new Date(assignedDate),
+                      });
+                    }
+
+                    if (timelineEvents.length === 0) {
+                      return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
+                    }
+
+                    const sorted = [...timelineEvents].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
+
+                    return (
+                      <div className="space-y-4">
+                        {sorted.map((evt, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evt.color}`} />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{evt.title}</p>
+                              <p className="text-xs text-muted-foreground">{evt.date} • {evt.actor}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
