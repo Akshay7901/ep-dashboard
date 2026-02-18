@@ -397,10 +397,17 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
-              <FileCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">Feedback & Contract</span>
-            </TabsTrigger>
+            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
+              <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
+                <FileCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Feedback & Contract</span>
+              </TabsTrigger>
+            ) : (
+              <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Log</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
