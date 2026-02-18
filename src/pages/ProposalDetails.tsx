@@ -590,97 +590,123 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
-          <TabsContent value="feedback" className="mt-4 space-y-6">
-            {/* Show submitted peer review feedback */}
-            {submittedReview ? (() => {
-              const formData = (submittedReview as any).review_form_data || {};
-              const reviewFields = [
-                { label: "Scope", key: "scope" },
-                { label: "Purpose and Value", key: "purposeAndValue" },
-                { label: "Title", key: "title" },
-                { label: "Originality and Points of Difference", key: "originalityAndDifference" },
-                { label: "Credibility", key: "credibility" },
-                { label: "Structure", key: "structure" },
-                { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
-                { label: "Other Comments", key: "otherComments" },
-                { label: "Red Flags", key: "redFlags" },
-              ];
-              return (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Peer Review Feedback</CardTitle>
-                      <span className="text-sm text-muted-foreground">
-                        Completed on {format(new Date((submittedReview as any).created_at), "MMM d, yyyy")}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {reviewFields.map(({ label, key }) => {
-                      const value = formData[key];
-                      if (!value) return null;
+          <TabsContent value="feedback" className="mt-4 space-y-4">
+            <Accordion type="multiple" defaultValue={["peer-review"]} className="space-y-2">
+              {/* Original Peer Review Feedback */}
+              <AccordionItem value="peer-review" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="text-left">
+                    <p className="text-base font-semibold">Original Peer Review Feedback</p>
+                    {submittedReview && (() => {
+                      const formData = (submittedReview as any).review_form_data || {};
+                      const reviewerName = (submittedReview as any).reviewer_name || "Peer Reviewer";
+                      const recommendation = formData.recommendation
+                        ? formData.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+                        : null;
                       return (
-                        <div key={key} className="space-y-1">
-                          <p className="text-sm font-semibold">{label}</p>
-                          <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
-                          <Separator />
-                        </div>
+                        <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                          {reviewerName}{recommendation ? ` • ${recommendation}` : ""}
+                        </p>
                       );
-                    })}
-                    {formData.recommendation && (
-                      <div className="border border-muted rounded-lg p-4 mt-2">
-                        <p className="text-sm font-semibold">Final Recommendation</p>
-                        <p className="text-sm font-medium mt-1 capitalize">{formData.recommendation}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })() : (
-              <Card>
-                <CardContent className="py-8">
-                  <p className="text-sm text-muted-foreground text-center">No peer review feedback available yet.</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Send Contract Button - only show when review is submitted but contract not yet sent */}
-            {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'locked' && (
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="py-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Ready to send contract?</p>
-                    <p className="text-xs text-muted-foreground">Review the feedback above, then send the contract to the author.</p>
+                    })()}
                   </div>
-                  <Button
-                    onClick={() => {
-                      upstreamUpdateStatus({
-                        status: "approved",
-                        notes: "Decision reviewer sent contract to author",
-                      });
-                      workflowStatus.mutate({
-                        id: localId || id || "",
-                        status: "approved",
-                        previousStatus: proposal.status,
-                        ticketNumber: proposal.ticket_number || id,
-                        proposalData: {
-                          id: localId || undefined,
-                          name: proposal.name,
-                          author_name: proposal.author_name,
-                          author_email: proposal.author_email,
-                          ticket_number: proposal.ticket_number || id,
-                        },
-                      });
-                      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                    }}
-                    disabled={isBusy}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Contract to Author
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  {submittedReview ? (() => {
+                    const formData = (submittedReview as any).review_form_data || {};
+                    const reviewFields = [
+                      { label: "Scope", key: "scope" },
+                      { label: "Purpose and Value", key: "purposeAndValue" },
+                      { label: "Title", key: "title" },
+                      { label: "Originality and Points of Difference", key: "originalityAndDifference" },
+                      { label: "Credibility", key: "credibility" },
+                      { label: "Structure", key: "structure" },
+                      { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
+                      { label: "Other Comments", key: "otherComments" },
+                      { label: "Red Flags", key: "redFlags" },
+                    ];
+                    return (
+                      <div className="space-y-4">
+                        {reviewFields.map(({ label, key }) => {
+                          const value = formData[key];
+                          if (!value) return null;
+                          return (
+                            <div key={key} className="space-y-1">
+                              <p className="text-sm font-semibold">{label}</p>
+                              <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
+                              <Separator />
+                            </div>
+                          );
+                        })}
+                        {formData.recommendation && (
+                          <div className="border border-muted rounded-lg p-4 mt-2">
+                            <p className="text-sm font-semibold">Final Recommendation</p>
+                            <p className="text-sm font-medium mt-1 capitalize">
+                              {formData.recommendation.replace(/_/g, " ")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Publishing Contract */}
+              <AccordionItem value="contract" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="text-left">
+                    <p className="text-base font-semibold">Publishing Contract</p>
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                      Current version: Standard Contract
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'locked' ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Review the peer feedback above, then send the contract to the author.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          upstreamUpdateStatus({
+                            status: "approved",
+                            notes: "Decision reviewer sent contract to author",
+                          });
+                          workflowStatus.mutate({
+                            id: localId || id || "",
+                            status: "approved",
+                            previousStatus: proposal.status,
+                            ticketNumber: proposal.ticket_number || id,
+                            proposalData: {
+                              id: localId || undefined,
+                              name: proposal.name,
+                              author_name: proposal.author_name,
+                              author_email: proposal.author_email,
+                              ticket_number: proposal.ticket_number || id,
+                            },
+                          });
+                          queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                        }}
+                        disabled={isBusy}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send Contract to Author
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {proposal.status === 'approved' || proposal.status === 'locked'
+                        ? "Contract has been sent to the author."
+                        : "Contract will be available after review submission."}
+                    </p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
