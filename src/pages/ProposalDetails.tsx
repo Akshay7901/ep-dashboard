@@ -763,46 +763,93 @@ const ProposalDetails: React.FC = () => {
                   {(() => {
                     const timelineEvents: { title: string; date: string; actor: string; color: string }[] = [];
 
-                    // Proposal submitted event
+                    // 1. Proposal Submitted
                     const submittedDate = proposal.submitted_at || proposal.created_at;
                     if (submittedDate) {
                       timelineEvents.push({
                         title: "Proposal Submitted",
                         date: format(new Date(submittedDate), "MMM d, yyyy"),
                         actor: proposal.corresponding_author_name || proposal.author_name || "Author",
-                        color: "bg-green-500",
+                        color: "bg-[#3d5a47]",
                       });
                     }
 
-                    // Workflow log events
-                    for (const log of ([...logs] as any[]).reverse()) {
-                      let title = log.action;
-                      let color = "bg-muted-foreground";
-                      if (log.new_status === "under_review" || log.action?.toLowerCase().includes("assign")) {
-                        title = "Assigned to Peer Reviewer";
-                        color = "bg-blue-500";
-                      } else if (log.new_status === "approved") {
-                        title = "Review Completed";
-                        color = "bg-green-500";
-                      } else if (log.new_status === "rejected") {
-                        title = "Proposal Declined";
-                        color = "bg-destructive";
-                      } else if (log.new_status === "submitted") {
-                        title = "Reverted to New";
-                        color = "bg-muted-foreground";
+                    // 2. Initial Screening Passed (inferred: proposal moved past 'submitted')
+                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
+                      const screeningDate = proposal.assigned_at || proposal.updated_at;
+                      if (screeningDate) {
+                        timelineEvents.push({
+                          title: "Initial Screening Passed",
+                          date: format(new Date(screeningDate), "MMM d, yyyy"),
+                          actor: "Commissioning Editor",
+                          color: "bg-muted-foreground",
+                        });
                       }
+                    }
+
+                    // 3. Assigned to Peer Reviewer
+                    const assignedDate = proposal.assigned_at
+                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+                    if (assignedDate && proposal.status !== "submitted") {
                       timelineEvents.push({
-                        title,
-                        date: format(new Date(log.created_at), "MMM d, yyyy"),
+                        title: "Assigned to Peer Reviewer",
+                        date: format(new Date(assignedDate), "MMM d, yyyy"),
                         actor: "System",
-                        color,
+                        color: "bg-[#2563eb]",
                       });
+                    }
+
+                    // 4. Review Completed (if approved or beyond)
+                    if (["approved", "finalised", "locked"].includes(proposal.status)) {
+                      const reviewDate = proposal.updated_at;
+                      if (reviewDate) {
+                        timelineEvents.push({
+                          title: "Review Completed",
+                          date: format(new Date(reviewDate), "MMM d, yyyy"),
+                          actor: "Peer Reviewer",
+                          color: "bg-[#3d5a47]",
+                        });
+                      }
+                    }
+
+                    // 5. Proposal Declined
+                    if (proposal.status === "rejected") {
+                      timelineEvents.push({
+                        title: "Proposal Declined",
+                        date: format(new Date(proposal.updated_at), "MMM d, yyyy"),
+                        actor: "Commissioning Editor",
+                        color: "bg-destructive",
+                      });
+                    }
+
+                    // Also append any additional workflow log events not already covered
+                    for (const log of ([...logs] as any[]).reverse()) {
+                      const isDuplicate = timelineEvents.some(e =>
+                        e.date === format(new Date(log.created_at), "MMM d, yyyy") &&
+                        ((log.new_status === "under_review" && e.title === "Assigned to Peer Reviewer") ||
+                         (log.new_status === "approved" && e.title === "Review Completed") ||
+                         (log.new_status === "rejected" && e.title === "Proposal Declined"))
+                      );
+                      if (!isDuplicate) {
+                        let title = log.action;
+                        let color = "bg-muted-foreground";
+                        if (log.new_status === "submitted") {
+                          title = "Reverted to New";
+                        }
+                        timelineEvents.push({
+                          title,
+                          date: format(new Date(log.created_at), "MMM d, yyyy"),
+                          actor: "System",
+                          color,
+                        });
+                      }
                     }
 
                     if (timelineEvents.length === 0) {
                       return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
                     }
 
+                    // Sort chronologically (newest first for display)
                     return (
                       <div className="space-y-4">
                         {[...timelineEvents].reverse().map((evt, i) => (
