@@ -883,6 +883,21 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
+                // Update local status to 'approved' so peer reviewer dashboard shows "Completed"
+                workflowStatus.mutate({
+                  id: localId || id || "",
+                  status: "approved",
+                  previousStatus: proposal.status,
+                  ticketNumber: proposal.ticket_number || id,
+                  proposalData: {
+                    id: localId || undefined,
+                    name: proposal.name,
+                    author_name: proposal.author_name,
+                    author_email: proposal.author_email,
+                    ticket_number: proposal.ticket_number || id,
+                  },
+                });
+
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
                 navigate('/proposals');
