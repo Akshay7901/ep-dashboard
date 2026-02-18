@@ -301,8 +301,8 @@ const ProposalDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Reviewer + Actions row (for reviewer_1 only) */}
-      {isReviewer1 && proposal.status !== "rejected" && <div className="flex items-center gap-3 flex-wrap">
+      {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
+      {isReviewer1 && !hasSubmittedReview && proposal.status !== "rejected" && (proposal.status === "submitted" || proposal.status === "under_review") && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
               {proposal.status === "submitted" ? <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
