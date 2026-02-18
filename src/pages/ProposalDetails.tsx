@@ -761,98 +761,60 @@ const ProposalDetails: React.FC = () => {
                 <AccordionTrigger className="text-base font-semibold">Activity Timeline</AccordionTrigger>
                 <AccordionContent className="pb-4">
                   {(() => {
-                    const timelineEvents: { title: string; date: string; actor: string; color: string }[] = [];
+                    // Build timeline events in chronological order (oldest first)
+                    const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
 
-                    // 1. Proposal Submitted
                     const submittedDate = proposal.submitted_at || proposal.created_at;
+                    const assignedDate = proposal.assigned_at
+                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+
+                    // 1. Initial Screening Passed — when decision reviewer accepted (inferred from assignment)
+                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
+                      // Use a date between submitted and assigned, or fallback to assigned date
+                      const screeningDateRaw = assignedDate || proposal.updated_at;
+                      if (screeningDateRaw) {
+                        timelineEvents.push({
+                          title: "Initial Screening Passed",
+                          date: format(new Date(screeningDateRaw), "MMM d, yyyy"),
+                          actor: "Commissioning Editor",
+                          color: "bg-muted-foreground",
+                          sortDate: new Date(screeningDateRaw),
+                        });
+                      }
+                    }
+
+                    // 2. Proposal Submitted — author's original submission
                     if (submittedDate) {
                       timelineEvents.push({
                         title: "Proposal Submitted",
                         date: format(new Date(submittedDate), "MMM d, yyyy"),
                         actor: proposal.corresponding_author_name || proposal.author_name || "Author",
                         color: "bg-[#3d5a47]",
+                        sortDate: new Date(submittedDate),
                       });
                     }
 
-                    // 2. Initial Screening Passed (inferred: proposal moved past 'submitted')
-                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
-                      const screeningDate = proposal.assigned_at || proposal.updated_at;
-                      if (screeningDate) {
-                        timelineEvents.push({
-                          title: "Initial Screening Passed",
-                          date: format(new Date(screeningDate), "MMM d, yyyy"),
-                          actor: "Commissioning Editor",
-                          color: "bg-muted-foreground",
-                        });
-                      }
-                    }
-
-                    // 3. Assigned to Peer Reviewer
-                    const assignedDate = proposal.assigned_at
-                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
+                    // 3. Assigned to Peer Reviewer — when reviewer was assigned
                     if (assignedDate && proposal.status !== "submitted") {
                       timelineEvents.push({
                         title: "Assigned to Peer Reviewer",
                         date: format(new Date(assignedDate), "MMM d, yyyy"),
                         actor: "System",
                         color: "bg-[#2563eb]",
+                        sortDate: new Date(assignedDate),
                       });
-                    }
-
-                    // 4. Review Completed (if approved or beyond)
-                    if (["approved", "finalised", "locked"].includes(proposal.status)) {
-                      const reviewDate = proposal.updated_at;
-                      if (reviewDate) {
-                        timelineEvents.push({
-                          title: "Review Completed",
-                          date: format(new Date(reviewDate), "MMM d, yyyy"),
-                          actor: "Peer Reviewer",
-                          color: "bg-[#3d5a47]",
-                        });
-                      }
-                    }
-
-                    // 5. Proposal Declined
-                    if (proposal.status === "rejected") {
-                      timelineEvents.push({
-                        title: "Proposal Declined",
-                        date: format(new Date(proposal.updated_at), "MMM d, yyyy"),
-                        actor: "Commissioning Editor",
-                        color: "bg-destructive",
-                      });
-                    }
-
-                    // Also append any additional workflow log events not already covered
-                    for (const log of ([...logs] as any[]).reverse()) {
-                      const isDuplicate = timelineEvents.some(e =>
-                        e.date === format(new Date(log.created_at), "MMM d, yyyy") &&
-                        ((log.new_status === "under_review" && e.title === "Assigned to Peer Reviewer") ||
-                         (log.new_status === "approved" && e.title === "Review Completed") ||
-                         (log.new_status === "rejected" && e.title === "Proposal Declined"))
-                      );
-                      if (!isDuplicate) {
-                        let title = log.action;
-                        let color = "bg-muted-foreground";
-                        if (log.new_status === "submitted") {
-                          title = "Reverted to New";
-                        }
-                        timelineEvents.push({
-                          title,
-                          date: format(new Date(log.created_at), "MMM d, yyyy"),
-                          actor: "System",
-                          color,
-                        });
-                      }
                     }
 
                     if (timelineEvents.length === 0) {
                       return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
                     }
 
-                    // Sort chronologically (newest first for display)
+                    // Display newest first (matches Figma: Assigned → Submitted → Screening)
+                    const sorted = [...timelineEvents].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
+
                     return (
                       <div className="space-y-4">
-                        {[...timelineEvents].reverse().map((evt, i) => (
+                        {sorted.map((evt, i) => (
                           <div key={i} className="flex items-start gap-3">
                             <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evt.color}`} />
                             <div className="flex-1">
