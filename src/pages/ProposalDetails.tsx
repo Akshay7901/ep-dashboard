@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send } from "lucide-react";
 import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
@@ -306,7 +306,7 @@ const ProposalDetails: React.FC = () => {
             )}
           </div>
           <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-            <ProposalStatusBadge status={isPostSubmission ? "approved" : proposal.status} showIcon={false} />
+            <ProposalStatusBadge status={proposal.status} showIcon={false} />
             {/* Date next to badge in post-submission */}
             {isPostSubmission && (
               <span className="text-sm text-muted-foreground">
@@ -460,7 +460,7 @@ const ProposalDetails: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
-                  <ProposalStatusBadge status={isPostSubmission ? "approved" : proposal.status} showIcon={false} />
+                  <ProposalStatusBadge status={proposal.status} showIcon={false} />
                 </div>
               </div>
             </div>
@@ -640,6 +640,44 @@ const ProposalDetails: React.FC = () => {
               <Card>
                 <CardContent className="py-8">
                   <p className="text-sm text-muted-foreground text-center">No peer review feedback available yet.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Send Contract Button - only show when review is submitted but contract not yet sent */}
+            {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'finalised' && proposal.status !== 'locked' && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Ready to send contract?</p>
+                    <p className="text-xs text-muted-foreground">Review the feedback above, then send the contract to the author.</p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      upstreamUpdateStatus({
+                        status: "approved",
+                        notes: "Decision reviewer sent contract to author",
+                      });
+                      workflowStatus.mutate({
+                        id: localId || id || "",
+                        status: "approved",
+                        previousStatus: proposal.status,
+                        ticketNumber: proposal.ticket_number || id,
+                        proposalData: {
+                          id: localId || undefined,
+                          name: proposal.name,
+                          author_name: proposal.author_name,
+                          author_email: proposal.author_email,
+                          ticket_number: proposal.ticket_number || id,
+                        },
+                      });
+                      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                    }}
+                    disabled={isBusy}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Contract to Author
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -1035,25 +1073,6 @@ const ProposalDetails: React.FC = () => {
                     submittedAt: new Date().toISOString(),
                   },
                   ticketNumber: proposal.ticket_number || id,
-                });
-
-                // Update status to approved (Contract Sent)
-                upstreamUpdateStatus({
-                  status: "approved",
-                  notes: "Decision reviewer submitted review",
-                });
-                workflowStatus.mutate({
-                  id: localId || id || "",
-                  status: "approved",
-                  previousStatus: proposal.status,
-                  ticketNumber: proposal.ticket_number || id,
-                  proposalData: {
-                    id: localId || undefined,
-                    name: proposal.name,
-                    author_name: proposal.author_name,
-                    author_email: proposal.author_email,
-                    ticket_number: proposal.ticket_number || id,
-                  },
                 });
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
