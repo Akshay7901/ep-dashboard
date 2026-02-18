@@ -42,9 +42,9 @@ const statusConfig: Record<ProposalStatus, {
     icon: CheckCircle2,
   },
   finalised: {
-    label: 'Finalised',
+    label: 'Review Returned',
     variant: 'secondary',
-    className: 'bg-[#2d3748] text-white hover:bg-[#2d3748] border-[#2d3748] rounded-full px-4',
+    className: 'bg-[#c05621] text-white hover:bg-[#c05621] border-[#c05621] rounded-full px-4',
     icon: FileCheck,
   },
   rejected: {
