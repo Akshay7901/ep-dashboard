@@ -118,7 +118,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail, localOverride?: an
     additional_info: currentData.additional_info || null,
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
-    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
+    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers) || (localOverride?.assigned_reviewer_emails?.length > 0 ? localOverride.updated_at : null),
     assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) ? (apiProposal as any).assigned_reviewers : null,
   };
 };
