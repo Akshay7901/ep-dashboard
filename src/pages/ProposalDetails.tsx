@@ -213,13 +213,21 @@ const ProposalDetails: React.FC = () => {
   const showReviewForm = isReviewer2;
 
   // Check if peer reviewer already submitted their review
-  const peerReviewAlreadySubmitted = isReviewer2 && comments.some(
-    (c: any) => c.review_form_data?.submittedForAuthorization || c.submitted_for_authorization
+  // Detect via: new marker, old-style text prefix, or proposal status beyond under_review
+  const peerReviewAlreadySubmitted = isReviewer2 && (
+    comments.some(
+      (c: any) => c.review_form_data?.submittedForAuthorization
+        || c.submitted_for_authorization
+        || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
+    )
+    || ['approved', 'finalised', 'locked'].includes(proposal.status)
   );
 
   // Check if there's a submitted peer review (for decision reviewer split layout)
   const submittedReview = comments.find(
-    (c: any) => c.review_form_data?.submittedForAuthorization || c.submitted_for_authorization
+    (c: any) => c.review_form_data?.submittedForAuthorization
+      || c.submitted_for_authorization
+      || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
   );
   const hasSubmittedReview = isReviewer1 && !!submittedReview;
   const revertToNew = async () => {

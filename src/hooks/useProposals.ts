@@ -620,6 +620,10 @@ export const useProposalComments = (proposalId: string, ticketNumber?: string) =
             // Not valid JSON, treat as plain text
           }
         }
+        // Detect old-style submitted comments
+        else if (rawText.startsWith('[Peer Review Submitted]')) {
+          submittedForAuth = true;
+        }
 
         return {
           id: ac.id?.toString() || crypto.randomUUID(),
