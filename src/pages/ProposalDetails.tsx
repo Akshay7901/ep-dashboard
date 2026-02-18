@@ -660,15 +660,83 @@ const ProposalDetails: React.FC = () => {
                   <div className="text-left">
                     <p className="text-base font-semibold">Publishing Contract</p>
                     <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                      Current version: Standard Contract
+                      Current version: {(() => {
+                        const decisionComment = submittedReviewComments.find(
+                          (c: any) => c !== submittedReview
+                        );
+                        const ct = (decisionComment as any)?.review_form_data?.contractType;
+                        return ct === "edited_volume" ? "Edited Volume Contract"
+                          : ct === "custom" ? "Custom Contract"
+                          : "Standard Contract";
+                      })()}
                     </p>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
+                  {/* Decision Reviewer's submitted comments */}
+                  {(() => {
+                    const decisionComment = submittedReviewComments.find(
+                      (c: any) => c !== submittedReview
+                    );
+                    const formData = (decisionComment as any)?.review_form_data || {};
+                    const reviewFields = [
+                      { label: "Scope", key: "scope" },
+                      { label: "Purpose and Value", key: "purposeAndValue" },
+                      { label: "Title", key: "title" },
+                      { label: "Originality and Points of Difference", key: "originalityAndDifference" },
+                      { label: "Credibility", key: "credibility" },
+                      { label: "Structure", key: "structure" },
+                      { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
+                      { label: "Other Comments", key: "otherComments" },
+                      { label: "Red Flags", key: "redFlags" },
+                    ];
+                    const hasAnyField = reviewFields.some(({ key }) => formData[key]);
+
+                    if (hasAnyField) {
+                      return (
+                        <div className="space-y-4 mb-6">
+                          <p className="text-sm font-semibold text-foreground">Decision Reviewer Comments</p>
+                          {reviewFields.map(({ label, key }) => {
+                            const value = formData[key];
+                            if (!value) return null;
+                            return (
+                              <div key={key} className="space-y-1">
+                                <p className="text-sm font-semibold">{label}</p>
+                                <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
+                                <Separator />
+                              </div>
+                            );
+                          })}
+                          {formData.recommendation && (
+                            <div className="border border-muted rounded-lg p-4 mt-2">
+                              <p className="text-sm font-semibold">Final Recommendation</p>
+                              <p className="text-sm font-medium mt-1 capitalize">
+                                {formData.recommendation.replace(/_/g, " ")}
+                              </p>
+                            </div>
+                          )}
+                          {formData.contractType && (
+                            <div className="border border-muted rounded-lg p-4">
+                              <p className="text-sm font-semibold">Contract Type</p>
+                              <p className="text-sm font-medium mt-1">
+                                {formData.contractType === "edited_volume" ? "Edited Volume Contract"
+                                  : formData.contractType === "custom" ? "Custom Contract"
+                                  : "Standard Contract"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Send Contract action */}
                   {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'locked' ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
+                      <Separator />
                       <p className="text-sm text-muted-foreground">
-                        Review the peer feedback above, then send the contract to the author.
+                        Review the feedback above, then send the contract to the author.
                       </p>
                       <Button
                         onClick={() => {
@@ -698,11 +766,12 @@ const ProposalDetails: React.FC = () => {
                       </Button>
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {proposal.status === 'approved' || proposal.status === 'locked'
-                        ? "Contract has been sent to the author."
-                        : "Contract will be available after review submission."}
-                    </p>
+                    proposal.status === 'approved' || proposal.status === 'locked' ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        Contract has been sent to the author.
+                      </div>
+                    ) : null
                   )}
                 </AccordionContent>
               </AccordionItem>
