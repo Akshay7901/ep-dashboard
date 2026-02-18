@@ -1055,7 +1055,125 @@ const ProposalDetails: React.FC = () => {
         )
       ) : hasSubmittedReview ? (
         (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
-          <div>{rightPanel}</div>
+          <div className="max-w-3xl mx-auto py-8 px-4 space-y-4">
+            {/* Original Peer Review Feedback - Accordion */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="peer-feedback" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline py-5">
+                  <div className="text-left">
+                    <h3 className="text-base font-semibold">Original Peer Review Feedback</h3>
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                      {(() => {
+                        const peerComment = comments.find(
+                          (c: any) =>
+                            c.review_form_data?.submittedForAuthorization &&
+                            !c.review_form_data?.contractType
+                        );
+                        const reviewerName = (peerComment as any)?.reviewer_name || 'Peer Reviewer';
+                        const recommendation = peerComment?.review_form_data?.recommendation;
+                        const recLabel = recommendation === 'strongly_recommend' ? 'Strongly Recommend'
+                          : recommendation === 'recommend' ? 'Recommend'
+                          : recommendation === 'recommend_with_revisions' ? 'Minor Revision'
+                          : recommendation === 'do_not_recommend' ? 'Do Not Recommend'
+                          : 'Review Submitted';
+                        return `${reviewerName} • ${recLabel}`;
+                      })()}
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  {(() => {
+                    const peerComment = comments.find(
+                      (c: any) =>
+                        c.review_form_data?.submittedForAuthorization &&
+                        !c.review_form_data?.contractType
+                    );
+                    if (!peerComment) return <p className="text-sm text-muted-foreground">No peer review feedback available.</p>;
+                    const fd = peerComment.review_form_data as Record<string, any> || {};
+                    return (
+                      <div className="space-y-4 pb-2">
+                        {fd.academicMerit && (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                              { label: 'Academic Merit', val: fd.academicMerit },
+                              { label: 'Market Potential', val: fd.marketPotential },
+                              { label: 'Originality', val: fd.originalityScore },
+                              { label: 'Writing Quality', val: fd.writingQuality },
+                            ].map(s => (
+                              <div key={s.label} className="text-center p-2 bg-muted/50 rounded-lg">
+                                <p className="text-xs text-muted-foreground">{s.label}</p>
+                                <p className="text-base font-bold">{s.val || '-'}/10</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {fd.strengthsComments && (
+                          <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <p className="text-xs font-medium text-green-700 mb-1">Strengths</p>
+                            <p className="text-sm">{fd.strengthsComments}</p>
+                          </div>
+                        )}
+                        {fd.weaknessesComments && (
+                          <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <p className="text-xs font-medium text-red-700 mb-1">Weaknesses</p>
+                            <p className="text-sm">{fd.weaknessesComments}</p>
+                          </div>
+                        )}
+                        {fd.suggestionsComments && (
+                          <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                            <p className="text-xs font-medium text-blue-700 mb-1">Suggestions</p>
+                            <p className="text-sm">{fd.suggestionsComments}</p>
+                          </div>
+                        )}
+                        {fd.otherComments && (
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Other Comments</p>
+                            <p className="text-sm">{fd.otherComments}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/* Publishing Contract - Accordion */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="contract" className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline py-5">
+                  <div className="text-left">
+                    <h3 className="text-base font-semibold">Publishing Contract</h3>
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                      {(() => {
+                        const decComment = comments.find(
+                          (c: any) => c.review_form_data?.contractType
+                        );
+                        const ct = decComment?.review_form_data?.contractType;
+                        const label = ct === 'edited_volume' ? 'Edited Volume Contract'
+                          : ct === 'custom' ? 'Custom Contract'
+                          : 'Standard Contract';
+                        return `Current version: ${label}`;
+                      })()}
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pb-2">
+                    <p className="text-sm text-muted-foreground">
+                      The contract has been sent to the author along with the proposal feedback.
+                    </p>
+                    {proposal.contract_sent_at && (
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Sent on:</span>{' '}
+                        <span className="font-medium">{format(new Date(proposal.contract_sent_at), 'MMMM d, yyyy')}</span>
+                      </p>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         ) : showingSummary ? (
           <PeerReviewSummary
             proposal={proposal}
