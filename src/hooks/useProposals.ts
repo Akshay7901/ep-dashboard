@@ -396,23 +396,9 @@ export const useProposal = (id: string) => {
             });
             if (found) {
               ticketNumber = found.ticket_number;
-            } else {
-              // UUID not found in any override — try fetching from local DB directly
-              try {
-                const { data: localRecord } = await supabase
-                  .from('proposals')
-                  .select('ticket_number')
-                  .eq('id', id)
-                  .maybeSingle();
-                if (localRecord?.ticket_number) {
-                  ticketNumber = localRecord.ticket_number;
-                }
-              } catch {
-                // ignore
-              }
             }
-          } catch (err) {
-            console.error('UUID resolution failed:', err);
+          } catch {
+            // Fall through
           }
         }
       }
