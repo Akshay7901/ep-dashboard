@@ -242,7 +242,7 @@ const ProposalDetails: React.FC = () => {
   );
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
     submittedReviewComments.length >= 2
-    || ['approved', 'finalised', 'locked'].includes(proposal.status)
+    || ['approved', 'locked'].includes(proposal.status)
   );
 
   const revertToNew = async () => {
@@ -645,7 +645,7 @@ const ProposalDetails: React.FC = () => {
             )}
 
             {/* Send Contract Button - only show when review is submitted but contract not yet sent */}
-            {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'finalised' && proposal.status !== 'locked' && (
+            {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'locked' && (
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="py-4 flex items-center justify-between">
                   <div>
