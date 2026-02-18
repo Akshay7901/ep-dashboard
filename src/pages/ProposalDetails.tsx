@@ -735,7 +735,7 @@ const ProposalDetails: React.FC = () => {
                   <div className="flex gap-4 py-1">
                     <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
                     <span className="text-sm font-medium">
-                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                      {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
                     </span>
                   </div>
                   {(() => {
@@ -764,7 +764,7 @@ const ProposalDetails: React.FC = () => {
                     // Build timeline events in chronological order (oldest first)
                     const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
 
-                    const submittedDate = proposal.submitted_at || proposal.created_at;
+                    const submittedDate = proposal.created_at;
                     const assignedDate = proposal.assigned_at
                       || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
 
