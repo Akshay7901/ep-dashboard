@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Proposal } from "@/types";
 
 const REVIEW_FIELDS = [
@@ -25,8 +26,10 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: () => void;
+  onConfirmSubmit: (contractType?: string) => void;
   isSubmitting: boolean;
+  /** Show contract selection for decision reviewer */
+  showContractSection?: boolean;
 }
 
 const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
@@ -35,7 +38,10 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   onGoBack,
   onConfirmSubmit,
   isSubmitting,
+  showContractSection = false,
 }) => {
+  const [selectedContract, setSelectedContract] = useState("standard");
+
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
       <h1 className="text-2xl font-bold mb-1">Peer Review Summary</h1>
@@ -88,6 +94,29 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         )}
       </div>
 
+      {/* Contract selection - only for decision reviewer */}
+      {showContractSection && (
+        <div className="mt-8">
+          <h2 className="text-base font-semibold mb-4">Select Contract to Send with Proposal</h2>
+          <Select value={selectedContract} onValueChange={setSelectedContract}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a contract" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="standard">Standard contract</SelectItem>
+              <SelectItem value="edited_volume">Edited volume contract</SelectItem>
+              <SelectItem value="custom">Custom contract</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground mt-3">
+            or{" "}
+            <button className="text-primary underline hover:opacity-80">
+              Upload another file
+            </button>
+          </p>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex justify-center gap-4 mt-10">
         <Button variant="outline" onClick={onGoBack} disabled={isSubmitting}>
@@ -95,10 +124,14 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         </Button>
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-          onClick={onConfirmSubmit}
+          onClick={() => onConfirmSubmit(showContractSection ? selectedContract : undefined)}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Submitting..." : "Confirm & Submit"}
+          {isSubmitting
+            ? "Submitting..."
+            : showContractSection
+            ? "Confirm & Submit to Author"
+            : "Confirm & Submit"}
         </Button>
       </div>
     </div>
