@@ -1047,8 +1047,88 @@ const ProposalDetails: React.FC = () => {
             />
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
-            {rightPanel}
+            {/* Simplified right panel for decision reviewer split view */}
+            <div className="space-y-6">
+              {/* Back to Home link */}
+              <button
+                onClick={() => navigate('/proposals')}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </button>
+
+              {/* Title + Subtitle + Submitted date */}
+              <div>
+                <h2 className="text-xl font-bold text-foreground">{proposal.name}</h2>
+                {proposal.sub_title && (
+                  <p className="text-sm text-muted-foreground mt-1 italic">{proposal.sub_title}</p>
+                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Submitted {proposal.created_at ? format(new Date(proposal.created_at), "MMMM d, yyyy") : "—"}
+                </p>
+              </div>
+
+              {/* Assigned Reviewer chip */}
+              {(() => {
+                const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+                  || proposal?.assigned_reviewers?.map((r: any) => r.email)
+                  || [];
+                const assignedEmail = assignedEmails[0];
+                const assigned = reviewers.find(r => r.email === assignedEmail);
+                const reviewerName = assigned ? (assigned.name || assigned.email.split("@")[0]) : assignedEmail;
+                if (!reviewerName) return null;
+                return (
+                  <div className="flex items-center gap-2">
+                    <UserCircle className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium border rounded-full px-3 py-1">{reviewerName}</span>
+                  </div>
+                );
+              })()}
+
+              {/* Book Info tab only */}
+              <Tabs defaultValue="book">
+                <TabsList className="w-auto">
+                  <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Book Info</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="book" className="space-y-6 mt-4">
+                  {/* Overview */}
+                  <div>
+                    <h3 className="text-base font-semibold mb-3">Overview</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">Book Type</p>
+                        <p className="text-sm font-medium">{proposal.book_type || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-0.5">Word Count</p>
+                        <p className="text-sm font-medium">{proposal.word_count || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Blurb */}
+                  <div>
+                    <h3 className="text-base font-semibold mb-2">Blurb</h3>
+                    <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                      {proposal.short_description || "No blurb available"}
+                    </p>
+                  </div>
+
+                  {/* TOC */}
+                  <div>
+                    <h3 className="text-base font-semibold mb-2">TOC</h3>
+                    <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                      {proposal.table_of_contents || "No table of contents available"}
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
         )
