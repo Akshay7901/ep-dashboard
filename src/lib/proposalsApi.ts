@@ -25,7 +25,7 @@ export interface StatusUpdate {
 }
 
 export interface AssignmentRequest {
-  reviewer_emails: string[];
+  reviewer_email: string;
 }
 
 // Peer Reviewers API

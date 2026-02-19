@@ -376,7 +376,7 @@ const ProposalDetails: React.FC = () => {
             setIsAssignDialogOpen(true);
             return;
           }
-          assignReviewers([selectedReviewer], {
+          assignReviewers(selectedReviewer, {
             onSuccess: () => {
               workflowStatus.mutate({
                 id: localId || id || "",
@@ -1288,7 +1288,7 @@ const ProposalDetails: React.FC = () => {
       setIsAssignDialogOpen(open);
       if (!open) setPendingAction(null);
     }} onAssign={reviewerIds => {
-      assignReviewers(reviewerIds, {
+      assignReviewers(reviewerIds[0], {
         onSuccess: () => {
           workflowStatus.mutate({
             id: localId || id || "",
