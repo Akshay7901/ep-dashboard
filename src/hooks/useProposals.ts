@@ -243,9 +243,10 @@ export const useProposal = (id: string) => {
         const apiProposal: any = await fetchProposalByTicket(ticketNumber);
         const mapped = mapApiProposalDetail(apiProposal);
 
-        // Get assigned_reviewers from detail or cached list
+        // Get assigned_reviewers from detail or cached list or fresh list fetch
         let assignedReviewers = mapped.assigned_reviewers;
         if (!assignedReviewers) {
+          // Try cache first
           const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
           for (const [, queryData] of cachedListData) {
             const cached = queryData?.data?.find(p => p.ticket_number === ticketNumber);
@@ -253,6 +254,18 @@ export const useProposal = (id: string) => {
               assignedReviewers = cached.assigned_reviewers;
               break;
             }
+          }
+        }
+        if (!assignedReviewers) {
+          // Cache miss (e.g. page reload) — fetch from list API
+          try {
+            const listData = await fetchProposalsList(1000, 0);
+            const listItem: any = (listData.proposals || []).find((p: any) => p.ticket_number === ticketNumber);
+            if (listItem?.assigned_reviewers && Array.isArray(listItem.assigned_reviewers) && listItem.assigned_reviewers.length > 0) {
+              assignedReviewers = listItem.assigned_reviewers;
+            }
+          } catch {
+            // ignore
           }
         }
 
