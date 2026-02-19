@@ -200,6 +200,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
         page,
         limit,
         totalPages: Math.ceil(apiData.total / limit),
+        status_summary: (apiData as any).status_summary || null,
       };
     },
     staleTime: 0,
