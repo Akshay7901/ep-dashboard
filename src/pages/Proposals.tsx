@@ -28,9 +28,11 @@ const decisionStatusOptions: { value: ProposalStatus | "all"; label: string }[] 
   { value: "all", label: "All Statuses" },
   { value: "submitted", label: "New" },
   { value: "under_review", label: "In Review" },
-  { value: "approved", label: "Contract Sent" },
-  { value: "rejected", label: "Declined" },
-  { value: "finalised", label: "Finalised" },
+  { value: "review_returned", label: "Review Returned" },
+  { value: "contract_issued", label: "Contract Sent" },
+  { value: "queries_raised", label: "Clarification" },
+  { value: "author_approved", label: "Accepted" },
+  { value: "declined", label: "Declined" },
   { value: "locked", label: "Locked" },
 ];
 
@@ -181,10 +183,8 @@ const Proposals: React.FC = () => {
     if (!userEmail) return [];
     return data.data
       .filter((p) => {
-        const localEmails = (p as any).assigned_reviewer_emails;
-        const apiEmails = p.assigned_reviewers?.map((r: any) => r.email);
-        const assignedEmails = (localEmails && localEmails.length > 0) ? localEmails : (apiEmails || []);
-        return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
+        const apiEmails = p.assigned_reviewers?.map((r: any) => r.email) || [];
+        return apiEmails.some((e: string) => e?.toLowerCase() === userEmail);
       })
       .map((p) => ({
         ...p,
@@ -193,28 +193,28 @@ const Proposals: React.FC = () => {
   }, [data?.data, isReviewer1, isReviewer2, user?.email, startedProposals]);
 
   const statusCounts = React.useMemo(() => {
-    if (!roleFilteredProposals.length) return { total: 0, newCount: 0, inReview: 0, contractSent: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
+    if (!roleFilteredProposals.length) return { total: 0, newCount: 0, inReview: 0, reviewReturned: 0, contractSent: 0, clarification: 0, accepted: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
     const d = roleFilteredProposals;
     return {
       total: d.length,
       newCount: d.filter((p) => p.status === "submitted").length,
       inReview: d.filter((p) => p.status === "under_review").length,
-      reviewReturned: d.filter((p) => p.status === "finalised").length,
-      contractSent: d.filter((p) => p.status === "approved").length,
-      clarification: d.filter((p) => p.status === "locked").length,
-      accepted: d.filter((p) => p.status === "finalised").length,
-      declined: d.filter((p) => p.status === "rejected").length,
+      reviewReturned: d.filter((p) => p.status === "review_returned").length,
+      contractSent: d.filter((p) => p.status === "contract_issued").length,
+      clarification: d.filter((p) => p.status === "queries_raised").length,
+      accepted: d.filter((p) => p.status === "author_approved").length,
+      declined: d.filter((p) => p.status === "declined" || p.status === "rejected").length,
       pending: d.filter((p) => p.status === "submitted").length,
       inProgress: d.filter((p) => p.status === "under_review").length,
-      completed: d.filter((p) => p.status === "approved" || p.status === "finalised").length,
+      completed: d.filter((p) => p.status === "approved" || p.status === "finalised" || p.status === "review_returned" || p.status === "contract_issued" || p.status === "author_approved").length,
     };
   }, [roleFilteredProposals]);
 
   const filteredProposals = React.useMemo(() => {
     if (!roleFilteredProposals.length) return [];
     if (statusFilter === "all") return roleFilteredProposals;
-    if (statusFilter === "approved") {
-      return roleFilteredProposals.filter((p) => p.status === "approved" || p.status === "finalised");
+    if (statusFilter === "declined") {
+      return roleFilteredProposals.filter((p) => p.status === "declined" || p.status === "rejected");
     }
     return roleFilteredProposals.filter((p) => p.status === statusFilter);
   }, [roleFilteredProposals, statusFilter]);
@@ -327,36 +327,36 @@ const Proposals: React.FC = () => {
               count={statusCounts.reviewReturned}
               label="Review Returned"
               colorClass="bg-[#c05621] text-white border-[#c05621]"
-              isActive={statusFilter === "finalised"}
-              onClick={() => handleStatusChange("finalised")}
+              isActive={statusFilter === "review_returned"}
+              onClick={() => handleStatusChange("review_returned")}
             />
             <StatusChip
               count={statusCounts.contractSent}
               label="Contract Sent"
               colorClass="bg-[#1d293d] text-white border-[#1d293d]"
-              isActive={statusFilter === "approved"}
-              onClick={() => handleStatusChange("approved")}
+              isActive={statusFilter === "contract_issued"}
+              onClick={() => handleStatusChange("contract_issued")}
             />
             <StatusChip
               count={statusCounts.clarification}
               label="Clarification"
               colorClass="bg-[#6b7280] text-white border-[#6b7280]"
-              isActive={statusFilter === "locked"}
-              onClick={() => handleStatusChange("locked")}
+              isActive={statusFilter === "queries_raised"}
+              onClick={() => handleStatusChange("queries_raised")}
             />
             <StatusChip
               count={statusCounts.accepted}
               label="Accepted"
               colorClass="bg-[#276749] text-white border-[#276749]"
-              isActive={false}
-              onClick={() => handleStatusChange("finalised")}
+              isActive={statusFilter === "author_approved"}
+              onClick={() => handleStatusChange("author_approved")}
             />
             <StatusChip
               count={statusCounts.declined}
               label="Declined"
               colorClass="bg-[#9b2c2c] text-white border-[#9b2c2c]"
-              isActive={statusFilter === "rejected"}
-              onClick={() => handleStatusChange("rejected")}
+              isActive={statusFilter === "declined"}
+              onClick={() => handleStatusChange("declined")}
             />
           </div>
         ) : (

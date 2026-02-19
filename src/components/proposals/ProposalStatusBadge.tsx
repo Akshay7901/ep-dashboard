@@ -35,6 +35,36 @@ const statusConfig: Record<ProposalStatus, {
     className: 'bg-[#45556c] text-white hover:bg-[#45556c] border-[#45556c] rounded-full px-4',
     icon: Clock,
   },
+  review_returned: {
+    label: 'Review Returned',
+    variant: 'secondary',
+    className: 'bg-[#c05621] text-white hover:bg-[#c05621] border-[#c05621] rounded-full px-4',
+    icon: FileCheck,
+  },
+  contract_issued: {
+    label: 'Contract Sent',
+    variant: 'secondary',
+    className: 'bg-[#1d293d] text-white hover:bg-[#1d293d] border-[#1d293d] rounded-full px-4',
+    icon: FileCheck,
+  },
+  queries_raised: {
+    label: 'Clarification',
+    variant: 'secondary',
+    className: 'bg-gray-600 text-white hover:bg-gray-600 border-gray-600 rounded-full px-4',
+    icon: Clock,
+  },
+  awaiting_author_approval: {
+    label: 'Awaiting Approval',
+    variant: 'secondary',
+    className: 'bg-[#45556c] text-white hover:bg-[#45556c] border-[#45556c] rounded-full px-4',
+    icon: Clock,
+  },
+  author_approved: {
+    label: 'Accepted',
+    variant: 'secondary',
+    className: 'bg-[#276749] text-white hover:bg-[#276749] border-[#276749] rounded-full px-4',
+    icon: CheckCircle2,
+  },
   approved: {
     label: 'Contract Sent',
     variant: 'secondary',
@@ -48,6 +78,12 @@ const statusConfig: Record<ProposalStatus, {
     icon: FileCheck,
   },
   rejected: {
+    label: 'Declined',
+    variant: 'destructive',
+    className: 'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c] rounded-full px-4',
+    icon: XCircle,
+  },
+  declined: {
     label: 'Declined',
     variant: 'destructive',
     className: 'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c] rounded-full px-4',
