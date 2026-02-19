@@ -160,8 +160,11 @@ const ProposalDetails: React.FC = () => {
   );
   React.useEffect(() => {
     if (reviewers.length === 0) return;
+    // Don't set default while proposal is still loading — wait for full data
+    if (isLoading || !proposal) return;
+    
     const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-      || proposal?.assigned_reviewers?.map((r: any) => r.email)
+      || proposal?.assigned_reviewers?.map((r: any) => r.email || r)
       || [];
     const assignedMatch = assignedEmails.length > 0
       ? reviewers.find(r => assignedEmails.includes(r.email))
@@ -174,7 +177,7 @@ const ProposalDetails: React.FC = () => {
       if (found) setSelectedReviewer(found.email);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultEmail, reviewers, assignedEmailsKey]);
+  }, [defaultEmail, reviewers, assignedEmailsKey, isLoading]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
