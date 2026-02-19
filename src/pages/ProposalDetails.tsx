@@ -153,15 +153,15 @@ const ProposalDetails: React.FC = () => {
   } = useProposal(id || "");
   const localId = proposal?.id || "";
 
-  // Set reviewer: prefer already-assigned reviewer, then default, then empty
-  // Re-derive whenever proposal assignment data changes
+  // Set reviewer on initial load only: prefer already-assigned reviewer, then default, then empty
+  const [reviewerInitialized, setReviewerInitialized] = useState(false);
   const assignedEmailsKey = JSON.stringify(
     (proposal as any)?.assigned_reviewer_emails
     || proposal?.assigned_reviewers?.map((r: any) => r.email)
     || []
   );
   React.useEffect(() => {
-    if (reviewers.length === 0) return;
+    if (reviewerInitialized || reviewers.length === 0) return;
     const assignedEmails = (proposal as any)?.assigned_reviewer_emails
       || proposal?.assigned_reviewers?.map((r: any) => r.email)
       || [];
@@ -171,10 +171,11 @@ const ProposalDetails: React.FC = () => {
 
     if (assignedMatch) {
       setSelectedReviewer(assignedMatch.email);
-    } else if (!selectedReviewer && defaultEmail) {
+    } else if (defaultEmail) {
       const found = reviewers.find(r => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
+    setReviewerInitialized(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultEmail, reviewers, assignedEmailsKey]);
   const {
