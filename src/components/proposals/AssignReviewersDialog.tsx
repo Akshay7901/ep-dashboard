@@ -1,18 +1,19 @@
- import React, { useState } from 'react';
- import {
-   Dialog,
-   DialogContent,
-   DialogDescription,
-   DialogFooter,
-   DialogHeader,
-   DialogTitle,
- } from '@/components/ui/dialog';
- import { Button } from '@/components/ui/button';
- import { Checkbox } from '@/components/ui/checkbox';
- import { Label } from '@/components/ui/label';
- import { Loader2, UserPlus } from 'lucide-react';
-  import { Badge } from '@/components/ui/badge';
-  import { usePeerReviewers } from '@/hooks/usePeerReviewers';
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Loader2, UserPlus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { usePeerReviewers } from '@/hooks/usePeerReviewers';
+import { useDefaultReviewer } from '@/hooks/useDefaultReviewer';
 
 interface AssignReviewersDialogProps {
   open: boolean;
@@ -29,6 +30,20 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
 }) => {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const { reviewers, isLoading: isLoadingReviewers } = usePeerReviewers();
+  const { defaultEmail } = useDefaultReviewer();
+
+  // Pre-select the default reviewer when dialog opens
+  useEffect(() => {
+    if (open && defaultEmail && reviewers.length > 0) {
+      const defaultReviewer = reviewers.find(r => r.email === defaultEmail);
+      if (defaultReviewer) {
+        setSelectedReviewers([String(defaultReviewer.id)]);
+      }
+    }
+    if (!open) {
+      setSelectedReviewers([]);
+    }
+  }, [open, defaultEmail, reviewers]);
  
    const handleToggle = (reviewerId: string) => {
      setSelectedReviewers((prev) =>
