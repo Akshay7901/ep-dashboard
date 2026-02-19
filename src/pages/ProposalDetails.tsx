@@ -160,40 +160,21 @@ const ProposalDetails: React.FC = () => {
   );
   React.useEffect(() => {
     if (reviewers.length === 0) return;
-    // Don't set default while proposal is still loading — wait for full data
-    if (isLoading || !proposal) return;
-    
-    // Only pre-select an assigned reviewer if the proposal is actively under review
-    // For "submitted"/"new" status, the assignment data from the API is historical and should not pre-select
-    const isActivelyAssigned = proposal.status === 'under_review' || proposal.status === 'approved' || proposal.status === 'finalised' || proposal.status === 'locked';
-    
-    if (isActivelyAssigned) {
-      // Get assigned reviewers sorted by most recent assignment first
-      const assignedReviewersList = proposal?.assigned_reviewers || [];
-      const sortedAssignments = [...assignedReviewersList].sort((a: any, b: any) => {
-        const dateA = a.assigned_at ? new Date(a.assigned_at).getTime() : 0;
-        const dateB = b.assigned_at ? new Date(b.assigned_at).getTime() : 0;
-        return dateB - dateA; // Most recent first
-      });
+    const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+      || proposal?.assigned_reviewers?.map((r: any) => r.email)
+      || [];
+    const assignedMatch = assignedEmails.length > 0
+      ? reviewers.find(r => assignedEmails.includes(r.email))
+      : null;
 
-      // Find the most recently assigned reviewer that exists in the peer reviewers list
-      for (const assignment of sortedAssignments) {
-        const email = assignment.email || assignment;
-        const match = reviewers.find(r => r.email === email);
-        if (match) {
-          setSelectedReviewer(match.email);
-          return;
-        }
-      }
-    }
-    
-    // Fallback to default reviewer for new/submitted proposals
-    if (!selectedReviewer && defaultEmail) {
+    if (assignedMatch) {
+      setSelectedReviewer(assignedMatch.email);
+    } else if (!selectedReviewer && defaultEmail) {
       const found = reviewers.find(r => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultEmail, reviewers, assignedEmailsKey, isLoading]);
+  }, [defaultEmail, reviewers, assignedEmailsKey]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
@@ -378,16 +359,12 @@ const ProposalDetails: React.FC = () => {
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            // Get the most recently assigned reviewer
-            const assignedList = proposal?.assigned_reviewers || [];
-            const sorted = [...assignedList].sort((a: any, b: any) => {
-              const dateA = a.assigned_at ? new Date(a.assigned_at).getTime() : 0;
-              const dateB = b.assigned_at ? new Date(b.assigned_at).getTime() : 0;
-              return dateB - dateA;
-            });
-            const mostRecentEmail = sorted[0]?.email || selectedReviewer;
-            const assigned = reviewers.find(r => r.email === mostRecentEmail);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : mostRecentEmail || "N/A";
+            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+              || proposal?.assigned_reviewers?.map((r: any) => r.email)
+              || [];
+            const assignedEmail = assignedEmails[0] || selectedReviewer;
+            const assigned = reviewers.find(r => r.email === assignedEmail);
+            return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
           })()}
                 </div>}
             </>}
@@ -961,7 +938,7 @@ const ProposalDetails: React.FC = () => {
                   <div className="flex gap-4 py-1">
                     <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
                     <span className="text-sm font-medium">
-                      {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
                     </span>
                   </div>
                   {(() => {
@@ -990,7 +967,7 @@ const ProposalDetails: React.FC = () => {
                     // Build timeline events in chronological order (oldest first)
                     const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
 
-                    const submittedDate = proposal.created_at;
+                    const submittedDate = proposal.submitted_at || proposal.created_at;
                     const assignedDate = proposal.assigned_at
                       || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
 
