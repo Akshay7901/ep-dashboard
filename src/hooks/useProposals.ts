@@ -278,22 +278,9 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
       // Fetch proposals directly from external API
       const apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
 
-      // Fetch detail for each proposal to get address & assigned_reviewers
-      const detailPromises = (apiData.proposals || []).map(async (p: any) => {
-        try {
-          const detail = await fetchProposalByTicket(p.ticket_number);
-          return {
-            ticket_number: p.ticket_number,
-            address: (detail as any)?.current_data?.address || null,
-            assigned_reviewers: (detail as any)?.assigned_reviewers || null,
-          };
-        } catch {
-          return { ticket_number: p.ticket_number, address: null, assigned_reviewers: null };
-        }
-      });
-
-      const details = await Promise.all(detailPromises);
-      const detailsMap = new Map(details.map((d: any) => [d.ticket_number, d]));
+      // Use list-level data only — no individual detail calls
+      // Address and assigned_reviewers are available from list API or local overrides
+      const detailsMap = new Map<string, any>();
 
       // Get local overrides from Supabase
       const ticketNumbers = (apiData.proposals || []).map((p: any) => p.ticket_number).filter(Boolean);
@@ -302,11 +289,9 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
       // Map API proposals with local overrides and detail data
       let proposals = (apiData.proposals || []).map((apiProposal: any) => {
         const localOverride = overrideMap.get(apiProposal.ticket_number) || null;
-        const detail = detailsMap.get(apiProposal.ticket_number);
         
-        // Attach detail data
-        apiProposal.address = detail?.address || null;
-        apiProposal.assigned_reviewers = detail?.assigned_reviewers || null;
+        // Use address and assigned_reviewers from list API data directly
+        // (these fields come from the list endpoint already if available)
         
         // Override status from local
         if (localOverride) {
