@@ -163,16 +163,26 @@ const ProposalDetails: React.FC = () => {
     // Don't set default while proposal is still loading — wait for full data
     if (isLoading || !proposal) return;
     
-    const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-      || proposal?.assigned_reviewers?.map((r: any) => r.email || r)
-      || [];
-    const assignedMatch = assignedEmails.length > 0
-      ? reviewers.find(r => assignedEmails.includes(r.email))
-      : null;
+    // Only pre-select an assigned reviewer if the proposal is actively under review
+    // For "submitted"/"new" status, the assignment data from the API is historical and should not pre-select
+    const isActivelyAssigned = proposal.status === 'under_review' || proposal.status === 'approved' || proposal.status === 'finalised' || proposal.status === 'locked';
+    
+    if (isActivelyAssigned) {
+      const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+        || proposal?.assigned_reviewers?.map((r: any) => r.email || r)
+        || [];
+      const assignedMatch = assignedEmails.length > 0
+        ? reviewers.find(r => assignedEmails.includes(r.email))
+        : null;
 
-    if (assignedMatch) {
-      setSelectedReviewer(assignedMatch.email);
-    } else if (!selectedReviewer && defaultEmail) {
+      if (assignedMatch) {
+        setSelectedReviewer(assignedMatch.email);
+        return;
+      }
+    }
+    
+    // Fallback to default reviewer for new/submitted proposals
+    if (!selectedReviewer && defaultEmail) {
       const found = reviewers.find(r => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
