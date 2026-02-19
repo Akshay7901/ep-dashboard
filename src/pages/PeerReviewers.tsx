@@ -91,20 +91,7 @@ const PeerReviewers: React.FC = () => {
         to_reviewer_email: targetEmail,
       });
 
-      // Update local assigned_reviewer_emails to reflect the reassignment
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        await supabase.functions.invoke("proposal-workflow", {
-          body: {
-            action: "updateStatus",
-            ticketNumber,
-            status: undefined,
-            assignedReviewerEmails: [targetEmail],
-          },
-        });
-      } catch {
-        // Best-effort local sync
-      }
+      // No local sync needed — reassignment handled by EthicsPress API above
 
       toast({
         title: "Proposal Re-assigned",
