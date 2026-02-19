@@ -171,8 +171,10 @@ const ProposalDetails: React.FC = () => {
 
     if (assignedMatch) {
       setSelectedReviewer(assignedMatch.email);
-    } else if (proposal.status === "submitted" && defaultEmail) {
-      // Only use default for unassigned (submitted) proposals
+    } else if (assignedEmails.length > 0) {
+      // API has an assigned email but it doesn't match any local reviewer - show it anyway
+      setSelectedReviewer(assignedEmails[0]);
+    } else if (defaultEmail) {
       const found = reviewers.find(r => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
