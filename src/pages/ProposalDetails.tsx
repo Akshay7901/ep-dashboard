@@ -350,15 +350,8 @@ const ProposalDetails: React.FC = () => {
             setIsAssignDialogOpen(true);
             return;
           }
-          assignReviewers([selectedReviewer], {
-            onSuccess: () => {
-              upstreamUpdateStatus({
-                status: "under_review",
-                notes: "Assigned for peer review",
-              });
-            }
-          });
-        }} disabled={isUpdatingUpstream || isAssigning}>
+          assignReviewers([selectedReviewer]);
+        }} disabled={isAssigning}>
                 Submit for review
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isUpdatingUpstream}>
@@ -1213,18 +1206,11 @@ const ProposalDetails: React.FC = () => {
     }} onAssign={reviewerIds => {
       assignReviewers(reviewerIds, {
         onSuccess: () => {
-          upstreamUpdateStatus({
-            status: "under_review",
-            notes: "Assigned for peer review",
-          }, {
-            onSuccess: () => {
-              setIsAssignDialogOpen(false);
-              setPendingAction(null);
-            }
-          });
+          setIsAssignDialogOpen(false);
+          setPendingAction(null);
         }
       });
-    }} isLoading={isUpdatingUpstream || isAssigning} />
+    }} isLoading={isAssigning} />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={() => {
       upstreamUpdateStatus({
