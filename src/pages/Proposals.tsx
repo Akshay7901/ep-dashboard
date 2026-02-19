@@ -24,30 +24,28 @@ const ITEMS_PER_PAGE = 10;
    DECISION REVIEWER (reviewer_1) — "Proposal Intake" config
    ============================================================ */
 
-const decisionStatusOptions: { value: ProposalStatus | "all"; label: string }[] = [
-  { value: "all", label: "All Statuses" },
-  { value: "submitted", label: "New" },
-  { value: "under_review", label: "In Review" },
-  { value: "review_returned", label: "Review Returned" },
-  { value: "contract_issued", label: "Contract Sent" },
-  { value: "queries_raised", label: "Clarification" },
-  { value: "author_approved", label: "Accepted" },
-  { value: "declined", label: "Declined" },
-  { value: "locked", label: "Locked" },
-];
-
 /* ============================================================
-   PEER REVIEWER (reviewer_2) — "Peer Review Dashboard" config
+   Status chip color & label config — keyed by API status_summary keys
    ============================================================ */
 
-const peerStatusOptions: { value: ProposalStatus | "all"; label: string }[] = [
-  { value: "all", label: "All Statuses" },
-  { value: "submitted", label: "Pending Review" },
-  { value: "under_review", label: "In Progress" },
-  { value: "approved", label: "Completed" },
-  { value: "rejected", label: "Declined" },
-  { value: "locked", label: "Locked" },
-];
+const statusChipConfig: Record<string, { label: string; colorClass: string; filterValue: string }> = {
+  // Decision reviewer statuses
+  total: { label: "Total", colorClass: "bg-[#2d3748] text-white border-[#2d3748]", filterValue: "all" },
+  new: { label: "New", colorClass: "bg-[#3d5a47] text-white border-[#3d5a47]", filterValue: "submitted" },
+  in_review: { label: "In Review", colorClass: "bg-[#45556c] text-white border-[#45556c]", filterValue: "under_review" },
+  review_returned: { label: "Review Returned", colorClass: "bg-[#c05621] text-white border-[#c05621]", filterValue: "review_returned" },
+  contract_issued: { label: "Contract Sent", colorClass: "bg-[#1d293d] text-white border-[#1d293d]", filterValue: "contract_issued" },
+  queries_raised: { label: "Clarification", colorClass: "bg-[#6b7280] text-white border-[#6b7280]", filterValue: "queries_raised" },
+  awaiting_author_approval: { label: "Awaiting Approval", colorClass: "bg-[#45556c] text-white border-[#45556c]", filterValue: "awaiting_author_approval" },
+  author_approved: { label: "Accepted", colorClass: "bg-[#276749] text-white border-[#276749]", filterValue: "author_approved" },
+  locked: { label: "Locked", colorClass: "bg-gray-600 text-white border-gray-600", filterValue: "locked" },
+  declined: { label: "Declined", colorClass: "bg-[#9b2c2c] text-white border-[#9b2c2c]", filterValue: "declined" },
+  // Peer reviewer statuses
+  assigned: { label: "Assigned", colorClass: "bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]", filterValue: "all" },
+  in_progress: { label: "In Progress", colorClass: "bg-[#f2a627] text-white border-[#f2a627]", filterValue: "under_review" },
+  completed: { label: "Completed", colorClass: "bg-[#93a316] text-white border-[#93a316]", filterValue: "approved" },
+  pending: { label: "Pending", colorClass: "bg-[#7a2626] text-white border-[#7a2626]", filterValue: "submitted" },
+};
 
 const peerReviewStatusConfig: Record<string, { label: string; className: string }> = {
   submitted: {
@@ -192,23 +190,22 @@ const Proposals: React.FC = () => {
       }));
   }, [data?.data, isReviewer1, isReviewer2, user?.email, startedProposals]);
 
-  const statusCounts = React.useMemo(() => {
-    if (!roleFilteredProposals.length) return { total: 0, newCount: 0, inReview: 0, reviewReturned: 0, contractSent: 0, clarification: 0, accepted: 0, declined: 0, pending: 0, inProgress: 0, completed: 0 };
-    const d = roleFilteredProposals;
-    return {
-      total: d.length,
-      newCount: d.filter((p) => p.status === "submitted").length,
-      inReview: d.filter((p) => p.status === "under_review").length,
-      reviewReturned: d.filter((p) => p.status === "review_returned").length,
-      contractSent: d.filter((p) => p.status === "contract_issued").length,
-      clarification: d.filter((p) => p.status === "queries_raised").length,
-      accepted: d.filter((p) => p.status === "author_approved").length,
-      declined: d.filter((p) => p.status === "declined" || p.status === "rejected").length,
-      pending: d.filter((p) => p.status === "submitted").length,
-      inProgress: d.filter((p) => p.status === "under_review").length,
-      completed: d.filter((p) => p.status === "approved" || p.status === "finalised" || p.status === "review_returned" || p.status === "contract_issued" || p.status === "author_approved").length,
-    };
-  }, [roleFilteredProposals]);
+  // Use status_summary from API response directly
+  const statusSummary: Record<string, number> | null = data?.status_summary || null;
+
+  // Build status options for dropdown from status_summary keys
+  const statusOptions = React.useMemo(() => {
+    if (!statusSummary) return [{ value: "all" as const, label: "All Statuses" }];
+    const options: { value: string; label: string }[] = [{ value: "all", label: "All Statuses" }];
+    Object.keys(statusSummary).forEach((key) => {
+      if (key === "total") return;
+      const config = statusChipConfig[key];
+      if (config) {
+        options.push({ value: config.filterValue, label: config.label });
+      }
+    });
+    return options;
+  }, [statusSummary]);
 
   const filteredProposals = React.useMemo(() => {
     if (!roleFilteredProposals.length) return [];
@@ -263,7 +260,7 @@ const Proposals: React.FC = () => {
     );
   }
 
-  const statusOptions = isReviewer1 ? decisionStatusOptions : peerStatusOptions;
+  
 
   /* ============================================================
      RENDER
@@ -299,96 +296,23 @@ const Proposals: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Summary Chips — different per role */}
-        {isReviewer1 ? (
+        {/* Status Summary Chips — dynamically rendered from API status_summary */}
+        {statusSummary && (
           <div className="flex flex-wrap items-center gap-3">
-            <StatusChip
-              count={statusCounts.total}
-              label="Total"
-              colorClass="bg-[#2d3748] text-white border-[#2d3748]"
-              isActive={statusFilter === "all"}
-              onClick={() => handleStatusChange("all")}
-            />
-            <StatusChip
-              count={statusCounts.newCount}
-              label="New"
-              colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
-              isActive={statusFilter === "submitted"}
-              onClick={() => handleStatusChange("submitted")}
-            />
-            <StatusChip
-              count={statusCounts.inReview}
-              label="In Review"
-              colorClass="bg-[#45556c] text-white border-[#45556c]"
-              isActive={statusFilter === "under_review"}
-              onClick={() => handleStatusChange("under_review")}
-            />
-            <StatusChip
-              count={statusCounts.reviewReturned}
-              label="Review Returned"
-              colorClass="bg-[#c05621] text-white border-[#c05621]"
-              isActive={statusFilter === "review_returned"}
-              onClick={() => handleStatusChange("review_returned")}
-            />
-            <StatusChip
-              count={statusCounts.contractSent}
-              label="Contract Sent"
-              colorClass="bg-[#1d293d] text-white border-[#1d293d]"
-              isActive={statusFilter === "contract_issued"}
-              onClick={() => handleStatusChange("contract_issued")}
-            />
-            <StatusChip
-              count={statusCounts.clarification}
-              label="Clarification"
-              colorClass="bg-[#6b7280] text-white border-[#6b7280]"
-              isActive={statusFilter === "queries_raised"}
-              onClick={() => handleStatusChange("queries_raised")}
-            />
-            <StatusChip
-              count={statusCounts.accepted}
-              label="Accepted"
-              colorClass="bg-[#276749] text-white border-[#276749]"
-              isActive={statusFilter === "author_approved"}
-              onClick={() => handleStatusChange("author_approved")}
-            />
-            <StatusChip
-              count={statusCounts.declined}
-              label="Declined"
-              colorClass="bg-[#9b2c2c] text-white border-[#9b2c2c]"
-              isActive={statusFilter === "declined"}
-              onClick={() => handleStatusChange("declined")}
-            />
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusChip
-              count={statusCounts.total}
-              label="Assigned"
-              colorClass="bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]"
-              isActive={statusFilter === "all"}
-              onClick={() => handleStatusChange("all")}
-            />
-            <StatusChip
-              count={statusCounts.pending}
-              label="Pending"
-              colorClass="bg-[#7a2626] text-white border-[#7a2626]"
-              isActive={statusFilter === "submitted"}
-              onClick={() => handleStatusChange("submitted")}
-            />
-            <StatusChip
-              count={statusCounts.inProgress}
-              label="In Progress"
-              colorClass="bg-[#f2a627] text-white border-[#f2a627]"
-              isActive={statusFilter === "under_review"}
-              onClick={() => handleStatusChange("under_review")}
-            />
-            <StatusChip
-              count={statusCounts.completed}
-              label="Completed"
-              colorClass="bg-[#93a316] text-white border-[#93a316]"
-              isActive={statusFilter === "approved"}
-              onClick={() => handleStatusChange("approved")}
-            />
+            {Object.entries(statusSummary).map(([key, count]) => {
+              const config = statusChipConfig[key];
+              if (!config) return null;
+              return (
+                <StatusChip
+                  key={key}
+                  count={count}
+                  label={config.label}
+                  colorClass={config.colorClass}
+                  isActive={statusFilter === config.filterValue}
+                  onClick={() => handleStatusChange(config.filterValue)}
+                />
+              );
+            })}
           </div>
         )}
 
