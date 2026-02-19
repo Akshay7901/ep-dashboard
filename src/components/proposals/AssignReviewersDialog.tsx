@@ -8,11 +8,11 @@
    DialogTitle,
  } from '@/components/ui/dialog';
  import { Button } from '@/components/ui/button';
- import { Checkbox } from '@/components/ui/checkbox';
- import { Label } from '@/components/ui/label';
- import { Loader2, UserPlus } from 'lucide-react';
-  import { Badge } from '@/components/ui/badge';
-  import { usePeerReviewers } from '@/hooks/usePeerReviewers';
+import { Label } from '@/components/ui/label';
+import { Loader2, UserPlus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { usePeerReviewers } from '@/hooks/usePeerReviewers';
 
 interface AssignReviewersDialogProps {
   open: boolean;
@@ -20,31 +20,22 @@ interface AssignReviewersDialogProps {
   onAssign: (reviewerEmails: string[]) => void;
   isLoading: boolean;
 }
- 
+
 const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
   open,
   onOpenChange,
   onAssign,
   isLoading,
 }) => {
-  const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
+  const [selectedReviewer, setSelectedReviewer] = useState<string>('');
   const { reviewers, isLoading: isLoadingReviewers } = usePeerReviewers();
- 
-   const handleToggle = (reviewerId: string) => {
-     setSelectedReviewers((prev) =>
-       prev.includes(reviewerId)
-         ? prev.filter((id) => id !== reviewerId)
-         : [...prev, reviewerId]
-     );
-   };
- 
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Convert selected reviewer IDs to emails
-    const selectedEmails = reviewers
-      .filter((r) => selectedReviewers.includes(String(r.id)))
-      .map((r) => r.email);
-    onAssign(selectedEmails);
+    const reviewer = reviewers.find((r) => String(r.id) === selectedReviewer);
+    if (reviewer) {
+      onAssign([reviewer.email]);
+    }
   };
  
    return (
@@ -70,19 +61,18 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
                No peer reviewers available. Create one first.
              </p>
            ) : (
-             <div className="space-y-3 max-h-64 overflow-y-auto">
-               {reviewers.map((reviewer) => (
-                 <div
-                   key={reviewer.id}
-                   className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50"
-                 >
-                    <Checkbox
+            <RadioGroup value={selectedReviewer} onValueChange={setSelectedReviewer} className="space-y-3 max-h-64 overflow-y-auto">
+                {reviewers.map((reviewer) => (
+                  <div
+                    key={reviewer.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50"
+                  >
+                    <RadioGroupItem
+                      value={String(reviewer.id)}
                       id={String(reviewer.id)}
-                      checked={selectedReviewers.includes(String(reviewer.id))}
-                      onCheckedChange={() => handleToggle(String(reviewer.id))}
                     />
-                     <Label
-                       htmlFor={String(reviewer.id)}
+                    <Label
+                      htmlFor={String(reviewer.id)}
                       className="flex-1 cursor-pointer"
                     >
                       <span className="flex items-center gap-2">
@@ -95,26 +85,26 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
                         {reviewer.email}
                       </span>
                     </Label>
-                 </div>
-               ))}
-             </div>
-           )}
- 
-           <DialogFooter>
-             <Button
-               type="button"
-               variant="outline"
-               onClick={() => onOpenChange(false)}
-             >
-               Cancel
-             </Button>
-             <Button
-               type="submit"
-               disabled={isLoading || selectedReviewers.length === 0}
-             >
-               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-               Assign ({selectedReviewers.length})
-             </Button>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading || !selectedReviewer}
+              >
+                {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Assign Reviewer
+              </Button>
            </DialogFooter>
          </form>
        </DialogContent>
