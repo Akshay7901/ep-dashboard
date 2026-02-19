@@ -26,7 +26,6 @@ import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
-import { useToast } from "@/hooks/use-toast";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
 // commentsApi import removed - useAddComment now handles serialization
@@ -112,7 +111,6 @@ const ProposalDetails: React.FC = () => {
     id: string;
   }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const {
     isReviewer1,
@@ -374,11 +372,8 @@ const ProposalDetails: React.FC = () => {
           {proposal.status === "submitted" && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
           if (!selectedReviewer) {
-            toast({
-              title: 'Select a reviewer',
-              description: 'Please select a peer reviewer from the dropdown first.',
-              variant: 'destructive',
-            });
+            setPendingAction("accept");
+            setIsAssignDialogOpen(true);
             return;
           }
           assignReviewers([selectedReviewer], {
@@ -943,7 +938,7 @@ const ProposalDetails: React.FC = () => {
                   <div className="flex gap-4 py-1">
                     <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
                     <span className="text-sm font-medium">
-                      {(proposal as any).submitted_at ? format(new Date((proposal as any).submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
                     </span>
                   </div>
                   {(() => {
@@ -972,7 +967,7 @@ const ProposalDetails: React.FC = () => {
                     // Build timeline events in chronological order (oldest first)
                     const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
 
-                    const submittedDate = (proposal as any).submitted_at || proposal.created_at;
+                    const submittedDate = proposal.submitted_at || proposal.created_at;
                     const assignedDate = proposal.assigned_at
                       || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
 

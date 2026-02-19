@@ -91,7 +91,20 @@ const PeerReviewers: React.FC = () => {
         to_reviewer_email: targetEmail,
       });
 
-      // Reassign endpoint handles all server-side state updates
+      // Update local assigned_reviewer_emails to reflect the reassignment
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.functions.invoke("proposal-workflow", {
+          body: {
+            action: "updateStatus",
+            ticketNumber,
+            status: undefined,
+            assignedReviewerEmails: [targetEmail],
+          },
+        });
+      } catch {
+        // Best-effort local sync
+      }
 
       toast({
         title: "Proposal Re-assigned",
