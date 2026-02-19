@@ -168,16 +168,22 @@ const ProposalDetails: React.FC = () => {
     const isActivelyAssigned = proposal.status === 'under_review' || proposal.status === 'approved' || proposal.status === 'finalised' || proposal.status === 'locked';
     
     if (isActivelyAssigned) {
-      const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-        || proposal?.assigned_reviewers?.map((r: any) => r.email || r)
-        || [];
-      const assignedMatch = assignedEmails.length > 0
-        ? reviewers.find(r => assignedEmails.includes(r.email))
-        : null;
+      // Get assigned reviewers sorted by most recent assignment first
+      const assignedReviewersList = proposal?.assigned_reviewers || [];
+      const sortedAssignments = [...assignedReviewersList].sort((a: any, b: any) => {
+        const dateA = a.assigned_at ? new Date(a.assigned_at).getTime() : 0;
+        const dateB = b.assigned_at ? new Date(b.assigned_at).getTime() : 0;
+        return dateB - dateA; // Most recent first
+      });
 
-      if (assignedMatch) {
-        setSelectedReviewer(assignedMatch.email);
-        return;
+      // Find the most recently assigned reviewer that exists in the peer reviewers list
+      for (const assignment of sortedAssignments) {
+        const email = assignment.email || assignment;
+        const match = reviewers.find(r => r.email === email);
+        if (match) {
+          setSelectedReviewer(match.email);
+          return;
+        }
       }
     }
     
@@ -372,12 +378,16 @@ const ProposalDetails: React.FC = () => {
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email)
-              || [];
-            const assignedEmail = assignedEmails[0] || selectedReviewer;
-            const assigned = reviewers.find(r => r.email === assignedEmail);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
+            // Get the most recently assigned reviewer
+            const assignedList = proposal?.assigned_reviewers || [];
+            const sorted = [...assignedList].sort((a: any, b: any) => {
+              const dateA = a.assigned_at ? new Date(a.assigned_at).getTime() : 0;
+              const dateB = b.assigned_at ? new Date(b.assigned_at).getTime() : 0;
+              return dateB - dateA;
+            });
+            const mostRecentEmail = sorted[0]?.email || selectedReviewer;
+            const assigned = reviewers.find(r => r.email === mostRecentEmail);
+            return assigned ? assigned.name || assigned.email.split("@")[0] : mostRecentEmail || "N/A";
           })()}
                 </div>}
             </>}
