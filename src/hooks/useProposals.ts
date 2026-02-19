@@ -62,7 +62,11 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
     assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-    assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0) ? apiProposal.assigned_reviewers : null,
+    assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0)
+      ? apiProposal.assigned_reviewers
+      : (Array.isArray(apiProposal.assigned_reviewer_emails) && apiProposal.assigned_reviewer_emails.length > 0)
+        ? apiProposal.assigned_reviewer_emails.map((email: string) => ({ email }))
+        : null,
   };
 };
 
@@ -116,7 +120,11 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
     assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
-    assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) ? (apiProposal as any).assigned_reviewers : null,
+    assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) && (apiProposal as any).assigned_reviewers.length > 0
+      ? (apiProposal as any).assigned_reviewers
+      : Array.isArray((apiProposal as any).assigned_reviewer_emails) && (apiProposal as any).assigned_reviewer_emails.length > 0
+        ? (apiProposal as any).assigned_reviewer_emails.map((email: string) => ({ email }))
+        : null,
   };
 };
 
@@ -263,6 +271,8 @@ export const useProposal = (id: string) => {
             const listItem: any = (listData.proposals || []).find((p: any) => p.ticket_number === ticketNumber);
             if (listItem?.assigned_reviewers && Array.isArray(listItem.assigned_reviewers) && listItem.assigned_reviewers.length > 0) {
               assignedReviewers = listItem.assigned_reviewers;
+            } else if (listItem?.assigned_reviewer_emails && Array.isArray(listItem.assigned_reviewer_emails) && listItem.assigned_reviewer_emails.length > 0) {
+              assignedReviewers = listItem.assigned_reviewer_emails.map((email: string) => ({ email }));
             }
           } catch {
             // ignore
