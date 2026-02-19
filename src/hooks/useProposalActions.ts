@@ -2,13 +2,26 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { statusApi, assignmentsApi, proposalApi, reassignApi } from '@/lib/proposalsApi';
 import { useToast } from '@/hooks/use-toast';
 
+// Reverse map: internal status -> API status
+const mapToApiStatus = (status: string): string => {
+  const reverseMap: Record<string, string> = {
+    'submitted': 'new',
+    'under_review': 'under_review',
+    'approved': 'approved',
+    'rejected': 'rejected',
+    'finalised': 'published',
+    'locked': 'locked',
+  };
+  return reverseMap[status] || status;
+};
+
 export const useProposalActions = (ticketNumber: string | undefined) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ status, notes }: { status: string; notes?: string }) => 
-      statusApi.update(ticketNumber!, { status, notes }),
+      statusApi.update(ticketNumber!, { status: mapToApiStatus(status), notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });

@@ -31,6 +31,19 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
   return statusMap[apiStatus] || 'submitted';
 };
 
+// Reverse map: internal status -> API status
+const mapToApiStatus = (status: ProposalStatus): string => {
+  const reverseMap: Record<ProposalStatus, string> = {
+    'submitted': 'new',
+    'under_review': 'under_review',
+    'approved': 'approved',
+    'rejected': 'rejected',
+    'finalised': 'published',
+    'locked': 'locked',
+  };
+  return reverseMap[status] || status;
+};
+
 // Extract earliest assigned_at from assigned_reviewers array
 const extractAssignedAt = (assignedReviewers: any): string | null => {
   if (!Array.isArray(assignedReviewers) || assignedReviewers.length === 0) return null;
@@ -358,7 +371,8 @@ export const useUpdateProposalStatus = () => {
       const lookupTicket = ticketNumber || proposalData?.ticket_number || id;
       
       // Update status via external API directly
-      await statusApi.update(lookupTicket, { status, notes: `Status changed from ${previousStatus} to ${status}` });
+      const apiStatus = mapToApiStatus(status);
+      await statusApi.update(lookupTicket, { status: apiStatus, notes: `Status changed from ${previousStatus} to ${status}` });
 
       return { 
         ticketNumber: lookupTicket,
