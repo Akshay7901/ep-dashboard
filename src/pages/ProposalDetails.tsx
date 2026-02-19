@@ -371,29 +371,8 @@ const ProposalDetails: React.FC = () => {
 
           {proposal.status === "submitted" && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
-          if (!selectedReviewer) {
-            setPendingAction("accept");
-            setIsAssignDialogOpen(true);
-            return;
-          }
-          assignReviewers([selectedReviewer], {
-            onSuccess: () => {
-              workflowStatus.mutate({
-                id: localId || id || "",
-                status: "under_review",
-                previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number || id,
-                proposalData: {
-                  id: localId || undefined,
-                  name: proposal.name,
-                  author_name: proposal.author_name,
-                  author_email: proposal.author_email,
-                  ticket_number: proposal.ticket_number || id
-                },
-                assignedReviewerEmails: [selectedReviewer],
-              });
-            }
-          });
+          setPendingAction("accept");
+          setIsAssignDialogOpen(true);
         }} disabled={workflowStatus.isPending || isAssigning}>
                 Submit for review
               </Button>
