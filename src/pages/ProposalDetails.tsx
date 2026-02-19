@@ -154,15 +154,11 @@ const ProposalDetails: React.FC = () => {
   // Set reviewer: prefer already-assigned reviewer, then default, then empty
   // Re-derive whenever proposal assignment data changes
   const assignedEmailsKey = JSON.stringify(
-    (proposal as any)?.assigned_reviewer_emails
-    || proposal?.assigned_reviewers?.map((r: any) => r.email)
-    || []
+    proposal?.assigned_reviewers?.map((r: any) => r.email) || []
   );
   React.useEffect(() => {
     if (reviewers.length === 0) return;
-    const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-      || proposal?.assigned_reviewers?.map((r: any) => r.email)
-      || [];
+    const assignedEmails = proposal?.assigned_reviewers?.map((r: any) => r.email) || [];
     const assignedMatch = assignedEmails.length > 0
       ? reviewers.find(r => assignedEmails.includes(r.email))
       : null;
@@ -359,9 +355,7 @@ const ProposalDetails: React.FC = () => {
                   </SelectContent>
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
-            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email)
-              || [];
+            const assignedEmails = proposal?.assigned_reviewers?.map((r: any) => r.email) || [];
             const assignedEmail = assignedEmails[0] || selectedReviewer;
             const assigned = reviewers.find(r => r.email === assignedEmail);
             return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
@@ -938,7 +932,7 @@ const ProposalDetails: React.FC = () => {
                   <div className="flex gap-4 py-1">
                     <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
                     <span className="text-sm font-medium">
-                      {proposal.submitted_at ? format(new Date(proposal.submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
+                      {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
                     </span>
                   </div>
                   {(() => {
@@ -967,7 +961,7 @@ const ProposalDetails: React.FC = () => {
                     // Build timeline events in chronological order (oldest first)
                     const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
 
-                    const submittedDate = proposal.submitted_at || proposal.created_at;
+                    const submittedDate = proposal.created_at;
                     const assignedDate = proposal.assigned_at
                       || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
 
