@@ -56,6 +56,7 @@ const extractAssignedAt = (assignedReviewers: any): string | null => {
 
 // Map API proposal to internal Proposal structure (list view - basic)
 const mapApiProposal = (apiProposal: any): Proposal => {
+  const reviewers = extractAssignedReviewers(apiProposal);
   return {
     id: apiProposal.ticket_number,
     name: apiProposal.title,
@@ -74,19 +75,20 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     ticket_number: apiProposal.ticket_number,
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
-    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-    assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0)
-      ? apiProposal.assigned_reviewers
-      : (Array.isArray(apiProposal.assigned_reviewer_emails) && apiProposal.assigned_reviewer_emails.length > 0)
-        ? apiProposal.assigned_reviewer_emails.map((email: string) => typeof email === 'string' ? { email } : email)
-        : (Array.isArray(apiProposal.reviewers) && apiProposal.reviewers.length > 0)
-          ? apiProposal.reviewers.map((r: any) => typeof r === 'string' ? { email: r } : r)
-          : null,
+    assigned_at: extractAssignedAt(reviewers),
+    assigned_reviewers: reviewers,
   };
 };
 
 // Extract assigned reviewers from any possible field name the API might use
 const extractAssignedReviewers = (apiProposal: any): any[] | null => {
+  // Try assignments (detail API format: { reviewer_email, assigned_at })
+  if (Array.isArray(apiProposal?.assignments) && apiProposal.assignments.length > 0) {
+    return apiProposal.assignments.map((a: any) => ({
+      email: a.reviewer_email || a.email,
+      assigned_at: a.assigned_at,
+    }));
+  }
   // Try assigned_reviewers (array of objects with email)
   if (Array.isArray(apiProposal?.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0) {
     return apiProposal.assigned_reviewers;
@@ -155,7 +157,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     additional_info: currentData.additional_info || null,
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
-    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
+    assigned_at: extractAssignedAt(extractAssignedReviewers(apiProposal)),
     assigned_reviewers: extractAssignedReviewers(apiProposal),
   };
 };

@@ -42,11 +42,12 @@ export const useReviewerAssignments = () => {
         if (status === 'new' || status === 'submitted') continue;
 
         // Check if proposal has assigned_reviewers or similar field
-        const reviewers = proposal.assigned_reviewers || proposal.reviewers || proposal.assigned_reviewer_emails || [];
-        if (!Array.isArray(reviewers) || reviewers.length === 0) continue;
+        // Check all possible field names for reviewer assignments
+        const reviewerList = proposal.assignments || proposal.assigned_reviewers || proposal.reviewers || proposal.assigned_reviewer_emails || [];
+        if (!Array.isArray(reviewerList) || reviewerList.length === 0) continue;
         
-        for (const reviewer of reviewers) {
-          const email = reviewer.email || reviewer;
+        for (const reviewer of reviewerList) {
+          const email = reviewer.reviewer_email || reviewer.email || reviewer;
           if (!email) continue;
 
           const existing = assignmentMap.get(email) || [];
