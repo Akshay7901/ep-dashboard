@@ -76,7 +76,7 @@ export const assignmentsApi = {
   },
 
   unassign: async (ticketNumber: string): Promise<void> => {
-    await api.delete(`/api/proposals/${encodeURIComponent(ticketNumber)}/assign`);
+    await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/assign`, { reviewer_emails: [] });
   },
 };
 
