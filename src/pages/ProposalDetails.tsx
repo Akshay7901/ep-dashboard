@@ -26,6 +26,7 @@ import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
+import { useToast } from "@/hooks/use-toast";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
 // commentsApi import removed - useAddComment now handles serialization
@@ -111,6 +112,7 @@ const ProposalDetails: React.FC = () => {
     id: string;
   }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const {
     isReviewer1,
@@ -371,8 +373,32 @@ const ProposalDetails: React.FC = () => {
 
           {proposal.status === "submitted" && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
-          setPendingAction("accept");
-          setIsAssignDialogOpen(true);
+          if (!selectedReviewer) {
+            toast({
+              title: 'Select a reviewer',
+              description: 'Please select a peer reviewer from the dropdown first.',
+              variant: 'destructive',
+            });
+            return;
+          }
+          assignReviewers([selectedReviewer], {
+            onSuccess: () => {
+              workflowStatus.mutate({
+                id: localId || id || "",
+                status: "under_review",
+                previousStatus: proposal.status,
+                ticketNumber: proposal.ticket_number || id,
+                proposalData: {
+                  id: localId || undefined,
+                  name: proposal.name,
+                  author_name: proposal.author_name,
+                  author_email: proposal.author_email,
+                  ticket_number: proposal.ticket_number || id
+                },
+                assignedReviewerEmails: [selectedReviewer],
+              });
+            }
+          });
         }} disabled={workflowStatus.isPending || isAssigning}>
                 Submit for review
               </Button>
