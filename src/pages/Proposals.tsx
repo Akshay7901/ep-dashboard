@@ -181,7 +181,9 @@ const Proposals: React.FC = () => {
     if (!userEmail) return [];
     return data.data
       .filter((p) => {
-        const assignedEmails = p.assigned_reviewers?.map((r: any) => r.email) || [];
+        const localEmails = (p as any).assigned_reviewer_emails;
+        const apiEmails = p.assigned_reviewers?.map((r: any) => r.email);
+        const assignedEmails = (localEmails && localEmails.length > 0) ? localEmails : (apiEmails || []);
         return assignedEmails.some((e: string) => e?.toLowerCase() === userEmail);
       })
       .map((p) => ({

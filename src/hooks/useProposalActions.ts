@@ -27,16 +27,8 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   const assignMutation = useMutation({
-    mutationFn: async (reviewerEmails: string[]) => {
-      console.log('[ASSIGN] Calling POST /assign for', ticketNumber, 'with emails:', reviewerEmails);
-      try {
-        await assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails });
-        console.log('[ASSIGN] Success');
-      } catch (err: any) {
-        console.error('[ASSIGN] Failed:', err?.status, err?.message, JSON.stringify(err));
-        throw err;
-      }
-    },
+    mutationFn: (reviewerEmails: string[]) => 
+      assignmentsApi.assign(ticketNumber!, { reviewer_emails: reviewerEmails }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
@@ -46,7 +38,6 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
       });
     },
     onError: (error: Error) => {
-      console.error('[ASSIGN] onError:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to assign reviewers',

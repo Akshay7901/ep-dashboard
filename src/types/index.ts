@@ -42,25 +42,7 @@ export interface AuthResponse {
 }
 
 // API status values from external API
-export type ApiProposalStatus = 'new' | 'under_review' | 'review_returned' | 'contract_sent' | 'clarification' | 'approved' | 'rejected' | 'published';
-
-// API assignment structure
-export interface ApiAssignment {
-  assigned_at: string;
-  reviewer_email: string;
-}
-
-// API status summary from list endpoint
-export interface ApiStatusSummary {
-  total: number;
-  new: number;
-  in_review: number;
-  review_returned: number;
-  contract_sent: number;
-  clarification: number;
-  accepted: number;
-  declined: number;
-}
+export type ApiProposalStatus = 'new' | 'under_review' | 'approved' | 'rejected' | 'published';
 
 // Internal status values (for Supabase)
 export type ProposalStatus = 
@@ -115,29 +97,14 @@ export interface ApiProposal {
   status: ApiProposalStatus;
   submitted_at: string;
   current_revision: number;
-  assignments?: ApiAssignment[];
 }
 
 // API response proposal structure (detail view - includes current_data)
-export interface ApiProposalDetail {
-  ticket_number: string;
-  title?: string;
-  corresponding_author?: string;
-  email?: string;
-  status: ApiProposalStatus;
-  submitted_at: string;
-  updated_at?: string;
-  current_revision: number;
+export interface ApiProposalDetail extends ApiProposal {
   current_data?: ApiProposalCurrentData;
-  assignments?: ApiAssignment[];
   revisions?: Array<{
     action: string;
     created_at: string;
-    data?: ApiProposalCurrentData;
-    notes?: string;
-    revised_by?: string;
-    revision_number?: number;
-    role?: string;
   }>;
 }
 
@@ -147,7 +114,6 @@ export interface ApiProposalsResponse {
   total: number;
   limit: number;
   offset: number;
-  status_summary?: ApiStatusSummary;
 }
 
 // Internal proposal structure (mapped from API)
