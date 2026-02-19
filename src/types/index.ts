@@ -42,15 +42,34 @@ export interface AuthResponse {
 }
 
 // API status values from external API
-export type ApiProposalStatus = 'new' | 'under_review' | 'approved' | 'rejected' | 'published';
+export type ApiProposalStatus = 
+  | 'new' 
+  | 'in_review' 
+  | 'under_review' 
+  | 'review_returned' 
+  | 'contract_issued' 
+  | 'queries_raised' 
+  | 'awaiting_author_approval' 
+  | 'author_approved' 
+  | 'approved' 
+  | 'rejected' 
+  | 'declined' 
+  | 'locked' 
+  | 'published';
 
-// Internal status values (for Supabase)
+// Internal status values used throughout the app
 export type ProposalStatus = 
   | 'submitted' 
   | 'under_review' 
+  | 'review_returned'
+  | 'contract_issued'
+  | 'queries_raised'
+  | 'awaiting_author_approval'
+  | 'author_approved'
   | 'approved' 
   | 'finalised' 
   | 'rejected' 
+  | 'declined'
   | 'locked';
 
 // API proposal current_data structure (full details)
