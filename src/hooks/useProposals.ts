@@ -78,9 +78,32 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0)
       ? apiProposal.assigned_reviewers
       : (Array.isArray(apiProposal.assigned_reviewer_emails) && apiProposal.assigned_reviewer_emails.length > 0)
-        ? apiProposal.assigned_reviewer_emails.map((email: string) => ({ email }))
-        : null,
+        ? apiProposal.assigned_reviewer_emails.map((email: string) => typeof email === 'string' ? { email } : email)
+        : (Array.isArray(apiProposal.reviewers) && apiProposal.reviewers.length > 0)
+          ? apiProposal.reviewers.map((r: any) => typeof r === 'string' ? { email: r } : r)
+          : null,
   };
+};
+
+// Extract assigned reviewers from any possible field name the API might use
+const extractAssignedReviewers = (apiProposal: any): any[] | null => {
+  // Try assigned_reviewers (array of objects with email)
+  if (Array.isArray(apiProposal?.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0) {
+    return apiProposal.assigned_reviewers;
+  }
+  // Try assigned_reviewer_emails (array of email strings)
+  if (Array.isArray(apiProposal?.assigned_reviewer_emails) && apiProposal.assigned_reviewer_emails.length > 0) {
+    return apiProposal.assigned_reviewer_emails.map((email: string) => 
+      typeof email === 'string' ? { email } : email
+    );
+  }
+  // Try reviewers (alternative field name)
+  if (Array.isArray(apiProposal?.reviewers) && apiProposal.reviewers.length > 0) {
+    return apiProposal.reviewers.map((r: any) => 
+      typeof r === 'string' ? { email: r } : r
+    );
+  }
+  return null;
 };
 
 // Map API proposal detail to internal Proposal structure (detail view - full)
@@ -133,11 +156,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
     assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
-    assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) && (apiProposal as any).assigned_reviewers.length > 0
-      ? (apiProposal as any).assigned_reviewers
-      : Array.isArray((apiProposal as any).assigned_reviewer_emails) && (apiProposal as any).assigned_reviewer_emails.length > 0
-        ? (apiProposal as any).assigned_reviewer_emails.map((email: string) => ({ email }))
-        : null,
+    assigned_reviewers: extractAssignedReviewers(apiProposal),
   };
 };
 
@@ -264,8 +283,8 @@ export const useProposal = (id: string) => {
         const apiProposal: any = await fetchProposalByTicket(ticketNumber);
         const mapped = mapApiProposalDetail(apiProposal);
 
-        // Get assigned_reviewers from detail or cached list or fresh list fetch
-        let assignedReviewers = mapped.assigned_reviewers;
+        // Get assigned_reviewers from detail, or extract from raw API response, or cached list, or fresh list fetch
+        let assignedReviewers = mapped.assigned_reviewers || extractAssignedReviewers(apiProposal);
         if (!assignedReviewers) {
           // Try cache first
           const cachedListData = queryClient.getQueriesData<{ data: Proposal[] }>({ queryKey: ['proposals'] });
@@ -282,11 +301,7 @@ export const useProposal = (id: string) => {
           try {
             const listData = await fetchProposalsList(1000, 0);
             const listItem: any = (listData.proposals || []).find((p: any) => p.ticket_number === ticketNumber);
-            if (listItem?.assigned_reviewers && Array.isArray(listItem.assigned_reviewers) && listItem.assigned_reviewers.length > 0) {
-              assignedReviewers = listItem.assigned_reviewers;
-            } else if (listItem?.assigned_reviewer_emails && Array.isArray(listItem.assigned_reviewer_emails) && listItem.assigned_reviewer_emails.length > 0) {
-              assignedReviewers = listItem.assigned_reviewer_emails.map((email: string) => ({ email }));
-            }
+            assignedReviewers = extractAssignedReviewers(listItem);
           } catch {
             // ignore
           }

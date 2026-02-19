@@ -42,7 +42,7 @@ export const useReviewerAssignments = () => {
         if (status === 'new' || status === 'submitted') continue;
 
         // Check if proposal has assigned_reviewers or similar field
-        const reviewers = proposal.assigned_reviewers || proposal.reviewers || [];
+        const reviewers = proposal.assigned_reviewers || proposal.reviewers || proposal.assigned_reviewer_emails || [];
         if (!Array.isArray(reviewers) || reviewers.length === 0) continue;
         
         for (const reviewer of reviewers) {
