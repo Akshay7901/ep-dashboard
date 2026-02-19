@@ -153,15 +153,15 @@ const ProposalDetails: React.FC = () => {
   } = useProposal(id || "");
   const localId = proposal?.id || "";
 
-  // Set reviewer on initial load only: prefer already-assigned reviewer, then default, then empty
-  const [reviewerInitialized, setReviewerInitialized] = useState(false);
+  // Set reviewer: prefer already-assigned reviewer, then default, then empty
+  // Re-derive whenever proposal assignment data changes
   const assignedEmailsKey = JSON.stringify(
     (proposal as any)?.assigned_reviewer_emails
     || proposal?.assigned_reviewers?.map((r: any) => r.email)
     || []
   );
   React.useEffect(() => {
-    if (reviewerInitialized || reviewers.length === 0 || !proposal) return;
+    if (reviewers.length === 0) return;
     const assignedEmails = (proposal as any)?.assigned_reviewer_emails
       || proposal?.assigned_reviewers?.map((r: any) => r.email)
       || [];
@@ -171,16 +171,12 @@ const ProposalDetails: React.FC = () => {
 
     if (assignedMatch) {
       setSelectedReviewer(assignedMatch.email);
-    } else if (assignedEmails.length > 0) {
-      // API has an assigned email but it doesn't match any local reviewer - show it anyway
-      setSelectedReviewer(assignedEmails[0]);
-    } else if (defaultEmail) {
+    } else if (!selectedReviewer && defaultEmail) {
       const found = reviewers.find(r => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
-    setReviewerInitialized(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultEmail, reviewers, assignedEmailsKey, proposal?.status]);
+  }, [defaultEmail, reviewers, assignedEmailsKey]);
   const {
     data: comments = []
   } = useProposalComments(localId, proposal?.ticket_number || id);
