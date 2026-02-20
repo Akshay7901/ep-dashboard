@@ -6,8 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Save } from "lucide-react";
 import { Proposal } from "@/types";
-import { useAddComment } from "@/hooks/useProposals";
-// commentsApi import removed - useAddComment now handles serialization
+import { useReview } from "@/hooks/useReview";
 
 interface PeerReviewCommentsFormProps {
   proposal: Proposal;
@@ -124,7 +123,7 @@ const RECOMMENDATION_OPTIONS = [
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
   ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle }, ref) => {
-    const addComment = useAddComment();
+    const { saveDraft, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
       existingAssessment || {
@@ -188,24 +187,18 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       markAsStarted();
       setIsSaving(true);
       try {
-        // Build the review payload
+        // Build the review payload with all form fields
         const reviewPayload = {
           ...formData,
-          submittedForAuthorization: submitForAuthorization,
-          submittedAt: new Date().toISOString(),
         };
 
-        // Save to external API via useAddComment (serializes form data as JSON in comment_text)
-        await addComment.mutateAsync({
-          proposalId: proposal.id,
-          commentText: formData.otherComments || "",
-          reviewFormData: reviewPayload,
-          ticketNumber: proposal.ticket_number || undefined,
-        });
-
         if (submitForAuthorization) {
+          // Use review/submit endpoint
+          await submitReviewApi(reviewPayload);
           setIsSubmitted(true);
         } else {
+          // Use review/save endpoint for drafts
+          await saveDraft(reviewPayload);
           onDraftSaved?.();
         }
         onSave?.();
