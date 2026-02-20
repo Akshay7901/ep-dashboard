@@ -239,11 +239,15 @@ const ProposalDetails: React.FC = () => {
     || statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
   );
 
-  // Check if there's a peer review available (for decision reviewer split layout)
-  // Show split screen ONLY when GET /review API returns successfully with actual review data
-  // When API returns 404 (no review yet), reviewData will be null — do NOT show split screen
+  // Check if there's a SUBMITTED peer review available (for decision reviewer split layout)
+  // Show split screen ONLY when the peer reviewer has actually submitted (not just saved a draft)
+  const peerReviewEntry = (() => {
+    if (!reviewData) return null;
+    const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
+    return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || null;
+  })();
   
-  const hasSubmittedReview = isReviewer1 && reviewData != null && (!!reviewData.reviews?.length || !!reviewData.review) && Object.keys(reviewFormData).length > 0;
+  const hasSubmittedReview = isReviewer1 && peerReviewEntry != null && peerReviewEntry.is_submitted === true && Object.keys(reviewFormData).length > 0;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   // Check if the decision reviewer has already submitted their own review
