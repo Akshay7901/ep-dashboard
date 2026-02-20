@@ -550,164 +550,123 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
-            <Accordion type="multiple" defaultValue={["peer-review"]} className="space-y-2">
-              {/* Original Peer Review Feedback */}
-              <AccordionItem value="peer-review" className="border rounded-lg px-4">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="text-left">
-                    <p className="text-base font-semibold">Original Peer Review Feedback</p>
-                    {submittedReview && (() => {
-                      const formData = reviewFormData || {};
-                      const reviewerName = reviewData?.reviewer_name || reviewData?.reviewer_email || "Peer Reviewer";
-                      const recommendation = formData.recommendation
-                        ? formData.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
-                        : null;
-                      return (
-                        <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                          {reviewerName}{recommendation ? ` • ${recommendation}` : ""}
-                        </p>
-                      );
-                    })()}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  {submittedReview ? (() => {
-                    const formData = reviewFormData || {};
-                    const reviewFields = [
-                      { label: "Scope", key: "scope" },
-                      { label: "Purpose and Value", key: "purposeAndValue" },
-                      { label: "Title", key: "title" },
-                      { label: "Originality and Points of Difference", key: "originalityAndDifference" },
-                      { label: "Credibility", key: "credibility" },
-                      { label: "Structure", key: "structure" },
-                      { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
-                      { label: "Other Comments", key: "otherComments" },
-                      { label: "Red Flags", key: "redFlags" },
-                    ];
+            {(() => {
+              // Extract peer reviewer and decision reviewer reviews from API data
+              const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
+              const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
+              const decisionReview = allReviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+
+              const reviewFields = [
+                { label: "Scope", key: "scope" },
+                { label: "Purpose and Value", key: "purposeAndValue" },
+                { label: "Title", key: "title" },
+                { label: "Originality and Points of Difference", key: "originality" },
+                { label: "Credibility", key: "credibility" },
+                { label: "Structure", key: "structure" },
+                { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
+                { label: "Other Comments", key: "otherComments" },
+                { label: "Red Flags", key: "redFlags" },
+              ];
+
+              const renderReviewFields = (data: Record<string, any>) => (
+                <div className="space-y-4">
+                  {reviewFields.map(({ label, key }) => {
+                    const value = data[key];
+                    if (!value) return null;
                     return (
-                      <div className="space-y-4">
-                        {reviewFields.map(({ label, key }) => {
-                          const value = formData[key];
-                          if (!value) return null;
-                          return (
-                            <div key={key} className="space-y-1">
-                              <p className="text-sm font-semibold">{label}</p>
-                              <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
-                              <Separator />
-                            </div>
-                          );
-                        })}
-                        {formData.recommendation && (
-                          <div className="border border-muted rounded-lg p-4 mt-2">
-                            <p className="text-sm font-semibold">Final Recommendation</p>
-                            <p className="text-sm font-medium mt-1 capitalize">
-                              {formData.recommendation.replace(/_/g, " ")}
-                            </p>
-                          </div>
-                        )}
+                      <div key={key} className="space-y-1">
+                        <p className="text-sm font-semibold">{label}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
+                        <Separator />
                       </div>
                     );
-                  })() : (
-                    <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Publishing Contract */}
-              <AccordionItem value="contract" className="border rounded-lg px-4">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="text-left">
-                    <p className="text-base font-semibold">Publishing Contract</p>
-                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                      Current version: Standard Contract
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  {/* Decision Reviewer's submitted comments */}
-                  {(() => {
-                    const formData = reviewFormData || {};
-                    const reviewFields = [
-                      { label: "Scope", key: "scope" },
-                      { label: "Purpose and Value", key: "purposeAndValue" },
-                      { label: "Title", key: "title" },
-                      { label: "Originality and Points of Difference", key: "originalityAndDifference" },
-                      { label: "Credibility", key: "credibility" },
-                      { label: "Structure", key: "structure" },
-                      { label: "Clarity, Structure and Quality of Writing", key: "clarityAndQuality" },
-                      { label: "Other Comments", key: "otherComments" },
-                      { label: "Red Flags", key: "redFlags" },
-                    ];
-                    const hasAnyField = reviewFields.some(({ key }) => formData[key]);
-
-                    if (hasAnyField) {
-                      return (
-                        <div className="space-y-4 mb-6">
-                          <p className="text-sm font-semibold text-foreground">Decision Reviewer Comments</p>
-                          {reviewFields.map(({ label, key }) => {
-                            const value = formData[key];
-                            if (!value) return null;
-                            return (
-                              <div key={key} className="space-y-1">
-                                <p className="text-sm font-semibold">{label}</p>
-                                <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
-                                <Separator />
-                              </div>
-                            );
-                          })}
-                          {formData.recommendation && (
-                            <div className="border border-muted rounded-lg p-4 mt-2">
-                              <p className="text-sm font-semibold">Final Recommendation</p>
-                              <p className="text-sm font-medium mt-1 capitalize">
-                                {formData.recommendation.replace(/_/g, " ")}
-                              </p>
-                            </div>
-                          )}
-                          {formData.contractType && (
-                            <div className="border border-muted rounded-lg p-4">
-                              <p className="text-sm font-semibold">Contract Type</p>
-                              <p className="text-sm font-medium mt-1">
-                                {formData.contractType === "edited_volume" ? "Edited Volume Contract"
-                                  : formData.contractType === "custom" ? "Custom Contract"
-                                  : "Standard Contract"}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-
-                  {/* Send Contract action */}
-                  {isPostSubmission && !statusIs(proposal.status, "approved", "contract_issued", "contract_sent") && !statusIs(proposal.status, "locked") ? (
-                    <div className="space-y-3">
-                      <Separator />
-                      <p className="text-sm text-muted-foreground">
-                        Review the feedback above, then send the contract to the author.
+                  })}
+                  {data.recommendation && (
+                    <div className="border border-muted rounded-lg p-4 mt-2">
+                      <p className="text-sm font-semibold">Final Recommendation</p>
+                      <p className="text-sm font-medium mt-1 capitalize">
+                        {data.recommendation.replace(/_/g, " ")}
                       </p>
-                      <Button
-                        onClick={() => {
-                          queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                          queryClient.invalidateQueries({ queryKey: ["proposal", proposal.ticket_number || id] });
-                        }}
-                        disabled={isBusy}
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        Send Contract to Author
-                      </Button>
                     </div>
-                  ) : (
-                    statusIs(proposal.status, "approved", "contract_issued", "contract_sent") || statusIs(proposal.status, "locked") ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        Contract has been sent to the author.
-                      </div>
-                    ) : null
                   )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </div>
+              );
+
+              return (
+                <Accordion type="multiple" defaultValue={["peer-review", "decision-review", "contract"]} className="space-y-2">
+                  {/* Peer Review Feedback */}
+                  <AccordionItem value="peer-review" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">Peer Review Feedback</p>
+                        {peerReview && (
+                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                            {peerReview.reviewer_name || peerReview.reviewer_email || "Peer Reviewer"}
+                            {peerReview.review_data?.recommendation && ` • ${peerReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
+                          </p>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      {peerReview?.review_data ? renderReviewFields(peerReview.review_data) : (
+                        <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Decision Review Feedback */}
+                  <AccordionItem value="decision-review" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">Decision Review</p>
+                        {decisionReview && (
+                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                            {decisionReview.reviewer_name || decisionReview.reviewer_email || "Decision Reviewer"}
+                            {decisionReview.review_data?.recommendation && ` • ${decisionReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
+                          </p>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      {decisionReview?.review_data ? renderReviewFields(decisionReview.review_data) : (
+                        <p className="text-sm text-muted-foreground">No decision review submitted yet.</p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Contract */}
+                  <AccordionItem value="contract" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">Publishing Contract</p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      {decisionReview?.review_data?.contractType ? (
+                        <div className="space-y-4">
+                          <div className="border border-muted rounded-lg p-4">
+                            <p className="text-sm font-semibold">Contract Type</p>
+                            <p className="text-sm font-medium mt-1">
+                              {decisionReview.review_data.contractType === "edited_volume" ? "Edited Volume Contract"
+                                : decisionReview.review_data.contractType === "custom" ? "Custom Contract"
+                                : "Standard Contract"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            Contract has been sent to the author.
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Contract will be sent when the review is submitted to the author.
+                        </p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              );
+            })()}
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
