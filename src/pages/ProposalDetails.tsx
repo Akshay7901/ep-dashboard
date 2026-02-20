@@ -177,7 +177,7 @@ const ProposalDetails: React.FC = () => {
   }, [defaultEmail, reviewers, assignedEmailsKey]);
   // Fetch peer review data from review API
   const ticketNum = proposal?.ticket_number || id || "";
-  const { review: reviewData, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
+  const { review: reviewData, refetchReview, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -1137,7 +1137,10 @@ const ProposalDetails: React.FC = () => {
                       To reload {reviewMeta?.reviewer_name || "Peer Reviewer"}'s comments press here{" "}
                       <button
                         className="text-primary underline font-medium hover:opacity-80"
-                        onClick={() => setStartedFresh(false)}
+                        onClick={async () => {
+                          await refetchReview();
+                          setStartedFresh(false);
+                        }}
                       >
                         reload
                       </button>.
