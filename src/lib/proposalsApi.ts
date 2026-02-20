@@ -68,14 +68,6 @@ export const assignmentsApi = {
   },
 };
 
-// Reassign API
-export const reassignApi = {
-  reassign: async (ticketNumber: string, body: { from_reviewer_email: string; to_reviewer_email: string }): Promise<any> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/reassign`, body);
-    return data;
-  },
-};
-
 // Revisions API
 export const revisionsApi = {
   create: async (ticketNumber: string, revisionData: Record<string, unknown>): Promise<void> => {

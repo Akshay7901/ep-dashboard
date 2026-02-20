@@ -185,7 +185,7 @@ const ProposalDetails: React.FC = () => {
     assignReviewers,
     isAssigning,
     unassignReviewers,
-    isUnassigning
+    isUnassigning,
   } = useProposalActions(proposal?.ticket_number || id);
 
 
@@ -315,27 +315,18 @@ const ProposalDetails: React.FC = () => {
       {isReviewer1 && !hasSubmittedReview && proposal.status !== "rejected" && (proposal.status === "submitted" || proposal.status === "under_review") && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
-              {proposal.status === "submitted" ? <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
-                  <SelectTrigger className="w-56 bg-background">
-                    <SelectValue placeholder="Select a reviewer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {reviewers.map(reviewer => <SelectItem key={reviewer.id} value={reviewer.email}>
-                        {reviewer.name || reviewer.email.split("@")[0]}
-                        {reviewer.email === defaultEmail && " (Default)"}
-                        {" "}({reviewer.assigned_proposals_count ?? 0})
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
-                  {(() => {
-            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
-              || [];
-            const assignedEmail = assignedEmails.filter(Boolean)[0] || selectedReviewer;
-            const assigned = reviewers.find(r => r.email === assignedEmail);
-            return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
-          })()}
-                </div>}
+              <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
+                <SelectTrigger className="w-56 bg-background">
+                  <SelectValue placeholder="Select a reviewer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {reviewers.map(reviewer => <SelectItem key={reviewer.id} value={reviewer.email}>
+                      {reviewer.name || reviewer.email.split("@")[0]}
+                      {reviewer.email === defaultEmail && " (Default)"}
+                      {" "}({reviewer.assigned_proposals_count ?? 0})
+                    </SelectItem>)}
+                </SelectContent>
+              </Select>
             </>}
 
           {proposal.status === "submitted" && <>
@@ -354,9 +345,21 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {proposal.status === "under_review" && <Button variant="outline" onClick={() => revertToNew()} disabled={isBusy}>
+          {proposal.status === "under_review" && (() => {
+            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
+              || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
+              || [];
+            const currentAssigned = assignedEmails.filter(Boolean)[0] || "";
+            const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
+            return <Button
+              className="bg-[#3d5a47]"
+              onClick={() => assignReviewers(selectedReviewer)}
+              disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
+              title={isSameReviewer ? "Select a different reviewer to reassign" : ""}
+            >
               Reassign
-            </Button>}
+            </Button>;
+          })()}
         </div>}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
