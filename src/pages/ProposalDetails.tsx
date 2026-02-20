@@ -1,6 +1,7 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
+import { toast } from "@/hooks/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
@@ -1009,6 +1010,10 @@ const ProposalDetails: React.FC = () => {
             formData={summaryFormData}
             onGoBack={() => setShowingSummary(false)}
             onConfirmSubmit={async () => {
+              if (!summaryFormData.recommendation) {
+                toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
+                return;
+              }
               setIsConfirming(true);
               try {
                 await submitReviewApi({
@@ -1051,6 +1056,10 @@ const ProposalDetails: React.FC = () => {
             onGoBack={() => setShowingSummary(false)}
             showContractSection
             onConfirmSubmit={async (contractType) => {
+              if (!summaryFormData.recommendation) {
+                toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
+                return;
+              }
               setIsConfirming(true);
               try {
                 // Convert camelCase form fields to snake_case API fields
