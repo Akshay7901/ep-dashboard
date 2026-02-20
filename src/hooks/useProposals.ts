@@ -33,14 +33,27 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
 };
 
 
-// Extract earliest assigned_at from assigned_reviewers array
+// Normalize assignments (object or array) into an array
+const normalizeAssignments = (raw: any): Array<{ email: string; name?: string; assigned_at?: string }> | null => {
+  if (!raw) return null;
+  // Single object: { reviewer_email, assigned_at }
+  if (!Array.isArray(raw) && typeof raw === 'object' && raw.reviewer_email) {
+    return [{ email: raw.reviewer_email, name: raw.reviewer_name, assigned_at: raw.assigned_at }];
+  }
+  // Array of objects
+  if (Array.isArray(raw) && raw.length > 0) {
+    return raw.map((r: any) => ({ email: r.reviewer_email || r.email, name: r.reviewer_name || r.name, assigned_at: r.assigned_at }));
+  }
+  return null;
+};
+
+// Extract earliest assigned_at from assignments
 const extractAssignedAt = (assignedReviewers: any): string | null => {
-  if (!Array.isArray(assignedReviewers) || assignedReviewers.length === 0) return null;
-  const dates = assignedReviewers
-    .map((r: any) => r.assigned_at)
-    .filter(Boolean);
+  const normalized = normalizeAssignments(assignedReviewers);
+  if (!normalized || normalized.length === 0) return null;
+  const dates = normalized.map(r => r.assigned_at).filter(Boolean);
   if (dates.length === 0) return null;
-  return dates.sort()[0];
+  return dates.sort()[0] as string;
 };
 
 // Map API proposal to internal Proposal structure (list view - basic)
@@ -63,11 +76,9 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     ticket_number: apiProposal.ticket_number,
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
+    country: apiProposal.country || null,
     assigned_at: extractAssignedAt(apiProposal.assigned_reviewers || apiProposal.assignments),
-    assigned_reviewers: (() => {
-      const reviewers = apiProposal.assigned_reviewers || apiProposal.assignments;
-      return (Array.isArray(reviewers) && reviewers.length > 0) ? reviewers : null;
-    })(),
+    assigned_reviewers: normalizeAssignments(apiProposal.assigned_reviewers || apiProposal.assignments),
   };
 };
 
@@ -121,10 +132,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
     assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
-    assigned_reviewers: (() => {
-      const reviewers = (apiProposal as any).assigned_reviewers || (apiProposal as any).assignments;
-      return Array.isArray(reviewers) && reviewers.length > 0 ? reviewers : null;
-    })(),
+    assigned_reviewers: normalizeAssignments((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
   };
 };
 
