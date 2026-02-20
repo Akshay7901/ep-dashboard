@@ -1005,12 +1005,18 @@ const ProposalDetails: React.FC = () => {
       {/* Two-Panel, Summary, or Single-Panel Layout */}
       {showReviewForm ? (
         peerReviewAlreadySubmitted ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center space-y-4">
-            <CheckCircle2 className="h-12 w-12 text-[#3d5a47]" />
-            <h2 className="text-xl font-semibold">Review Submitted</h2>
-            <p className="text-muted-foreground text-sm max-w-sm">
-              Your peer review has been submitted and is now awaiting authorization.
-            </p>
+          <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+            <div className="pr-6 flex flex-col items-center justify-center text-center space-y-4">
+              <CheckCircle2 className="h-12 w-12 text-[#3d5a47]" />
+              <h2 className="text-xl font-semibold">Review Submitted</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
+                Your peer review has been submitted and is now awaiting authorization.
+              </p>
+            </div>
+            <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+              {rightPanel}
+            </div>
           </div>
         ) : showingSummary ? (
           <PeerReviewSummary
