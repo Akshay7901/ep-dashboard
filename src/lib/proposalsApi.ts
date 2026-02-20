@@ -57,6 +57,24 @@ export const commentsApi = {
   },
 };
 
+// Reviews API (peer review submission and retrieval)
+export const reviewsApi = {
+  get: async (ticketNumber: string): Promise<any> => {
+    const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/review`);
+    return data;
+  },
+
+  saveDraft: async (ticketNumber: string, reviewData: Record<string, any>): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/review/save`, reviewData);
+    return data;
+  },
+
+  submit: async (ticketNumber: string, reviewData: Record<string, any>): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/review/submit`, reviewData);
+    return data;
+  },
+};
+
 // Assignments API
 export const assignmentsApi = {
   assign: async (ticketNumber: string, assignment: AssignmentRequest): Promise<void> => {

@@ -21,7 +21,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send } from "lucide-react";
-import { useProposal, useProposalComments, useWorkflowLogs, useAddComment } from "@/hooks/useProposals";
+import { useProposal, useWorkflowLogs } from "@/hooks/useProposals";
+import { useReview } from "@/hooks/useReview";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,7 +30,6 @@ import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
-// commentsApi import removed - useAddComment now handles serialization
 
 /* ---------------- Helpers ---------------- */
 
@@ -140,7 +140,6 @@ const ProposalDetails: React.FC = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [startedFresh, setStartedFresh] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
-  const addComment = useAddComment();
 
   /* ---------------- Data ---------------- */
 
@@ -176,9 +175,9 @@ const ProposalDetails: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultEmail, reviewers, assignedEmailsKey]);
-  const {
-    data: comments = []
-  } = useProposalComments(localId, proposal?.ticket_number || id);
+  // Fetch peer review data from review API
+  const ticketNum = proposal?.ticket_number || id || "";
+  const { review: reviewData, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -212,35 +211,24 @@ const ProposalDetails: React.FC = () => {
   const isBusy = isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
 
-  // Check if peer reviewer already submitted their review
-  // Detect via: new marker, old-style text prefix, or proposal status beyond under_review
+  // Check if peer reviewer already submitted their review (from review API response)
+  const reviewFormData = reviewData?.review_data || reviewData || {};
+  const reviewStatus = reviewData?.status || reviewData?.review_status;
   const peerReviewAlreadySubmitted = isReviewer2 && (
-    comments.some(
-      (c: any) => c.review_form_data?.submittedForAuthorization
-        || c.submitted_for_authorization
-        || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
-    )
-    || ['approved', 'finalised', 'locked'].includes(proposal.status)
+    reviewStatus === 'submitted' || reviewStatus === 'completed'
+    || statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
   );
 
   // Check if there's a submitted peer review (for decision reviewer split layout)
-  const submittedReview = comments.find(
-    (c: any) => c.review_form_data?.submittedForAuthorization
-      || c.submitted_for_authorization
-      || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
+  const hasSubmittedReview = isReviewer1 && !!reviewData && (
+    reviewStatus === 'submitted' || reviewStatus === 'completed'
+    || statusIs(proposal.status, "review_returned", "in_review", "under_review")
   );
-  const hasSubmittedReview = isReviewer1 && !!submittedReview;
+  const submittedReview = hasSubmittedReview ? reviewData : null;
 
   // Check if the decision reviewer has already submitted their own review
-  // (i.e., there are 2+ comments with submittedForAuthorization, or proposal is approved/finalised)
-  const submittedReviewComments = comments.filter(
-    (c: any) => c.review_form_data?.submittedForAuthorization
-      || c.submitted_for_authorization
-      || (typeof c.comment_text === 'string' && c.comment_text.startsWith('[Peer Review Submitted]'))
-  );
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    submittedReviewComments.length >= 2
-    || ['approved', 'locked'].includes(proposal.status)
+    statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
   );
 
   const revertToNew = async () => {
@@ -554,8 +542,8 @@ const ProposalDetails: React.FC = () => {
                   <div className="text-left">
                     <p className="text-base font-semibold">Original Peer Review Feedback</p>
                     {submittedReview && (() => {
-                      const formData = (submittedReview as any).review_form_data || {};
-                      const reviewerName = (submittedReview as any).reviewer_name || "Peer Reviewer";
+                      const formData = reviewFormData || {};
+                      const reviewerName = reviewData?.reviewer_name || reviewData?.reviewer_email || "Peer Reviewer";
                       const recommendation = formData.recommendation
                         ? formData.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
                         : null;
@@ -569,7 +557,7 @@ const ProposalDetails: React.FC = () => {
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   {submittedReview ? (() => {
-                    const formData = (submittedReview as any).review_form_data || {};
+                    const formData = reviewFormData || {};
                     const reviewFields = [
                       { label: "Scope", key: "scope" },
                       { label: "Purpose and Value", key: "purposeAndValue" },
@@ -616,25 +604,14 @@ const ProposalDetails: React.FC = () => {
                   <div className="text-left">
                     <p className="text-base font-semibold">Publishing Contract</p>
                     <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                      Current version: {(() => {
-                        const decisionComment = submittedReviewComments.find(
-                          (c: any) => c !== submittedReview
-                        );
-                        const ct = (decisionComment as any)?.review_form_data?.contractType;
-                        return ct === "edited_volume" ? "Edited Volume Contract"
-                          : ct === "custom" ? "Custom Contract"
-                          : "Standard Contract";
-                      })()}
+                      Current version: Standard Contract
                     </p>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   {/* Decision Reviewer's submitted comments */}
                   {(() => {
-                    const decisionComment = submittedReviewComments.find(
-                      (c: any) => c !== submittedReview
-                    );
-                    const formData = (decisionComment as any)?.review_form_data || {};
+                    const formData = reviewFormData || {};
                     const reviewFields = [
                       { label: "Scope", key: "scope" },
                       { label: "Purpose and Value", key: "purposeAndValue" },
@@ -1024,21 +1001,12 @@ const ProposalDetails: React.FC = () => {
             onConfirmSubmit={async () => {
               setIsConfirming(true);
               try {
-                await addComment.mutateAsync({
-                  proposalId: proposal.id,
-                  commentText: summaryFormData.otherComments || '',
-                  reviewFormData: {
-                    ...summaryFormData,
-                    submittedForAuthorization: true,
-                    submittedAt: new Date().toISOString(),
-                  },
-                  ticketNumber: proposal.ticket_number || id,
+                await submitReviewApi({
+                  ...summaryFormData,
                 });
 
-                // Status transitions managed by backend
-
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
+                queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
                 navigate('/proposals');
               } catch (err) {
                 console.error('Submit failed:', err);
@@ -1051,7 +1019,7 @@ const ProposalDetails: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
-              <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
+            <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
                 if (statusIs(proposal.status, "pending", "new", "submitted")) {
                   // Status transitions managed by backend
                 }
@@ -1075,22 +1043,13 @@ const ProposalDetails: React.FC = () => {
             onConfirmSubmit={async (contractType) => {
               setIsConfirming(true);
               try {
-                await addComment.mutateAsync({
-                  proposalId: proposal.id,
-                  commentText: summaryFormData.otherComments || '',
-                  reviewFormData: {
-                    ...summaryFormData,
-                    submittedForAuthorization: true,
-                    submittedAt: new Date().toISOString(),
-                    contractType: contractType || 'standard',
-                  },
-                  ticketNumber: proposal.ticket_number || id,
+                await submitReviewApi({
+                  ...summaryFormData,
+                  contractType: contractType || 'standard',
                 });
 
-                // Status transitions managed by backend
-
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
+                queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
                 setDecisionReviewerSubmitted(true);
                 setShowingSummary(false);
               } catch (err) {
@@ -1162,7 +1121,7 @@ const ProposalDetails: React.FC = () => {
             <PeerReviewCommentsForm
               ref={reviewFormRef}
               proposal={proposal}
-              existingAssessment={startedFresh ? {} : (submittedReview as any).review_form_data || {}}
+              existingAssessment={startedFresh ? {} : reviewFormData || {}}
               forceEditable
               hideHeader
               preloadedStyle={!startedFresh}
