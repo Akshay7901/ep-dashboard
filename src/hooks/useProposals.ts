@@ -13,8 +13,10 @@ interface UseProposalsOptions {
 }
 
 // Map API status to internal status
-const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
-  const statusMap: Record<ApiProposalStatus, ProposalStatus> = {
+const mapApiStatus = (apiStatus: string): ProposalStatus => {
+  // Normalize: "In Review" -> "in_review", "New" -> "new", "Review Returned" -> "review_returned"
+  const normalized = apiStatus.trim().toLowerCase().replace(/\s+/g, '_') as ApiProposalStatus;
+  const statusMap: Record<string, ProposalStatus> = {
     'new': 'submitted',
     'under_review': 'under_review',
     'in_review': 'under_review',
@@ -29,7 +31,7 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
     'locked': 'locked',
     'published': 'finalised',
   };
-  return statusMap[apiStatus] || 'submitted';
+  return statusMap[normalized] || 'submitted';
 };
 
 
