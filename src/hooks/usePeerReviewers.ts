@@ -1,23 +1,25 @@
- import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
- import { peerReviewersApi, PeerReviewer } from '@/lib/proposalsApi';
- import { useToast } from '@/hooks/use-toast';
- 
- export const usePeerReviewers = () => {
-   const queryClient = useQueryClient();
-   const { toast } = useToast();
- 
-  const reviewersQuery = useQuery({
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { peerReviewersApi, PeerReviewer } from '@/lib/proposalsApi';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+
+export const usePeerReviewers = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { isReviewer1 } = useAuth();
+
+ const reviewersQuery = useQuery({
     queryKey: ['peer-reviewers'],
     queryFn: async () => {
       const result = await peerReviewersApi.list();
-      // Handle graceful upstream errors (403/404 returned as 200 with error field)
       if (result && typeof result === 'object' && 'error' in result) {
         console.warn('Peer reviewers API returned error:', result);
-        return []; // Return empty array on permission errors
+        return [];
       }
       return result;
     },
     staleTime: 60000,
+    enabled: isReviewer1, // Only fetch for admin/decision_reviewer roles
   });
  
    const createMutation = useMutation({
