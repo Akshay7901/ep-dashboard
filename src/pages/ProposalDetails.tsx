@@ -281,7 +281,13 @@ const ProposalDetails: React.FC = () => {
             )}
           </div>
           <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-            <ProposalStatusBadge status={proposal.status} showIcon={false} />
+            {isPostSubmission ? (
+              <Badge className="bg-foreground text-background hover:bg-foreground rounded-full px-4 py-1.5 font-medium text-xs">
+                Contract Sent
+              </Badge>
+            ) : (
+              <ProposalStatusBadge status={proposal.status} showIcon={false} />
+            )}
             {/* Date next to badge in post-submission */}
             {isPostSubmission && (
               <span className="text-sm text-muted-foreground">
@@ -595,12 +601,12 @@ const ProposalDetails: React.FC = () => {
               );
 
               return (
-                <Accordion type="multiple" defaultValue={["peer-review", "decision-review", "contract"]} className="space-y-2">
-                  {/* Peer Review Feedback */}
+                <Accordion type="multiple" className="space-y-2">
+                  {/* Original Peer Review Feedback */}
                   <AccordionItem value="peer-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
-                        <p className="text-base font-semibold">Peer Review Feedback</p>
+                        <p className="text-base font-semibold">Original Peer Review Feedback</p>
                         {peerReview && (
                           <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             {peerReview.reviewer_name || peerReview.reviewer_email || "Peer Reviewer"}
@@ -616,31 +622,16 @@ const ProposalDetails: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* Decision Review Feedback */}
-                  <AccordionItem value="decision-review" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="text-left">
-                        <p className="text-base font-semibold">Decision Review</p>
-                        {decisionReview && (
-                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                            {decisionReview.reviewer_name || decisionReview.reviewer_email || "Decision Reviewer"}
-                            {decisionReview.review_data?.recommendation && ` • ${decisionReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
-                          </p>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      {decisionReview?.review_data ? renderReviewFields(decisionReview.review_data) : (
-                        <p className="text-sm text-muted-foreground">No decision review submitted yet.</p>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  {/* Contract */}
+                  {/* Publishing Contract */}
                   <AccordionItem value="contract" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
                         <p className="text-base font-semibold">Publishing Contract</p>
+                        <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                          Current version: {decisionReview?.review_data?.contractType === "edited_volume" ? "Edited Volume Contract"
+                            : decisionReview?.review_data?.contractType === "custom" ? "Custom Contract"
+                            : "Standard Contract"}
+                        </p>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
