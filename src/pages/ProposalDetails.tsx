@@ -188,12 +188,13 @@ const ProposalDetails: React.FC = () => {
     isUnassigning,
   } = useProposalActions(proposal?.ticket_number || id);
 
-  // Extract review form data - must be before early returns (hooks rule)
+  // Extract peer review form data for pre-loading into decision reviewer's form
   const reviewFormData = React.useMemo(() => {
     if (!reviewData) return {};
-    // API returns { status, reviews: [{ review_data: {...}, is_submitted, ... }] }
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    const reviewObj = reviews[0] || reviewData;
+    // For form pre-loading, always use the peer reviewer's review
+    const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
+    const reviewObj = peerReview || reviewData;
     const candidate = reviewObj.review_data || reviewObj.data || reviewObj;
     if (candidate && typeof candidate === 'object' && (candidate.scope !== undefined || candidate.recommendation !== undefined)) {
       return candidate;
@@ -201,7 +202,12 @@ const ProposalDetails: React.FC = () => {
     return {};
   }, [reviewData]);
 
-  const reviewMeta = (reviewData?.reviews?.[0]) || reviewData?.review || reviewData || {};
+  // Peer review metadata (for reviewer name display, etc.)
+  const reviewMeta = React.useMemo(() => {
+    if (!reviewData) return {};
+    const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
+    return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || reviewData.review || reviewData || {};
+  }, [reviewData]);
 
 
   /* ---------------- Loading / Error ---------------- */
