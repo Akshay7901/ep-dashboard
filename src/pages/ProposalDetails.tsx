@@ -241,9 +241,11 @@ const ProposalDetails: React.FC = () => {
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   // Check if the decision reviewer has already submitted their own review
-  // Note: "review_returned" means peer review came back TO the decision reviewer — they still need to act
+  // Either status indicates it, or the API reviews array contains a decision_reviewer entry
+  const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
+  const hasDecisionReviewInApi = allReviews.some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted);
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked")
+    statusIs(proposal.status, "contract_issued", "approved", "locked") || hasDecisionReviewInApi
   );
 
   const revertToNew = async () => {
