@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send } from "lucide-react";
-import { useProposal, useProposalComments, useWorkflowLogs, useUpdateProposalStatus, useAddComment } from "@/hooks/useProposals";
+import { useProposal, useProposalComments, useWorkflowLogs, useAddComment } from "@/hooks/useProposals";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -181,10 +181,7 @@ const ProposalDetails: React.FC = () => {
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
-  const workflowStatus = useUpdateProposalStatus();
   const {
-    updateStatus: upstreamUpdateStatus,
-    isUpdatingStatus: isUpdatingUpstream,
     assignReviewers,
     isAssigning,
     unassignReviewers,
@@ -211,7 +208,7 @@ const ProposalDetails: React.FC = () => {
   /* ---------------- Derived values ---------------- */
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
-  const isBusy = workflowStatus.isPending || isUpdatingUpstream || isAssigning || isUnassigning;
+  const isBusy = isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
 
   // Check if peer reviewer already submitted their review
@@ -246,43 +243,15 @@ const ProposalDetails: React.FC = () => {
   );
 
   const revertToNew = async () => {
-    const ticketNumber = proposal.ticket_number || id || "";
-    upstreamUpdateStatus({
-      status: "new",
-      notes: "Reverted to new status"
-    }, {
-      onSuccess: async () => {
-        try {
-          await unassignReviewers();
-        } catch {
-          console.log("DELETE unassign not supported, relying on status change");
-        }
-        workflowStatus.mutate({
-          id: localId || id || "",
-          status: "submitted",
-          previousStatus: proposal.status,
-          ticketNumber,
-          proposalData: {
-            id: localId || undefined,
-            name: proposal.name,
-            author_name: proposal.author_name,
-            author_email: proposal.author_email,
-            ticket_number: ticketNumber
-          },
-          assignedReviewerEmails: [],
-        }, {
-          onSuccess: () => {
-            setIsRevertDialogOpen(false);
-            queryClient.invalidateQueries({
-              queryKey: ["reviewer-assignments"]
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["proposals"]
-            });
-          }
-        });
-      }
-    });
+    try {
+      await unassignReviewers();
+    } catch {
+      console.log("DELETE unassign not supported, relying on status change");
+    }
+    setIsRevertDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
+    queryClient.invalidateQueries({ queryKey: ["proposals"] });
+    queryClient.invalidateQueries({ queryKey: ["proposal", proposal.ticket_number || id] });
   };
 
   /* ======================== RIGHT PANEL CONTENT ======================== */
@@ -376,28 +345,11 @@ const ProposalDetails: React.FC = () => {
             setIsAssignDialogOpen(true);
             return;
           }
-          assignReviewers(selectedReviewer, {
-            onSuccess: () => {
-              workflowStatus.mutate({
-                id: localId || id || "",
-                status: "under_review",
-                previousStatus: proposal.status,
-                ticketNumber: proposal.ticket_number || id,
-                proposalData: {
-                  id: localId || undefined,
-                  name: proposal.name,
-                  author_name: proposal.author_name,
-                  author_email: proposal.author_email,
-                  ticket_number: proposal.ticket_number || id
-                },
-                assignedReviewerEmails: [selectedReviewer],
-              });
-            }
-          });
-        }} disabled={workflowStatus.isPending || isAssigning}>
+          assignReviewers(selectedReviewer);
+        }} disabled={isAssigning}>
                 Submit for review
               </Button>
-              <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={workflowStatus.isPending}>
+              <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
               </Button>
             </>}
@@ -740,24 +692,8 @@ const ProposalDetails: React.FC = () => {
                       </p>
                       <Button
                         onClick={() => {
-                          upstreamUpdateStatus({
-                            status: "approved",
-                            notes: "Decision reviewer sent contract to author",
-                          });
-                          workflowStatus.mutate({
-                            id: localId || id || "",
-                            status: "approved",
-                            previousStatus: proposal.status,
-                            ticketNumber: proposal.ticket_number || id,
-                            proposalData: {
-                              id: localId || undefined,
-                              name: proposal.name,
-                              author_name: proposal.author_name,
-                              author_email: proposal.author_email,
-                              ticket_number: proposal.ticket_number || id,
-                            },
-                          });
                           queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                          queryClient.invalidateQueries({ queryKey: ["proposal", proposal.ticket_number || id] });
                         }}
                         disabled={isBusy}
                       >
@@ -1095,20 +1031,7 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
-                // Update status to 'finalised' so it appears under "Review Returned" for Decision Reviewer
-                workflowStatus.mutate({
-                  id: localId || id || "",
-                  status: "finalised",
-                  previousStatus: proposal.status,
-                  ticketNumber: proposal.ticket_number || id,
-                  proposalData: {
-                    id: localId || undefined,
-                    name: proposal.name,
-                    author_name: proposal.author_name,
-                    author_email: proposal.author_email,
-                    ticket_number: proposal.ticket_number || id,
-                  },
-                });
+                // Status transitions managed by backend
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
@@ -1126,19 +1049,7 @@ const ProposalDetails: React.FC = () => {
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
               <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
                 if (proposal.status === 'submitted') {
-                  workflowStatus.mutate({
-                    id: localId || id || "",
-                    status: "under_review",
-                    previousStatus: proposal.status,
-                    ticketNumber: proposal.ticket_number || id,
-                    proposalData: {
-                      id: localId || undefined,
-                      name: proposal.name,
-                      author_name: proposal.author_name,
-                      author_email: proposal.author_email,
-                      ticket_number: proposal.ticket_number || id,
-                    },
-                  });
+                  // Status transitions managed by backend
                 }
               }} />
             </div>
@@ -1172,24 +1083,7 @@ const ProposalDetails: React.FC = () => {
                   ticketNumber: proposal.ticket_number || id,
                 });
 
-                // Send contract to author directly
-                upstreamUpdateStatus({
-                  status: "approved",
-                  notes: `Decision reviewer sent contract to author (${contractType || 'standard'})`,
-                });
-                workflowStatus.mutate({
-                  id: localId || id || "",
-                  status: "approved",
-                  previousStatus: proposal.status,
-                  ticketNumber: proposal.ticket_number || id,
-                  proposalData: {
-                    id: localId || undefined,
-                    name: proposal.name,
-                    author_name: proposal.author_name,
-                    author_email: proposal.author_email,
-                    ticket_number: proposal.ticket_number || id,
-                  },
-                });
+                // Status transitions managed by backend
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["proposal-comments"] });
@@ -1290,51 +1184,17 @@ const ProposalDetails: React.FC = () => {
     }} onAssign={reviewerIds => {
       assignReviewers(reviewerIds[0], {
         onSuccess: () => {
-          workflowStatus.mutate({
-            id: localId || id || "",
-            status: "under_review",
-            previousStatus: proposal.status,
-            ticketNumber: proposal.ticket_number || id,
-            proposalData: {
-              id: localId || undefined,
-              name: proposal.name,
-              author_name: proposal.author_name,
-              author_email: proposal.author_email,
-              ticket_number: proposal.ticket_number || id
-            }
-          }, {
-            onSuccess: () => {
-              setIsAssignDialogOpen(false);
-              setPendingAction(null);
-            }
-          });
+          setIsAssignDialogOpen(false);
+          setPendingAction(null);
         }
       });
-    }} isLoading={workflowStatus.isPending || isAssigning} />
+    }} isLoading={isAssigning} />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={() => {
-      upstreamUpdateStatus({
-        status: "rejected",
-        notes: "Proposal declined",
-      });
-      workflowStatus.mutate({
-        id: localId || id || "",
-        status: "rejected",
-        previousStatus: proposal.status,
-        ticketNumber: proposal.ticket_number || id,
-        proposalData: {
-          id: localId || undefined,
-          name: proposal.name,
-          author_name: proposal.author_name,
-          author_email: proposal.author_email,
-          ticket_number: proposal.ticket_number || id
-        }
-      }, {
-        onSuccess: () => {
-          setIsDeclineDialogOpen(false);
-        }
-      });
-    }} isLoading={workflowStatus.isPending || isUpdatingUpstream} />
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["proposal", proposal.ticket_number || id] });
+      setIsDeclineDialogOpen(false);
+    }} isLoading={isBusy} />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
         <AlertDialogContent>

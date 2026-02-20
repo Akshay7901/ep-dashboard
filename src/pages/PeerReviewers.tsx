@@ -31,7 +31,7 @@ import { ChevronLeft, Plus, Loader2, ChevronDown, ChevronRight, FileText, ArrowR
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import { useReviewerAssignments } from "@/hooks/useReviewerAssignments";
-import { assignmentsApi, statusApi, reassignApi } from "@/lib/proposalsApi";
+import { assignmentsApi, reassignApi } from "@/lib/proposalsApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
