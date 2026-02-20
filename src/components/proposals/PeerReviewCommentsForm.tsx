@@ -211,6 +211,15 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     }, [markAsStarted]);
 
     const handleSave = async (submitForAuthorization: boolean = false) => {
+      if (submitForAuthorization && !formData.recommendation?.trim()) {
+        const { toast } = await import('@/hooks/use-toast');
+        toast({
+          variant: 'destructive',
+          title: 'Recommendation Required',
+          description: 'Please select a recommendation before submitting your review.',
+        });
+        return;
+      }
       markAsStarted();
       setIsSaving(true);
       try {
@@ -326,6 +335,16 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           </Button>
           <Button
             onClick={() => {
+              if (!formData.recommendation?.trim()) {
+                import('@/hooks/use-toast').then(({ toast }) => {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Recommendation Required',
+                    description: 'Please select a recommendation before submitting your review.',
+                  });
+                });
+                return;
+              }
               if (onSubmitReview) {
                 onSubmitReview({ ...formData });
               } else {
