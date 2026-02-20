@@ -156,12 +156,14 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         const mapped: Record<string, string> = { ...defaultData };
         const fieldMap: Record<string, string> = {
           scope: 'scope',
+          purpose_value: 'purposeAndValue',
           purpose_and_value: 'purposeAndValue',
           purposeAndValue: 'purposeAndValue',
           title: 'title',
           originality: 'originality',
           credibility: 'credibility',
           structure: 'structure',
+          clarity_quality: 'clarity',
           clarity: 'clarity',
           other_comments: 'otherComments',
           otherComments: 'otherComments',
@@ -223,10 +225,25 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       markAsStarted();
       setIsSaving(true);
       try {
-        // Build the review payload with all form fields
-        const reviewPayload = {
-          ...formData,
+        // Build the review payload converting camelCase form keys to snake_case API keys
+        const formToApiMap: Record<string, string> = {
+          scope: 'scope',
+          purposeAndValue: 'purpose_value',
+          title: 'title',
+          originality: 'originality',
+          credibility: 'credibility',
+          structure: 'structure',
+          clarity: 'clarity_quality',
+          otherComments: 'other_comments',
+          redFlags: 'red_flags',
+          recommendation: 'recommendation',
         };
+        const reviewPayload: Record<string, string> = {};
+        for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
+          if (formData[formKey] !== undefined && formData[formKey] !== '') {
+            reviewPayload[apiKey] = formData[formKey];
+          }
+        }
 
         if (submitForAuthorization) {
           // Use review/submit endpoint
