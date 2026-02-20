@@ -106,4 +106,9 @@ export const proposalApi = {
   delete: async (ticketNumber: string): Promise<void> => {
     await api.delete(`/api/proposals/${encodeURIComponent(ticketNumber)}`);
   },
+
+  decline: async (ticketNumber: string): Promise<{ status: string; message: string; ticket_number: string; email_sent: boolean }> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/decline`);
+    return data;
+  },
 };

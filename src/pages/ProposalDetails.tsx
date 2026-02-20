@@ -6,6 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
+import { proposalApi } from "@/lib/proposalsApi";
 import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
@@ -1195,10 +1196,17 @@ const ProposalDetails: React.FC = () => {
       });
     }} isLoading={isAssigning} />
 
-      <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={() => {
-      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-      queryClient.invalidateQueries({ queryKey: ["proposal", proposal.ticket_number || id] });
-      setIsDeclineDialogOpen(false);
+      <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
+      try {
+        const ticketNum = proposal.ticket_number || id;
+        await proposalApi.decline(ticketNum!);
+        queryClient.invalidateQueries({ queryKey: ["proposals"] });
+        queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
+        toast({ title: "Proposal Declined", description: "The proposal has been declined and the author has been notified." });
+        setIsDeclineDialogOpen(false);
+      } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Decline", description: error?.message || "An error occurred while declining the proposal." });
+      }
     }} isLoading={isBusy} />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
