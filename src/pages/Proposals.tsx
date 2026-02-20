@@ -175,21 +175,29 @@ const Proposals: React.FC = () => {
     return proposal.status;
   };
 
-  // For peer reviewers, filter to only show proposals assigned to them
+  // For peer reviewers, the API already filters to only assigned proposals,
+  // so we show all returned proposals. For reviewer_1, show everything.
   const roleFilteredProposals = React.useMemo(() => {
     if (!data?.data) return [];
     if (isReviewer1) return data.data;
+    // For peer reviewers: the API already returns only their assigned proposals
+    // Try email matching first, fall back to showing all if assignments lack emails
     const userEmail = user?.email?.toLowerCase();
-    if (!userEmail) return [];
-    return data.data
-      .filter((p) => {
-        const apiEmails = p.assigned_reviewers?.map((r: any) => r.email) || [];
-        return apiEmails.some((e: string) => e?.toLowerCase() === userEmail);
-      })
-      .map((p) => ({
-        ...p,
-        status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
-      }));
+    if (!userEmail) return data.data.map((p) => ({
+      ...p,
+      status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
+    }));
+    const emailFiltered = data.data.filter((p) => {
+      const reviewers = p.assigned_reviewers || [];
+      const apiEmails = reviewers.map((r: any) => r.email).filter(Boolean);
+      // If no emails in assignments data, include the proposal (API already filtered)
+      if (apiEmails.length === 0) return true;
+      return apiEmails.some((e: string) => e?.toLowerCase() === userEmail);
+    });
+    return emailFiltered.map((p) => ({
+      ...p,
+      status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
+    }));
   }, [data?.data, isReviewer1, isReviewer2, user?.email, startedProposals]);
 
   // Use status_summary from API response directly

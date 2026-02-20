@@ -81,8 +81,11 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     ticket_number: apiProposal.ticket_number,
     current_revision: apiProposal.current_revision,
     address: apiProposal.address || null,
-    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers),
-    assigned_reviewers: (Array.isArray(apiProposal.assigned_reviewers) && apiProposal.assigned_reviewers.length > 0) ? apiProposal.assigned_reviewers : null,
+    assigned_at: extractAssignedAt(apiProposal.assigned_reviewers || apiProposal.assignments),
+    assigned_reviewers: (() => {
+      const reviewers = apiProposal.assigned_reviewers || apiProposal.assignments;
+      return (Array.isArray(reviewers) && reviewers.length > 0) ? reviewers : null;
+    })(),
   };
 };
 
