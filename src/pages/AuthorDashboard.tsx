@@ -11,36 +11,18 @@ import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import brandLogo from "@/assets/brand-logo.webp";
-import { ProposalStatus } from "@/types";
+import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 
 const ITEMS_PER_PAGE = 10;
 
-/* ---- Status config ---- */
-
-const authorStatusConfig: Record<string, { label: string; className: string }> = {
-  submitted: { label: "Submitted", className: "bg-[#6b7280] text-white border-[#6b7280]" },
-  under_review: { label: "Editorial Review", className: "bg-[#3d5a47] text-white border-[#3d5a47]" },
-  approved: { label: "Contract Received", className: "bg-[#c05621] text-white border-[#c05621]" },
-  finalised: { label: "Finalised", className: "bg-[#276749] text-white border-[#276749]" },
-  rejected: { label: "Declined", className: "bg-[#1d293d] text-white border-[#1d293d]" },
-  locked: { label: "Waiting for Finalisation", className: "bg-[#2563eb] text-white border-[#2563eb]" },
-  peer_review: { label: "Peer Review", className: "bg-[#3d5a47] text-white border-[#3d5a47]" },
-};
-
-const AuthorStatusBadge: React.FC<{ status: ProposalStatus }> = ({ status }) => {
-  const config = authorStatusConfig[status] || authorStatusConfig.submitted;
-  return (
-    <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs whitespace-nowrap hover:opacity-90")}>
-      {config.label}
-    </Badge>
-  );
-};
+// Status badge and config removed — using ProposalStatusBadge which reads raw API display text
 
 /* ---- Action Required logic ---- */
-const getActionRequired = (status: ProposalStatus): { label: string; hasAction: boolean } => {
-  switch (status) {
-    case "approved":
-    case "locked":
+const getActionRequired = (status: string): { label: string; hasAction: boolean } => {
+  const normalized = status.trim().toLowerCase().replace(/\s+/g, '_');
+  switch (normalized) {
+    case "feedback_&_agreement_pending":
+    case "final_review_&_confirmation":
       return { label: "Action Required", hasAction: true };
     default:
       return { label: "No action", hasAction: false };
@@ -74,7 +56,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
@@ -93,30 +75,22 @@ const AuthorDashboard: React.FC = () => {
     return data.data.filter((p) => p.author_email?.toLowerCase() === email);
   }, [data?.data, user?.email]);
 
-  const statusCounts = React.useMemo(() => {
-    const d = authorProposals;
-    return {
-      total: d.length,
-      submitted: d.filter((p) => p.status === "submitted").length,
-      editorial: d.filter((p) => p.status === "under_review").length,
-      peerReview: 0, // derived from under_review with peer assignment — simplified for now
-      contractReceived: d.filter((p) => p.status === "approved").length,
-      waitingFinalisation: d.filter((p) => p.status === "locked").length,
-      finalised: d.filter((p) => p.status === "finalised").length,
-      declined: d.filter((p) => p.status === "rejected").length,
-    };
-  }, [authorProposals]);
+  // Use status_summary from API response directly
+  const statusSummary: Record<string, number> | null = data?.status_summary || null;
+
+  // Normalize status for comparison: "Submitted" -> "submitted"
+  const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
 
   const filteredProposals = React.useMemo(() => {
     if (statusFilter === "all") return authorProposals;
-    return authorProposals.filter((p) => p.status === statusFilter);
+    return authorProposals.filter((p) => normalizeStatus(p.status) === statusFilter);
   }, [authorProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as ProposalStatus | "all");
+    setStatusFilter(value);
     setDisplayCount(ITEMS_PER_PAGE);
   };
 
@@ -139,58 +113,35 @@ const AuthorDashboard: React.FC = () => {
           </Button>
         </div>
 
-        {/* Status Chips */}
-        <div className="flex flex-wrap items-center gap-3">
-          <StatusChip
-            count={statusCounts.submitted}
-            label="Submitted"
-            colorClass="bg-[#6b7280] text-white border-[#6b7280]"
-            isActive={statusFilter === "submitted"}
-            onClick={() => handleStatusChange(statusFilter === "submitted" ? "all" : "submitted")}
-          />
-          <StatusChip
-            count={statusCounts.editorial}
-            label="Editorial Review"
-            colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
-            isActive={statusFilter === "under_review"}
-            onClick={() => handleStatusChange(statusFilter === "under_review" ? "all" : "under_review")}
-          />
-          <StatusChip
-            count={statusCounts.peerReview}
-            label="Peer Review"
-            colorClass="bg-[#3d5a47] text-white border-[#3d5a47]"
-            isActive={statusFilter === ("peer_review" as any)}
-            onClick={() => handleStatusChange(statusFilter === ("peer_review" as any) ? "all" : ("peer_review" as any))}
-          />
-          <StatusChip
-            count={statusCounts.contractReceived}
-            label="Contract Received"
-            colorClass="bg-[#c05621] text-white border-[#c05621]"
-            isActive={statusFilter === "approved"}
-            onClick={() => handleStatusChange(statusFilter === "approved" ? "all" : "approved")}
-          />
-          <StatusChip
-            count={statusCounts.waitingFinalisation}
-            label="Waiting for Finalisation"
-            colorClass="bg-[#2563eb] text-white border-[#2563eb]"
-            isActive={statusFilter === "locked"}
-            onClick={() => handleStatusChange(statusFilter === "locked" ? "all" : "locked")}
-          />
-          <StatusChip
-            count={statusCounts.finalised}
-            label="Finalised"
-            colorClass="bg-[#276749] text-white border-[#276749]"
-            isActive={statusFilter === "finalised"}
-            onClick={() => handleStatusChange(statusFilter === "finalised" ? "all" : "finalised")}
-          />
-          <StatusChip
-            count={statusCounts.declined}
-            label="Declined"
-            colorClass="bg-[#1d293d] text-white border-[#1d293d]"
-            isActive={statusFilter === "rejected"}
-            onClick={() => handleStatusChange(statusFilter === "rejected" ? "all" : "rejected")}
-          />
-        </div>
+        {/* Status Chips — dynamically rendered from API status_summary */}
+        {statusSummary && (
+          <div className="flex flex-wrap items-center gap-3">
+            {Object.entries(statusSummary).map(([key, count]) => {
+              if (key === "total") return null;
+              const chipColorMap: Record<string, string> = {
+                submitted: "bg-[#6b7280] text-white border-[#6b7280]",
+                editorial_review: "bg-[#3d5a47] text-white border-[#3d5a47]",
+                peer_review: "bg-[#3d5a47] text-white border-[#3d5a47]",
+                feedback_and_agreement_pending: "bg-[#c05621] text-white border-[#c05621]",
+                final_review_and_confirmation: "bg-[#45556c] text-white border-[#45556c]",
+                confirmed_and_finalised: "bg-[#276749] text-white border-[#276749]",
+                declined: "bg-[#1d293d] text-white border-[#1d293d]",
+              };
+              const colorClass = chipColorMap[key] || "bg-gray-500 text-white border-gray-500";
+              const label = key.replace(/_/g, ' ').replace(/\band\b/g, '&').replace(/\b\w/g, (c) => c.toUpperCase());
+              return (
+                <StatusChip
+                  key={key}
+                  count={count}
+                  label={label}
+                  colorClass={colorClass}
+                  isActive={statusFilter === key}
+                  onClick={() => handleStatusChange(statusFilter === key ? "all" : key)}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {/* Proposals Table */}
         <div className="space-y-4">
@@ -250,7 +201,7 @@ const AuthorDashboard: React.FC = () => {
                               : "—"}
                           </TableCell>
                           <TableCell>
-                            <AuthorStatusBadge status={proposal.status} />
+                            <ProposalStatusBadge status={proposal.status} showIcon={false} />
                           </TableCell>
                           <TableCell className="text-right">
                             {action.hasAction ? (

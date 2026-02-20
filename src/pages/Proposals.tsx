@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { ProposalStatus } from "@/types";
 import { Search, Loader2, Users, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
@@ -28,62 +26,28 @@ const ITEMS_PER_PAGE = 10;
    Status chip color config — keyed by API status_summary keys
    ============================================================ */
 
-const statusChipColorMap: Record<string, { colorClass: string; filterValue: string }> = {
-  total: { colorClass: "bg-[#2d3748] text-white border-[#2d3748]", filterValue: "all" },
-  new: { colorClass: "bg-[#3d5a47] text-white border-[#3d5a47]", filterValue: "submitted" },
-  in_review: { colorClass: "bg-[#45556c] text-white border-[#45556c]", filterValue: "under_review" },
-  review_returned: { colorClass: "bg-[#c05621] text-white border-[#c05621]", filterValue: "review_returned" },
-  contract_issued: { colorClass: "bg-[#1d293d] text-white border-[#1d293d]", filterValue: "contract_issued" },
-  queries_raised: { colorClass: "bg-[#6b7280] text-white border-[#6b7280]", filterValue: "queries_raised" },
-  awaiting_author_approval: { colorClass: "bg-[#45556c] text-white border-[#45556c]", filterValue: "awaiting_author_approval" },
-  author_approved: { colorClass: "bg-[#276749] text-white border-[#276749]", filterValue: "author_approved" },
-  locked: { colorClass: "bg-gray-600 text-white border-gray-600", filterValue: "locked" },
-  declined: { colorClass: "bg-[#9b2c2c] text-white border-[#9b2c2c]", filterValue: "declined" },
-  assigned: { colorClass: "bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]", filterValue: "all" },
-  in_progress: { colorClass: "bg-[#f2a627] text-white border-[#f2a627]", filterValue: "under_review" },
-  completed: { colorClass: "bg-[#93a316] text-white border-[#93a316]", filterValue: "approved" },
-  pending: { colorClass: "bg-[#7a2626] text-white border-[#7a2626]", filterValue: "submitted" },
+const statusChipColorMap: Record<string, { colorClass: string }> = {
+  total: { colorClass: "bg-[#2d3748] text-white border-[#2d3748]" },
+  new: { colorClass: "bg-[#3d5a47] text-white border-[#3d5a47]" },
+  in_review: { colorClass: "bg-[#45556c] text-white border-[#45556c]" },
+  review_returned: { colorClass: "bg-[#c05621] text-white border-[#c05621]" },
+  contract_issued: { colorClass: "bg-[#1d293d] text-white border-[#1d293d]" },
+  queries_raised: { colorClass: "bg-[#6b7280] text-white border-[#6b7280]" },
+  awaiting_author_approval: { colorClass: "bg-[#45556c] text-white border-[#45556c]" },
+  author_approved: { colorClass: "bg-[#276749] text-white border-[#276749]" },
+  locked: { colorClass: "bg-gray-600 text-white border-gray-600" },
+  declined: { colorClass: "bg-[#9b2c2c] text-white border-[#9b2c2c]" },
+  assigned: { colorClass: "bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]" },
+  in_progress: { colorClass: "bg-[#f2a627] text-white border-[#f2a627]" },
+  completed: { colorClass: "bg-[#93a316] text-white border-[#93a316]" },
+  pending: { colorClass: "bg-[#7a2626] text-white border-[#7a2626]" },
 };
 
 // Convert API key to display label: replace underscores with spaces, capitalise each word
 const formatStatusLabel = (key: string): string =>
   key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-const peerReviewStatusConfig: Record<string, { label: string; className: string }> = {
-  submitted: {
-    label: "Pending Review",
-    className: "bg-[#7a2626] text-white hover:bg-[#7a2626] border-[#7a2626]",
-  },
-  under_review: {
-    label: "In Progress",
-    className: "bg-[#f2a627] text-white hover:bg-[#f2a627] border-[#f2a627]",
-  },
-  approved: {
-    label: "Completed",
-    className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]",
-  },
-  finalised: {
-    label: "Completed",
-    className: "bg-[#93a316] text-white hover:bg-[#93a316] border-[#93a316]",
-  },
-  rejected: {
-    label: "Declined",
-    className: "bg-[#9b2c2c] text-white hover:bg-[#9b2c2c] border-[#9b2c2c]",
-  },
-  locked: {
-    label: "Locked",
-    className: "bg-gray-600 text-white hover:bg-gray-600 border-gray-600",
-  },
-};
-
-const PeerReviewStatusBadge: React.FC<{ status: ProposalStatus }> = ({ status }) => {
-  const config = peerReviewStatusConfig[status] || peerReviewStatusConfig.submitted;
-  return (
-    <Badge className={cn(config.className, "rounded-full px-4 py-1 font-medium text-xs")}>
-      {config.label}
-    </Badge>
-  );
-};
+// PeerReviewStatusBadge removed — the API provides role-appropriate display status directly
 
 /* ============================================================
    Shared components
@@ -119,7 +83,7 @@ const Proposals: React.FC = () => {
   const { isAnyReviewer, isReviewer1, isReviewer2, logout, isAuthor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("author");
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
     page: 1,
@@ -133,72 +97,23 @@ const Proposals: React.FC = () => {
 
   const { user } = useAuth();
 
-  // Track which proposals the peer reviewer has started reviewing (reactive state)
-  const [startedProposals, setStartedProposals] = React.useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem('peer_review_started');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch { return new Set(); }
-  });
-
-  // Listen for localStorage changes (when peer reviewer starts filling form and navigates back)
-  React.useEffect(() => {
-    const handleStorage = () => {
-      try {
-        const stored = localStorage.getItem('peer_review_started');
-        setStartedProposals(stored ? new Set(JSON.parse(stored)) : new Set());
-      } catch { /* ignore */ }
-    };
-    // Also refresh on focus (covers same-tab navigation back)
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('focus', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('focus', handleStorage);
-    };
-  }, []);
-
-  // Re-sync from localStorage whenever route data changes (e.g. navigating back from details)
-  React.useEffect(() => {
-    if (!isReviewer2) return;
-    try {
-      const stored = localStorage.getItem('peer_review_started');
-      setStartedProposals(stored ? new Set(JSON.parse(stored)) : new Set());
-    } catch { /* ignore */ }
-  }, [data?.data, isReviewer2]);
-
-  // For peer reviewers, compute the effective display status
-  const getPeerDisplayStatus = (proposal: any): ProposalStatus => {
-    if (proposal.status === 'under_review' && !startedProposals.has(proposal.ticket_number)) {
-      return 'submitted'; // Pending
-    }
-    return proposal.status;
-  };
-
   // For peer reviewers, the API already filters to only assigned proposals,
   // so we show all returned proposals. For reviewer_1, show everything.
+  // The API already provides role-appropriate display status, no overrides needed.
   const roleFilteredProposals = React.useMemo(() => {
     if (!data?.data) return [];
     if (isReviewer1) return data.data;
     // For peer reviewers: the API already returns only their assigned proposals
-    // Try email matching first, fall back to showing all if assignments lack emails
     const userEmail = user?.email?.toLowerCase();
-    if (!userEmail) return data.data.map((p) => ({
-      ...p,
-      status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
-    }));
+    if (!userEmail) return data.data;
     const emailFiltered = data.data.filter((p) => {
       const reviewers = p.assigned_reviewers || [];
       const apiEmails = reviewers.map((r: any) => r.email).filter(Boolean);
-      // If no emails in assignments data, include the proposal (API already filtered)
       if (apiEmails.length === 0) return true;
       return apiEmails.some((e: string) => e?.toLowerCase() === userEmail);
     });
-    return emailFiltered.map((p) => ({
-      ...p,
-      status: isReviewer2 ? getPeerDisplayStatus(p) : p.status,
-    }));
-  }, [data?.data, isReviewer1, isReviewer2, user?.email, startedProposals]);
+    return emailFiltered;
+  }, [data?.data, isReviewer1, user?.email]);
 
   // Use status_summary from API response directly
   const statusSummary: Record<string, number> | null = data?.status_summary || null;
@@ -209,21 +124,18 @@ const Proposals: React.FC = () => {
     const options: { value: string; label: string }[] = [{ value: "all", label: "All Statuses" }];
     Object.keys(statusSummary).forEach((key) => {
       if (key === "total") return;
-      const config = statusChipColorMap[key];
-      if (config) {
-        options.push({ value: config.filterValue, label: formatStatusLabel(key) });
-      }
+      options.push({ value: key, label: formatStatusLabel(key) });
     });
     return options;
   }, [statusSummary]);
 
+  // Normalize status for comparison: "In Review" -> "in_review"
+  const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
+
   const filteredProposals = React.useMemo(() => {
     if (!roleFilteredProposals.length) return [];
     if (statusFilter === "all") return roleFilteredProposals;
-    if (statusFilter === "declined") {
-      return roleFilteredProposals.filter((p) => p.status === "declined" || p.status === "rejected");
-    }
-    return roleFilteredProposals.filter((p) => p.status === statusFilter);
+    return roleFilteredProposals.filter((p) => normalizeStatus(p.status) === statusFilter);
   }, [roleFilteredProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
@@ -237,7 +149,7 @@ const Proposals: React.FC = () => {
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value as ProposalStatus | "all");
+    setStatusFilter(value);
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
@@ -313,7 +225,7 @@ const Proposals: React.FC = () => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
               const colorClass = config?.colorClass || "bg-gray-500 text-white border-gray-500";
-              const filterValue = config?.filterValue || key;
+              const filterValue = key === "total" ? "all" : key;
               return (
                 <StatusChip
                   key={key}
@@ -457,11 +369,7 @@ const Proposals: React.FC = () => {
                           </TableCell>
                         )}
                         <TableCell className="text-right">
-                          {isReviewer1 ? (
-                            <ProposalStatusBadge status={proposal.status} showIcon={false} />
-                          ) : (
-                            <PeerReviewStatusBadge status={proposal.status} />
-                          )}
+                          <ProposalStatusBadge status={proposal.status} showIcon={false} />
                         </TableCell>
                       </TableRow>
                     ))}

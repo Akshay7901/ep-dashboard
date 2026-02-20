@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
+import { statusIs } from "@/lib/statusUtils";
 import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
@@ -312,7 +313,7 @@ const ProposalDetails: React.FC = () => {
       </div>
 
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
-      {isReviewer1 && !hasSubmittedReview && proposal.status !== "rejected" && (proposal.status === "submitted" || proposal.status === "under_review") && <div className="flex items-center gap-3 flex-wrap">
+      {isReviewer1 && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
               <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
@@ -329,7 +330,7 @@ const ProposalDetails: React.FC = () => {
               </Select>
             </>}
 
-          {proposal.status === "submitted" && <>
+          {statusIs(proposal.status, "new", "submitted") && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
           if (!selectedReviewer) {
             setPendingAction("accept");
@@ -345,7 +346,7 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {proposal.status === "under_review" && (() => {
+          {statusIs(proposal.status, "in_review", "under_review") && (() => {
             const assignedEmails = (proposal as any)?.assigned_reviewer_emails
               || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
               || [];
@@ -687,7 +688,7 @@ const ProposalDetails: React.FC = () => {
                   })()}
 
                   {/* Send Contract action */}
-                  {isPostSubmission && proposal.status !== 'approved' && proposal.status !== 'locked' ? (
+                  {isPostSubmission && !statusIs(proposal.status, "approved", "contract_issued", "contract_sent") && !statusIs(proposal.status, "locked") ? (
                     <div className="space-y-3">
                       <Separator />
                       <p className="text-sm text-muted-foreground">
@@ -705,7 +706,7 @@ const ProposalDetails: React.FC = () => {
                       </Button>
                     </div>
                   ) : (
-                    proposal.status === 'approved' || proposal.status === 'locked' ? (
+                    statusIs(proposal.status, "approved", "contract_issued", "contract_sent") || statusIs(proposal.status, "locked") ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                         Contract has been sent to the author.
@@ -911,7 +912,7 @@ const ProposalDetails: React.FC = () => {
                       || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
 
                     // 1. Initial Screening Passed — when decision reviewer accepted (inferred from assignment)
-                    if (proposal.status !== "submitted" && proposal.status !== "rejected") {
+                    if (!statusIs(proposal.status, "new", "submitted") && !statusIs(proposal.status, "rejected", "declined")) {
                       // Use a date between submitted and assigned, or fallback to assigned date
                       const screeningDateRaw = assignedDate || proposal.updated_at;
                       if (screeningDateRaw) {
@@ -937,7 +938,7 @@ const ProposalDetails: React.FC = () => {
                     }
 
                     // 3. Assigned to Peer Reviewer — when reviewer was assigned
-                    if (assignedDate && proposal.status !== "submitted") {
+                    if (assignedDate && !statusIs(proposal.status, "new", "submitted")) {
                       timelineEvents.push({
                         title: "Assigned to Peer Reviewer",
                         date: format(new Date(assignedDate), "MMM d, yyyy"),
@@ -1051,7 +1052,7 @@ const ProposalDetails: React.FC = () => {
           <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
               <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={comments?.[0]?.review_form_data as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
-                if (proposal.status === 'submitted') {
+                if (statusIs(proposal.status, "pending", "new", "submitted")) {
                   // Status transitions managed by backend
                 }
               }} />

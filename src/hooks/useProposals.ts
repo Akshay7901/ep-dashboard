@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { extractCountry } from '@/lib/extractCountry';
-import { Proposal, ProposalStatus, ReviewerComment, WorkflowLog, ApiProposalDetail, ApiProposalsResponse, ApiProposalStatus } from '@/types';
+import { Proposal, ReviewerComment, WorkflowLog, ApiProposalDetail, ApiProposalsResponse } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
 interface UseProposalsOptions {
@@ -9,30 +9,10 @@ interface UseProposalsOptions {
   limit?: number;
   search?: string;
   searchCategory?: string;
-  status?: ProposalStatus | 'all';
+  status?: string | 'all';
 }
 
-// Map API status to internal status
-const mapApiStatus = (apiStatus: string): ProposalStatus => {
-  // Normalize: "In Review" -> "in_review", "New" -> "new", "Review Returned" -> "review_returned"
-  const normalized = apiStatus.trim().toLowerCase().replace(/\s+/g, '_') as ApiProposalStatus;
-  const statusMap: Record<string, ProposalStatus> = {
-    'new': 'submitted',
-    'under_review': 'under_review',
-    'in_review': 'under_review',
-    'review_returned': 'review_returned',
-    'contract_issued': 'contract_issued',
-    'queries_raised': 'queries_raised',
-    'awaiting_author_approval': 'awaiting_author_approval',
-    'author_approved': 'author_approved',
-    'approved': 'approved',
-    'rejected': 'rejected',
-    'declined': 'declined',
-    'locked': 'locked',
-    'published': 'finalised',
-  };
-  return statusMap[normalized] || 'submitted';
-};
+// No status mapping needed — the API returns role-appropriate display text directly
 
 
 // Normalize assignments (object or array) into an array
@@ -67,7 +47,7 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     author_email: apiProposal.email,
     author_phone: null,
     description: null,
-    status: mapApiStatus(apiProposal.status),
+    status: apiProposal.status,
     value: null,
     contract_sent: false,
     contract_sent_at: null,
@@ -94,7 +74,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     author_email: currentData.email || apiProposal.email,
     author_phone: null,
     description: currentData.detailed_description || currentData.short_description || null,
-    status: mapApiStatus(apiProposal.status),
+    status: apiProposal.status,
     value: null,
     contract_sent: false,
     contract_sent_at: null,
