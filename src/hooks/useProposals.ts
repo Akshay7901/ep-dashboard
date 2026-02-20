@@ -32,6 +32,25 @@ const mapApiStatus = (apiStatus: ApiProposalStatus): ProposalStatus => {
   return statusMap[apiStatus] || 'submitted';
 };
 
+// Map internal status back to API status for PATCH requests
+const mapInternalToApiStatus = (internalStatus: ProposalStatus): ApiProposalStatus => {
+  const reverseMap: Record<ProposalStatus, ApiProposalStatus> = {
+    'submitted': 'new',
+    'under_review': 'in_review',
+    'review_returned': 'review_returned',
+    'contract_issued': 'contract_issued',
+    'queries_raised': 'queries_raised',
+    'awaiting_author_approval': 'awaiting_author_approval',
+    'author_approved': 'author_approved',
+    'approved': 'approved',
+    'rejected': 'rejected',
+    'declined': 'declined',
+    'locked': 'locked',
+    'finalised': 'published',
+  };
+  return reverseMap[internalStatus] || internalStatus as ApiProposalStatus;
+};
+
 // Extract earliest assigned_at from assigned_reviewers array
 const extractAssignedAt = (assignedReviewers: any): string | null => {
   if (!Array.isArray(assignedReviewers) || assignedReviewers.length === 0) return null;
@@ -302,9 +321,10 @@ export const useUpdateProposalStatus = () => {
     }) => {
       const lookupTicket = ticketNumber || proposalData?.ticket_number || id;
       
-      // Update status via external API
+      // Update status via external API - map internal status to API status
+      const apiStatus = mapInternalToApiStatus(status);
       await api.patch(`/api/proposals/${encodeURIComponent(lookupTicket)}/status`, {
-        status,
+        status: apiStatus,
         notes: `Status changed from ${previousStatus} to ${status}`,
       });
 
