@@ -240,7 +240,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         };
         const reviewPayload: Record<string, string> = {};
         for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
-          if (formData[formKey] !== undefined && formData[formKey] !== '') {
+          if (formData[formKey] !== undefined) {
             reviewPayload[apiKey] = formData[formKey];
           }
         }
