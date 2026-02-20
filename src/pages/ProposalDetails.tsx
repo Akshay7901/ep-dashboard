@@ -1079,6 +1079,7 @@ const ProposalDetails: React.FC = () => {
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
+                queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
                 setDecisionReviewerSubmitted(true);
                 setShowingSummary(false);
               } catch (err) {
