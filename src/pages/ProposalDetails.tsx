@@ -191,18 +191,16 @@ const ProposalDetails: React.FC = () => {
   // Extract review form data - must be before early returns (hooks rule)
   const reviewFormData = React.useMemo(() => {
     if (!reviewData) return {};
-    // Try common nesting patterns
-    const candidate = reviewData.review_data || reviewData.data || reviewData.review || reviewData;
-    // Verify it actually has review fields (not just metadata like status/id)
-    if (candidate && typeof candidate === 'object' && (candidate.scope || candidate.recommendation || candidate.purposeAndValue)) {
+    // API returns { status, review: { review_data: {...}, is_submitted, ... } }
+    const reviewObj = reviewData.review || reviewData;
+    const candidate = reviewObj.review_data || reviewObj.data || reviewObj;
+    if (candidate && typeof candidate === 'object' && (candidate.scope !== undefined || candidate.recommendation !== undefined)) {
       return candidate;
-    }
-    // If the root object itself has review fields
-    if (reviewData.scope || reviewData.recommendation || reviewData.purposeAndValue) {
-      return reviewData;
     }
     return {};
   }, [reviewData]);
+
+  const reviewMeta = reviewData?.review || reviewData || {};
 
 
   /* ---------------- Loading / Error ---------------- */
@@ -228,18 +226,18 @@ const ProposalDetails: React.FC = () => {
   const showReviewForm = isReviewer2;
 
   // Check if peer reviewer already submitted their review
-  const reviewStatus = reviewData?.status || reviewData?.review_status;
+  const reviewStatus = reviewMeta?.is_submitted ? 'submitted' : (reviewMeta?.status || reviewMeta?.review_status || '');
   const peerReviewAlreadySubmitted = isReviewer2 && (
-    reviewStatus === 'submitted' || reviewStatus === 'completed'
+    reviewMeta?.is_submitted === true
     || statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
   );
 
   // Check if there's a submitted peer review (for decision reviewer split layout)
-  const hasSubmittedReview = isReviewer1 && !!reviewData && (
-    reviewStatus === 'submitted' || reviewStatus === 'completed'
+  const hasSubmittedReview = isReviewer1 && !!reviewData?.review && (
+    reviewMeta?.is_submitted === true
     || statusIs(proposal.status, "review_returned", "in_review", "under_review")
   );
-  const submittedReview = hasSubmittedReview ? reviewData : null;
+  const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   // Check if the decision reviewer has already submitted their own review
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
