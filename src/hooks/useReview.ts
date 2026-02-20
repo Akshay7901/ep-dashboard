@@ -62,6 +62,7 @@ export const useReview = (ticketNumber: string | undefined) => {
     review: reviewQuery.data,
     isLoading: reviewQuery.isLoading,
     error: reviewQuery.error,
+    refetchReview: reviewQuery.refetch,
     saveDraft: saveDraftMutation.mutateAsync,
     isSavingDraft: saveDraftMutation.isPending,
     submitReview: submitMutation.mutateAsync,
