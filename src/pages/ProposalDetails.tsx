@@ -233,9 +233,8 @@ const ProposalDetails: React.FC = () => {
   );
 
   // Check if there's a submitted peer review (for decision reviewer split layout)
-  const hasSubmittedReview = isReviewer1 && !!reviewData?.review && (
-    reviewMeta?.is_submitted === true || statusIs(proposal.status, "review_returned")
-  );
+  // ONLY show when peer reviewer has explicitly submitted (is_submitted === true from API)
+  const hasSubmittedReview = isReviewer1 && !!reviewData?.review && reviewMeta?.is_submitted === true;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   // Check if the decision reviewer has already submitted their own review
