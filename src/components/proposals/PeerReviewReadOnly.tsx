@@ -137,10 +137,10 @@ const PeerReviewReadOnly: React.FC<PeerReviewReadOnlyProps> = ({
         <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-foreground">
-            Reviewer 1's Comments Pre-loaded
+            {reviewerName || "Peer Reviewer"}'s Comments Pre-loaded
           </p>
           <p className="text-sm text-muted-foreground mt-0.5">
-            The form below contains Reviewer 1's comments in{" "}
+            The form below contains {reviewerName || "Peer Reviewer"}'s comments in{" "}
             <span className="text-destructive font-medium">red text</span>.
             You can edit any field directly, or click "Start Fresh" above to clear all fields.
           </p>
