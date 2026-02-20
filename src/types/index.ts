@@ -116,6 +116,7 @@ export interface ApiProposal {
   status: ApiProposalStatus;
   submitted_at: string;
   current_revision: number;
+  country?: string;
 }
 
 // API response proposal structure (detail view - includes current_data)
@@ -171,6 +172,7 @@ export interface Proposal {
   file_uploads?: string | null;
   secondary_email?: string | null;
   address?: string | null;
+  country?: string | null;
   // Additional submission fields
   cv_submitted?: string | null;
   sample_chapter_submitted?: string | null;

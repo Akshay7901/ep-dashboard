@@ -442,7 +442,7 @@ const Proposals: React.FC = () => {
                         <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {extractCountry(proposal.address) || "—"}
+                          {proposal.country || extractCountry(proposal.address) || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {proposal.created_at

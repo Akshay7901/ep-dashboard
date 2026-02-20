@@ -186,7 +186,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
             case 'email':
               return p.author_email?.toLowerCase().includes(searchLower);
             case 'country': {
-              const country = extractCountry(p.address);
+              const country = p.country || extractCountry(p.address);
               return country?.toLowerCase().includes(searchLower) ?? false;
             }
             case 'author':
