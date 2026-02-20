@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import { commentsApi } from "@/lib/proposalsApi";
+import { useReview } from "@/hooks/useReview";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 
@@ -109,44 +110,32 @@ const REVIEW_FEEDBACK_FIELDS = [
   { key: "recommendation", label: "Recommendations" },
 ];
 
-const PeerReviewFeedbackSection: React.FC<{ comments: any[] }> = ({ comments }) => {
-  // Find the first comment that has review_form_data with actual content
-  const reviewComment = comments.find((c: any) => {
-    const fd = c.review_form_data;
-    if (!fd || typeof fd !== "object") return false;
-    return REVIEW_FEEDBACK_FIELDS.some((f) => fd[f.key]?.trim?.());
-  });
-
-  const formData = reviewComment?.review_form_data;
+const ReviewFeedbackCard: React.FC<{ review: any; title: string }> = ({ review, title }) => {
+  const formData = review?.review_data;
   if (!formData) return null;
 
-  const completedDate = formData.submittedAt
-    ? format(new Date(formData.submittedAt), "MMM d, yyyy")
-    : reviewComment?.updated_at
-      ? format(new Date(reviewComment.updated_at), "MMM d, yyyy")
+  const completedDate = review.submitted_at
+    ? format(new Date(review.submitted_at), "MMM d, yyyy")
+    : review.updated_at
+      ? format(new Date(review.updated_at), "MMM d, yyyy")
       : null;
+
+  const hasContent = REVIEW_FEEDBACK_FIELDS.some((f) => formData[f.key]?.trim?.());
+  if (!hasContent) return null;
 
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
-        {/* Info banner */}
-        <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
-          The feedback below forms part of the publishing decision. Our peer reviewers have carefully evaluated your
-          proposal and provided the following assessment. Please review both the feedback and the contract terms before
-          responding.
-        </div>
-
-        {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
+          <h3 className="text-xl font-bold text-foreground">{title}</h3>
           {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
         </div>
-
-        {/* Review fields */}
+        {review.reviewer_name && (
+          <p className="text-sm text-muted-foreground">Reviewed by: <span className="font-medium text-foreground">{review.reviewer_name}</span></p>
+        )}
         {REVIEW_FEEDBACK_FIELDS.map((field) => {
           const value = formData[field.key];
           if (!value?.trim?.()) return null;
-
           return (
             <div key={field.key}>
               <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
@@ -175,8 +164,15 @@ const AuthorProposalDetails: React.FC = () => {
 
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
   const localId = proposal?.id || "";
-  const { data: comments = [] } = useProposalComments(localId, proposal?.ticket_number || id);
+  const ticketNum = proposal?.ticket_number || id || "";
+  const { data: comments = [] } = useProposalComments(localId, ticketNum);
+  const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const addComment = useAddComment();
+
+  // Extract reviews array from API response
+  const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
+  const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
+  const decisionReview = reviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
 
   if (isLoading) {
     return (
@@ -533,9 +529,23 @@ const AuthorProposalDetails: React.FC = () => {
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">
-            {/* Structured Peer Review Feedback */}
-            <PeerReviewFeedbackSection comments={comments} />
+            {/* Info banner */}
+            <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
+              The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
+              proposal and provided the following assessment. Please review both the feedback and the contract terms before
+              responding.
+            </div>
 
+            {isReviewLoading ? (
+              <div className="py-10 text-center text-muted-foreground">Loading reviews...</div>
+            ) : !peerReview && !decisionReview ? (
+              <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div>
+            ) : (
+              <>
+                {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
+                {decisionReview && <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />}
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>
