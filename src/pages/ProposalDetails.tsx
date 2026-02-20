@@ -304,17 +304,10 @@ const ProposalDetails: React.FC = () => {
             )}
           </div>
           <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-            {isPostSubmission ? (
-              <Badge className="bg-foreground text-background hover:bg-foreground rounded-full px-4 py-1.5 font-medium text-xs">
-                Contract Sent
-              </Badge>
-            ) : (
-              <ProposalStatusBadge status={proposal.status} showIcon={false} />
-            )}
-            {/* Date next to badge in post-submission */}
-            {isPostSubmission && (
+            <ProposalStatusBadge status={proposal.status} showIcon={false} />
+            {isPostSubmission && proposal.contract_sent_at && (
               <span className="text-sm text-muted-foreground">
-                {format(new Date(), "do MMMM yyyy")}
+                {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
             )}
           </div>
