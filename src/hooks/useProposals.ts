@@ -229,6 +229,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
       };
     },
     staleTime: 0,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 };
 
