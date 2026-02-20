@@ -245,6 +245,8 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           }
         }
 
+        console.log('[PeerReviewForm] Sending payload:', JSON.stringify(reviewPayload));
+
         if (submitForAuthorization) {
           // Use review/submit endpoint
           await submitReviewApi(reviewPayload);
@@ -255,8 +257,8 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           onDraftSaved?.();
         }
         onSave?.();
-      } catch (error) {
-        console.error("Failed to save assessment:", error);
+      } catch (error: any) {
+        console.error("Failed to save assessment:", JSON.stringify({ message: error?.message, status: error?.status }));
       } finally {
         setIsSaving(false);
       }
