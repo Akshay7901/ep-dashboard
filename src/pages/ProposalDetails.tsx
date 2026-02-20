@@ -1060,8 +1060,27 @@ const ProposalDetails: React.FC = () => {
             onConfirmSubmit={async (contractType) => {
               setIsConfirming(true);
               try {
+                // Convert camelCase form fields to snake_case API fields
+                const formToApiMap: Record<string, string> = {
+                  scope: 'scope',
+                  purposeAndValue: 'purpose_value',
+                  title: 'title',
+                  originality: 'originality',
+                  credibility: 'credibility',
+                  structure: 'structure',
+                  clarity: 'clarity_quality',
+                  otherComments: 'other_comments',
+                  redFlags: 'red_flags',
+                  recommendation: 'recommendation',
+                };
+                const apiPayload: Record<string, string> = {};
+                for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
+                  if (summaryFormData[formKey] !== undefined && summaryFormData[formKey] !== '') {
+                    apiPayload[apiKey] = summaryFormData[formKey];
+                  }
+                }
                 await submitReviewApi({
-                  ...summaryFormData,
+                  ...apiPayload,
                   contractType: contractType || 'standard',
                 });
 
