@@ -138,8 +138,11 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     additional_info: currentData.additional_info || null,
     corresponding_author_name: currentData.corresponding_author_name || null,
     referrer_url: currentData.referrer_url || null,
-    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers),
-    assigned_reviewers: Array.isArray((apiProposal as any).assigned_reviewers) ? (apiProposal as any).assigned_reviewers : null,
+    assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
+    assigned_reviewers: (() => {
+      const reviewers = (apiProposal as any).assigned_reviewers || (apiProposal as any).assignments;
+      return Array.isArray(reviewers) && reviewers.length > 0 ? reviewers : null;
+    })(),
   };
 };
 

@@ -360,9 +360,9 @@ const ProposalDetails: React.FC = () => {
                 </Select> : <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background text-sm font-medium">
                   {(() => {
             const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email)
+              || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
               || [];
-            const assignedEmail = assignedEmails[0] || selectedReviewer;
+            const assignedEmail = assignedEmails.filter(Boolean)[0] || selectedReviewer;
             const assigned = reviewers.find(r => r.email === assignedEmail);
             return assigned ? assigned.name || assigned.email.split("@")[0] : assignedEmail || "N/A";
           })()}
