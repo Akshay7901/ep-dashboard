@@ -150,7 +150,34 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         credibility: "", structure: "", clarity: "", otherComments: "",
         redFlags: "", recommendation: "",
       };
-      setFormData(existingAssessment && Object.keys(existingAssessment).length > 0 ? existingAssessment : defaultData);
+      console.log('[PeerReviewForm] existingAssessment changed:', JSON.stringify(existingAssessment)?.substring(0, 200));
+      if (existingAssessment && Object.keys(existingAssessment).length > 0) {
+        // Map API field names to form field names (handle snake_case from API)
+        const mapped: Record<string, string> = { ...defaultData };
+        const fieldMap: Record<string, string> = {
+          scope: 'scope',
+          purpose_and_value: 'purposeAndValue',
+          purposeAndValue: 'purposeAndValue',
+          title: 'title',
+          originality: 'originality',
+          credibility: 'credibility',
+          structure: 'structure',
+          clarity: 'clarity',
+          other_comments: 'otherComments',
+          otherComments: 'otherComments',
+          red_flags: 'redFlags',
+          redFlags: 'redFlags',
+          recommendation: 'recommendation',
+        };
+        for (const [apiKey, formKey] of Object.entries(fieldMap)) {
+          if (existingAssessment[apiKey]) {
+            mapped[formKey] = existingAssessment[apiKey];
+          }
+        }
+        setFormData(mapped);
+      } else {
+        setFormData(defaultData);
+      }
     }, [existingAssessment]);
 
     // Calculate progress
