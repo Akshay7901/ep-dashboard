@@ -60,8 +60,16 @@ export const commentsApi = {
 // Reviews API (peer review submission and retrieval)
 export const reviewsApi = {
   get: async (ticketNumber: string): Promise<any> => {
-    const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/review`);
-    return data;
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/review`);
+      return data;
+    } catch (error: any) {
+      // If no review exists yet (404), return null instead of throwing
+      if (error?.status === 404 || error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   },
 
   saveDraft: async (ticketNumber: string, reviewData: Record<string, any>): Promise<any> => {
