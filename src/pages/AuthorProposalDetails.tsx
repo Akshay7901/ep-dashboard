@@ -22,36 +22,19 @@ import brandLogo from "@/assets/brand-logo.webp";
 
 /* ---- Timeline helpers ---- */
 
-const timelineSteps = [
-  { key: "submitted", label: "Proposal Submitted" },
-  { key: "under_review", label: "Editorial Review" },
-  { key: "peer_review", label: "Peer Review" },
-  { key: "approved", label: "Contract Finalisation" },
-  { key: "locked", label: "Metadata Locked" },
-  { key: "finalised", label: "Publication" },
-];
+interface TimelineStage {
+  stage_name: string;
+  display_name: string;
+  completed_at?: string | null;
+  started_at?: string | null;
+  is_current: boolean;
+  is_completed: boolean;
+}
 
-const statusOrder: Record<string, number> = {
-  submitted: 0,
-  under_review: 1,
-  editorial_review: 1,
-  peer_review: 2,
-  'feedback_&_agreement_pending': 3,
-  approved: 3,
-  contract_issued: 3,
-  'final_review_&_confirmation': 4,
-  locked: 4,
-  'confirmed_&_finalised': 5,
-  finalised: 5,
-  rejected: -1,
-  declined: -1,
-};
-
-const getTimelineProgress = (status: string): number => {
-  const normalized = normalizeStatus(status);
-  const idx = statusOrder[normalized] ?? 0;
-  if (idx < 0) return 0;
-  return Math.round(((idx + 1) / timelineSteps.length) * 100);
+const getTimelineProgressFromApi = (timeline: TimelineStage[]): number => {
+  if (!timeline?.length) return 0;
+  const completedCount = timeline.filter((s) => s.is_completed).length;
+  return Math.round((completedCount / timeline.length) * 100);
 };
 
 /* ---- Action banner config ---- */
@@ -195,8 +178,8 @@ const AuthorProposalDetails: React.FC = () => {
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
   const actionBanner = getActionBanner(proposal.status);
-  const progress = getTimelineProgress(proposal.status);
-  const currentStepIdx = statusOrder[proposal.status] ?? 0;
+  const apiTimeline: TimelineStage[] = (proposal as any).timeline || [];
+  const progress = getTimelineProgressFromApi(apiTimeline);
 
   const handleSendComment = async () => {
     if (!commentText.trim()) return;
@@ -282,28 +265,29 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
 
           {/* Timeline steps */}
-          <div className="grid grid-cols-6 gap-2">
-            {timelineSteps.map((step, idx) => {
-              const isCompleted = currentStepIdx >= 0 && idx <= currentStepIdx;
-              const isCurrent = idx === currentStepIdx;
+          <div className={cn("grid gap-2", `grid-cols-${apiTimeline.length || 6}`)} style={{ gridTemplateColumns: `repeat(${apiTimeline.length || 6}, minmax(0, 1fr))` }}>
+            {apiTimeline.map((step) => {
+              const dateStr = step.completed_at || step.started_at;
               return (
-                <div key={step.key} className="flex flex-col items-center text-center gap-1.5">
-                  {isCompleted ? (
-                    <CheckCircle2 className={cn("h-6 w-6", isCurrent ? "text-[#2563eb]" : "text-[#3d5a47]")} />
+                <div key={step.stage_name} className="flex flex-col items-center text-center gap-1.5">
+                  {step.is_completed ? (
+                    <CheckCircle2 className={cn("h-6 w-6", step.is_current ? "text-[#2563eb]" : "text-[#3d5a47]")} />
+                  ) : step.is_current ? (
+                    <CheckCircle2 className="h-6 w-6 text-[#2563eb]" />
                   ) : (
                     <Circle className="h-6 w-6 text-muted-foreground/40" />
                   )}
                   <span
                     className={cn(
                       "text-[10px] leading-tight",
-                      isCompleted ? "text-foreground font-medium" : "text-muted-foreground",
+                      step.is_completed || step.is_current ? "text-foreground font-medium" : "text-muted-foreground",
                     )}
                   >
-                    {step.label}
+                    {step.display_name}
                   </span>
-                  {isCompleted && proposal.created_at && idx === 0 && (
+                  {dateStr && (
                     <span className="text-[9px] text-muted-foreground">
-                      {format(new Date(proposal.created_at), "MMM d, yyyy")}
+                      {format(new Date(dateStr), "MMM d, yyyy")}
                     </span>
                   )}
                 </div>
