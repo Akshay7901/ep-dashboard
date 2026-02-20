@@ -14,7 +14,8 @@ export const useReview = (ticketNumber: string | undefined) => {
       return result;
     },
     enabled: !!ticketNumber,
-    staleTime: 30000,
+    staleTime: 0,
+    refetchOnMount: 'always',
     retry: false,
   });
 
