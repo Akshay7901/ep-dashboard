@@ -974,7 +974,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && !decisionReviewerAlreadySubmitted && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview || isReviewer1) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && !decisionReviewerAlreadySubmitted && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -1160,6 +1160,54 @@ const ProposalDetails: React.FC = () => {
             {rightPanel}
           </div>
         </div>
+        )
+      ) : isReviewer1 ? (
+        /* Decision reviewer: two-panel layout with review form on left, proposal details on right */
+        (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
+          <div>{rightPanel}</div>
+        ) : showingSummary ? (
+          <PeerReviewSummary
+            proposal={proposal}
+            formData={summaryFormData}
+            onGoBack={() => setShowingSummary(false)}
+            showContractSection
+            onConfirmSubmit={async (contractType) => {
+              setIsConfirming(true);
+              try {
+                await submitReviewApi({
+                  ...summaryFormData,
+                  contractType: contractType || 'standard',
+                });
+                queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
+                setDecisionReviewerSubmitted(true);
+                setShowingSummary(false);
+              } catch (err) {
+                console.error('Submit failed:', err);
+              } finally {
+                setIsConfirming(false);
+              }
+            }}
+            isSubmitting={isConfirming}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+              <PeerReviewCommentsForm
+                ref={reviewFormRef}
+                proposal={proposal}
+                existingAssessment={{}}
+                forceEditable
+                onSave={() => refetch()}
+                onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
+                onDraftSaved={() => {}}
+              />
+            </div>
+            <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+              {rightPanel}
+            </div>
+          </div>
         )
       ) : <div>{rightPanel}</div>}
 
