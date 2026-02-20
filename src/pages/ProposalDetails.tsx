@@ -188,6 +188,22 @@ const ProposalDetails: React.FC = () => {
     isUnassigning,
   } = useProposalActions(proposal?.ticket_number || id);
 
+  // Extract review form data - must be before early returns (hooks rule)
+  const reviewFormData = React.useMemo(() => {
+    if (!reviewData) return {};
+    // Try common nesting patterns
+    const candidate = reviewData.review_data || reviewData.data || reviewData.review || reviewData;
+    // Verify it actually has review fields (not just metadata like status/id)
+    if (candidate && typeof candidate === 'object' && (candidate.scope || candidate.recommendation || candidate.purposeAndValue)) {
+      return candidate;
+    }
+    // If the root object itself has review fields
+    if (reviewData.scope || reviewData.recommendation || reviewData.purposeAndValue) {
+      return reviewData;
+    }
+    return {};
+  }, [reviewData]);
+
 
   /* ---------------- Loading / Error ---------------- */
 
@@ -211,8 +227,7 @@ const ProposalDetails: React.FC = () => {
   const isBusy = isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
 
-  // Check if peer reviewer already submitted their review (from review API response)
-  const reviewFormData = reviewData?.review_data || reviewData || {};
+  // Check if peer reviewer already submitted their review
   const reviewStatus = reviewData?.status || reviewData?.review_status;
   const peerReviewAlreadySubmitted = isReviewer2 && (
     reviewStatus === 'submitted' || reviewStatus === 'completed'
