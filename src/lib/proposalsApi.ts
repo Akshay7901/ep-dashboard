@@ -1,24 +1,4 @@
 import api from '@/lib/api';
-import { ProposalStatus, ApiProposalStatus } from '@/types';
-
-// Map internal status back to API status for outgoing requests
-const mapInternalToApiStatus = (internalStatus: string): string => {
-  const reverseMap: Record<string, string> = {
-    'submitted': 'new',
-    'under_review': 'in_review',
-    'review_returned': 'review_returned',
-    'contract_issued': 'contract_issued',
-    'queries_raised': 'queries_raised',
-    'awaiting_author_approval': 'awaiting_author_approval',
-    'author_approved': 'author_approved',
-    'approved': 'approved',
-    'rejected': 'rejected',
-    'declined': 'declined',
-    'locked': 'locked',
-    'finalised': 'published',
-  };
-  return reverseMap[internalStatus] || internalStatus;
-};
 
 // Types for API responses
 export interface PeerReviewer {
@@ -37,11 +17,6 @@ export interface ProposalComment {
   author_email: string;
   created_at: string;
   role?: string;
-}
-
-export interface StatusUpdate {
-  status: string;
-  notes?: string;
 }
 
 export interface AssignmentRequest {
@@ -79,17 +54,6 @@ export const commentsApi = {
   add: async (ticketNumber: string, comment: { comment: string }): Promise<ProposalComment> => {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, { comment_text: comment.comment });
     return data;
-  },
-};
-
-// Status API
-export const statusApi = {
-  update: async (ticketNumber: string, statusUpdate: StatusUpdate): Promise<void> => {
-    const apiStatus = mapInternalToApiStatus(statusUpdate.status);
-    await api.patch(`/api/proposals/${encodeURIComponent(ticketNumber)}/status`, {
-      ...statusUpdate,
-      status: apiStatus,
-    });
   },
 };
 
