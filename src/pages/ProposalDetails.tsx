@@ -232,12 +232,9 @@ const ProposalDetails: React.FC = () => {
     || statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
   );
 
-  // Check if there's a submitted peer review (for decision reviewer split layout)
-  // ONLY show when peer reviewer has explicitly submitted (is_submitted === true from API)
-  console.log('[ProposalDetails] reviewData:', JSON.stringify(reviewData)?.substring(0, 500));
-  console.log('[ProposalDetails] reviewMeta:', JSON.stringify(reviewMeta)?.substring(0, 300));
-  console.log('[ProposalDetails] isReviewer1:', isReviewer1, 'is_submitted:', reviewMeta?.is_submitted, 'hasReview:', !!reviewData?.review);
-  const hasSubmittedReview = isReviewer1 && !!reviewData?.review && reviewMeta?.is_submitted === true;
+  // Check if there's a peer review available (for decision reviewer split layout)
+  // Show split screen when GET /review API returns successfully with review data
+  const hasSubmittedReview = isReviewer1 && !!reviewData?.review && Object.keys(reviewFormData).length > 0;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   // Check if the decision reviewer has already submitted their own review
