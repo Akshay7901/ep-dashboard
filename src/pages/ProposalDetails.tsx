@@ -635,24 +635,37 @@ const ProposalDetails: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {decisionReview?.review_data?.contractType ? (
+                      {decisionReview?.review_data ? (
                         <div className="space-y-4">
-                          <div className="border border-muted rounded-lg p-4">
-                            <p className="text-sm font-semibold">Contract Type</p>
-                            <p className="text-sm font-medium mt-1">
-                              {decisionReview.review_data.contractType === "edited_volume" ? "Edited Volume Contract"
-                                : decisionReview.review_data.contractType === "custom" ? "Custom Contract"
-                                : "Standard Contract"}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            Contract has been sent to the author.
-                          </div>
+                          {/* Decision reviewer's review comments */}
+                          <p className="text-sm font-semibold text-foreground">Decision Reviewer Comments</p>
+                          {decisionReview.reviewer_name && (
+                            <p className="text-xs text-muted-foreground -mt-2">{decisionReview.reviewer_name}</p>
+                          )}
+                          {renderReviewFields(decisionReview.review_data)}
+
+                          {/* Contract Type */}
+                          {decisionReview.review_data.contractType && (
+                            <>
+                              <Separator />
+                              <div className="border border-muted rounded-lg p-4">
+                                <p className="text-sm font-semibold">Contract Type</p>
+                                <p className="text-sm font-medium mt-1">
+                                  {decisionReview.review_data.contractType === "edited_volume" ? "Edited Volume Contract"
+                                    : decisionReview.review_data.contractType === "custom" ? "Custom Contract"
+                                    : "Standard Contract"}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                Contract has been sent to the author.
+                              </div>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          Contract will be sent when the review is submitted to the author.
+                          Decision review and contract will appear here once submitted.
                         </p>
                       )}
                     </AccordionContent>
