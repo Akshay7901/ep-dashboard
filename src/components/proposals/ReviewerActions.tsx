@@ -3,27 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Send, Lock, AlertCircle } from 'lucide-react';
-import { Proposal, ProposalStatus } from '@/types';
+import { Proposal } from '@/types';
+import { statusIs } from '@/lib/statusUtils';
 
 interface ReviewerActionsProps {
   proposal: Proposal;
   isReviewer1: boolean;
   isReviewer2: boolean;
-  onStatusChange: (status: ProposalStatus) => void;
+  onStatusChange: (status: string) => void;
   isPending: boolean;
   hasReviewer2Comments: boolean;
 }
 
-/**
- * Screen 1: Reviewer 1 (Sarah) - Accept/Decline submitted proposals
- * Read-only view with accept/decline actions for new submissions
- */
 export const Reviewer1SubmittedActions: React.FC<{
   proposal: Proposal;
-  onStatusChange: (status: ProposalStatus) => void;
+  onStatusChange: (status: string) => void;
   isPending: boolean;
 }> = ({ proposal, onStatusChange, isPending }) => {
-  if (proposal.status !== 'submitted') return null;
+  if (!statusIs(proposal.status, 'new', 'submitted')) return null;
 
   return (
     <Card className="border-primary/20 bg-primary/5">
@@ -59,15 +56,11 @@ export const Reviewer1SubmittedActions: React.FC<{
   );
 };
 
-/**
- * Screen 2: Reviewer 2 (Amanda) - Assessment view indicator
- * Shows when proposal is under review and awaiting Reviewer 2's assessment
- */
 export const Reviewer2AssessmentIndicator: React.FC<{
   proposal: Proposal;
   hasComments: boolean;
 }> = ({ proposal, hasComments }) => {
-  if (proposal.status !== 'under_review') return null;
+  if (!statusIs(proposal.status, 'in_review', 'under_review', 'in_progress')) return null;
 
   return (
     <Card className="border-blue-500/20 bg-blue-500/5">
@@ -89,17 +82,13 @@ export const Reviewer2AssessmentIndicator: React.FC<{
   );
 };
 
-/**
- * Screen 3: Reviewer 1 (Sarah) - Review comments and send contract
- * After Reviewer 2 completes assessment, Reviewer 1 reviews and sends to author
- */
 export const Reviewer1ApprovalActions: React.FC<{
   proposal: Proposal;
-  onStatusChange: (status: ProposalStatus) => void;
+  onStatusChange: (status: string) => void;
   isPending: boolean;
   hasReviewer2Comments: boolean;
 }> = ({ proposal, onStatusChange, isPending, hasReviewer2Comments }) => {
-  if (proposal.status !== 'under_review' && proposal.status !== 'approved') return null;
+  if (!statusIs(proposal.status, 'in_review', 'under_review') && !statusIs(proposal.status, 'approved', 'contract_issued', 'contract_sent')) return null;
 
   return (
     <Card className="border-green-500/20 bg-green-500/5">
@@ -109,7 +98,7 @@ export const Reviewer1ApprovalActions: React.FC<{
           <Badge variant="outline" className="text-xs">Step 3 of 4</Badge>
         </div>
         <CardDescription>
-          {proposal.status === 'under_review' 
+          {statusIs(proposal.status, 'in_review', 'under_review')
             ? hasReviewer2Comments
               ? 'Reviewer 2 has submitted their assessment. Review comments below and approve if ready.'
               : 'Awaiting assessment from Reviewer 2. You can still add your own comments.'
@@ -117,7 +106,7 @@ export const Reviewer1ApprovalActions: React.FC<{
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-3">
-        {proposal.status === 'under_review' && (
+        {statusIs(proposal.status, 'in_review', 'under_review') && (
           <Button 
             onClick={() => onStatusChange('approved')}
             disabled={isPending || !hasReviewer2Comments}
@@ -126,7 +115,7 @@ export const Reviewer1ApprovalActions: React.FC<{
             Approve Proposal
           </Button>
         )}
-        {proposal.status === 'approved' && (
+        {statusIs(proposal.status, 'approved', 'contract_issued', 'contract_sent') && (
           <Button 
             onClick={() => onStatusChange('finalised')}
             disabled={isPending}
@@ -140,16 +129,12 @@ export const Reviewer1ApprovalActions: React.FC<{
   );
 };
 
-/**
- * Screen 4: Reviewer 1 (Sarah) - Final review and lock
- * After contract sent, final review of all changes before locking
- */
 export const Reviewer1FinalActions: React.FC<{
   proposal: Proposal;
-  onStatusChange: (status: ProposalStatus) => void;
+  onStatusChange: (status: string) => void;
   isPending: boolean;
 }> = ({ proposal, onStatusChange, isPending }) => {
-  if (proposal.status !== 'finalised') return null;
+  if (!statusIs(proposal.status, 'finalised', 'review_returned')) return null;
 
   return (
     <Card className="border-amber-500/20 bg-amber-500/5">
@@ -181,10 +166,6 @@ export const Reviewer1FinalActions: React.FC<{
   );
 };
 
-/**
- * Main ReviewerActions component that shows the appropriate actions
- * based on the user's role and proposal status
- */
 const ReviewerActions: React.FC<ReviewerActionsProps> = ({
   proposal,
   isReviewer1,
@@ -193,9 +174,7 @@ const ReviewerActions: React.FC<ReviewerActionsProps> = ({
   isPending,
   hasReviewer2Comments,
 }) => {
-  const isLocked = proposal.status === 'locked';
-
-  if (isLocked) {
+  if (statusIs(proposal.status, 'locked')) {
     return (
       <Card className="border-muted bg-muted/50">
         <CardHeader className="pb-3">
@@ -211,7 +190,6 @@ const ReviewerActions: React.FC<ReviewerActionsProps> = ({
     );
   }
 
-  // Reviewer 1 (Sarah) actions
   if (isReviewer1) {
     return (
       <div className="space-y-4">
@@ -235,7 +213,6 @@ const ReviewerActions: React.FC<ReviewerActionsProps> = ({
     );
   }
 
-  // Reviewer 2 (Amanda) indicator
   if (isReviewer2) {
     return (
       <Reviewer2AssessmentIndicator 

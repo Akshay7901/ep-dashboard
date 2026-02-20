@@ -13,7 +13,7 @@ import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCi
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { ProposalStatus } from "@/types";
+import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import { commentsApi } from "@/lib/proposalsApi";
 import { toast } from "@/hooks/use-toast";
@@ -33,48 +33,54 @@ const timelineSteps = [
 const statusOrder: Record<string, number> = {
   submitted: 0,
   under_review: 1,
+  editorial_review: 1,
   peer_review: 2,
+  'feedback_&_agreement_pending': 3,
   approved: 3,
+  contract_issued: 3,
+  'final_review_&_confirmation': 4,
   locked: 4,
+  'confirmed_&_finalised': 5,
   finalised: 5,
   rejected: -1,
+  declined: -1,
 };
 
-const getTimelineProgress = (status: ProposalStatus): number => {
-  const idx = statusOrder[status] ?? 0;
+const getTimelineProgress = (status: string): number => {
+  const normalized = normalizeStatus(status);
+  const idx = statusOrder[normalized] ?? 0;
   if (idx < 0) return 0;
   return Math.round(((idx + 1) / timelineSteps.length) * 100);
 };
 
 /* ---- Action banner config ---- */
 
-const getActionBanner = (status: ProposalStatus) => {
-  switch (status) {
-    case "approved":
-      return {
-        show: true,
-        icon: AlertCircle,
-        iconColor: "text-[#c05621]",
-        bgColor: "bg-[#c05621]/5 border-[#c05621]/20",
-        title: "Peer review complete – action required",
-        description: "Please review the feedback and contract, then respond.",
-        buttonLabel: "View & Respond",
-        buttonTab: "review",
-      };
-    case "locked":
-      return {
-        show: true,
-        icon: AlertCircle,
-        iconColor: "text-[#2563eb]",
-        bgColor: "bg-[#2563eb]/5 border-[#2563eb]/20",
-        title: "Clarification needed – action required",
-        description: "Additional information has been requested. Please respond.",
-        buttonLabel: "View & Respond",
-        buttonTab: "review",
-      };
-    default:
-      return { show: false } as any;
+const getActionBanner = (status: string) => {
+  if (statusIs(status, "feedback_&_agreement_pending", "approved", "review_returned", "contract_issued")) {
+    return {
+      show: true,
+      icon: AlertCircle,
+      iconColor: "text-[#c05621]",
+      bgColor: "bg-[#c05621]/5 border-[#c05621]/20",
+      title: "Peer review complete – action required",
+      description: "Please review the feedback and contract, then respond.",
+      buttonLabel: "View & Respond",
+      buttonTab: "review",
+    };
   }
+  if (statusIs(status, "final_review_&_confirmation", "locked", "awaiting_author_approval")) {
+    return {
+      show: true,
+      icon: AlertCircle,
+      iconColor: "text-[#2563eb]",
+      bgColor: "bg-[#2563eb]/5 border-[#2563eb]/20",
+      title: "Clarification needed – action required",
+      description: "Additional information has been requested. Please respond.",
+      buttonLabel: "View & Respond",
+      buttonTab: "review",
+    };
+  }
+  return { show: false } as any;
 };
 
 /* ---- Detail helpers ---- */

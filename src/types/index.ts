@@ -57,20 +57,8 @@ export type ApiProposalStatus =
   | 'locked' 
   | 'published';
 
-// Internal status values used throughout the app
-export type ProposalStatus = 
-  | 'submitted' 
-  | 'under_review' 
-  | 'review_returned'
-  | 'contract_issued'
-  | 'queries_raised'
-  | 'awaiting_author_approval'
-  | 'author_approved'
-  | 'approved' 
-  | 'finalised' 
-  | 'rejected' 
-  | 'declined'
-  | 'locked';
+// Status is now a raw display string from the API (e.g., "New", "In Review", "Pending")
+export type ProposalStatus = string;
 
 // API proposal current_data structure (full details)
 export interface ApiProposalCurrentData {
