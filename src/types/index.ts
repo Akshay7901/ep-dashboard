@@ -177,6 +177,15 @@ export interface Proposal {
   // Assignment data
   assigned_at?: string | null;
   assigned_reviewers?: Array<{ email: string; name?: string; assigned_at?: string }> | null;
+  // Timeline from API
+  timeline?: Array<{
+    stage_name: string;
+    display_name: string;
+    completed_at?: string | null;
+    started_at?: string | null;
+    is_current: boolean;
+    is_completed: boolean;
+  }> | null;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
