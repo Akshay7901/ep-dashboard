@@ -1117,9 +1117,9 @@ const ProposalDetails: React.FC = () => {
                       </svg>
                     </div>
                     <div>
-                      <p className="font-semibold text-sm">Reviewer 1's Comments Pre-loaded</p>
+                      <p className="font-semibold text-sm">{reviewData?.review?.reviewer_name || "Peer Reviewer"}'s Comments Pre-loaded</p>
                       <p className="text-sm text-muted-foreground mt-0.5">
-                        The form below contains Reviewer 1's comments in <span className="text-destructive font-medium">red text</span>.
+                        The form below contains {reviewData?.review?.reviewer_name || "Peer Reviewer"}'s comments in <span className="text-destructive font-medium">red text</span>.
                         You can edit any field directly, or click "Start Fresh" above to clear all fields.
                       </p>
                     </div>
@@ -1131,9 +1131,9 @@ const ProposalDetails: React.FC = () => {
                     <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">Reviewer 1's Comments Cleared</p>
+                    <p className="font-semibold text-sm">{reviewData?.review?.reviewer_name || "Peer Reviewer"}'s Comments Cleared</p>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      To reload reviewer 1's comments press here{" "}
+                      To reload {reviewData?.review?.reviewer_name || "Peer Reviewer"}'s comments press here{" "}
                       <button
                         className="text-primary underline font-medium hover:opacity-80"
                         onClick={() => setStartedFresh(false)}
