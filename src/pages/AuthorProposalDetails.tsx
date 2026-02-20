@@ -178,7 +178,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
   const actionBanner = getActionBanner(proposal.status);
-  const apiTimeline: TimelineStage[] = (proposal as any).timeline || [];
+  const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
 
   const handleSendComment = async () => {

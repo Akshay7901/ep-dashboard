@@ -115,6 +115,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     referrer_url: currentData.referrer_url || null,
     assigned_at: extractAssignedAt((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
     assigned_reviewers: normalizeAssignments((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
+    timeline: (apiProposal as any).timeline || null,
   };
 };
 
