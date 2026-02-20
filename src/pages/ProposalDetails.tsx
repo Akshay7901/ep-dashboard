@@ -188,7 +188,7 @@ const ProposalDetails: React.FC = () => {
     isUnassigning,
   } = useProposalActions(proposal?.ticket_number || id);
 
-  // Extract peer review form data for pre-loading into decision reviewer's form
+  // Extract peer review form data (used for pre-loading peer reviewer's comments)
   const reviewFormData = React.useMemo(() => {
     if (!reviewData) return {};
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
@@ -200,6 +200,19 @@ const ProposalDetails: React.FC = () => {
       return candidate;
     }
     return {};
+  }, [reviewData]);
+
+  // Extract decision reviewer's OWN saved draft (if any) from the API response
+  const decisionReviewerDraft = React.useMemo(() => {
+    if (!reviewData) return null;
+    const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
+    const drReview = reviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+    if (!drReview) return null;
+    const candidate = drReview.review_data || drReview.data || drReview;
+    if (candidate && typeof candidate === 'object' && (candidate.scope !== undefined || candidate.recommendation !== undefined)) {
+      return candidate;
+    }
+    return null;
   }, [reviewData]);
 
   // Peer review metadata (for reviewer name display, etc.)
@@ -1128,10 +1141,10 @@ const ProposalDetails: React.FC = () => {
             <PeerReviewCommentsForm
               ref={reviewFormRef}
               proposal={proposal}
-              existingAssessment={startedFresh ? {} : reviewFormData || {}}
+              existingAssessment={startedFresh ? {} : (decisionReviewerDraft || reviewFormData || {})}
               forceEditable
               hideHeader
-              preloadedStyle={!startedFresh}
+              preloadedStyle={!startedFresh && !decisionReviewerDraft}
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
               onDraftSaved={() => {}}
