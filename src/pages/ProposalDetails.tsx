@@ -511,7 +511,7 @@ const ProposalDetails: React.FC = () => {
               <h3 className="text-xl font-semibold">
                 {proposal.corresponding_author_name || proposal.author_name || "N/A"}
               </h3>
-              <Badge className="bg-[#3d5a47] text-white text-xs rounded-md uppercase tracking-wide">
+              <Badge className="bg-[#3d5a47] text-white text-xs rounded-md uppercase tracking-wide hover:bg-[#3d5a47]">
                 Author
               </Badge>
             </div>
@@ -782,7 +782,7 @@ const ProposalDetails: React.FC = () => {
               <h3 className="text-xl font-semibold">
                 {proposal.corresponding_author_name || proposal.author_name || "N/A"}
               </h3>
-              <Badge className="bg-[#3d5a47] text-white text-xs rounded-md uppercase tracking-wide">
+              <Badge className="bg-[#3d5a47] text-white text-xs rounded-md uppercase tracking-wide hover:bg-[#3d5a47]">
                 Author
               </Badge>
             </div>
