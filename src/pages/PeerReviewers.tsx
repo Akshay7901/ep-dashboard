@@ -240,7 +240,7 @@ const PeerReviewers: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          className="text-[#3d5a47] border-[#3d5a47] hover:bg-[#3d5a47] hover:text-white"
                           onClick={() => handleDeleteClick({ id: reviewer.id, name: reviewer.name })}
                         >
                           Delete
