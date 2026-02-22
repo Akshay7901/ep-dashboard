@@ -36,7 +36,7 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
                <Button variant="outline" size="sm" asChild>
                 
                </Button>
-               <Button variant="default" size="sm" asChild>
+               <Button variant="default" size="sm" className="bg-[#3d5a47] hover:bg-[#3d5a47]/90 text-white" asChild>
                 <a href={documentUrl} download={fileName}>
                    <Download className="h-4 w-4 mr-2" />
                    Download
