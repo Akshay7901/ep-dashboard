@@ -355,7 +355,7 @@ const PeerReviewers: React.FC = () => {
             <Button
               onClick={handleAddReviewer}
               disabled={isCreating || !formData.name || !formData.email}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-[#3d5a47] hover:bg-[#3d5a47]/90 text-white"
             >
               {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Add Reviewer
