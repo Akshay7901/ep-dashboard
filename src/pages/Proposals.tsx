@@ -65,7 +65,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
   <button
     onClick={onClick}
     className={cn(
-      "inline-flex items-center gap-2 px-5 py-2 text-sm font-medium border transition-all rounded-full",
+      "flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded-full w-full h-10",
       colorClass,
       isActive && "ring-2 ring-offset-2 ring-primary",
     )}
@@ -220,7 +220,7 @@ const Proposals: React.FC = () => {
 
         {/* Status Summary Chips — dynamically rendered from API status_summary */}
         {statusSummary && (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-5 gap-3">
             {Object.entries(statusSummary).map(([key, count]) => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
