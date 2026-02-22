@@ -62,8 +62,7 @@ const ProposalStatusBadge: React.FC<ProposalStatusBadgeProps> = ({
 
   return (
     <Badge 
-      variant="secondary"
-      className={cn(config.className, 'gap-1.5 font-medium rounded-full px-4 transition-colors duration-200 cursor-default', className)}
+      className={cn(config.className, 'gap-1.5 font-medium rounded-full px-4 transition-colors duration-200 cursor-default border-transparent', className)}
     >
       {showIcon && <Icon className="h-3 w-3" />}
       {status}
