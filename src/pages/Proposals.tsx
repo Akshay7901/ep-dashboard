@@ -245,7 +245,7 @@ const Proposals: React.FC = () => {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Search by:</span>
             <Select value={searchCategory} onValueChange={(v) => { setSearchCategory(v); setDisplayCount(ITEMS_PER_PAGE); }}>
-              <SelectTrigger className="w-28 h-9 bg-primary text-primary-foreground">
+              <SelectTrigger className="w-28 h-9 bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
