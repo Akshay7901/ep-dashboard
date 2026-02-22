@@ -20,7 +20,6 @@ export type Database = {
           email: string
           id: string
           name: string
-          role: Database["public"]["Enums"]["reviewer_role"] | null
           updated_at: string
           user_id: string
         }
@@ -29,7 +28,6 @@ export type Database = {
           email: string
           id?: string
           name: string
-          role?: Database["public"]["Enums"]["reviewer_role"] | null
           updated_at?: string
           user_id: string
         }
@@ -38,7 +36,6 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          role?: Database["public"]["Enums"]["reviewer_role"] | null
           updated_at?: string
           user_id?: string
         }
@@ -96,7 +93,6 @@ export type Database = {
           finalised_by: string | null
           id: string
           name: string
-          status: Database["public"]["Enums"]["proposal_status"]
           ticket_number: string | null
           updated_at: string
           value: number | null
@@ -114,7 +110,6 @@ export type Database = {
           finalised_by?: string | null
           id?: string
           name: string
-          status?: Database["public"]["Enums"]["proposal_status"]
           ticket_number?: string | null
           updated_at?: string
           value?: number | null
@@ -132,7 +127,6 @@ export type Database = {
           finalised_by?: string | null
           id?: string
           name?: string
-          status?: Database["public"]["Enums"]["proposal_status"]
           ticket_number?: string | null
           updated_at?: string
           value?: number | null
@@ -196,8 +190,6 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          new_status: Database["public"]["Enums"]["proposal_status"] | null
-          previous_status: Database["public"]["Enums"]["proposal_status"] | null
           proposal_id: string
           user_id: string | null
         }
@@ -206,10 +198,6 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          new_status?: Database["public"]["Enums"]["proposal_status"] | null
-          previous_status?:
-            | Database["public"]["Enums"]["proposal_status"]
-            | null
           proposal_id: string
           user_id?: string | null
         }
@@ -218,10 +206,6 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          new_status?: Database["public"]["Enums"]["proposal_status"] | null
-          previous_status?:
-            | Database["public"]["Enums"]["proposal_status"]
-            | null
           proposal_id?: string
           user_id?: string | null
         }
@@ -240,24 +224,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: never
-        Returns: Database["public"]["Enums"]["reviewer_role"]
-      }
-      is_proposal_locked: { Args: { p_proposal_id: string }; Returns: boolean }
-      is_reviewer: { Args: never; Returns: boolean }
-      is_reviewer_1: { Args: never; Returns: boolean }
-      is_reviewer_2: { Args: never; Returns: boolean }
+      [_ in never]: never
     }
     Enums: {
-      proposal_status:
-        | "submitted"
-        | "under_review"
-        | "approved"
-        | "finalised"
-        | "rejected"
-        | "locked"
-      reviewer_role: "reviewer_1" | "reviewer_2"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -384,16 +354,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      proposal_status: [
-        "submitted",
-        "under_review",
-        "approved",
-        "finalised",
-        "rejected",
-        "locked",
-      ],
-      reviewer_role: ["reviewer_1", "reviewer_2"],
-    },
+    Enums: {},
   },
 } as const
