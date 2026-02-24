@@ -527,7 +527,7 @@ const AuthorProposalDetails: React.FC = () => {
 
             <div className="border rounded-md p-6 space-y-6">
                 {/* Info banner */}
-                <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
+                <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-lg p-4 text-sm text-foreground/80">
                   The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
                   proposal and provided the following assessment. Please review both the feedback and the contract terms before
                   responding.
