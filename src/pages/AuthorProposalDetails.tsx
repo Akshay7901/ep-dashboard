@@ -108,28 +108,26 @@ const ReviewFeedbackCard: React.FC<{ review: any; title: string }> = ({ review, 
   if (!hasContent) return null;
 
   return (
-    <Card>
-      <CardContent className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-foreground">{title}</h3>
-          {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
-        </div>
-        {review.reviewer_name && (
-          <p className="text-sm text-muted-foreground">Reviewed by: <span className="font-medium text-foreground">{review.reviewer_name}</span></p>
-        )}
-        {REVIEW_FEEDBACK_FIELDS.map((field) => {
-          const value = formData[field.key];
-          if (!value?.trim?.()) return null;
-          return (
-            <div key={field.key}>
-              <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
-              <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
-              <Separator className="mt-6" />
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
+        {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
+      </div>
+      {review.reviewer_name && (
+        <p className="text-sm text-muted-foreground">Reviewed by: <span className="font-medium text-foreground">{review.reviewer_name}</span></p>
+      )}
+      {REVIEW_FEEDBACK_FIELDS.map((field) => {
+        const value = formData[field.key];
+        if (!value?.trim?.()) return null;
+        return (
+          <div key={field.key}>
+            <Separator className="mb-6" />
+            <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
+            <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -535,135 +533,112 @@ const AuthorProposalDetails: React.FC = () => {
               <>
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {decisionReview && (
-                  <Card>
-                    <CardContent className="p-6 space-y-6">
-                      {/* Decision Review Feedback */}
-                      <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />
+                  <div className="space-y-6">
+                    {/* Decision Review Feedback */}
+                    <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />
 
-                      {/* Publishing Contract - inline within the same card */}
-                      {decisionReview.is_submitted && (
-                        <>
-                          <Separator />
+                    {/* Publishing Contract - inline */}
+                    {decisionReview.is_submitted && (
+                      <>
+                        <Separator />
 
-                          <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
+                        <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
 
-                          {/* Agreement notice */}
-                          <div className="bg-muted/50 border rounded-lg p-5 space-y-2">
-                            <p className="text-sm font-bold text-foreground">
-                              By signing this agreement, you confirm acceptance of the peer review feedback.
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
-                            </p>
+                        {/* Agreement notice */}
+                        <div className="bg-muted/50 border rounded-md p-5 space-y-2">
+                          <p className="text-sm font-bold text-foreground">
+                            By signing this agreement, you confirm acceptance of the peer review feedback.
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
+                          </p>
+                        </div>
+
+                        {/* Contract document */}
+                        <div className="border rounded-md overflow-hidden">
+                          <div className="bg-muted/40 border-b px-5 py-3">
+                            <span className="text-sm font-semibold text-foreground">
+                              {decisionReview.review_data?.contractType === "edited_volume"
+                                ? "Edited Volume Publishing Agreement"
+                                : decisionReview.review_data?.contractType === "custom"
+                                ? "Custom Publishing Agreement"
+                                : "Standard Academic Publishing Agreement"}
+                            </span>
                           </div>
-
-                          {/* Contract document - flat layout matching Figma */}
-                          <div className="border rounded-md overflow-hidden">
-                            {/* Header bar */}
-                            <div className="bg-muted/40 border-b px-5 py-3">
-                              <span className="text-sm font-semibold text-foreground">
-                                {decisionReview.review_data?.contractType === "edited_volume"
-                                  ? "Edited Volume Publishing Agreement"
-                                  : decisionReview.review_data?.contractType === "custom"
-                                  ? "Custom Publishing Agreement"
-                                  : "Standard Academic Publishing Agreement"}
-                              </span>
+                          <div className="p-6 space-y-6 text-sm leading-relaxed">
+                            <div className="text-center space-y-1">
+                              <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
+                              <p className="text-muted-foreground">Between Author and Publisher</p>
                             </div>
-
-                            {/* Contract body */}
-                            <div className="p-6 space-y-6 text-sm leading-relaxed">
-                              <div className="text-center space-y-1">
-                                <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
-                                <p className="text-muted-foreground">Between Author and Publisher</p>
+                            <div className="space-y-5">
+                              <div>
+                                <p className="font-bold">1. PARTIES</p>
+                                <p className="mt-1">
+                                  This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
+                                </p>
                               </div>
-
-                              <div className="space-y-5">
-                                <div>
-                                  <p className="font-bold">1. PARTIES</p>
-                                  <p className="mt-1">
-                                    This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">2. THE WORK</p>
-                                  <p className="mt-1">
-                                    The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:
-                                  </p>
-                                  <p className="mt-2 pl-6 italic font-medium">
-                                    "{proposal.name}"
-                                  </p>
-                                  <p className="mt-2">
-                                    ("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">3. GRANT OF RIGHTS</p>
-                                  <p className="mt-1">
-                                    The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">4. ROYALTIES</p>
-                                  <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
-                                  <ul className="mt-2 pl-10 space-y-1 list-none">
-                                    <li>10% of net receipts on hardcover sales</li>
-                                    <li>7.5% of net receipts on paperback sales</li>
-                                    <li>25% of net receipts on e-book sales</li>
-                                  </ul>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
-                                  <p className="mt-1">
-                                    The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">6. TERMINATION</p>
-                                  <p className="mt-1">
-                                    Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.
-                                  </p>
-                                </div>
+                              <div>
+                                <p className="font-bold">2. THE WORK</p>
+                                <p className="mt-1">The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:</p>
+                                <p className="mt-2 pl-6 italic font-medium">"{proposal.name}"</p>
+                                <p className="mt-2">("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.</p>
+                              </div>
+                              <div>
+                                <p className="font-bold">3. GRANT OF RIGHTS</p>
+                                <p className="mt-1">The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.</p>
+                              </div>
+                              <div>
+                                <p className="font-bold">4. ROYALTIES</p>
+                                <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
+                                <ul className="mt-2 pl-10 space-y-1 list-none">
+                                  <li>10% of net receipts on hardcover sales</li>
+                                  <li>7.5% of net receipts on paperback sales</li>
+                                  <li>25% of net receipts on e-book sales</li>
+                                </ul>
+                              </div>
+                              <div>
+                                <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
+                                <p className="mt-1">The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.</p>
+                              </div>
+                              <div>
+                                <p className="font-bold">6. TERMINATION</p>
+                                <p className="mt-1">Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.</p>
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          {/* Action buttons */}
-                          <div className="space-y-3">
-                            <Button
-                              className="w-full bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-6 text-base"
-                              onClick={async () => {
-                                setIsAccepting(true);
-                                try {
-                                  await proposalApi.acceptContract(ticketNum);
-                                  toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
-                                  refetch();
-                                } catch (err: any) {
-                                  toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
-                                } finally {
-                                  setIsAccepting(false);
-                                }
-                              }}
-                              disabled={isAccepting}
-                            >
-                              {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full py-6 text-base"
-                              onClick={() => setShowQuestionsForm(true)}
-                            >
-                              I have questions before signing
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
+                        {/* Action buttons */}
+                        <div className="space-y-3">
+                          <Button
+                            className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
+                            onClick={async () => {
+                              setIsAccepting(true);
+                              try {
+                                await proposalApi.acceptContract(ticketNum);
+                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
+                                refetch();
+                              } catch (err: any) {
+                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
+                              } finally {
+                                setIsAccepting(false);
+                              }
+                            }}
+                            disabled={isAccepting}
+                          >
+                            {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full py-6 text-base"
+                            onClick={() => setShowQuestionsForm(true)}
+                          >
+                            I have questions before signing
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
 
                 {/* Question form - separate card */}
