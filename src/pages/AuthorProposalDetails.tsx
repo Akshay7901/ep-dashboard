@@ -112,9 +112,6 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
       </div>
-      {review.reviewer_name
-
-      }
       {REVIEW_FEEDBACK_FIELDS.map((field) => {
         const value = formData[field.key];
         if (!value?.trim?.()) return null;
