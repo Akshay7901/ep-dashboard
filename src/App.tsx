@@ -14,6 +14,7 @@ import ProposalDetails from "./pages/ProposalDetails";
 import PeerReviewers from "./pages/PeerReviewers";
 import AuthorDashboard from "./pages/AuthorDashboard";
 import AuthorProposalDetails from "./pages/AuthorProposalDetails";
+import ContractSigning from "./pages/ContractSigning";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AuthorProposalDetails />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/proposals/:ticketNumber/contract"
+              element={
+                <ProtectedRoute>
+                  <ContractSigning />
                 </ProtectedRoute>
               }
             />
