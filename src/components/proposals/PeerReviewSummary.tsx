@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Proposal } from "@/types";
 
 const REVIEW_FIELDS = [
@@ -26,7 +28,7 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: (contractType?: string) => void;
+  onConfirmSubmit: (sendContract: boolean, contractType?: string) => void;
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
@@ -40,6 +42,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   isSubmitting,
   showContractSection = false,
 }) => {
+  const [sendContract, setSendContract] = useState<"yes" | "no">("yes");
   const [selectedContract, setSelectedContract] = useState("author_contract");
 
   return (
@@ -94,19 +97,39 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         )}
       </div>
 
-      {/* Contract selection - only for decision reviewer */}
+      {/* Contract option - only for decision reviewer */}
       {showContractSection && (
-        <div className="mt-8">
-          <h2 className="text-base font-semibold mb-4">Select Contract to Send with Proposal</h2>
-          <Select value={selectedContract} onValueChange={setSelectedContract}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a contract" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="author_contract">Author Contract</SelectItem>
-              <SelectItem value="editor_contract">Editor Contract</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mt-8 space-y-4">
+          <h2 className="text-base font-semibold">Send Contract with Submission?</h2>
+          <RadioGroup
+            value={sendContract}
+            onValueChange={(v) => setSendContract(v as "yes" | "no")}
+            className="flex gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="send-yes" />
+              <Label htmlFor="send-yes">Yes, send contract</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="send-no" />
+              <Label htmlFor="send-no">No, submit without contract</Label>
+            </div>
+          </RadioGroup>
+
+          {sendContract === "yes" && (
+            <div>
+              <p className="text-sm font-medium mb-2">Select Contract Type</p>
+              <Select value={selectedContract} onValueChange={setSelectedContract}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a contract" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="author_contract">Author Contract</SelectItem>
+                  <SelectItem value="editor_contract">Editor Contract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       )}
 
@@ -117,7 +140,10 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         </Button>
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-          onClick={() => onConfirmSubmit(showContractSection ? selectedContract : undefined)}
+          onClick={() => {
+            const shouldSend = showContractSection && sendContract === "yes";
+            onConfirmSubmit(shouldSend, shouldSend ? selectedContract : undefined);
+          }}
           disabled={isSubmitting}
         >
           {isSubmitting
