@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
-import { commentsApi } from "@/lib/proposalsApi";
+import { commentsApi, proposalApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
@@ -141,6 +141,10 @@ const AuthorProposalDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("proposal");
   const [commentText, setCommentText] = useState("");
   const [isSendingComment, setIsSendingComment] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [showQuestionsForm, setShowQuestionsForm] = useState(false);
+  const [questionsText, setQuestionsText] = useState("");
+  const [isSendingQuestions, setIsSendingQuestions] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(
     null,
   );
@@ -528,6 +532,175 @@ const AuthorProposalDetails: React.FC = () => {
               <>
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {decisionReview && <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />}
+
+                {/* Publishing Contract - shown when contract is issued */}
+                {decisionReview?.is_submitted && (
+                  <Card>
+                    <CardContent className="p-6 space-y-6">
+                      <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
+
+                      {/* Agreement notice */}
+                      <div className="bg-muted/50 border rounded-lg p-5 space-y-2">
+                        <p className="text-sm font-bold text-foreground">
+                          By signing this agreement, you confirm acceptance of the peer review feedback.
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
+                        </p>
+                      </div>
+
+                      {/* Contract document */}
+                      <Accordion type="single" collapsible defaultValue="contract-doc">
+                        <AccordionItem value="contract-doc" className="border rounded-lg">
+                          <AccordionTrigger className="px-5 hover:no-underline">
+                            <span className="text-sm font-semibold">
+                              {decisionReview.review_data?.contractType === "edited_volume"
+                                ? "Edited Volume Publishing Agreement"
+                                : decisionReview.review_data?.contractType === "custom"
+                                ? "Custom Publishing Agreement"
+                                : "Standard Academic Publishing Agreement"}
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-5 pb-5">
+                            <div className="border rounded-lg p-6 bg-background space-y-6 text-sm leading-relaxed">
+                              <div className="text-center space-y-1">
+                                <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
+                                <p className="text-muted-foreground">Between Author and Publisher</p>
+                              </div>
+
+                              <Separator />
+
+                              <div className="space-y-4">
+                                <div>
+                                  <p className="font-bold">1. PARTIES</p>
+                                  <p className="mt-1">
+                                    This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="font-bold">2. THE WORK</p>
+                                  <p className="mt-1">
+                                    The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:
+                                  </p>
+                                  <p className="mt-2 pl-6 italic font-medium">
+                                    "{proposal.name}"
+                                  </p>
+                                  <p className="mt-2">
+                                    ("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="font-bold">3. GRANT OF RIGHTS</p>
+                                  <p className="mt-1">
+                                    The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="font-bold">4. ROYALTIES</p>
+                                  <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
+                                  <ul className="mt-2 pl-10 space-y-1 list-none">
+                                    <li>10% of net receipts on hardcover sales</li>
+                                    <li>7.5% of net receipts on paperback sales</li>
+                                    <li>25% of net receipts on e-book sales</li>
+                                  </ul>
+                                </div>
+
+                                <div>
+                                  <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
+                                  <p className="mt-1">
+                                    The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="font-bold">6. TERMINATION</p>
+                                  <p className="mt-1">
+                                    Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+
+                      {/* Action buttons */}
+                      {!showQuestionsForm ? (
+                        <div className="space-y-3">
+                          <Button
+                            className="w-full bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-6 text-base"
+                            onClick={async () => {
+                              setIsAccepting(true);
+                              try {
+                                await proposalApi.acceptContract(ticketNum);
+                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
+                                refetch();
+                              } catch (err: any) {
+                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
+                              } finally {
+                                setIsAccepting(false);
+                              }
+                            }}
+                            disabled={isAccepting}
+                          >
+                            {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full py-6 text-base"
+                            onClick={() => setShowQuestionsForm(true)}
+                          >
+                            I have questions before signing
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Textarea
+                            placeholder="Type your questions or concerns about the contract here..."
+                            value={questionsText}
+                            onChange={(e) => setQuestionsText(e.target.value)}
+                            rows={4}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              className="flex-1 bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white"
+                              onClick={async () => {
+                                if (!questionsText.trim()) return;
+                                setIsSendingQuestions(true);
+                                try {
+                                  await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
+                                  toast({ title: "Questions sent", description: "Your questions have been submitted to the publisher." });
+                                  setShowQuestionsForm(false);
+                                  setQuestionsText("");
+                                  refetch();
+                                } catch (err: any) {
+                                  toast({ title: "Error", description: err.message || "Failed to send questions", variant: "destructive" });
+                                } finally {
+                                  setIsSendingQuestions(false);
+                                }
+                              }}
+                              disabled={isSendingQuestions || !questionsText.trim()}
+                            >
+                              {isSendingQuestions ? "Sending..." : "Send Questions"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowQuestionsForm(false);
+                                setQuestionsText("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
           </TabsContent>
