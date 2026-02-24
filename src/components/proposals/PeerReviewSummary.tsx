@@ -40,7 +40,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   isSubmitting,
   showContractSection = false,
 }) => {
-  const [selectedContract, setSelectedContract] = useState("standard");
+  const [selectedContract, setSelectedContract] = useState("author_contract");
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
@@ -103,17 +103,10 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
               <SelectValue placeholder="Select a contract" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="standard">Standard contract</SelectItem>
-              <SelectItem value="edited_volume">Edited volume contract</SelectItem>
-              <SelectItem value="custom">Custom contract</SelectItem>
+              <SelectItem value="author_contract">Author Contract</SelectItem>
+              <SelectItem value="editor_contract">Editor Contract</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground mt-3">
-            or{" "}
-            <button className="text-primary underline hover:opacity-80">
-              Upload another file
-            </button>
-          </p>
         </div>
       )}
 
