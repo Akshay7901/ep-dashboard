@@ -525,7 +525,7 @@ const AuthorProposalDetails: React.FC = () => {
             !peerReview && !decisionReview ?
             <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div> :
 
-            <div className="border rounded-md p-6 space-y-6">
+            <div className="space-y-4">
                 {/* Info banner */}
                 <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-lg p-4 text-sm text-foreground/80">
                   The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
@@ -533,20 +533,25 @@ const AuthorProposalDetails: React.FC = () => {
                   responding.
                 </div>
 
-                {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
-                {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
-                {decisionReview &&
-              <div className="space-y-6">
-                    {/* Peer Review Feedback */}
-                    <ReviewFeedbackCard review={decisionReview} title="Peer Review Feedback" />
+                <Accordion type="multiple" defaultValue={["peer-review", "publishing-contract"]} className="space-y-4">
+                  {/* Peer Review Feedback Section */}
+                  <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
+                    <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                      <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
+                      {peerReview && <ReviewFeedbackCard review={peerReview} title="" />}
+                      {decisionReview && <ReviewFeedbackCard review={decisionReview} title="" />}
+                    </AccordionContent>
+                  </AccordionItem>
 
-                    {/* Publishing Contract - inline */}
-                    {decisionReview.is_submitted &&
-                <>
-                        <Separator />
-
+                  {/* Publishing Contract Section */}
+                  {decisionReview?.is_submitted && (
+                    <AccordionItem value="publishing-contract" className="border rounded-md overflow-hidden">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
-
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
                         {/* Agreement notice */}
                         <div className="bg-muted/50 border rounded-md p-5 space-y-2">
                           <p className="text-sm font-bold text-foreground">
@@ -562,10 +567,10 @@ const AuthorProposalDetails: React.FC = () => {
                           <div className="bg-muted/40 border-b px-5 py-3">
                             <span className="text-sm font-semibold text-foreground">
                               {decisionReview.review_data?.contractType === "edited_volume" ?
-                        "Edited Volume Publishing Agreement" :
-                        decisionReview.review_data?.contractType === "custom" ?
-                        "Custom Publishing Agreement" :
-                        "Standard Academic Publishing Agreement"}
+                                "Edited Volume Publishing Agreement" :
+                                decisionReview.review_data?.contractType === "custom" ?
+                                "Custom Publishing Agreement" :
+                                "Standard Academic Publishing Agreement"}
                             </span>
                           </div>
                           <div className="p-6 space-y-6 text-sm leading-relaxed">
@@ -614,35 +619,35 @@ const AuthorProposalDetails: React.FC = () => {
                         {/* Action buttons */}
                         <div className="space-y-3">
                           <Button
-                      className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
-                      onClick={async () => {
-                        setIsAccepting(true);
-                        try {
-                          await proposalApi.acceptContract(ticketNum);
-                          toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
-                          refetch();
-                        } catch (err: any) {
-                          toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
-                        } finally {
-                          setIsAccepting(false);
-                        }
-                      }}
-                      disabled={isAccepting}>
-
+                            className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
+                            onClick={async () => {
+                              setIsAccepting(true);
+                              try {
+                                await proposalApi.acceptContract(ticketNum);
+                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
+                                refetch();
+                              } catch (err: any) {
+                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
+                              } finally {
+                                setIsAccepting(false);
+                              }
+                            }}
+                            disabled={isAccepting}>
                             {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
                           </Button>
                           <Button
-                      variant="outline"
-                      className="w-full py-6 text-base"
-                      onClick={() => setShowQuestionsForm(true)}>
-
+                            variant="outline"
+                            className="w-full py-6 text-base"
+                            onClick={() => setShowQuestionsForm(true)}>
                             I have questions before signing
                           </Button>
                         </div>
-                      </>
-                }
-                  </div>
-              }
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+              </div>
+            }
 
                 {/* Question form - separate card */}
                 {decisionReview?.is_submitted && showQuestionsForm && (
@@ -770,8 +775,6 @@ const AuthorProposalDetails: React.FC = () => {
                     </Card>)
 
               }
-              </div>
-            }
           </TabsContent>
         </Tabs>
       </div>
