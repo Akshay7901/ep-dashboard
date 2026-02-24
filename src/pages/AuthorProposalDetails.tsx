@@ -143,6 +143,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [isSendingComment, setIsSendingComment] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [showQuestionsForm, setShowQuestionsForm] = useState(false);
+  const [questionType, setQuestionType] = useState("");
   const [questionsText, setQuestionsText] = useState("");
   const [isSendingQuestions, setIsSendingQuestions] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(
@@ -657,46 +658,92 @@ const AuthorProposalDetails: React.FC = () => {
                           </Button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <Textarea
-                            placeholder="Type your questions or concerns about the contract here..."
-                            value={questionsText}
-                            onChange={(e) => setQuestionsText(e.target.value)}
-                            rows={4}
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              className="flex-1 bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white"
-                              onClick={async () => {
-                                if (!questionsText.trim()) return;
-                                setIsSendingQuestions(true);
-                                try {
-                                  await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
-                                  toast({ title: "Questions sent", description: "Your questions have been submitted to the publisher." });
+                        <Card className="border">
+                          <CardContent className="p-6 space-y-5">
+                            <div>
+                              <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
+                              </p>
+                            </div>
+
+                            {/* Question Type */}
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-foreground">
+                                Question Type <span className="text-destructive">*</span>
+                              </label>
+                              <select
+                                value={questionType}
+                                onChange={(e) => setQuestionType(e.target.value)}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                <option value="">Select a question type...</option>
+                                <option value="contract_terms">Contract Terms</option>
+                                <option value="royalties">Royalties & Payments</option>
+                                <option value="rights">Rights & Permissions</option>
+                                <option value="timeline">Timeline & Deadlines</option>
+                                <option value="review_feedback">Review Feedback</option>
+                                <option value="other">Other</option>
+                              </select>
+                            </div>
+
+                            {/* Question Text */}
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium text-foreground">
+                                Your Question <span className="text-destructive">*</span>{" "}
+                                <span className="text-muted-foreground font-normal">(max 500 characters)</span>
+                              </label>
+                              <Textarea
+                                placeholder="Please provide details about your question..."
+                                value={questionsText}
+                                onChange={(e) => {
+                                  if (e.target.value.length <= 500) setQuestionsText(e.target.value);
+                                }}
+                                rows={5}
+                              />
+                              <p className="text-xs text-muted-foreground text-right">
+                                {questionsText.length}/500 characters
+                              </p>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <Button
+                                className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
+                                onClick={async () => {
+                                  if (!questionsText.trim() || !questionType) return;
+                                  setIsSendingQuestions(true);
+                                  try {
+                                    await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
+                                    toast({ title: "Question submitted", description: "Your question has been submitted. We'll respond within 2 business days." });
+                                    setShowQuestionsForm(false);
+                                    setQuestionsText("");
+                                    setQuestionType("");
+                                    refetch();
+                                  } catch (err: any) {
+                                    toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
+                                  } finally {
+                                    setIsSendingQuestions(false);
+                                  }
+                                }}
+                                disabled={isSendingQuestions || !questionsText.trim() || !questionType}
+                              >
+                                {isSendingQuestions ? "Submitting..." : "Submit Question"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="py-5"
+                                onClick={() => {
                                   setShowQuestionsForm(false);
                                   setQuestionsText("");
-                                  refetch();
-                                } catch (err: any) {
-                                  toast({ title: "Error", description: err.message || "Failed to send questions", variant: "destructive" });
-                                } finally {
-                                  setIsSendingQuestions(false);
-                                }
-                              }}
-                              disabled={isSendingQuestions || !questionsText.trim()}
-                            >
-                              {isSendingQuestions ? "Sending..." : "Send Questions"}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setShowQuestionsForm(false);
-                                setQuestionsText("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
+                                  setQuestionType("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
                       )}
                     </CardContent>
                   </Card>
