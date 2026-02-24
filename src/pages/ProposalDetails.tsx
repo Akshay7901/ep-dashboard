@@ -1056,14 +1056,13 @@ const ProposalDetails: React.FC = () => {
             formData={summaryFormData}
             onGoBack={() => setShowingSummary(false)}
             showContractSection
-            onConfirmSubmit={async (contractType) => {
+            onConfirmSubmit={async (sendContract, contractType) => {
               if (!summaryFormData.recommendation) {
                 toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
                 return;
               }
               setIsConfirming(true);
               try {
-                // Convert camelCase form fields to snake_case API fields
                 const formToApiMap: Record<string, string> = {
                   scope: 'scope',
                   purposeAndValue: 'purpose_value',
@@ -1076,17 +1075,19 @@ const ProposalDetails: React.FC = () => {
                   redFlags: 'red_flags',
                   recommendation: 'recommendation',
                 };
-                const apiPayload: Record<string, string> = {};
+                const apiPayload: Record<string, any> = {};
                 for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
                   if (summaryFormData[formKey] !== undefined && summaryFormData[formKey] !== '') {
                     apiPayload[apiKey] = summaryFormData[formKey];
                   }
                 }
-                await submitReviewApi({
-                  ...apiPayload,
-                  send_contract: true,
-                  contract_type: contractType || 'author_contract',
-                });
+                if (sendContract) {
+                  apiPayload.send_contract = true;
+                  apiPayload.contract_type = contractType || 'author_contract';
+                } else {
+                  apiPayload.send_contract = false;
+                }
+                await submitReviewApi(apiPayload);
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
