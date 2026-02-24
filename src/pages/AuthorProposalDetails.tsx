@@ -147,6 +147,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [questionType, setQuestionType] = useState("");
   const [questionsText, setQuestionsText] = useState("");
   const [isSendingQuestions, setIsSendingQuestions] = useState(false);
+  const [questionSubmitted, setQuestionSubmitted] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(
     null,
   );
@@ -658,6 +659,45 @@ const AuthorProposalDetails: React.FC = () => {
                             I have questions before signing
                           </Button>
                         </div>
+                      ) : questionSubmitted ? (
+                        <Card className="border">
+                          <CardContent className="p-8 text-center space-y-4">
+                            <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
+                              <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
+                              </p>
+                            </div>
+                            <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setShowQuestionsForm(true);
+                                  setQuestionSubmitted(false);
+                                  setQuestionsText("");
+                                  setQuestionType("");
+                                }}
+                              >
+                                Submit Another Question
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="text-muted-foreground"
+                                onClick={() => {
+                                  setShowQuestionsForm(false);
+                                  setQuestionSubmitted(false);
+                                  setQuestionsText("");
+                                  setQuestionType("");
+                                }}
+                              >
+                                Back to Contract
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
                       ) : (
                         <Card className="border">
                           <CardContent className="p-6 space-y-5">
@@ -716,10 +756,7 @@ const AuthorProposalDetails: React.FC = () => {
                                   setIsSendingQuestions(true);
                                   try {
                                     await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
-                                    toast({ title: "Question submitted", description: "Your question has been submitted. We'll respond within 2 business days." });
-                                    setShowQuestionsForm(false);
-                                    setQuestionsText("");
-                                    setQuestionType("");
+                                    setQuestionSubmitted(true);
                                     refetch();
                                   } catch (err: any) {
                                     toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
