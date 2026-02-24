@@ -134,6 +134,12 @@ const AuthorProposalDetails: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("proposal");
+  const [hasSeenReview, setHasSeenReview] = useState(false);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "review") setHasSeenReview(true);
+  };
   const [commentText, setCommentText] = useState("");
   const [isSendingComment, setIsSendingComment] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -235,7 +241,7 @@ const AuthorProposalDetails: React.FC = () => {
             <Button
             size="sm"
             className="bg-[#3d5a47] hover:opacity-90 text-white shrink-0"
-            onClick={() => setActiveTab("review")}>
+            onClick={() => handleTabChange("review")}>
 
               {actionBanner.buttonLabel}
             </Button>
@@ -298,7 +304,7 @@ const AuthorProposalDetails: React.FC = () => {
         </div>
 
         {/* Tabs: Proposal Information / Peer Review & Contract */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto">
             <TabsTrigger
               value="proposal"
@@ -311,7 +317,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
               Peer Review & Contract
-              {actionBanner.show &&
+              {actionBanner.show && !hasSeenReview &&
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
               }
             </TabsTrigger>
