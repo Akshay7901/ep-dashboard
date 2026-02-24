@@ -111,7 +111,6 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
-        {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
       </div>
       {review.reviewer_name
 
