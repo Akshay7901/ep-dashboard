@@ -1084,16 +1084,9 @@ const ProposalDetails: React.FC = () => {
                 }
                 await submitReviewApi({
                   ...apiPayload,
-                  contractType: contractType || 'author_contract',
+                  send_contract: true,
+                  contract_type: contractType || 'author_contract',
                 });
-
-                // Send contract to author via DocuSign
-                try {
-                  await proposalApi.sendContract(ticketNum, contractType || 'author_contract');
-                } catch (contractErr) {
-                  console.error('Contract send failed:', contractErr);
-                  toast({ variant: 'destructive', title: 'Contract Send Failed', description: 'Review submitted but contract could not be sent. Please try again.' });
-                }
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });

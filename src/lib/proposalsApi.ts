@@ -117,10 +117,8 @@ export const proposalApi = {
     return data;
   },
 
-  sendContract: async (ticketNumber: string, contractType: string): Promise<any> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/send`, { contract_type: contractType });
-    return data;
-  },
+
+
 
   raiseQuestions: async (ticketNumber: string, message: string): Promise<any> => {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/questions`, { message });
