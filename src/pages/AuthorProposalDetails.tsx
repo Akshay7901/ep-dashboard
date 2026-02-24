@@ -35,7 +35,7 @@ interface TimelineStage {
 const getTimelineProgressFromApi = (timeline: TimelineStage[]): number => {
   if (!timeline?.length) return 0;
   const completedCount = timeline.filter((s) => s.is_completed).length;
-  return Math.round((completedCount / timeline.length) * 100);
+  return Math.round(completedCount / timeline.length * 100);
 };
 
 /* ---- Action banner config ---- */
@@ -50,7 +50,7 @@ const getActionBanner = (status: string) => {
       title: "Peer review complete – action required",
       description: "Please review the feedback and contract, then respond.",
       buttonLabel: "View & Respond",
-      buttonTab: "review",
+      buttonTab: "review"
     };
   }
   if (statusIs(status, "final_review_&_confirmation", "locked", "awaiting_author_approval")) {
@@ -62,7 +62,7 @@ const getActionBanner = (status: string) => {
       title: "Clarification needed – action required",
       description: "Additional information has been requested. Please respond.",
       buttonLabel: "View & Respond",
-      buttonTab: "review",
+      buttonTab: "review"
     };
   }
   return { show: false } as any;
@@ -70,39 +70,39 @@ const getActionBanner = (status: string) => {
 
 /* ---- Detail helpers ---- */
 
-const DetailField = ({ label, value }: { label: string; value?: string | null }) => {
+const DetailField = ({ label, value }: {label: string;value?: string | null;}) => {
   if (!value) return null;
   return (
     <div className="space-y-1">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-medium">{value}</p>
-    </div>
-  );
+    </div>);
+
 };
 
 /* ---- Review feedback fields (matching PeerReviewReadOnly) ---- */
 
 const REVIEW_FEEDBACK_FIELDS = [
-  { key: "scope", label: "Scope" },
-  { key: "purposeAndValue", label: "Purpose and Value" },
-  { key: "title", label: "Title" },
-  { key: "originality", label: "Originality and Points of Difference" },
-  { key: "credibility", label: "Credibility" },
-  { key: "structure", label: "Structure and Quality" },
-  { key: "clarity", label: "Clarity, Structure and Quality of Writing" },
-  { key: "otherComments", label: "Other Comments" },
-  { key: "recommendation", label: "Recommendations" },
-];
+{ key: "scope", label: "Scope" },
+{ key: "purposeAndValue", label: "Purpose and Value" },
+{ key: "title", label: "Title" },
+{ key: "originality", label: "Originality and Points of Difference" },
+{ key: "credibility", label: "Credibility" },
+{ key: "structure", label: "Structure and Quality" },
+{ key: "clarity", label: "Clarity, Structure and Quality of Writing" },
+{ key: "otherComments", label: "Other Comments" },
+{ key: "recommendation", label: "Recommendations" }];
 
-const ReviewFeedbackCard: React.FC<{ review: any; title: string }> = ({ review, title }) => {
+
+const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, title }) => {
   const formData = review?.review_data;
   if (!formData) return null;
 
-  const completedDate = review.submitted_at
-    ? format(new Date(review.submitted_at), "MMM d, yyyy")
-    : review.updated_at
-      ? format(new Date(review.updated_at), "MMM d, yyyy")
-      : null;
+  const completedDate = review.submitted_at ?
+  format(new Date(review.submitted_at), "MMM d, yyyy") :
+  review.updated_at ?
+  format(new Date(review.updated_at), "MMM d, yyyy") :
+  null;
 
   const hasContent = REVIEW_FEEDBACK_FIELDS.some((f) => formData[f.key]?.trim?.());
   if (!hasContent) return null;
@@ -113,9 +113,9 @@ const ReviewFeedbackCard: React.FC<{ review: any; title: string }> = ({ review, 
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
         {completedDate && <span className="text-sm text-muted-foreground">Completed on {completedDate}</span>}
       </div>
-      {review.reviewer_name && (
-        <p className="text-sm text-muted-foreground">Reviewed by: <span className="font-medium text-foreground">{review.reviewer_name}</span></p>
-      )}
+      {review.reviewer_name
+
+      }
       {REVIEW_FEEDBACK_FIELDS.map((field) => {
         const value = formData[field.key];
         if (!value?.trim?.()) return null;
@@ -124,17 +124,17 @@ const ReviewFeedbackCard: React.FC<{ review: any; title: string }> = ({ review, 
             <Separator className="mb-6" />
             <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
             <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
-          </div>
-        );
+          </div>);
+
       })}
-    </div>
-  );
+    </div>);
+
 };
 
 /* ---- Main ---- */
 
 const AuthorProposalDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{id: string;}>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("proposal");
@@ -146,8 +146,8 @@ const AuthorProposalDetails: React.FC = () => {
   const [questionsText, setQuestionsText] = useState("");
   const [isSendingQuestions, setIsSendingQuestions] = useState(false);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
-  const [documentPreview, setDocumentPreview] = useState<{ url: string; name: string; type: "pdf" | "word" } | null>(
-    null,
+  const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
+    null
   );
 
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
@@ -166,8 +166,8 @@ const AuthorProposalDetails: React.FC = () => {
     return (
       <DashboardLayout title="Proposal Review">
         <div className="py-20 text-center text-muted-foreground">Loading...</div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>);
+
   }
 
   if (!proposal || error) {
@@ -177,8 +177,8 @@ const AuthorProposalDetails: React.FC = () => {
           <p className="text-destructive">Failed to load proposal</p>
           <Button onClick={() => refetch()}>Retry</Button>
         </div>
-      </DashboardLayout>
-    );
+      </DashboardLayout>);
+
   }
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
@@ -217,18 +217,18 @@ const AuthorProposalDetails: React.FC = () => {
             <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
           <div className="text-right text-sm text-muted-foreground">
-            {proposal.ticket_number && (
-              <p>
+            {proposal.ticket_number &&
+            <p>
                 Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
               </p>
-            )}
+            }
             <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
           </div>
         </div>
 
         {/* Action Banner */}
-        {actionBanner.show && (
-          <div className={cn("flex items-center justify-between p-4 border rounded-lg", actionBanner.bgColor)}>
+        {actionBanner.show &&
+        <div className={cn("flex items-center justify-between p-4 border rounded-lg", actionBanner.bgColor)}>
             <div className="flex items-center gap-3">
               <actionBanner.icon className={cn("h-5 w-5 shrink-0", actionBanner.iconColor)} />
               <div>
@@ -237,14 +237,14 @@ const AuthorProposalDetails: React.FC = () => {
               </div>
             </div>
             <Button
-              size="sm"
-              className="bg-[#3d5a47] hover:opacity-90 text-white shrink-0"
-              onClick={() => setActiveTab("review")}
-            >
+            size="sm"
+            className="bg-[#3d5a47] hover:opacity-90 text-white shrink-0"
+            onClick={() => setActiveTab("review")}>
+
               {actionBanner.buttonLabel}
             </Button>
           </div>
-        )}
+        }
 
         {/* Title & Subtitle */}
         <div>
@@ -264,8 +264,8 @@ const AuthorProposalDetails: React.FC = () => {
             <div className="h-1.5 bg-muted rounded-full">
               <div
                 className="h-1.5 bg-[#2563eb] rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+                style={{ width: `${progress}%` }} />
+
             </div>
           </div>
 
@@ -275,28 +275,28 @@ const AuthorProposalDetails: React.FC = () => {
               const dateStr = step.completed_at || step.started_at;
               return (
                 <div key={step.stage_name} className="flex flex-col items-center text-center gap-1.5">
-                  {step.is_completed ? (
-                    <CheckCircle2 className={cn("h-6 w-6", step.is_current ? "text-[#2563eb]" : "text-[#3d5a47]")} />
-                  ) : step.is_current ? (
-                    <CheckCircle2 className="h-6 w-6 text-[#2563eb]" />
-                  ) : (
-                    <Circle className="h-6 w-6 text-muted-foreground/40" />
-                  )}
+                  {step.is_completed ?
+                  <CheckCircle2 className={cn("h-6 w-6", step.is_current ? "text-[#2563eb]" : "text-[#3d5a47]")} /> :
+                  step.is_current ?
+                  <CheckCircle2 className="h-6 w-6 text-[#2563eb]" /> :
+
+                  <Circle className="h-6 w-6 text-muted-foreground/40" />
+                  }
                   <span
                     className={cn(
                       "text-[10px] leading-tight",
-                      step.is_completed || step.is_current ? "text-foreground font-medium" : "text-muted-foreground",
-                    )}
-                  >
+                      step.is_completed || step.is_current ? "text-foreground font-medium" : "text-muted-foreground"
+                    )}>
+
                     {step.display_name}
                   </span>
-                  {dateStr && (
-                    <span className="text-[9px] text-muted-foreground">
+                  {dateStr &&
+                  <span className="text-[9px] text-muted-foreground">
                       {format(new Date(dateStr), "MMM d, yyyy")}
                     </span>
-                  )}
-                </div>
-              );
+                  }
+                </div>);
+
             })}
           </div>
         </div>
@@ -306,18 +306,18 @@ const AuthorProposalDetails: React.FC = () => {
           <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto">
             <TabsTrigger
               value="proposal"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
-            >
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+
               Proposal Information
             </TabsTrigger>
             <TabsTrigger
               value="review"
-              className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
-            >
+              className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+
               Peer Review & Contract
-              {actionBanner.show && (
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
-              )}
+              {actionBanner.show &&
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
+              }
             </TabsTrigger>
           </TabsList>
 
@@ -338,13 +338,13 @@ const AuthorProposalDetails: React.FC = () => {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      strokeWidth={2}
-                    >
+                      strokeWidth={2}>
+
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+
                     </svg>
                     Author Details
                   </span>
@@ -358,14 +358,14 @@ const AuthorProposalDetails: React.FC = () => {
                     <DetailField label="Secondary Email" value={proposal.secondary_email} />
                     <DetailField label="Country" value={extractCountry(proposal.address)} />
                   </div>
-                  {proposal.biography && (
-                    <div className="space-y-1 pt-2">
+                  {proposal.biography &&
+                  <div className="space-y-1 pt-2">
                       <p className="text-xs text-muted-foreground">Biography</p>
                       <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
                         {proposal.biography}
                       </p>
                     </div>
-                  )}
+                  }
                 </AccordionContent>
               </AccordionItem>
 
@@ -378,13 +378,13 @@ const AuthorProposalDetails: React.FC = () => {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      strokeWidth={2}
-                    >
+                      strokeWidth={2}>
+
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+
                     </svg>
                     Book Details
                   </span>
@@ -396,30 +396,30 @@ const AuthorProposalDetails: React.FC = () => {
                     <DetailField label="Expected Completion" value={proposal.expected_completion_date} />
                     <DetailField label="Figures/Tables" value={proposal.figures_tables_count} />
                   </div>
-                  {proposal.short_description && (
-                    <div className="space-y-1 pt-2">
+                  {proposal.short_description &&
+                  <div className="space-y-1 pt-2">
                       <p className="text-xs text-muted-foreground">Blurb</p>
                       <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
                         {proposal.short_description}
                       </p>
                     </div>
-                  )}
-                  {proposal.table_of_contents && (
-                    <div className="space-y-1">
+                  }
+                  {proposal.table_of_contents &&
+                  <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Table of Contents</p>
                       <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
                         {proposal.table_of_contents}
                       </p>
                     </div>
-                  )}
-                  {proposal.detailed_description && (
-                    <div className="space-y-1">
+                  }
+                  {proposal.detailed_description &&
+                  <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Detailed Description</p>
                       <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
                         {proposal.detailed_description}
                       </p>
                     </div>
-                  )}
+                  }
                 </AccordionContent>
               </AccordionItem>
 
@@ -432,27 +432,27 @@ const AuthorProposalDetails: React.FC = () => {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      strokeWidth={2}
-                    >
+                      strokeWidth={2}>
+
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+
                     </svg>
                     Market & Keywords
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-5 space-y-4">
                   {proposal.keywords && <DetailField label="Keywords" value={proposal.keywords} />}
-                  {proposal.marketing_info && (
-                    <div className="space-y-1">
+                  {proposal.marketing_info &&
+                  <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Marketing Information</p>
                       <p className="text-sm leading-relaxed whitespace-pre-line bg-muted/30 p-4 rounded">
                         {proposal.marketing_info}
                       </p>
                     </div>
-                  )}
+                  }
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <DetailField label="Co-Authors / Editors" value={proposal.co_authors_editors} />
                     <DetailField label="Referees / Reviewers" value={proposal.referees_reviewers} />
@@ -470,47 +470,47 @@ const AuthorProposalDetails: React.FC = () => {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-5">
-                  {files.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No documents uploaded.</p>
-                  ) : (
-                    <div className="space-y-2">
+                  {files.length === 0 ?
+                  <p className="text-sm text-muted-foreground">No documents uploaded.</p> :
+
+                  <div className="space-y-2">
                       {files.map((file: string, index: number) => {
-                        const fileName = file.split("/").pop() || file;
-                        const isPdf = fileName.toLowerCase().endsWith(".pdf");
-                        const isWord =
-                          fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-muted/20"
-                          >
+                      const fileName = file.split("/").pop() || file;
+                      const isPdf = fileName.toLowerCase().endsWith(".pdf");
+                      const isWord =
+                      fileName.toLowerCase().endsWith(".doc") || fileName.toLowerCase().endsWith(".docx");
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg bg-muted/20">
+
                             <div className="flex items-center gap-3">
                               <FileText className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">{fileName}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              {(isPdf || isWord) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    setDocumentPreview({ url: file, name: fileName, type: isPdf ? "pdf" : "word" })
-                                  }
-                                >
+                              {(isPdf || isWord) &&
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                              setDocumentPreview({ url: file, name: fileName, type: isPdf ? "pdf" : "word" })
+                              }>
+
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                              )}
+                            }
                               <Button variant="ghost" size="sm" asChild>
                                 <a href={file} download target="_blank" rel="noopener noreferrer">
                                   <Download className="h-4 w-4" />
                                 </a>
                               </Button>
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>);
+
+                    })}
                     </div>
-                  )}
+                  }
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -525,21 +525,21 @@ const AuthorProposalDetails: React.FC = () => {
               responding.
             </div>
 
-            {isReviewLoading ? (
-              <div className="py-10 text-center text-muted-foreground">Loading reviews...</div>
-            ) : !peerReview && !decisionReview ? (
-              <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div>
-            ) : (
-              <div className="border rounded-md p-6 space-y-6">
+            {isReviewLoading ?
+            <div className="py-10 text-center text-muted-foreground">Loading reviews...</div> :
+            !peerReview && !decisionReview ?
+            <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div> :
+
+            <div className="border rounded-md p-6 space-y-6">
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
-                {decisionReview && (
-                  <div className="space-y-6">
+                {decisionReview &&
+              <div className="space-y-6">
                     {/* Peer Review Feedback */}
                     <ReviewFeedbackCard review={decisionReview} title="Peer Review Feedback" />
 
                     {/* Publishing Contract - inline */}
-                    {decisionReview.is_submitted && (
-                      <>
+                    {decisionReview.is_submitted &&
+                <>
                         <Separator />
 
                         <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
@@ -558,11 +558,11 @@ const AuthorProposalDetails: React.FC = () => {
                         <div className="border rounded-md overflow-hidden">
                           <div className="bg-muted/40 border-b px-5 py-3">
                             <span className="text-sm font-semibold text-foreground">
-                              {decisionReview.review_data?.contractType === "edited_volume"
-                                ? "Edited Volume Publishing Agreement"
-                                : decisionReview.review_data?.contractType === "custom"
-                                ? "Custom Publishing Agreement"
-                                : "Standard Academic Publishing Agreement"}
+                              {decisionReview.review_data?.contractType === "edited_volume" ?
+                        "Edited Volume Publishing Agreement" :
+                        decisionReview.review_data?.contractType === "custom" ?
+                        "Custom Publishing Agreement" :
+                        "Standard Academic Publishing Agreement"}
                             </span>
                           </div>
                           <div className="p-6 space-y-6 text-sm leading-relaxed">
@@ -611,40 +611,40 @@ const AuthorProposalDetails: React.FC = () => {
                         {/* Action buttons */}
                         <div className="space-y-3">
                           <Button
-                            className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
-                            onClick={async () => {
-                              setIsAccepting(true);
-                              try {
-                                await proposalApi.acceptContract(ticketNum);
-                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
-                                refetch();
-                              } catch (err: any) {
-                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
-                              } finally {
-                                setIsAccepting(false);
-                              }
-                            }}
-                            disabled={isAccepting}
-                          >
+                      className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
+                      onClick={async () => {
+                        setIsAccepting(true);
+                        try {
+                          await proposalApi.acceptContract(ticketNum);
+                          toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
+                          refetch();
+                        } catch (err: any) {
+                          toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
+                        } finally {
+                          setIsAccepting(false);
+                        }
+                      }}
+                      disabled={isAccepting}>
+
                             {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
                           </Button>
                           <Button
-                            variant="outline"
-                            className="w-full py-6 text-base"
-                            onClick={() => setShowQuestionsForm(true)}
-                          >
+                      variant="outline"
+                      className="w-full py-6 text-base"
+                      onClick={() => setShowQuestionsForm(true)}>
+
                             I have questions before signing
                           </Button>
                         </div>
                       </>
-                    )}
+                }
                   </div>
-                )}
+              }
 
                 {/* Question form - separate card */}
                 {decisionReview?.is_submitted && showQuestionsForm && (
-                  questionSubmitted ? (
-                    <Card className="border">
+              questionSubmitted ?
+              <Card className="border">
                       <CardContent className="p-8 text-center space-y-4">
                         <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
                           <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
@@ -657,32 +657,32 @@ const AuthorProposalDetails: React.FC = () => {
                         </div>
                         <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
                           <Button
-                            variant="outline"
-                            onClick={() => {
-                              setQuestionSubmitted(false);
-                              setQuestionsText("");
-                              setQuestionType("");
-                            }}
-                          >
+                      variant="outline"
+                      onClick={() => {
+                        setQuestionSubmitted(false);
+                        setQuestionsText("");
+                        setQuestionType("");
+                      }}>
+
                             Submit Another Question
                           </Button>
                           <Button
-                            variant="ghost"
-                            className="text-muted-foreground"
-                            onClick={() => {
-                              setShowQuestionsForm(false);
-                              setQuestionSubmitted(false);
-                              setQuestionsText("");
-                              setQuestionType("");
-                            }}
-                          >
+                      variant="ghost"
+                      className="text-muted-foreground"
+                      onClick={() => {
+                        setShowQuestionsForm(false);
+                        setQuestionSubmitted(false);
+                        setQuestionsText("");
+                        setQuestionType("");
+                      }}>
+
                             Back to Contract
                           </Button>
                         </div>
                       </CardContent>
-                    </Card>
-                  ) : (
-                    <Card className="border">
+                    </Card> :
+
+              <Card className="border">
                       <CardContent className="p-6 space-y-5">
                         <div>
                           <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
@@ -718,13 +718,13 @@ const AuthorProposalDetails: React.FC = () => {
                             <span className="text-muted-foreground font-normal">(max 500 characters)</span>
                           </label>
                           <Textarea
-                            placeholder="Please provide details about your question..."
-                            value={questionsText}
-                            onChange={(e) => {
-                              if (e.target.value.length <= 500) setQuestionsText(e.target.value);
-                            }}
-                            rows={5}
-                          />
+                      placeholder="Please provide details about your question..."
+                      value={questionsText}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 500) setQuestionsText(e.target.value);
+                      }}
+                      rows={5} />
+
                           <p className="text-xs text-muted-foreground text-right">
                             {questionsText.length}/500 characters
                           </p>
@@ -733,60 +733,60 @@ const AuthorProposalDetails: React.FC = () => {
                         {/* Buttons */}
                         <div className="grid grid-cols-2 gap-3">
                           <Button
-                            className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
-                            onClick={async () => {
-                              if (!questionsText.trim() || !questionType) return;
-                              setIsSendingQuestions(true);
-                              try {
-                                await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
-                                setQuestionSubmitted(true);
-                                refetch();
-                              } catch (err: any) {
-                                toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
-                              } finally {
-                                setIsSendingQuestions(false);
-                              }
-                            }}
-                            disabled={isSendingQuestions || !questionsText.trim() || !questionType}
-                          >
+                      className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
+                      onClick={async () => {
+                        if (!questionsText.trim() || !questionType) return;
+                        setIsSendingQuestions(true);
+                        try {
+                          await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
+                          setQuestionSubmitted(true);
+                          refetch();
+                        } catch (err: any) {
+                          toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
+                        } finally {
+                          setIsSendingQuestions(false);
+                        }
+                      }}
+                      disabled={isSendingQuestions || !questionsText.trim() || !questionType}>
+
                             {isSendingQuestions ? "Submitting..." : "Submit Question"}
                           </Button>
                           <Button
-                            variant="outline"
-                            className="py-5"
-                            onClick={() => {
-                              setShowQuestionsForm(false);
-                              setQuestionsText("");
-                              setQuestionType("");
-                            }}
-                          >
+                      variant="outline"
+                      className="py-5"
+                      onClick={() => {
+                        setShowQuestionsForm(false);
+                        setQuestionsText("");
+                        setQuestionType("");
+                      }}>
+
                             Cancel
                           </Button>
                         </div>
                       </CardContent>
-                    </Card>
-                  )
-                )}
+                    </Card>)
+
+              }
               </div>
-            )}
+            }
           </TabsContent>
         </Tabs>
       </div>
 
       {/* Document preview dialog */}
-      {documentPreview && (
-        <DocumentPreviewDialog
-          open={!!documentPreview}
-          onOpenChange={(open) => {
-            if (!open) setDocumentPreview(null);
-          }}
-          documentUrl={documentPreview.url}
-          fileName={documentPreview.name}
-          fileType={documentPreview.type}
-        />
-      )}
-    </DashboardLayout>
-  );
+      {documentPreview &&
+      <DocumentPreviewDialog
+        open={!!documentPreview}
+        onOpenChange={(open) => {
+          if (!open) setDocumentPreview(null);
+        }}
+        documentUrl={documentPreview.url}
+        fileName={documentPreview.name}
+        fileType={documentPreview.type} />
+
+      }
+    </DashboardLayout>);
+
 };
 
 export default AuthorProposalDetails;
