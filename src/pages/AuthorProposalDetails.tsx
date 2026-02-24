@@ -148,6 +148,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [questionsText, setQuestionsText] = useState("");
   const [isSendingQuestions, setIsSendingQuestions] = useState(false);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
+  const [submittedQuestions, setSubmittedQuestions] = useState<Array<{ text: string; type: string; date: Date }>>([]);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
   );
@@ -533,7 +534,58 @@ const AuthorProposalDetails: React.FC = () => {
                   responding.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["peer-review", "publishing-contract"]} className="space-y-4">
+                <Accordion type="multiple" defaultValue={["comments", "peer-review", "publishing-contract"]} className="space-y-4">
+                  {/* Comments Section - shows after author submits a question */}
+                  {submittedQuestions.length > 0 && (
+                    <AccordionItem value="comments" className="border rounded-md overflow-hidden">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                        <h3 className="text-xl font-bold text-foreground">Comments</h3>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
+                        {submittedQuestions.map((q, idx) => {
+                          const typeLabels: Record<string, string> = {
+                            contract_terms: "CONTRACT QUERY",
+                            royalties: "ROYALTIES QUERY",
+                            rights: "RIGHTS QUERY",
+                            timeline: "TIMELINE QUERY",
+                            review_feedback: "REVIEW FEEDBACK",
+                            other: "GENERAL QUERY",
+                          };
+                          return (
+                            <div key={idx} className="space-y-4">
+                              {idx > 0 && <Separator />}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-foreground">
+                                    {proposal.corresponding_author_name || proposal.author_name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    · {format(q.date, "MMMM d, yyyy")}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-medium border rounded-md px-3 py-1 text-muted-foreground">
+                                  {typeLabels[q.type] || q.type.toUpperCase()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground/80 leading-relaxed">{q.text}</p>
+
+                              {/* Reply from Editor placeholder */}
+                              <div className="mt-3">
+                                <p className="text-xs font-medium text-muted-foreground mb-2">Reply from Editor</p>
+                                <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-md p-4">
+                                  <p className="text-xs font-medium text-[#3d5a47]">Awaiting Response</p>
+                                  <p className="text-sm text-foreground/70 mt-1">
+                                    Your question has been submitted. The editorial team will respond within 2 business days.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
                   {/* Peer Review Feedback Section */}
                   <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
                     <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
@@ -747,6 +799,7 @@ const AuthorProposalDetails: React.FC = () => {
                         setIsSendingQuestions(true);
                         try {
                           await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
+                          setSubmittedQuestions(prev => [...prev, { text: questionsText.trim(), type: questionType, date: new Date() }]);
                           setQuestionSubmitted(true);
                           refetch();
                         } catch (err: any) {
