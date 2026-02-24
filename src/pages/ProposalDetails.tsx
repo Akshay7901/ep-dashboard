@@ -1083,7 +1083,7 @@ const ProposalDetails: React.FC = () => {
                 }
                 if (sendContract) {
                   apiPayload.send_contract = true;
-                  apiPayload.contract_type = contractType || 'author_contract';
+                  apiPayload.contract_type = contractType || 'author';
                 } else {
                   apiPayload.send_contract = false;
                 }
