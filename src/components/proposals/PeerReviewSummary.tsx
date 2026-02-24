@@ -43,7 +43,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   showContractSection = false,
 }) => {
   const [sendContract, setSendContract] = useState<"yes" | "no">("yes");
-  const [selectedContract, setSelectedContract] = useState("author_contract");
+  const [selectedContract, setSelectedContract] = useState("author");
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
@@ -124,8 +124,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                   <SelectValue placeholder="Select a contract" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  <SelectItem value="author_contract">Author Contract</SelectItem>
-                  <SelectItem value="editor_contract">Editor Contract</SelectItem>
+                  <SelectItem value="author">Author Contract</SelectItem>
+                  <SelectItem value="editor">Editor Contract</SelectItem>
                 </SelectContent>
               </Select>
             </div>
