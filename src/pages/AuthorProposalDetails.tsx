@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -672,19 +673,19 @@ const AuthorProposalDetails: React.FC = () => {
                               <label className="text-sm font-medium text-foreground">
                                 Question Type <span className="text-destructive">*</span>
                               </label>
-                              <select
-                                value={questionType}
-                                onChange={(e) => setQuestionType(e.target.value)}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                              >
-                                <option value="">Select a question type...</option>
-                                <option value="contract_terms">Contract Terms</option>
-                                <option value="royalties">Royalties & Payments</option>
-                                <option value="rights">Rights & Permissions</option>
-                                <option value="timeline">Timeline & Deadlines</option>
-                                <option value="review_feedback">Review Feedback</option>
-                                <option value="other">Other</option>
-                              </select>
+                              <Select value={questionType} onValueChange={setQuestionType}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a question type..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="contract_terms">Contract Terms</SelectItem>
+                                  <SelectItem value="royalties">Royalties & Payments</SelectItem>
+                                  <SelectItem value="rights">Rights & Permissions</SelectItem>
+                                  <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
+                                  <SelectItem value="review_feedback">Review Feedback</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
 
                             {/* Question Text */}
