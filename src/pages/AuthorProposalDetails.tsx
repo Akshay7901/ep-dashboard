@@ -530,7 +530,7 @@ const AuthorProposalDetails: React.FC = () => {
             ) : !peerReview && !decisionReview ? (
               <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div>
             ) : (
-              <>
+              <div className="border rounded-md p-6 space-y-6">
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {decisionReview && (
                   <div className="space-y-6">
@@ -767,7 +767,7 @@ const AuthorProposalDetails: React.FC = () => {
                     </Card>
                   )
                 )}
-              </>
+              </div>
             )}
           </TabsContent>
         </Tabs>
