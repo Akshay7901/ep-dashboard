@@ -534,8 +534,8 @@ const AuthorProposalDetails: React.FC = () => {
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {decisionReview && (
                   <div className="space-y-6">
-                    {/* Decision Review Feedback */}
-                    <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />
+                    {/* Peer Review Feedback */}
+                    <ReviewFeedbackCard review={decisionReview} title="Peer Review Feedback" />
 
                     {/* Publishing Contract - inline */}
                     {decisionReview.is_submitted && (
