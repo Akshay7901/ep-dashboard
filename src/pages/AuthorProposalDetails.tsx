@@ -534,257 +534,266 @@ const AuthorProposalDetails: React.FC = () => {
             ) : (
               <>
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
-                {decisionReview && <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />}
-
-                {/* Publishing Contract - shown when contract is issued */}
-                {decisionReview?.is_submitted && (
+                {decisionReview && (
                   <Card>
                     <CardContent className="p-6 space-y-6">
-                      <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
+                      {/* Decision Review Feedback */}
+                      <ReviewFeedbackCard review={decisionReview} title="Decision Review Feedback" />
 
-                      {/* Agreement notice */}
-                      <div className="bg-muted/50 border rounded-lg p-5 space-y-2">
-                        <p className="text-sm font-bold text-foreground">
-                          By signing this agreement, you confirm acceptance of the peer review feedback.
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
-                        </p>
-                      </div>
+                      {/* Publishing Contract - inline within the same card */}
+                      {decisionReview.is_submitted && (
+                        <>
+                          <Separator />
 
-                      {/* Contract document */}
-                      <Accordion type="single" collapsible defaultValue="contract-doc">
-                        <AccordionItem value="contract-doc" className="border rounded-lg">
-                          <AccordionTrigger className="px-5 hover:no-underline">
-                            <span className="text-sm font-semibold">
-                              {decisionReview.review_data?.contractType === "edited_volume"
-                                ? "Edited Volume Publishing Agreement"
-                                : decisionReview.review_data?.contractType === "custom"
-                                ? "Custom Publishing Agreement"
-                                : "Standard Academic Publishing Agreement"}
-                            </span>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-5 pb-5">
-                            <div className="border rounded-lg p-6 bg-background space-y-6 text-sm leading-relaxed">
-                              <div className="text-center space-y-1">
-                                <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
-                                <p className="text-muted-foreground">Between Author and Publisher</p>
-                              </div>
+                          <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
 
-                              <Separator />
+                          {/* Agreement notice */}
+                          <div className="bg-muted/50 border rounded-lg p-5 space-y-2">
+                            <p className="text-sm font-bold text-foreground">
+                              By signing this agreement, you confirm acceptance of the peer review feedback.
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
+                            </p>
+                          </div>
 
-                              <div className="space-y-4">
-                                <div>
-                                  <p className="font-bold">1. PARTIES</p>
-                                  <p className="mt-1">
-                                    This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
-                                  </p>
+                          {/* Contract document */}
+                          <Accordion type="single" collapsible defaultValue="contract-doc">
+                            <AccordionItem value="contract-doc" className="border rounded-lg">
+                              <AccordionTrigger className="px-5 hover:no-underline">
+                                <span className="text-sm font-semibold">
+                                  {decisionReview.review_data?.contractType === "edited_volume"
+                                    ? "Edited Volume Publishing Agreement"
+                                    : decisionReview.review_data?.contractType === "custom"
+                                    ? "Custom Publishing Agreement"
+                                    : "Standard Academic Publishing Agreement"}
+                                </span>
+                              </AccordionTrigger>
+                              <AccordionContent className="px-5 pb-5">
+                                <div className="border rounded-lg p-6 bg-background space-y-6 text-sm leading-relaxed">
+                                  <div className="text-center space-y-1">
+                                    <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
+                                    <p className="text-muted-foreground">Between Author and Publisher</p>
+                                  </div>
+
+                                  <Separator />
+
+                                  <div className="space-y-4">
+                                    <div>
+                                      <p className="font-bold">1. PARTIES</p>
+                                      <p className="mt-1">
+                                        This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
+                                      </p>
+                                    </div>
+
+                                    <div>
+                                      <p className="font-bold">2. THE WORK</p>
+                                      <p className="mt-1">
+                                        The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:
+                                      </p>
+                                      <p className="mt-2 pl-6 italic font-medium">
+                                        "{proposal.name}"
+                                      </p>
+                                      <p className="mt-2">
+                                        ("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.
+                                      </p>
+                                    </div>
+
+                                    <div>
+                                      <p className="font-bold">3. GRANT OF RIGHTS</p>
+                                      <p className="mt-1">
+                                        The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.
+                                      </p>
+                                    </div>
+
+                                    <div>
+                                      <p className="font-bold">4. ROYALTIES</p>
+                                      <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
+                                      <ul className="mt-2 pl-10 space-y-1 list-none">
+                                        <li>10% of net receipts on hardcover sales</li>
+                                        <li>7.5% of net receipts on paperback sales</li>
+                                        <li>25% of net receipts on e-book sales</li>
+                                      </ul>
+                                    </div>
+
+                                    <div>
+                                      <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
+                                      <p className="mt-1">
+                                        The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.
+                                      </p>
+                                    </div>
+
+                                    <div>
+                                      <p className="font-bold">6. TERMINATION</p>
+                                      <p className="mt-1">
+                                        Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
 
-                                <div>
-                                  <p className="font-bold">2. THE WORK</p>
-                                  <p className="mt-1">
-                                    The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:
-                                  </p>
-                                  <p className="mt-2 pl-6 italic font-medium">
-                                    "{proposal.name}"
-                                  </p>
-                                  <p className="mt-2">
-                                    ("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">3. GRANT OF RIGHTS</p>
-                                  <p className="mt-1">
-                                    The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">4. ROYALTIES</p>
-                                  <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
-                                  <ul className="mt-2 pl-10 space-y-1 list-none">
-                                    <li>10% of net receipts on hardcover sales</li>
-                                    <li>7.5% of net receipts on paperback sales</li>
-                                    <li>25% of net receipts on e-book sales</li>
-                                  </ul>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
-                                  <p className="mt-1">
-                                    The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="font-bold">6. TERMINATION</p>
-                                  <p className="mt-1">
-                                    Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-
-                      {/* Action buttons */}
-                      {!showQuestionsForm ? (
-                        <div className="space-y-3">
-                          <Button
-                            className="w-full bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-6 text-base"
-                            onClick={async () => {
-                              setIsAccepting(true);
-                              try {
-                                await proposalApi.acceptContract(ticketNum);
-                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
-                                refetch();
-                              } catch (err: any) {
-                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
-                              } finally {
-                                setIsAccepting(false);
-                              }
-                            }}
-                            disabled={isAccepting}
-                          >
-                            {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="w-full py-6 text-base"
-                            onClick={() => setShowQuestionsForm(true)}
-                          >
-                            I have questions before signing
-                          </Button>
-                        </div>
-                      ) : questionSubmitted ? (
-                        <Card className="border">
-                          <CardContent className="p-8 text-center space-y-4">
-                            <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
-                              <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
-                            </div>
-                            <div>
-                              <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
-                              </p>
-                            </div>
-                            <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setShowQuestionsForm(true);
-                                  setQuestionSubmitted(false);
-                                  setQuestionsText("");
-                                  setQuestionType("");
-                                }}
-                              >
-                                Submit Another Question
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                className="text-muted-foreground"
-                                onClick={() => {
-                                  setShowQuestionsForm(false);
-                                  setQuestionSubmitted(false);
-                                  setQuestionsText("");
-                                  setQuestionType("");
-                                }}
-                              >
-                                Back to Contract
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        <Card className="border">
-                          <CardContent className="p-6 space-y-5">
-                            <div>
-                              <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
-                              </p>
-                            </div>
-
-                            {/* Question Type */}
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-foreground">
-                                Question Type <span className="text-destructive">*</span>
-                              </label>
-                              <Select value={questionType} onValueChange={setQuestionType}>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Select a question type..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="contract_terms">Contract Terms</SelectItem>
-                                  <SelectItem value="royalties">Royalties & Payments</SelectItem>
-                                  <SelectItem value="rights">Rights & Permissions</SelectItem>
-                                  <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
-                                  <SelectItem value="review_feedback">Review Feedback</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Question Text */}
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-foreground">
-                                Your Question <span className="text-destructive">*</span>{" "}
-                                <span className="text-muted-foreground font-normal">(max 500 characters)</span>
-                              </label>
-                              <Textarea
-                                placeholder="Please provide details about your question..."
-                                value={questionsText}
-                                onChange={(e) => {
-                                  if (e.target.value.length <= 500) setQuestionsText(e.target.value);
-                                }}
-                                rows={5}
-                              />
-                              <p className="text-xs text-muted-foreground text-right">
-                                {questionsText.length}/500 characters
-                              </p>
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="grid grid-cols-2 gap-3">
-                              <Button
-                                className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
-                                onClick={async () => {
-                                  if (!questionsText.trim() || !questionType) return;
-                                  setIsSendingQuestions(true);
-                                  try {
-                                    await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
-                                    setQuestionSubmitted(true);
-                                    refetch();
-                                  } catch (err: any) {
-                                    toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
-                                  } finally {
-                                    setIsSendingQuestions(false);
-                                  }
-                                }}
-                                disabled={isSendingQuestions || !questionsText.trim() || !questionType}
-                              >
-                                {isSendingQuestions ? "Submitting..." : "Submit Question"}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="py-5"
-                                onClick={() => {
-                                  setShowQuestionsForm(false);
-                                  setQuestionsText("");
-                                  setQuestionType("");
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
+                          {/* Action buttons */}
+                          <div className="space-y-3">
+                            <Button
+                              className="w-full bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-6 text-base"
+                              onClick={async () => {
+                                setIsAccepting(true);
+                                try {
+                                  await proposalApi.acceptContract(ticketNum);
+                                  toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
+                                  refetch();
+                                } catch (err: any) {
+                                  toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
+                                } finally {
+                                  setIsAccepting(false);
+                                }
+                              }}
+                              disabled={isAccepting}
+                            >
+                              {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="w-full py-6 text-base"
+                              onClick={() => setShowQuestionsForm(true)}
+                            >
+                              I have questions before signing
+                            </Button>
+                          </div>
+                        </>
                       )}
                     </CardContent>
                   </Card>
+                )}
+
+                {/* Question form - separate card */}
+                {decisionReview?.is_submitted && showQuestionsForm && (
+                  questionSubmitted ? (
+                    <Card className="border">
+                      <CardContent className="p-8 text-center space-y-4">
+                        <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
+                          <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setQuestionSubmitted(false);
+                              setQuestionsText("");
+                              setQuestionType("");
+                            }}
+                          >
+                            Submit Another Question
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="text-muted-foreground"
+                            onClick={() => {
+                              setShowQuestionsForm(false);
+                              setQuestionSubmitted(false);
+                              setQuestionsText("");
+                              setQuestionType("");
+                            }}
+                          >
+                            Back to Contract
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border">
+                      <CardContent className="p-6 space-y-5">
+                        <div>
+                          <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
+                          </p>
+                        </div>
+
+                        {/* Question Type */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-foreground">
+                            Question Type <span className="text-destructive">*</span>
+                          </label>
+                          <Select value={questionType} onValueChange={setQuestionType}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a question type..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="contract_terms">Contract Terms</SelectItem>
+                              <SelectItem value="royalties">Royalties & Payments</SelectItem>
+                              <SelectItem value="rights">Rights & Permissions</SelectItem>
+                              <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
+                              <SelectItem value="review_feedback">Review Feedback</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Question Text */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-foreground">
+                            Your Question <span className="text-destructive">*</span>{" "}
+                            <span className="text-muted-foreground font-normal">(max 500 characters)</span>
+                          </label>
+                          <Textarea
+                            placeholder="Please provide details about your question..."
+                            value={questionsText}
+                            onChange={(e) => {
+                              if (e.target.value.length <= 500) setQuestionsText(e.target.value);
+                            }}
+                            rows={5}
+                          />
+                          <p className="text-xs text-muted-foreground text-right">
+                            {questionsText.length}/500 characters
+                          </p>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button
+                            className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
+                            onClick={async () => {
+                              if (!questionsText.trim() || !questionType) return;
+                              setIsSendingQuestions(true);
+                              try {
+                                await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
+                                setQuestionSubmitted(true);
+                                refetch();
+                              } catch (err: any) {
+                                toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
+                              } finally {
+                                setIsSendingQuestions(false);
+                              }
+                            }}
+                            disabled={isSendingQuestions || !questionsText.trim() || !questionType}
+                          >
+                            {isSendingQuestions ? "Submitting..." : "Submit Question"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="py-5"
+                            onClick={() => {
+                              setShowQuestionsForm(false);
+                              setQuestionsText("");
+                              setQuestionType("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
                 )}
               </>
             )}
