@@ -520,19 +520,20 @@ const AuthorProposalDetails: React.FC = () => {
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">
-            {/* Info banner */}
-            <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
-              The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
-              proposal and provided the following assessment. Please review both the feedback and the contract terms before
-              responding.
-            </div>
-
             {isReviewLoading ?
             <div className="py-10 text-center text-muted-foreground">Loading reviews...</div> :
             !peerReview && !decisionReview ?
             <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div> :
 
             <div className="border rounded-md p-6 space-y-6">
+                {/* Info banner */}
+                <div className="bg-muted/40 border rounded-lg p-4 text-sm text-muted-foreground">
+                  The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
+                  proposal and provided the following assessment. Please review both the feedback and the contract terms before
+                  responding.
+                </div>
+
+                {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {peerReview && <ReviewFeedbackCard review={peerReview} title="Peer Review Feedback" />}
                 {decisionReview &&
               <div className="space-y-6">
