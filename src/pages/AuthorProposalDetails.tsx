@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -154,6 +155,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
   );
+  const [contractViewOpen, setContractViewOpen] = useState(false);
   
   // Contract signing URL state
   const [signingUrl, setSigningUrl] = useState<string | null>(null);
@@ -764,11 +766,7 @@ const AuthorProposalDetails: React.FC = () => {
                                 <Button
                                   variant="outline"
                                   className="gap-2"
-                                  onClick={() => {
-                                    const docUrl = contractApi.getDocumentUrl(ticketNum);
-                                    const token = localStorage.getItem('auth_token');
-                                    window.open(`${docUrl}?token=${token}`, '_blank');
-                                  }}
+                                  onClick={() => setContractViewOpen(true)}
                                 >
                                   <Eye className="h-4 w-4" /> View Signed Contract
                                 </Button>
@@ -937,6 +935,22 @@ const AuthorProposalDetails: React.FC = () => {
         fileType={documentPreview.type} />
 
       }
+
+      {/* Contract document iframe dialog */}
+      <Dialog open={contractViewOpen} onOpenChange={setContractViewOpen}>
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <h3 className="text-lg font-semibold">Contract Document</h3>
+          </div>
+          <div className="flex-1 min-h-0">
+            <iframe
+              src={`${contractApi.getDocumentUrl(ticketNum)}?token=${localStorage.getItem('auth_token')}`}
+              className="w-full h-full border-0"
+              title="Contract Document"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>);
 
 };

@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2 } from "lucide-react";
 import { useProposal, useWorkflowLogs } from "@/hooks/useProposals";
@@ -134,6 +135,7 @@ const ProposalDetails: React.FC = () => {
     name: string;
     type: "pdf" | "word";
   } | null>(null);
+  const [contractViewOpen, setContractViewOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
@@ -757,11 +759,7 @@ const ProposalDetails: React.FC = () => {
                           <Button
                             variant="outline"
                             className="gap-2"
-                            onClick={() => {
-                              const docUrl = contractApi.getDocumentUrl(proposal.ticket_number || id || '');
-                              const token = localStorage.getItem('auth_token');
-                              window.open(`${docUrl}?token=${token}`, '_blank');
-                            }}
+                            onClick={() => setContractViewOpen(true)}
                           >
                             <Eye className="h-4 w-4" /> View Contract Document
                           </Button>
@@ -1266,6 +1264,22 @@ const ProposalDetails: React.FC = () => {
 
       {/* Dialogs */}
       <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
+
+      {/* Contract document iframe dialog */}
+      <Dialog open={contractViewOpen} onOpenChange={setContractViewOpen}>
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <h3 className="text-lg font-semibold">Contract Document</h3>
+          </div>
+          <div className="flex-1 min-h-0">
+            <iframe
+              src={`${contractApi.getDocumentUrl(proposal?.ticket_number || id || '')}?token=${localStorage.getItem('auth_token')}`}
+              className="w-full h-full border-0"
+              title="Contract Document"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AssignReviewersDialog open={isAssignDialogOpen} onOpenChange={open => {
       setIsAssignDialogOpen(open);
