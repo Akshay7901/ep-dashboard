@@ -13,6 +13,7 @@ import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
 import PeerReviewCommentsForm, { type PeerReviewCommentsFormHandle } from "@/components/proposals/PeerReviewCommentsForm";
 import PeerReviewSummary from "@/components/proposals/PeerReviewSummary";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
+import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
 import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
 import DeclineProposalDialog from "@/components/proposals/DeclineProposalDialog";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2 } from "lucide-react";
 import { useProposal, useWorkflowLogs } from "@/hooks/useProposals";
@@ -1275,28 +1275,17 @@ const ProposalDetails: React.FC = () => {
       {/* Dialogs */}
       <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
 
-      <Dialog open={contractViewOpen} onOpenChange={(open) => {
-        setContractViewOpen(open);
-        if (!open) setContractPdfUrl(null);
-      }}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <DialogTitle className="text-lg font-semibold">Contract Document</DialogTitle>
-          </div>
-          <div className="flex-1 min-h-0 flex items-center justify-center">
-            {contractPdfLoading ? (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading document…</p>
-              </div>
-            ) : contractPdfUrl ? (
-              <iframe src={contractPdfUrl} className="w-full h-full border-0" title="Contract Document" />
-            ) : (
-              <p className="text-sm text-destructive">Failed to load contract document.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ContractPdfViewerDialog
+        open={contractViewOpen}
+        onOpenChange={(open) => {
+          setContractViewOpen(open);
+          if (!open) setContractPdfUrl(null);
+        }}
+        documentDataUrl={contractPdfUrl}
+        isLoading={contractPdfLoading}
+        downloadUrl={contractPdfUrl || undefined}
+        downloadFileName={`${ticketNum || "contract"}.pdf`}
+      />
 
       <AssignReviewersDialog open={isAssignDialogOpen} onOpenChange={open => {
       setIsAssignDialogOpen(open);

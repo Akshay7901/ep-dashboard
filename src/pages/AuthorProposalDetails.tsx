@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
+import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
 import { commentsApi, proposalApi, contractApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
@@ -946,29 +946,18 @@ const AuthorProposalDetails: React.FC = () => {
 
       }
 
-      {/* Contract document iframe dialog */}
-      <Dialog open={contractViewOpen} onOpenChange={(open) => {
-        setContractViewOpen(open);
-        if (!open) setContractPdfUrl(null);
-      }}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <DialogTitle className="text-lg font-semibold">Contract Document</DialogTitle>
-          </div>
-          <div className="flex-1 min-h-0 flex items-center justify-center">
-            {contractPdfLoading ? (
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading document…</p>
-              </div>
-            ) : contractPdfUrl ? (
-              <iframe src={contractPdfUrl} className="w-full h-full border-0" title="Contract Document" />
-            ) : (
-              <p className="text-sm text-destructive">Failed to load contract document.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Contract document viewer dialog */}
+      <ContractPdfViewerDialog
+        open={contractViewOpen}
+        onOpenChange={(open) => {
+          setContractViewOpen(open);
+          if (!open) setContractPdfUrl(null);
+        }}
+        documentDataUrl={contractPdfUrl}
+        isLoading={contractPdfLoading}
+        downloadUrl={contractPdfUrl || undefined}
+        downloadFileName={`${ticketNum || "contract"}.pdf`}
+      />
     </DashboardLayout>);
 
 };
