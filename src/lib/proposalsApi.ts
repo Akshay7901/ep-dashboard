@@ -117,6 +117,15 @@ export const contractApi = {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
     return `${baseUrl}/api/proposals/${encodeURIComponent(ticketNumber)}/contract/document`;
   },
+
+  getDocumentBlob: async (ticketNumber: string): Promise<string> => {
+    const response = await api.get(
+      `/api/proposals/${encodeURIComponent(ticketNumber)}/contract/document`,
+      { responseType: 'blob' }
+    );
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    return URL.createObjectURL(blob);
+  },
 };
 
 // Delete Proposal API

@@ -136,6 +136,8 @@ const ProposalDetails: React.FC = () => {
     type: "pdf" | "word";
   } | null>(null);
   const [contractViewOpen, setContractViewOpen] = useState(false);
+  const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
+  const [contractPdfLoading, setContractPdfLoading] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
@@ -759,7 +761,15 @@ const ProposalDetails: React.FC = () => {
                           <Button
                             variant="outline"
                             className="gap-2"
-                            onClick={() => setContractViewOpen(true)}
+                            onClick={async () => {
+                              setContractViewOpen(true);
+                              setContractPdfLoading(true);
+                              try {
+                                const url = await contractApi.getDocumentBlob(proposal.ticket_number || id || '');
+                                setContractPdfUrl(url);
+                              } catch { setContractPdfUrl(null); }
+                              finally { setContractPdfLoading(false); }
+                            }}
                           >
                             <Eye className="h-4 w-4" /> View Contract Document
                           </Button>
@@ -1265,18 +1275,25 @@ const ProposalDetails: React.FC = () => {
       {/* Dialogs */}
       <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
 
-      {/* Contract document iframe dialog */}
-      <Dialog open={contractViewOpen} onOpenChange={setContractViewOpen}>
+      <Dialog open={contractViewOpen} onOpenChange={(open) => {
+        setContractViewOpen(open);
+        if (!open && contractPdfUrl) { URL.revokeObjectURL(contractPdfUrl); setContractPdfUrl(null); }
+      }}>
         <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0">
           <div className="flex items-center justify-between px-6 py-4 border-b">
             <h3 className="text-lg font-semibold">Contract Document</h3>
           </div>
-          <div className="flex-1 min-h-0">
-            <iframe
-              src={`${contractApi.getDocumentUrl(proposal?.ticket_number || id || '')}?token=${localStorage.getItem('auth_token')}`}
-              className="w-full h-full border-0"
-              title="Contract Document"
-            />
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            {contractPdfLoading ? (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading document…</p>
+              </div>
+            ) : contractPdfUrl ? (
+              <iframe src={contractPdfUrl} className="w-full h-full border-0" title="Contract Document" />
+            ) : (
+              <p className="text-sm text-destructive">Failed to load contract document.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
