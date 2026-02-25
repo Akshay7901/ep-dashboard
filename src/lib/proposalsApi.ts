@@ -101,6 +101,24 @@ export const revisionsApi = {
   },
 };
 
+// Contract API
+export const contractApi = {
+  get: async (ticketNumber: string): Promise<any> => {
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract`);
+      return data;
+    } catch (error: any) {
+      if (error?.status === 404 || error?.response?.status === 404) return null;
+      throw error;
+    }
+  },
+
+  getDocumentUrl: (ticketNumber: string): string => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
+    return `${baseUrl}/api/proposals/${encodeURIComponent(ticketNumber)}/contract/document`;
+  },
+};
+
 // Delete Proposal API
 export const proposalApi = {
   delete: async (ticketNumber: string): Promise<void> => {
