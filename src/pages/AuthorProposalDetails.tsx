@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -951,9 +951,9 @@ const AuthorProposalDetails: React.FC = () => {
         setContractViewOpen(open);
         if (!open && contractPdfUrl) { URL.revokeObjectURL(contractPdfUrl); setContractPdfUrl(null); }
       }}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
           <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h3 className="text-lg font-semibold">Contract Document</h3>
+            <DialogTitle className="text-lg font-semibold">Contract Document</DialogTitle>
           </div>
           <div className="flex-1 min-h-0 flex items-center justify-center">
             {contractPdfLoading ? (

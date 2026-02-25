@@ -119,11 +119,14 @@ export const contractApi = {
   },
 
   getDocumentBlob: async (ticketNumber: string): Promise<string> => {
-    const response = await api.get(
-      `/api/proposals/${encodeURIComponent(ticketNumber)}/contract/document`,
-      { responseType: 'blob' }
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(
+      `${baseUrl}/api/proposals/${encodeURIComponent(ticketNumber)}/contract/document`,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    const blob = new Blob([response.data], { type: 'application/pdf' });
+    if (!response.ok) throw new Error(`Failed to fetch document: ${response.status}`);
+    const blob = await response.blob();
     return URL.createObjectURL(blob);
   },
 };
