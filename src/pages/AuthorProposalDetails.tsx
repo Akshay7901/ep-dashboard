@@ -690,7 +690,7 @@ const AuthorProposalDetails: React.FC = () => {
                                     Your contract is ready for signing
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    Click the button below to open your contract for signing via DocuSign. The signing link expires after approximately 5 minutes — use "Get New Link" if it expires.
+                                    Click the button below to open your contract for signing via DocuSign. A fresh signing link is generated each time you click.
                                   </p>
                                 </div>
 
