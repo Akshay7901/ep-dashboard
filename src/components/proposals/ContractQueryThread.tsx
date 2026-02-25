@@ -53,7 +53,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 
   const handleSubmit = async () => {
     if (!text.trim() || isSending) return;
-    await onSend(text.trim(), viewAs === "author" ? category : undefined);
+    await onSend(text.trim(), category);
     setText("");
   };
 
@@ -157,7 +157,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       {/* Input */}
       {canSend && (
         <div className="space-y-3 pt-2 border-t">
-          {viewAs === "author" && (
+          {(
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Question Type</label>
               <Select value={category} onValueChange={setCategory}>
