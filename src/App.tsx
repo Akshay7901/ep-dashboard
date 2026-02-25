@@ -15,6 +15,7 @@ import PeerReviewers from "./pages/PeerReviewers";
 import AuthorDashboard from "./pages/AuthorDashboard";
 import AuthorProposalDetails from "./pages/AuthorProposalDetails";
 import ContractSigning from "./pages/ContractSigning";
+import ContractComplete from "./pages/ContractComplete";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/contract/complete" element={<ContractComplete />} />
 
             {/* Redirect root to proposals */}
             <Route path="/" element={<Navigate to="/proposals" replace />} />
