@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, ExternalLink, AlertCircle } from "lucide-react";
+import { Loader2, Download, AlertCircle } from "lucide-react";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -118,26 +118,6 @@ const ContractPdfViewerDialog: React.FC<ContractPdfViewerDialogProps> = ({
     };
   }, [open, documentDataUrl]);
 
-  const handleOpen = () => {
-    if (documentDataUrl) {
-      const blobUrl = URL.createObjectURL(dataUrlToBlob(documentDataUrl));
-      const popup = window.open(blobUrl, "_blank", "noopener,noreferrer");
-
-      if (!popup) {
-        URL.revokeObjectURL(blobUrl);
-        setRenderError("Unable to open a new tab. Please allow pop-ups for this site.");
-        return;
-      }
-
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-      return;
-    }
-
-    if (downloadUrl) {
-      window.open(downloadUrl, "_blank", "noopener,noreferrer");
-    }
-  };
-
   const handleDownload = () => {
     const href = documentDataUrl ? URL.createObjectURL(dataUrlToBlob(documentDataUrl)) : downloadUrl;
     if (!href) return;
@@ -162,11 +142,6 @@ const ContractPdfViewerDialog: React.FC<ContractPdfViewerDialogProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleOpen} disabled={!documentDataUrl && !downloadUrl}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open
-            </Button>
-
             <Button size="sm" onClick={handleDownload} disabled={!documentDataUrl && !downloadUrl}>
               <Download className="h-4 w-4 mr-2" />
               Download
