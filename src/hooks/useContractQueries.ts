@@ -19,7 +19,7 @@ export const useContractQueries = (ticketNumber: string) => {
   };
 
   const raiseQuery = useMutation({
-    mutationFn: (queryText: string) => contractQueriesApi.raise(ticketNumber, queryText),
+    mutationFn: ({ queryText, category }: { queryText: string; category: string }) => contractQueriesApi.raise(ticketNumber, queryText, category),
     onSuccess: () => {
       toast({ title: 'Query sent', description: 'Your query has been submitted successfully.' });
       refreshAll();

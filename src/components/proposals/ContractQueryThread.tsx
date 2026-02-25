@@ -2,9 +2,17 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2, AlertTriangle, MessageSquare } from "lucide-react";
 import { ContractQuery } from "@/lib/proposalsApi";
 import { cn } from "@/lib/utils";
+
+const QUERY_CATEGORIES = [
+  { value: "contract", label: "Contract Terms" },
+  { value: "copyright", label: "Copyright & IP" },
+  { value: "royalties", label: "Royalties & Payment" },
+  { value: "other", label: "Other" },
+];
 
 interface ContractQueryThreadProps {
   queries: ContractQuery[];
@@ -14,7 +22,7 @@ interface ContractQueryThreadProps {
   /** Current proposal status */
   proposalStatus: string;
   /** Called when the user submits a new query or response */
-  onSend: (text: string) => Promise<void>;
+  onSend: (text: string, category?: string) => Promise<void>;
   isSending: boolean;
   /** Whether a sent contract exists (enables query input for author) */
   hasActiveContract?: boolean;
@@ -30,6 +38,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   hasActiveContract = false,
 }) => {
   const [text, setText] = useState("");
+  const [category, setCategory] = useState("contract");
   const normalizedStatus = proposalStatus?.trim().toLowerCase().replace(/\s+/g, "_");
   const isQueriesRaised = normalizedStatus === "queries_raised";
   const isContractIssued = normalizedStatus === "contract_issued";
@@ -45,7 +54,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 
   const handleSubmit = async () => {
     if (!text.trim() || isSending) return;
-    await onSend(text.trim());
+    await onSend(text.trim(), viewAs === "author" ? category : undefined);
     setText("");
   };
 
@@ -133,19 +142,39 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 
       {/* Input */}
       {canSend && (
-        <div className="space-y-2 pt-2 border-t">
-          <Textarea
-            placeholder={
-              viewAs === "author"
-                ? "Type your query…"
-                : "Type your response…"
-            }
-            value={text}
-            onChange={(e) => {
-              if (e.target.value.length <= 1000) setText(e.target.value);
-            }}
-            rows={3}
-          />
+        <div className="space-y-3 pt-2 border-t">
+          {viewAs === "author" && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Question Type</label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {QUERY_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Your Question</label>
+            <Textarea
+              placeholder={
+                viewAs === "author"
+                  ? "Type your query…"
+                  : "Type your response…"
+              }
+              value={text}
+              onChange={(e) => {
+                if (e.target.value.length <= 1000) setText(e.target.value);
+              }}
+              rows={3}
+            />
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
               {text.length}/1000 characters
