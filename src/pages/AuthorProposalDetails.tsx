@@ -571,7 +571,7 @@ const AuthorProposalDetails: React.FC = () => {
                   proposal and provided the following assessment. Please review the feedback and contract details.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["peer-review", "contract-details"]} className="space-y-4">
+                <Accordion type="multiple" defaultValue={["contract-details"]} className="space-y-4">
                   {/* Comments Section */}
                   {submittedQuestions.length > 0 && (
                     <AccordionItem value="comments" className="border rounded-md overflow-hidden">
