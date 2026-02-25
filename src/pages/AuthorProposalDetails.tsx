@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink, HelpCircle } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -138,6 +138,7 @@ const AuthorProposalDetails: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("proposal");
   const [hasSeenReview, setHasSeenReview] = useState(false);
+  const [showQueryThread, setShowQueryThread] = useState(false);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -566,29 +567,7 @@ const AuthorProposalDetails: React.FC = () => {
                   proposal and provided the following assessment. Please review the feedback and contract details.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["contract-details", "queries"]} className="space-y-4">
-                  {/* Contract Queries Thread */}
-                  <AccordionItem value="queries" className="border rounded-md overflow-hidden">
-                    <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
-                      <h3 className="text-xl font-bold text-foreground">
-                        Contract Queries
-                        {contractQueries.length > 0 && (
-                          <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
-                        )}
-                      </h3>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-6 pt-0">
-                      <ContractQueryThread
-                        queries={contractQueries}
-                        isLoading={queriesLoading}
-                        viewAs="author"
-                        proposalStatus={proposal.status}
-                        onSend={async (text) => { await raiseQuery.mutateAsync(text); }}
-                        isSending={raiseQuery.isPending}
-                        hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
+                <Accordion type="multiple" defaultValue={["contract-details"]} className="space-y-4">
 
                   {/* Peer Review Feedback Section */}
                   {(peerReview || decisionReview) && (
@@ -684,16 +663,23 @@ const AuthorProposalDetails: React.FC = () => {
                                 )}
 
                                 {!signingLoading && !signingError && !proposalIsQueriesRaised && (
-                                  <div className="max-w-sm mx-auto text-center">
+                                  <div className="max-w-sm mx-auto text-center space-y-3">
                                     <Button
                                       className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
                                       onClick={handleSignContract}
                                     >
                                       <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
                                     </Button>
-                                    <p className="text-xs text-muted-foreground mt-2">
+                                    <p className="text-xs text-muted-foreground">
                                       A fresh signing link will be generated each time you click.
                                     </p>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full gap-2 text-sm"
+                                      onClick={() => setShowQueryThread(true)}
+                                    >
+                                      <HelpCircle className="h-4 w-4" /> I have a question before signing
+                                    </Button>
                                   </div>
                                 )}
 
@@ -760,6 +746,32 @@ const AuthorProposalDetails: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+
+                {/* Contract Query Thread — shown on demand or when queries exist */}
+                {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) && (
+                  <div className="border rounded-md overflow-hidden">
+                    <div className="px-6 py-4 bg-background border-b">
+                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                        Contract Queries
+                        {contractQueries.length > 0 && (
+                          <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                        )}
+                      </h3>
+                    </div>
+                    <div className="px-6 pb-6 pt-4">
+                      <ContractQueryThread
+                        queries={contractQueries}
+                        isLoading={queriesLoading}
+                        viewAs="author"
+                        proposalStatus={proposal.status}
+                        onSend={async (text) => { await raiseQuery.mutateAsync(text); }}
+                        isSending={raiseQuery.isPending}
+                        hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             }
 
