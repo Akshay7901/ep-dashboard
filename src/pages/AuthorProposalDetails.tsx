@@ -143,7 +143,7 @@ const AuthorProposalDetails: React.FC = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    setOpenAccordion(value === "review" ? "contract-details" : undefined);
+    setOpenAccordion(undefined);
     if (value === "review") setHasSeenReview(true);
   };
   const [commentText, setCommentText] = useState("");
