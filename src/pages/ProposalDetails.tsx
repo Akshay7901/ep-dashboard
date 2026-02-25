@@ -1277,7 +1277,7 @@ const ProposalDetails: React.FC = () => {
 
       <Dialog open={contractViewOpen} onOpenChange={(open) => {
         setContractViewOpen(open);
-        if (!open && contractPdfUrl) { URL.revokeObjectURL(contractPdfUrl); setContractPdfUrl(null); }
+        if (!open) setContractPdfUrl(null);
       }}>
         <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
           <div className="flex items-center justify-between px-6 py-4 border-b">
