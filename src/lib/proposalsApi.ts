@@ -179,8 +179,8 @@ export const contractQueriesApi = {
     return data?.queries || data || [];
   },
 
-  raise: async (ticketNumber: string, queryText: string): Promise<any> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query`, { query_text: queryText });
+  raise: async (ticketNumber: string, queryText: string, category: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query`, { query_text: queryText, category });
     return data;
   },
 

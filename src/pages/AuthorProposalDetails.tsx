@@ -765,7 +765,7 @@ const AuthorProposalDetails: React.FC = () => {
                         isLoading={queriesLoading}
                         viewAs="author"
                         proposalStatus={proposal.status}
-                        onSend={async (text) => { await raiseQuery.mutateAsync(text); }}
+                        onSend={async (text, category) => { await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' }); }}
                         isSending={raiseQuery.isPending}
                         hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
                       />
