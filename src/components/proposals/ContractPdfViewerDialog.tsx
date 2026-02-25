@@ -28,6 +28,12 @@ const dataUrlToBytes = (dataUrl: string) => {
   return bytes;
 };
 
+const dataUrlToBlob = (dataUrl: string) => {
+  const mimeMatch = dataUrl.match(/^data:(.*?);base64,/);
+  const mimeType = mimeMatch?.[1] || "application/pdf";
+  return new Blob([dataUrlToBytes(dataUrl)], { type: mimeType });
+};
+
 const ContractPdfViewerDialog: React.FC<ContractPdfViewerDialogProps> = ({
   open,
   onOpenChange,
@@ -112,6 +118,40 @@ const ContractPdfViewerDialog: React.FC<ContractPdfViewerDialogProps> = ({
     };
   }, [open, documentDataUrl]);
 
+  const handleOpen = () => {
+    if (documentDataUrl) {
+      const blobUrl = URL.createObjectURL(dataUrlToBlob(documentDataUrl));
+      const popup = window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+      if (!popup) {
+        URL.revokeObjectURL(blobUrl);
+        setRenderError("Unable to open a new tab. Please allow pop-ups for this site.");
+        return;
+      }
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      return;
+    }
+
+    if (downloadUrl) {
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleDownload = () => {
+    const href = documentDataUrl ? URL.createObjectURL(dataUrlToBlob(documentDataUrl)) : downloadUrl;
+    if (!href) return;
+
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = downloadFileName;
+    anchor.click();
+
+    if (documentDataUrl) {
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl w-[94vw] h-[88vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
@@ -122,23 +162,15 @@ const ContractPdfViewerDialog: React.FC<ContractPdfViewerDialogProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {downloadUrl && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={downloadUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open
-                </a>
-              </Button>
-            )}
+            <Button variant="outline" size="sm" onClick={handleOpen} disabled={!documentDataUrl && !downloadUrl}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open
+            </Button>
 
-            {downloadUrl && (
-              <Button size="sm" asChild>
-                <a href={downloadUrl} download={downloadFileName}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </a>
-              </Button>
-            )}
+            <Button size="sm" onClick={handleDownload} disabled={!documentDataUrl && !downloadUrl}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
           </div>
         </div>
 
