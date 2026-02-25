@@ -16,8 +16,8 @@ interface ContractQueryThreadProps {
   /** Called when the user submits a new query or response */
   onSend: (text: string) => Promise<void>;
   isSending: boolean;
-  /** Whether sign button should be disabled (queries_raised) */
-  signDisabled?: boolean;
+  /** Whether a sent contract exists (enables query input for author) */
+  hasActiveContract?: boolean;
 }
 
 const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
@@ -27,17 +27,18 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   proposalStatus,
   onSend,
   isSending,
+  hasActiveContract = false,
 }) => {
   const [text, setText] = useState("");
   const normalizedStatus = proposalStatus?.trim().toLowerCase().replace(/\s+/g, "_");
   const isQueriesRaised = normalizedStatus === "queries_raised";
   const isContractIssued = normalizedStatus === "contract_issued";
 
-  // Author can raise queries when contract_issued or queries_raised
+  // Author can raise queries when contract_issued, queries_raised, OR when an active contract exists
   // DR can respond when queries_raised
   const canSend =
     viewAs === "author"
-      ? isContractIssued || isQueriesRaised
+      ? isContractIssued || isQueriesRaised || hasActiveContract
       : isQueriesRaised;
 
   const sendLabel = viewAs === "author" ? "Send Query" : "Send Response";

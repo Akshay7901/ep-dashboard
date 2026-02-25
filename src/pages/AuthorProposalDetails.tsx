@@ -585,6 +585,7 @@ const AuthorProposalDetails: React.FC = () => {
                         proposalStatus={proposal.status}
                         onSend={async (text) => { await raiseQuery.mutateAsync(text); }}
                         isSending={raiseQuery.isPending}
+                        hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
                       />
                     </AccordionContent>
                   </AccordionItem>
