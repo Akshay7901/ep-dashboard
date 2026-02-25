@@ -173,7 +173,8 @@ const AuthorProposalDetails: React.FC = () => {
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const addComment = useAddComment();
 
-  const fetchSigningUrl = async () => {
+  // Fetch a fresh signing URL and open it immediately
+  const handleSignContract = async () => {
     if (!ticketNum) return;
     setSigningLoading(true);
     setSigningError(null);
@@ -182,6 +183,7 @@ const AuthorProposalDetails: React.FC = () => {
       if (data?.signing_url) {
         setSigningUrl(data.signing_url);
         setSigningExpiresAt(data.expires_at || null);
+        window.open(data.signing_url, '_blank', 'noopener,noreferrer');
       } else {
         setSigningError('No signing URL received from server.');
       }
@@ -195,13 +197,6 @@ const AuthorProposalDetails: React.FC = () => {
       setSigningLoading(false);
     }
   };
-
-  // Fetch signing URL when contract is in 'sent' status
-  useEffect(() => {
-    if (ticketNum && latestContract && (latestContract.status === 'sent' || latestContract.docusign_status === 'sent')) {
-      fetchSigningUrl();
-    }
-  }, [ticketNum, latestContract?.status]);
 
   // Extract reviews array from API response
   const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
@@ -706,36 +701,29 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 )}
 
-                                {signingError && (
+                                {signingError && !signingLoading && (
                                   <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
                                     <div className="flex items-center gap-2">
                                       <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                                       <p className="text-sm font-medium text-destructive">{signingError}</p>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
+                                    <Button variant="outline" size="sm" onClick={handleSignContract}>
                                       <RefreshCw className="mr-2 h-4 w-4" /> Try Again
                                     </Button>
                                   </div>
                                 )}
 
-                                {signingUrl && !signingLoading && !signingError && (
-                                  <div className="border rounded-md p-6 text-center space-y-4 bg-muted/20">
-                                    <ExternalLink className="h-10 w-10 text-primary mx-auto" />
-                                    <div>
-                                      <p className="text-sm font-semibold text-foreground">Ready to sign</p>
-                                      {signingExpiresAt && (
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                          Link expires: {format(new Date(signingExpiresAt), "MMM d, yyyy 'at' h:mm a")}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div className="max-w-sm mx-auto">
-                                      <a href={signingUrl} target="_blank" rel="noopener noreferrer">
-                                        <Button className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base">
-                                          <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
-                                        </Button>
-                                      </a>
-                                    </div>
+                                {!signingLoading && !signingError && (
+                                  <div className="max-w-sm mx-auto text-center">
+                                    <Button
+                                      className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
+                                      onClick={handleSignContract}
+                                    >
+                                      <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                      A fresh signing link will be generated each time you click.
+                                    </p>
                                   </div>
                                 )}
 
