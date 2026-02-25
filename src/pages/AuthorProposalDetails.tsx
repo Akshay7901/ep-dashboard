@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import api from "@/lib/api";
@@ -190,6 +190,13 @@ const AuthorProposalDetails: React.FC = () => {
     }
   };
 
+
+  // Fetch signing URL immediately when ticket number is available
+  useEffect(() => {
+    if (ticketNum) {
+      fetchSigningUrl();
+    }
+  }, [ticketNum]);
 
   // Extract reviews array from API response
   const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
