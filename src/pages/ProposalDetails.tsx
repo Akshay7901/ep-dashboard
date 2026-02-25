@@ -23,8 +23,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2 } from "lucide-react";
-import { useProposal, useWorkflowLogs } from "@/hooks/useProposals";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History } from "lucide-react";
+import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
@@ -189,6 +189,7 @@ const ProposalDetails: React.FC = () => {
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
+  const { data: proposalEvents = [], isLoading: eventsLoading } = useProposalEvents(ticketNum);
   const {
     assignReviewers,
     isAssigning,
@@ -401,7 +402,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs defaultValue={(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? "feedback" : "book"}>
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -414,15 +415,14 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
+            <TabsTrigger value="events" className="gap-1.5 text-xs sm:text-sm">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Events</span>
+            </TabsTrigger>
+            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) && (
               <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
-              </TabsTrigger>
-            ) : (
-              <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
-                <ClipboardList className="h-4 w-4" />
-                <span className="hidden sm:inline">Log</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -576,6 +576,71 @@ const ProposalDetails: React.FC = () => {
                       </div>;
               })}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ---- EVENTS / AUDIT TRAIL (Decision Reviewer) ---- */}
+          <TabsContent value="events" className="mt-4 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Audit Trail
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {eventsLoading ? (
+                  <div className="flex items-center gap-2 py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Loading events…</span>
+                  </div>
+                ) : proposalEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No events recorded yet.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {proposalEvents.map((evt) => (
+                      <div key={evt.id} className="flex items-start gap-3">
+                        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${
+                          evt.event_type === 'status_change' ? 'bg-[#2563eb]' :
+                          evt.event_type === 'assignment' ? 'bg-[#3d5a47]' :
+                          'bg-muted-foreground'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{evt.description}</p>
+                          <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground mt-0.5">
+                            <span>{format(new Date(evt.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
+                            {evt.changed_by && (
+                              <>
+                                <span>•</span>
+                                <span>{evt.changed_by}</span>
+                              </>
+                            )}
+                            {evt.changed_by_role && (
+                              <>
+                                <span>•</span>
+                                <span className="capitalize">{evt.changed_by_role.replace(/_/g, ' ')}</span>
+                              </>
+                            )}
+                          </div>
+                          {(evt.old_status || evt.new_status) && (
+                            <div className="flex items-center gap-2 mt-1">
+                              {evt.old_status && (
+                                <Badge variant="outline" className="text-xs capitalize">{evt.old_status.replace(/_/g, ' ')}</Badge>
+                              )}
+                              {evt.old_status && evt.new_status && (
+                                <span className="text-xs text-muted-foreground">→</span>
+                              )}
+                              {evt.new_status && (
+                                <Badge className="text-xs capitalize bg-[#3d5a47] hover:bg-[#3d5a47]">{evt.new_status.replace(/_/g, ' ')}</Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -409,6 +409,28 @@ export const useWorkflowLogs = (proposalId: string) => {
   });
 };
 
+export interface ProposalEvent {
+  id: number;
+  event_type: string;
+  old_status: string | null;
+  new_status: string | null;
+  description: string;
+  changed_by: string;
+  changed_by_role: string;
+  created_at: string;
+}
+
+export const useProposalEvents = (ticketNumber: string) => {
+  return useQuery({
+    queryKey: ['proposal-events', ticketNumber],
+    queryFn: async () => {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/events`);
+      return (data?.events || []) as ProposalEvent[];
+    },
+    enabled: !!ticketNumber,
+  });
+};
+
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboard-stats'],
