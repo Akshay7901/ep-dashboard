@@ -632,7 +632,7 @@ const ProposalDetails: React.FC = () => {
               );
 
               return (
-                <Accordion type="multiple" defaultValue={["peer-review"]} className="space-y-2">
+                <Accordion type="single" collapsible defaultValue="peer-review" className="space-y-2">
                   {/* Original Peer Review Feedback */}
                   <AccordionItem value="peer-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
