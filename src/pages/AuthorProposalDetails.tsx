@@ -729,15 +729,12 @@ const AuthorProposalDetails: React.FC = () => {
                                         </p>
                                       )}
                                     </div>
-                                    <div className="flex flex-col gap-2 max-w-sm mx-auto">
+                                    <div className="max-w-sm mx-auto">
                                       <a href={signingUrl} target="_blank" rel="noopener noreferrer">
                                         <Button className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base">
                                           <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
                                         </Button>
                                       </a>
-                                      <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
-                                        <RefreshCw className="mr-2 h-4 w-4" /> Get New Link
-                                      </Button>
                                     </div>
                                   </div>
                                 )}
