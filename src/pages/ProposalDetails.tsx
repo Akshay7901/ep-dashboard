@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi } from "@/lib/proposalsApi";
 import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2 } from "lucide-react";
 import { useProposal, useWorkflowLogs } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +32,7 @@ import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
+import { useContract } from "@/hooks/useContract";
 
 /* ---------------- Helpers ---------------- */
 
@@ -180,6 +181,7 @@ const ProposalDetails: React.FC = () => {
   // Fetch peer review data from review API
   const ticketNum = proposal?.ticket_number || id || "";
   const { review: reviewData, refetchReview, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
+  const { latestContract, isLoading: contractLoading } = useContract(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -577,7 +579,6 @@ const ProposalDetails: React.FC = () => {
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
             {(() => {
-              // Extract peer reviewer and decision reviewer reviews from API data
               const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
               const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
               const decisionReview = allReviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
@@ -619,7 +620,7 @@ const ProposalDetails: React.FC = () => {
               );
 
               return (
-                <Accordion type="multiple" className="space-y-2">
+                <Accordion type="multiple" defaultValue={["peer-review"]} className="space-y-2">
                   {/* Original Peer Review Feedback */}
                   <AccordionItem value="peer-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
@@ -640,51 +641,131 @@ const ProposalDetails: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* Publishing Contract */}
-                  <AccordionItem value="contract" className="border rounded-lg px-4">
+                  {/* Final Review Feedback (Decision Reviewer) */}
+                  <AccordionItem value="final-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
-                        <p className="text-base font-semibold">Publishing Contract</p>
-                        <p className="text-sm text-muted-foreground font-normal mt-0.5">
-                          Current version: {decisionReview?.review_data?.contractType === "edited_volume" ? "Edited Volume Contract"
-                            : decisionReview?.review_data?.contractType === "custom" ? "Custom Contract"
-                            : "Standard Contract"}
-                        </p>
+                        <p className="text-base font-semibold">Final Review Feedback</p>
+                        {decisionReview && (
+                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                            {decisionReview.reviewer_name || decisionReview.reviewer_email || "Decision Reviewer"}
+                            {decisionReview.review_data?.recommendation && ` • ${decisionReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
+                          </p>
+                        )}
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
                       {decisionReview?.review_data ? (
                         <div className="space-y-4">
-                          {/* Decision reviewer's review comments */}
-                          <p className="text-sm font-semibold text-foreground">Decision Reviewer Comments</p>
-                          {decisionReview.reviewer_name && (
-                            <p className="text-xs text-muted-foreground -mt-2">{decisionReview.reviewer_name}</p>
-                          )}
                           {renderReviewFields(decisionReview.review_data)}
-
-                          {/* Contract Type */}
                           {decisionReview.review_data.contractType && (
                             <>
                               <Separator />
                               <div className="border border-muted rounded-lg p-4">
-                                <p className="text-sm font-semibold">Contract Type</p>
-                                <p className="text-sm font-medium mt-1">
-                                  {decisionReview.review_data.contractType === "edited_volume" ? "Edited Volume Contract"
-                                    : decisionReview.review_data.contractType === "custom" ? "Custom Contract"
-                                    : "Standard Contract"}
+                                <p className="text-sm font-semibold">Contract Type Issued</p>
+                                <p className="text-sm font-medium mt-1 capitalize">
+                                  {decisionReview.review_data.contractType === "editor" ? "Editor Contract" : "Author Contract"}
                                 </p>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                Contract has been sent to the author.
                               </div>
                             </>
                           )}
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Decision review and contract will appear here once submitted.
-                        </p>
+                        <p className="text-sm text-muted-foreground">No final review feedback available yet.</p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Publishing Contract */}
+                  <AccordionItem value="contract" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">Publishing Contract</p>
+                        {contractLoading && <p className="text-sm text-muted-foreground font-normal mt-0.5">Loading…</p>}
+                        {latestContract && (
+                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                            Status: <span className="capitalize">{(latestContract.status || latestContract.docusign_status || 'unknown').replace(/_/g, ' ')}</span>
+                            {latestContract.contract_type && ` • ${latestContract.contract_type === 'editor' ? 'Editor' : 'Author'} Contract`}
+                          </p>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      {contractLoading ? (
+                        <div className="flex items-center gap-2 py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm text-muted-foreground">Loading contract details…</span>
+                        </div>
+                      ) : !latestContract ? (
+                        <p className="text-sm text-muted-foreground">No contract found for this proposal.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Contract info grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Status</p>
+                              <p className="text-sm font-medium capitalize">{(latestContract.status || latestContract.docusign_status || '—').replace(/_/g, ' ')}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Contract Type</p>
+                              <p className="text-sm font-medium capitalize">{(latestContract.contract_type || '—').replace(/_/g, ' ')}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Version</p>
+                              <p className="text-sm font-medium">{latestContract.contract_version || 1}</p>
+                            </div>
+                            {latestContract.recipient_name && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Recipient</p>
+                                <p className="text-sm font-medium">{latestContract.recipient_name}</p>
+                              </div>
+                            )}
+                            {latestContract.recipient_email && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Recipient Email</p>
+                                <p className="text-sm font-medium">{latestContract.recipient_email}</p>
+                              </div>
+                            )}
+                            {latestContract.docusign_sent_at && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Sent</p>
+                                <p className="text-sm font-medium">{format(new Date(latestContract.docusign_sent_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                              </div>
+                            )}
+                            {latestContract.docusign_completed_at && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Completed</p>
+                                <p className="text-sm font-medium">{format(new Date(latestContract.docusign_completed_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                              </div>
+                            )}
+                            {latestContract.docusign_declined_at && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Declined</p>
+                                <p className="text-sm font-medium">{format(new Date(latestContract.docusign_declined_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {latestContract.docusign_decline_reason && (
+                            <div className="border border-destructive/30 bg-destructive/5 rounded-md p-4">
+                              <p className="text-sm font-semibold text-destructive">Decline Reason</p>
+                              <p className="text-sm text-foreground/80 mt-1">{latestContract.docusign_decline_reason}</p>
+                            </div>
+                          )}
+
+                          {/* View document button */}
+                          <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => {
+                              const docUrl = contractApi.getDocumentUrl(proposal.ticket_number || id || '');
+                              const token = localStorage.getItem('auth_token');
+                              window.open(`${docUrl}?token=${token}`, '_blank');
+                            }}
+                          >
+                            <Eye className="h-4 w-4" /> View Contract Document
+                          </Button>
+                        </div>
                       )}
                     </AccordionContent>
                   </AccordionItem>

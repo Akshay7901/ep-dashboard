@@ -17,8 +17,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
-import { commentsApi, proposalApi } from "@/lib/proposalsApi";
+import { commentsApi, proposalApi, contractApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
+import { useContract } from "@/hooks/useContract";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 
@@ -165,6 +166,7 @@ const AuthorProposalDetails: React.FC = () => {
   const ticketNum = proposal?.ticket_number || id || "";
   const { data: comments = [] } = useProposalComments(localId, ticketNum);
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
+  const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const addComment = useAddComment();
 
   const fetchSigningUrl = async () => {
@@ -190,13 +192,12 @@ const AuthorProposalDetails: React.FC = () => {
     }
   };
 
-
-  // Fetch signing URL immediately when ticket number is available
+  // Fetch signing URL when contract is in 'sent' status
   useEffect(() => {
-    if (ticketNum) {
+    if (ticketNum && latestContract && (latestContract.status === 'sent' || latestContract.docusign_status === 'sent')) {
       fetchSigningUrl();
     }
-  }, [ticketNum]);
+  }, [ticketNum, latestContract?.status]);
 
   // Extract reviews array from API response
   const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
@@ -559,21 +560,20 @@ const AuthorProposalDetails: React.FC = () => {
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">
-            {isReviewLoading ?
-            <div className="py-10 text-center text-muted-foreground">Loading reviews...</div> :
-            !peerReview && !decisionReview ?
-            <div className="py-10 text-center text-muted-foreground">No review feedback available yet.</div> :
+            {isReviewLoading || contractLoading ?
+            <div className="py-10 text-center text-muted-foreground">Loading...</div> :
+            !peerReview && !decisionReview && !latestContract ?
+            <div className="py-10 text-center text-muted-foreground">No review feedback or contract available yet.</div> :
 
             <div className="space-y-4">
                 {/* Info banner */}
                 <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-lg p-4 text-sm text-foreground/80">
                   The feedback below forms part of the publishing decision. Our reviewers have carefully evaluated your
-                  proposal and provided the following assessment. Please review both the feedback and the contract terms before
-                  responding.
+                  proposal and provided the following assessment. Please review the feedback and contract details.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["comments", "peer-review", "publishing-contract"]} className="space-y-4">
-                  {/* Comments Section - shows after author submits a question */}
+                <Accordion type="multiple" defaultValue={["peer-review", "contract-details"]} className="space-y-4">
+                  {/* Comments Section */}
                   {submittedQuestions.length > 0 && (
                     <AccordionItem value="comments" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
@@ -606,8 +606,6 @@ const AuthorProposalDetails: React.FC = () => {
                                 </span>
                               </div>
                               <p className="text-sm text-foreground/80 leading-relaxed">{q.text}</p>
-
-                              {/* Reply from Editor placeholder */}
                               <div className="mt-3">
                                 <p className="text-xs font-medium text-muted-foreground mb-2">Reply from Editor</p>
                                 <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-md p-4">
@@ -625,128 +623,210 @@ const AuthorProposalDetails: React.FC = () => {
                   )}
 
                   {/* Peer Review Feedback Section */}
-                  <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
-                    <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
-                      <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
-                      {peerReview && <ReviewFeedbackCard review={peerReview} title="" />}
-                      {decisionReview && <ReviewFeedbackCard review={decisionReview} title="" />}
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  {/* Publishing Contract Section */}
-                  {decisionReview?.is_submitted && (
-                    <AccordionItem value="publishing-contract" className="border rounded-md overflow-hidden">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background" onClick={() => {
-                        if (!signingUrl && !signingLoading && !signingError) {
-                          fetchSigningUrl();
-                        }
-                      }}>
-                        <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
+                  {(peerReview || decisionReview) && (
+                    <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                        <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
-                        {/* Agreement notice */}
-                        <div className="bg-muted/50 border rounded-md p-5 space-y-2">
-                          <p className="text-sm font-bold text-foreground">
-                            By signing this agreement, you confirm acceptance of the peer review feedback.
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Click the button below to open your contract for signing via DocuSign. The signing link expires after approximately 5 minutes — use "Get New Link" if it expires.
-                          </p>
-                        </div>
-
-                        {/* Signing URL states */}
-                        {signingLoading && (
-                          <div className="flex flex-col items-center justify-center py-10 space-y-3">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <p className="text-sm text-muted-foreground">Generating your signing link…</p>
-                          </div>
-                        )}
-
-                        {signingError && (
-                          <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
-                            <div className="flex items-center gap-2">
-                              <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
-                              <p className="text-sm font-medium text-destructive">{signingError}</p>
-                            </div>
-                            <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
-                              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-                            </Button>
-                          </div>
-                        )}
-
-                        {signingUrl && !signingLoading && !signingError && (
-                          <div className="space-y-4">
-                            <div className="border rounded-md p-6 text-center space-y-4 bg-muted/20">
-                              <ExternalLink className="h-10 w-10 text-primary mx-auto" />
-                              <div>
-                                <p className="text-sm font-semibold text-foreground">Your contract is ready for signing</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Click below to open DocuSign and sign your publishing agreement.
-                                </p>
-                                {signingExpiresAt && (
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    Link expires: {format(new Date(signingExpiresAt), "MMM d, yyyy 'at' h:mm a")}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-2 max-w-sm mx-auto">
-                                <a href={signingUrl} target="_blank" rel="noopener noreferrer">
-                                  <Button className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base">
-                                    <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
-                                  </Button>
-                                </a>
-                                <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
-                                  <RefreshCw className="mr-2 h-4 w-4" /> Get New Link
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Questions button */}
-                        <div>
-                          <Button
-                            variant="outline"
-                            className="w-full py-6 text-base"
-                            onClick={() => setShowQuestionsForm(true)}>
-                            I have questions before signing
-                          </Button>
-                        </div>
+                        {peerReview && <ReviewFeedbackCard review={peerReview} title="" />}
+                        {decisionReview && <ReviewFeedbackCard review={decisionReview} title="" />}
                       </AccordionContent>
                     </AccordionItem>
                   )}
+
+                  {/* Contract Details Section */}
+                  <AccordionItem value="contract-details" className="border rounded-md overflow-hidden">
+                    <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                      <div className="text-left">
+                        <h3 className="text-xl font-bold text-foreground">Contract Details</h3>
+                        {latestContract && (
+                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                            Status: <span className="capitalize">{(latestContract.status || latestContract.docusign_status || 'pending').replace(/_/g, ' ')}</span>
+                          </p>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
+                      {!latestContract ? (
+                        <p className="text-sm text-muted-foreground">No contract has been issued for this proposal yet.</p>
+                      ) : (() => {
+                        const contractStatus = (latestContract.status || latestContract.docusign_status || '').toLowerCase();
+                        const isSent = contractStatus === 'sent';
+                        const isSigned = contractStatus === 'completed' || contractStatus === 'signed';
+                        const isDeclined = contractStatus === 'declined';
+                        const isVoided = contractStatus === 'voided';
+
+                        return (
+                          <div className="space-y-5">
+                            {/* Contract info */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Contract Type</p>
+                                <p className="text-sm font-medium capitalize">{(latestContract.contract_type || '—').replace(/_/g, ' ')}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Status</p>
+                                <p className="text-sm font-medium capitalize">{contractStatus.replace(/_/g, ' ')}</p>
+                              </div>
+                              {latestContract.docusign_sent_at && (
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Sent</p>
+                                  <p className="text-sm font-medium">{format(new Date(latestContract.docusign_sent_at), "MMM d, yyyy")}</p>
+                                </div>
+                              )}
+                              {latestContract.docusign_completed_at && (
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Signed</p>
+                                  <p className="text-sm font-medium">{format(new Date(latestContract.docusign_completed_at), "MMM d, yyyy")}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Sent → Sign flow */}
+                            {isSent && (
+                              <div className="space-y-4">
+                                <div className="bg-muted/50 border rounded-md p-5 space-y-2">
+                                  <p className="text-sm font-bold text-foreground">
+                                    Your contract is ready for signing
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Click the button below to open your contract for signing via DocuSign. The signing link expires after approximately 5 minutes — use "Get New Link" if it expires.
+                                  </p>
+                                </div>
+
+                                {signingLoading && (
+                                  <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    <p className="text-sm text-muted-foreground">Generating your signing link…</p>
+                                  </div>
+                                )}
+
+                                {signingError && (
+                                  <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                      <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                                      <p className="text-sm font-medium text-destructive">{signingError}</p>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
+                                      <RefreshCw className="mr-2 h-4 w-4" /> Try Again
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {signingUrl && !signingLoading && !signingError && (
+                                  <div className="border rounded-md p-6 text-center space-y-4 bg-muted/20">
+                                    <ExternalLink className="h-10 w-10 text-primary mx-auto" />
+                                    <div>
+                                      <p className="text-sm font-semibold text-foreground">Ready to sign</p>
+                                      {signingExpiresAt && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                          Link expires: {format(new Date(signingExpiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col gap-2 max-w-sm mx-auto">
+                                      <a href={signingUrl} target="_blank" rel="noopener noreferrer">
+                                        <Button className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base">
+                                          <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
+                                        </Button>
+                                      </a>
+                                      <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
+                                        <RefreshCw className="mr-2 h-4 w-4" /> Get New Link
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Questions button */}
+                                <Button
+                                  variant="outline"
+                                  className="w-full py-6 text-base"
+                                  onClick={() => setShowQuestionsForm(true)}
+                                >
+                                  I have questions before signing
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Signed → View */}
+                            {isSigned && (
+                              <div className="space-y-4">
+                                <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-md p-5 flex items-center gap-3">
+                                  <CheckCircle2 className="h-6 w-6 text-[#3d5a47] shrink-0" />
+                                  <div>
+                                    <p className="text-sm font-bold text-foreground">Contract Signed</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Your publishing agreement has been signed successfully.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  className="gap-2"
+                                  onClick={() => {
+                                    const docUrl = contractApi.getDocumentUrl(ticketNum);
+                                    const token = localStorage.getItem('auth_token');
+                                    window.open(`${docUrl}?token=${token}`, '_blank');
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" /> View Signed Contract
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Declined */}
+                            {isDeclined && (
+                              <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5">
+                                <p className="text-sm font-bold text-destructive">Contract Declined</p>
+                                {latestContract.docusign_decline_reason && (
+                                  <p className="text-sm text-foreground/80 mt-1">{latestContract.docusign_decline_reason}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Voided */}
+                            {isVoided && (
+                              <div className="border border-muted bg-muted/30 rounded-md p-5">
+                                <p className="text-sm font-bold text-muted-foreground">Contract Voided</p>
+                                <p className="text-sm text-muted-foreground mt-1">This contract has been voided by the publisher.</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               </div>
             }
 
-                {/* Question form - separate card */}
-                {decisionReview?.is_submitted && showQuestionsForm && (
+            {/* Question form */}
+            {showQuestionsForm && (
               questionSubmitted ?
               <Card className="border">
-                      <CardContent className="p-8 text-center space-y-4">
-                        <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
-                          <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
-                          <Button
+                <CardContent className="p-8 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
+                    <Button
                       variant="outline"
                       onClick={() => {
                         setQuestionSubmitted(false);
                         setQuestionsText("");
                         setQuestionType("");
-                      }}>
-
-                            Submit Another Question
-                          </Button>
-                          <Button
+                      }}
+                    >
+                      Submit Another Question
+                    </Button>
+                    <Button
                       variant="ghost"
                       className="text-muted-foreground"
                       onClick={() => {
@@ -754,65 +834,59 @@ const AuthorProposalDetails: React.FC = () => {
                         setQuestionSubmitted(false);
                         setQuestionsText("");
                         setQuestionType("");
-                      }}>
-
-                            Back to Contract
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card> :
+                      }}
+                    >
+                      Back to Contract
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card> :
 
               <Card className="border">
-                      <CardContent className="p-6 space-y-5">
-                        <div>
-                          <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
-                          </p>
-                        </div>
-
-                        {/* Question Type */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-foreground">
-                            Question Type <span className="text-destructive">*</span>
-                          </label>
-                          <Select value={questionType} onValueChange={setQuestionType}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select a question type..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="contract_terms">Contract Terms</SelectItem>
-                              <SelectItem value="royalties">Royalties & Payments</SelectItem>
-                              <SelectItem value="rights">Rights & Permissions</SelectItem>
-                              <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
-                              <SelectItem value="review_feedback">Review Feedback</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Question Text */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-foreground">
-                            Your Question <span className="text-destructive">*</span>{" "}
-                            <span className="text-muted-foreground font-normal">(max 500 characters)</span>
-                          </label>
-                          <Textarea
+                <CardContent className="p-6 space-y-5">
+                  <div>
+                    <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Question Type <span className="text-destructive">*</span>
+                    </label>
+                    <Select value={questionType} onValueChange={setQuestionType}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a question type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="contract_terms">Contract Terms</SelectItem>
+                        <SelectItem value="royalties">Royalties & Payments</SelectItem>
+                        <SelectItem value="rights">Rights & Permissions</SelectItem>
+                        <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
+                        <SelectItem value="review_feedback">Review Feedback</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Your Question <span className="text-destructive">*</span>{" "}
+                      <span className="text-muted-foreground font-normal">(max 500 characters)</span>
+                    </label>
+                    <Textarea
                       placeholder="Please provide details about your question..."
                       value={questionsText}
                       onChange={(e) => {
                         if (e.target.value.length <= 500) setQuestionsText(e.target.value);
                       }}
-                      rows={5} />
-
-                          <p className="text-xs text-muted-foreground text-right">
-                            {questionsText.length}/500 characters
-                          </p>
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button
+                      rows={5}
+                    />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {questionsText.length}/500 characters
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
                       className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
                       onClick={async () => {
                         if (!questionsText.trim() || !questionType) return;
@@ -828,26 +902,25 @@ const AuthorProposalDetails: React.FC = () => {
                           setIsSendingQuestions(false);
                         }
                       }}
-                      disabled={isSendingQuestions || !questionsText.trim() || !questionType}>
-
-                            {isSendingQuestions ? "Submitting..." : "Submit Question"}
-                          </Button>
-                          <Button
+                      disabled={isSendingQuestions || !questionsText.trim() || !questionType}
+                    >
+                      {isSendingQuestions ? "Submitting..." : "Submit Question"}
+                    </Button>
+                    <Button
                       variant="outline"
                       className="py-5"
                       onClick={() => {
                         setShowQuestionsForm(false);
                         setQuestionsText("");
                         setQuestionType("");
-                      }}>
-
-                            Cancel
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>)
-
-              }
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
