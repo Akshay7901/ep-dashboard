@@ -1,0 +1,172 @@
+import React, { useState } from "react";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, Loader2, AlertTriangle, MessageSquare } from "lucide-react";
+import { ContractQuery } from "@/lib/proposalsApi";
+import { cn } from "@/lib/utils";
+
+interface ContractQueryThreadProps {
+  queries: ContractQuery[];
+  isLoading: boolean;
+  /** 'author' shows left-aligned queries, right-aligned responses; 'reviewer' is the opposite */
+  viewAs: "author" | "reviewer";
+  /** Current proposal status */
+  proposalStatus: string;
+  /** Called when the user submits a new query or response */
+  onSend: (text: string) => Promise<void>;
+  isSending: boolean;
+  /** Whether sign button should be disabled (queries_raised) */
+  signDisabled?: boolean;
+}
+
+const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
+  queries,
+  isLoading,
+  viewAs,
+  proposalStatus,
+  onSend,
+  isSending,
+}) => {
+  const [text, setText] = useState("");
+  const normalizedStatus = proposalStatus?.trim().toLowerCase().replace(/\s+/g, "_");
+  const isQueriesRaised = normalizedStatus === "queries_raised";
+  const isContractIssued = normalizedStatus === "contract_issued";
+
+  // Author can raise queries when contract_issued or queries_raised
+  // DR can respond when queries_raised
+  const canSend =
+    viewAs === "author"
+      ? isContractIssued || isQueriesRaised
+      : isQueriesRaised;
+
+  const sendLabel = viewAs === "author" ? "Send Query" : "Send Response";
+
+  const handleSubmit = async () => {
+    if (!text.trim() || isSending) return;
+    await onSend(text.trim());
+    setText("");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 py-6 justify-center">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-sm text-muted-foreground">Loading queries…</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Status banner for DR */}
+      {viewAs === "reviewer" && isQueriesRaised && (
+        <div className="flex items-center gap-3 p-3 border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg">
+          <AlertTriangle className="h-5 w-5 text-[#c4940a] shrink-0" />
+          <div>
+            <p className="text-sm font-semibold">Author has queries</p>
+            <p className="text-xs text-muted-foreground">
+              Please respond to re-enable the signing button for the author.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Status banner for Author when queries_raised */}
+      {viewAs === "author" && isQueriesRaised && (
+        <div className="flex items-center gap-3 p-3 border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg">
+          <AlertTriangle className="h-5 w-5 text-[#c4940a] shrink-0" />
+          <div>
+            <p className="text-sm font-semibold">Query sent — awaiting response</p>
+            <p className="text-xs text-muted-foreground">
+              Signing is disabled until the editorial team responds. You can raise another query below.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Thread */}
+      {queries.length === 0 ? (
+        <div className="py-6 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+          <MessageSquare className="h-5 w-5" />
+          No queries yet.
+        </div>
+      ) : (
+        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+          {queries.map((q) => {
+            const isQuery = q.type === "query";
+            // Author queries: left for author view, right for reviewer view
+            const alignRight =
+              (viewAs === "author" && !isQuery) || (viewAs === "reviewer" && isQuery);
+
+            return (
+              <div
+                key={q.id}
+                className={cn("flex", alignRight ? "justify-end" : "justify-start")}
+              >
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-lg p-3 space-y-1",
+                    isQuery
+                      ? "bg-muted/50 border border-border"
+                      : "bg-[#3d5a47]/10 border border-[#3d5a47]/20"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold">
+                      {isQuery ? "Author Query" : "Editorial Response"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(q.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {q.query_text || q.response_text}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Input */}
+      {canSend && (
+        <div className="space-y-2 pt-2 border-t">
+          <Textarea
+            placeholder={
+              viewAs === "author"
+                ? "Type your query…"
+                : "Type your response…"
+            }
+            value={text}
+            onChange={(e) => {
+              if (e.target.value.length <= 1000) setText(e.target.value);
+            }}
+            rows={3}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {text.length}/1000 characters
+            </span>
+            <Button
+              size="sm"
+              className="bg-[#3d5a47] hover:opacity-90 text-white gap-2"
+              onClick={handleSubmit}
+              disabled={isSending || !text.trim()}
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {sendLabel}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ContractQueryThread;
