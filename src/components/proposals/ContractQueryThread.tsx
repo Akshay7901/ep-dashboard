@@ -8,10 +8,8 @@ import { ContractQuery } from "@/lib/proposalsApi";
 import { cn } from "@/lib/utils";
 
 const QUERY_CATEGORIES = [
-  { value: "contract", label: "Contract Terms" },
-  { value: "copyright", label: "Copyright & IP" },
-  { value: "royalties", label: "Royalties & Payment" },
-  { value: "other", label: "Other" },
+  { value: "contract", label: "Contract" },
+  { value: "feedback", label: "Feedback" },
 ];
 
 interface ContractQueryThreadProps {
