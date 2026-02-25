@@ -1039,12 +1039,60 @@ const ProposalDetails: React.FC = () => {
       {showReviewForm ? (
         peerReviewAlreadySubmitted ? (
           <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="pr-6 flex flex-col items-center justify-center text-center space-y-4">
-              <CheckCircle2 className="h-12 w-12 text-[#3d5a47]" />
-              <h2 className="text-xl font-semibold">Review Submitted</h2>
-              <p className="text-muted-foreground text-sm max-w-sm">
-                Your peer review has been submitted and is now awaiting authorization.
-              </p>
+            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-6 w-6 text-[#3d5a47]" />
+                  <h2 className="text-2xl font-bold text-foreground">Review Submitted</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Your peer review has been submitted and is now awaiting authorization. Below is a read-only copy of your submission.
+                </p>
+                <Separator />
+                {/* Read-only review fields */}
+                {(() => {
+                  const reviewFields = [
+                    { label: "Scope", key: "scope" },
+                    { label: "Purpose and Value", key: "purposeAndValue" },
+                    { label: "Title", key: "title" },
+                    { label: "Originality and Points of Difference", key: "originality" },
+                    { label: "Credibility", key: "credibility" },
+                    { label: "Structure", key: "structure" },
+                    { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
+                    { label: "Other Comments", key: "otherComments" },
+                    { label: "Red Flags", key: "redFlags" },
+                  ];
+                  return (
+                    <div className="space-y-5">
+                      {reviewFields.map(({ label, key }) => {
+                        const value = reviewFormData[key];
+                        if (!value) return null;
+                        return (
+                          <div key={key} className="space-y-1.5">
+                            <p className="text-sm font-semibold">{label}</p>
+                            <div className="bg-muted/30 p-3 text-sm leading-relaxed whitespace-pre-line rounded-md border">
+                              {value}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {reviewFormData.recommendation && (
+                        <div className="space-y-1.5">
+                          <p className="text-sm font-semibold">Final Recommendation</p>
+                          <Badge className={`rounded-full px-4 py-1 text-sm ${
+                            reviewFormData.recommendation === 'proceed' ? 'bg-[#3d5a47] text-white hover:bg-[#3d5a47]' :
+                            reviewFormData.recommendation === 'reject' ? 'bg-foreground text-background hover:bg-foreground' :
+                            reviewFormData.recommendation === 'minor_revision' ? 'bg-[#c4940a] text-white hover:bg-[#c4940a]' :
+                            'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c]'
+                          }`}>
+                            {reviewFormData.recommendation.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
             <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
               <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
