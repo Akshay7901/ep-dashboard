@@ -30,7 +30,7 @@ export const useContractQueries = (ticketNumber: string) => {
   });
 
   const respondToQuery = useMutation({
-    mutationFn: (responseText: string) => contractQueriesApi.respond(ticketNumber, responseText),
+    mutationFn: ({ queryId, responseText }: { queryId: number; responseText: string }) => contractQueriesApi.respond(ticketNumber, queryId, responseText),
     onSuccess: () => {
       toast({ title: 'Response sent', description: 'Your response has been sent to the author.' });
       refreshAll();

@@ -804,7 +804,7 @@ const ProposalDetails: React.FC = () => {
                         isLoading={queriesLoading}
                         viewAs="reviewer"
                         proposalStatus={proposal.status}
-                        onSend={async (text) => { await respondToQuery.mutateAsync(text); }}
+                        onSend={async (text, _category, queryId) => { await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text }); }}
                         isSending={respondToQuery.isPending}
                       />
                     </AccordionContent>
