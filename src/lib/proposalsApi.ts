@@ -190,8 +190,8 @@ export const contractQueriesApi = {
     return data;
   },
 
-  respond: async (ticketNumber: string, responseText: string): Promise<any> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query/respond`, { response_text: responseText });
+  respond: async (ticketNumber: string, queryId: number, responseText: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query/respond`, { query_id: queryId, response_text: responseText });
     return data;
   },
 };

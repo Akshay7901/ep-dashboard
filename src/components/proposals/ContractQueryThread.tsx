@@ -16,14 +16,11 @@ const QUERY_CATEGORIES = [
 interface ContractQueryThreadProps {
   queries: ContractQuery[];
   isLoading: boolean;
-  /** 'author' shows left-aligned queries, right-aligned responses; 'reviewer' is the opposite */
   viewAs: "author" | "reviewer";
-  /** Current proposal status */
   proposalStatus: string;
-  /** Called when the user submits a new query or response */
-  onSend: (text: string, category?: string) => Promise<void>;
+  /** For author: (text, category) => ...; For reviewer: (text, category, queryId) => ... */
+  onSend: (text: string, category?: string, queryId?: number) => Promise<void>;
   isSending: boolean;
-  /** Whether a sent contract exists (enables query input for author) */
   hasActiveContract?: boolean;
 }
 
@@ -38,12 +35,11 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 }) => {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("contract");
+  const [selectedQueryId, setSelectedQueryId] = useState<string>("");
   const normalizedStatus = proposalStatus?.trim().toLowerCase().replace(/\s+/g, "_");
   const isQueriesRaised = normalizedStatus === "queries_raised";
   const isContractIssued = normalizedStatus === "contract_issued";
 
-  // Author can raise queries when contract_issued, queries_raised, OR when an active contract exists
-  // DR can respond when queries_raised
   const canSend =
     viewAs === "author"
       ? isContractIssued || isQueriesRaised || hasActiveContract
@@ -51,10 +47,16 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 
   const sendLabel = viewAs === "author" ? "Send Query" : "Send Response";
 
+  // Get unanswered queries for DR to select from
+  const unansweredQueries = queries.filter((q) => q.type === "query");
+
   const handleSubmit = async () => {
     if (!text.trim() || isSending) return;
-    await onSend(text.trim(), category);
+    if (viewAs === "reviewer" && !selectedQueryId) return;
+    const qId = viewAs === "reviewer" ? Number(selectedQueryId) : undefined;
+    await onSend(text.trim(), category, qId);
     setText("");
+    setSelectedQueryId("");
   };
 
   if (isLoading) {
@@ -157,7 +159,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       {/* Input */}
       {canSend && (
         <div className="space-y-3 pt-2 border-t">
-          {(
+          {viewAs === "author" && (
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Question Type</label>
               <Select value={category} onValueChange={setCategory}>
@@ -174,8 +176,27 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
               </Select>
             </div>
           )}
+          {viewAs === "reviewer" && unansweredQueries.length > 0 && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Responding to Query</label>
+              <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select query to respond to" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unansweredQueries.map((q) => (
+                    <SelectItem key={q.id} value={String(q.id)}>
+                      #{q.id} — {(q.text || q.query_text || "").substring(0, 60)}{(q.text || q.query_text || "").length > 60 ? "…" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Your Question</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              {viewAs === "author" ? "Your Question" : "Your Response"}
+            </label>
             <Textarea
               placeholder={
                 viewAs === "author"
@@ -197,7 +218,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
               size="sm"
               className="bg-[#3d5a47] hover:opacity-90 text-white gap-2"
               onClick={handleSubmit}
-              disabled={isSending || !text.trim()}
+              disabled={isSending || !text.trim() || (viewAs === "reviewer" && !selectedQueryId)}
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
