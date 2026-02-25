@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,8 +19,10 @@ import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDia
 import { commentsApi, proposalApi, contractApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
+import { useContractQueries } from "@/hooks/useContractQueries";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
+import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 
 /* ---- Timeline helpers ---- */
 
@@ -146,12 +146,6 @@ const AuthorProposalDetails: React.FC = () => {
   const [commentText, setCommentText] = useState("");
   const [isSendingComment, setIsSendingComment] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
-  const [showQuestionsForm, setShowQuestionsForm] = useState(false);
-  const [questionType, setQuestionType] = useState("");
-  const [questionsText, setQuestionsText] = useState("");
-  const [isSendingQuestions, setIsSendingQuestions] = useState(false);
-  const [questionSubmitted, setQuestionSubmitted] = useState(false);
-  const [submittedQuestions, setSubmittedQuestions] = useState<Array<{ text: string; type: string; date: Date }>>([]);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
   );
@@ -171,6 +165,7 @@ const AuthorProposalDetails: React.FC = () => {
   const { data: comments = [] } = useProposalComments(localId, ticketNum);
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
+  const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
   const addComment = useAddComment();
 
   // Fetch a fresh signing URL and open it immediately
@@ -571,55 +566,28 @@ const AuthorProposalDetails: React.FC = () => {
                   proposal and provided the following assessment. Please review the feedback and contract details.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["contract-details"]} className="space-y-4">
-                  {/* Comments Section */}
-                  {submittedQuestions.length > 0 && (
-                    <AccordionItem value="comments" className="border rounded-md overflow-hidden">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
-                        <h3 className="text-xl font-bold text-foreground">Comments</h3>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
-                        {submittedQuestions.map((q, idx) => {
-                          const typeLabels: Record<string, string> = {
-                            contract_terms: "CONTRACT QUERY",
-                            royalties: "ROYALTIES QUERY",
-                            rights: "RIGHTS QUERY",
-                            timeline: "TIMELINE QUERY",
-                            review_feedback: "REVIEW FEEDBACK",
-                            other: "GENERAL QUERY",
-                          };
-                          return (
-                            <div key={idx} className="space-y-4">
-                              {idx > 0 && <Separator />}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-semibold text-foreground">
-                                    {proposal.corresponding_author_name || proposal.author_name}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    · {format(q.date, "MMMM d, yyyy")}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-medium border rounded-md px-3 py-1 text-muted-foreground">
-                                  {typeLabels[q.type] || q.type.toUpperCase()}
-                                </span>
-                              </div>
-                              <p className="text-sm text-foreground/80 leading-relaxed">{q.text}</p>
-                              <div className="mt-3">
-                                <p className="text-xs font-medium text-muted-foreground mb-2">Reply from Editor</p>
-                                <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-md p-4">
-                                  <p className="text-xs font-medium text-[#3d5a47]">Awaiting Response</p>
-                                  <p className="text-sm text-foreground/70 mt-1">
-                                    Your question has been submitted. The editorial team will respond within 2 business days.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
+                <Accordion type="multiple" defaultValue={["contract-details", "queries"]} className="space-y-4">
+                  {/* Contract Queries Thread */}
+                  <AccordionItem value="queries" className="border rounded-md overflow-hidden">
+                    <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                      <h3 className="text-xl font-bold text-foreground">
+                        Contract Queries
+                        {contractQueries.length > 0 && (
+                          <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                        )}
+                      </h3>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-6 pt-0">
+                      <ContractQueryThread
+                        queries={contractQueries}
+                        isLoading={queriesLoading}
+                        viewAs="author"
+                        proposalStatus={proposal.status}
+                        onSend={async (text) => { await raiseQuery.mutateAsync(text); }}
+                        isSending={raiseQuery.isPending}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
 
                   {/* Peer Review Feedback Section */}
                   {(peerReview || decisionReview) && (
@@ -655,6 +623,7 @@ const AuthorProposalDetails: React.FC = () => {
                         const isSigned = contractStatus === 'completed' || contractStatus === 'signed';
                         const isDeclined = contractStatus === 'declined';
                         const isVoided = contractStatus === 'voided';
+                        const proposalIsQueriesRaised = statusIs(proposal.status, 'queries_raised');
 
                         return (
                           <div className="space-y-5">
@@ -713,7 +682,7 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 )}
 
-                                {!signingLoading && !signingError && (
+                                {!signingLoading && !signingError && !proposalIsQueriesRaised && (
                                   <div className="max-w-sm mx-auto text-center">
                                     <Button
                                       className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
@@ -727,14 +696,13 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 )}
 
-                                {/* Questions button */}
-                                <Button
-                                  variant="outline"
-                                  className="w-full py-6 text-base"
-                                  onClick={() => setShowQuestionsForm(true)}
-                                >
-                                  I have questions before signing
-                                </Button>
+                                {proposalIsQueriesRaised && !signingLoading && (
+                                  <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
+                                    <p className="text-sm font-medium text-[#c4940a]">Signing is disabled while your query is being reviewed</p>
+                                    <p className="text-xs text-muted-foreground mt-1">The signing button will be re-enabled once the editorial team responds.</p>
+                                  </div>
+                                )}
+
                               </div>
                             )}
 
@@ -794,126 +762,6 @@ const AuthorProposalDetails: React.FC = () => {
               </div>
             }
 
-            {/* Question form */}
-            {showQuestionsForm && (
-              questionSubmitted ?
-              <Card className="border">
-                <CardContent className="p-8 text-center space-y-4">
-                  <div className="mx-auto w-14 h-14 rounded-full bg-[#2f4b40]/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-7 w-7 text-[#2f4b40]" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-foreground">Question Submitted</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Your question has been submitted successfully. Our editorial team will review and respond within 2 business days.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 max-w-sm mx-auto pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setQuestionSubmitted(false);
-                        setQuestionsText("");
-                        setQuestionType("");
-                      }}
-                    >
-                      Submit Another Question
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="text-muted-foreground"
-                      onClick={() => {
-                        setShowQuestionsForm(false);
-                        setQuestionSubmitted(false);
-                        setQuestionsText("");
-                        setQuestionType("");
-                      }}
-                    >
-                      Back to Contract
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card> :
-
-              <Card className="border">
-                <CardContent className="p-6 space-y-5">
-                  <div>
-                    <h4 className="text-base font-bold text-foreground">Submit a Question</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Please select the nature of your question and provide details. Our editorial team will review and respond within 2 business days.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Question Type <span className="text-destructive">*</span>
-                    </label>
-                    <Select value={questionType} onValueChange={setQuestionType}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a question type..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="contract_terms">Contract Terms</SelectItem>
-                        <SelectItem value="royalties">Royalties & Payments</SelectItem>
-                        <SelectItem value="rights">Rights & Permissions</SelectItem>
-                        <SelectItem value="timeline">Timeline & Deadlines</SelectItem>
-                        <SelectItem value="review_feedback">Review Feedback</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Your Question <span className="text-destructive">*</span>{" "}
-                      <span className="text-muted-foreground font-normal">(max 500 characters)</span>
-                    </label>
-                    <Textarea
-                      placeholder="Please provide details about your question..."
-                      value={questionsText}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 500) setQuestionsText(e.target.value);
-                      }}
-                      rows={5}
-                    />
-                    <p className="text-xs text-muted-foreground text-right">
-                      {questionsText.length}/500 characters
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      className="bg-[#2f4b40] hover:bg-[#2f4b40]/90 text-white py-5"
-                      onClick={async () => {
-                        if (!questionsText.trim() || !questionType) return;
-                        setIsSendingQuestions(true);
-                        try {
-                          await proposalApi.raiseQuestions(ticketNum, questionsText.trim());
-                          setSubmittedQuestions(prev => [...prev, { text: questionsText.trim(), type: questionType, date: new Date() }]);
-                          setQuestionSubmitted(true);
-                          refetch();
-                        } catch (err: any) {
-                          toast({ title: "Error", description: err.message || "Failed to submit question", variant: "destructive" });
-                        } finally {
-                          setIsSendingQuestions(false);
-                        }
-                      }}
-                      disabled={isSendingQuestions || !questionsText.trim() || !questionType}
-                    >
-                      {isSendingQuestions ? "Submitting..." : "Submit Question"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="py-5"
-                      onClick={() => {
-                        setShowQuestionsForm(false);
-                        setQuestionsText("");
-                        setQuestionType("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>
       </div>

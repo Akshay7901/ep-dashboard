@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
 import { proposalApi, contractApi } from "@/lib/proposalsApi";
+import ContractQueryThread from "@/components/proposals/ContractQueryThread";
+import { useContractQueries } from "@/hooks/useContractQueries";
 import { Separator } from "@/components/ui/separator";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
@@ -188,6 +190,7 @@ const ProposalDetails: React.FC = () => {
   const ticketNum = proposal?.ticket_number || id || "";
   const { review: reviewData, refetchReview, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading } = useContract(ticketNum);
+  const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -780,6 +783,30 @@ const ProposalDetails: React.FC = () => {
                           </Button>
                         </div>
                       )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Contract Queries */}
+                  <AccordionItem value="queries" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">
+                          Contract Queries
+                          {contractQueries.length > 0 && (
+                            <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                          )}
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      <ContractQueryThread
+                        queries={contractQueries}
+                        isLoading={queriesLoading}
+                        viewAs="reviewer"
+                        proposalStatus={proposal.status}
+                        onSend={async (text) => { await respondToQuery.mutateAsync(text); }}
+                        isSending={respondToQuery.isPending}
+                      />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

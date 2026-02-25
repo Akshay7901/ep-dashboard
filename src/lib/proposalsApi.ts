@@ -160,3 +160,32 @@ export const proposalApi = {
     return data;
   },
 };
+
+// Contract Queries API
+export interface ContractQuery {
+  id: number;
+  ticket_number: string;
+  type: 'query' | 'response';
+  query_text?: string;
+  response_text?: string;
+  created_at: string;
+  created_by?: string;
+  created_by_role?: string;
+}
+
+export const contractQueriesApi = {
+  list: async (ticketNumber: string): Promise<ContractQuery[]> => {
+    const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/queries`);
+    return data?.queries || data || [];
+  },
+
+  raise: async (ticketNumber: string, queryText: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query`, { query_text: queryText });
+    return data;
+  },
+
+  respond: async (ticketNumber: string, responseText: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/query/respond`, { response_text: responseText });
+    return data;
+  },
+};
