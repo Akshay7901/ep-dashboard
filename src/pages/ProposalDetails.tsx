@@ -848,7 +848,7 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book Info</span>
@@ -860,10 +860,6 @@ const ProposalDetails: React.FC = () => {
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
-            </TabsTrigger>
-            <TabsTrigger value="log" className="gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Log</span>
             </TabsTrigger>
           </TabsList>
 
@@ -997,111 +993,7 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* ---- LOG (Peer Reviewer) ---- */}
-          <TabsContent value="log" className="mt-4 space-y-6">
-            <Accordion type="multiple" defaultValue={["status", "timeline"]} className="space-y-1">
-              {/* Current Status */}
-              <AccordionItem value="status" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Current Status</AccordionTrigger>
-                <AccordionContent className="pb-4 space-y-3">
-                  <div className="flex gap-4 py-1">
-                    <span className="text-sm text-muted-foreground w-28 shrink-0">Submitted:</span>
-                    <span className="text-sm font-medium">
-                      {(proposal as any).submitted_at ? format(new Date((proposal as any).submitted_at), "MMM d, yyyy") : proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}
-                    </span>
-                  </div>
-                  {(() => {
-                    const assignedDate = proposal.assigned_at || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
-                    if (assignedDate) {
-                      return (
-                        <div className="flex gap-4 py-1">
-                          <span className="text-sm text-muted-foreground w-28 shrink-0">Assigned On:</span>
-                          <span className="text-sm font-medium">{format(new Date(assignedDate), "MMM d, yyyy")}</span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  <div className="pt-1">
-                    <PeerReviewStatusBadge status={proposal.status} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
 
-              {/* Activity Timeline */}
-              <AccordionItem value="timeline" className="border rounded-lg px-4">
-                <AccordionTrigger className="text-base font-semibold">Activity Timeline</AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  {(() => {
-                    // Build timeline events in chronological order (oldest first)
-                    const timelineEvents: { title: string; date: string; actor: string; color: string; sortDate: Date }[] = [];
-
-                    const submittedDate = (proposal as any).submitted_at || proposal.created_at;
-                    const assignedDate = proposal.assigned_at
-                      || (logs as any[]).find((l: any) => l.new_status === 'under_review' || l.action?.toLowerCase().includes('assign'))?.created_at;
-
-                    // 1. Initial Screening Passed — when decision reviewer accepted (inferred from assignment)
-                    if (!statusIs(proposal.status, "new", "submitted") && !statusIs(proposal.status, "rejected", "declined")) {
-                      // Use a date between submitted and assigned, or fallback to assigned date
-                      const screeningDateRaw = assignedDate || proposal.updated_at;
-                      if (screeningDateRaw) {
-                        timelineEvents.push({
-                          title: "Initial Screening Passed",
-                          date: format(new Date(screeningDateRaw), "MMM d, yyyy"),
-                          actor: "Commissioning Editor",
-                          color: "bg-muted-foreground",
-                          sortDate: new Date(screeningDateRaw),
-                        });
-                      }
-                    }
-
-                    // 2. Proposal Submitted — author's original submission
-                    if (submittedDate) {
-                      timelineEvents.push({
-                        title: "Proposal Submitted",
-                        date: format(new Date(submittedDate), "MMM d, yyyy"),
-                        actor: proposal.corresponding_author_name || proposal.author_name || "Author",
-                        color: "bg-[#3d5a47]",
-                        sortDate: new Date(submittedDate),
-                      });
-                    }
-
-                    // 3. Assigned to Peer Reviewer — when reviewer was assigned
-                    if (assignedDate && !statusIs(proposal.status, "new", "submitted")) {
-                      timelineEvents.push({
-                        title: "Assigned to Peer Reviewer",
-                        date: format(new Date(assignedDate), "MMM d, yyyy"),
-                        actor: "System",
-                        color: "bg-[#2563eb]",
-                        sortDate: new Date(assignedDate),
-                      });
-                    }
-
-                    if (timelineEvents.length === 0) {
-                      return <p className="text-sm text-muted-foreground">No activity recorded yet.</p>;
-                    }
-
-                    // Display newest first (matches Figma: Assigned → Submitted → Screening)
-                    const sorted = [...timelineEvents].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
-
-                    return (
-                      <div className="space-y-4">
-                        {sorted.map((evt, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evt.color}`} />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{evt.title}</p>
-                              <p className="text-xs text-muted-foreground">{evt.date} • {evt.actor}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </TabsContent>
         </Tabs>)}
     </div>;
 
