@@ -127,7 +127,12 @@ export const contractApi = {
     );
     if (!response.ok) throw new Error(`Failed to fetch document: ${response.status}`);
     const blob = await response.blob();
-    return URL.createObjectURL(blob);
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   },
 };
 
