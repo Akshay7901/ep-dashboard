@@ -35,7 +35,24 @@ export const useContract = (ticketNumber: string | undefined) => {
     retry: false,
   });
 
-  const contracts: ContractDetails[] = query.data?.contracts || [];
+  // Flexibly parse contract data from various API response shapes
+  const rawData = query.data;
+  let contracts: ContractDetails[] = [];
+  if (rawData) {
+    if (Array.isArray(rawData.contracts)) {
+      contracts = rawData.contracts;
+    } else if (Array.isArray(rawData.data)) {
+      contracts = rawData.data;
+    } else if (rawData.contract && typeof rawData.contract === 'object') {
+      contracts = [rawData.contract];
+    } else if (Array.isArray(rawData)) {
+      contracts = rawData;
+    } else if (rawData.id || rawData.status || rawData.contract_type) {
+      // The response itself is a single contract object
+      contracts = [rawData as ContractDetails];
+    }
+  }
+  console.log('[useContract] raw:', rawData, '→ contracts:', contracts);
   const latestContract = contracts[0] || null;
 
   return {
