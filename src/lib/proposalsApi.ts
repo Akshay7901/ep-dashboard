@@ -164,10 +164,16 @@ export const proposalApi = {
 // Contract Queries API
 export interface ContractQuery {
   id: number;
-  ticket_number: string;
+  ticket_number?: string;
   type: 'query' | 'response';
+  category?: string | null;
+  text?: string;
   query_text?: string;
   response_text?: string;
+  raised_by?: string;
+  raised_by_name?: string;
+  raised_by_role?: string;
+  parent_query_id?: number | null;
   created_at: string;
   created_by?: string;
   created_by_role?: string;

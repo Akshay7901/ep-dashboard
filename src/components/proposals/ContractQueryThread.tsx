@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2, AlertTriangle, MessageSquare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, Loader2, AlertTriangle, MessageSquare, User, Tag } from "lucide-react";
 import { ContractQuery } from "@/lib/proposalsApi";
 import { cn } from "@/lib/utils";
 
@@ -103,9 +104,11 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
           {queries.map((q) => {
             const isQuery = q.type === "query";
-            // Author queries: left for author view, right for reviewer view
             const alignRight =
               (viewAs === "author" && !isQuery) || (viewAs === "reviewer" && isQuery);
+            const messageText = q.text || q.query_text || q.response_text || "";
+            const senderName = q.raised_by_name || q.created_by || (isQuery ? "Author" : "Reviewer");
+            const categoryLabel = q.category ? q.category.charAt(0).toUpperCase() + q.category.slice(1) : null;
 
             return (
               <div
@@ -114,22 +117,35 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
               >
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-lg p-3 space-y-1",
+                    "max-w-[85%] rounded-lg p-3 space-y-2",
                     isQuery
                       ? "bg-muted/50 border border-border"
                       : "bg-[#3d5a47]/10 border border-[#3d5a47]/20"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold">
-                      {isQuery ? "Author Query" : "Editorial Response"}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {senderName}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      {isQuery ? "Query" : "Response"}
+                    </Badge>
+                    {categoryLabel && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-0.5">
+                        <Tag className="h-2.5 w-2.5" />
+                        {categoryLabel}
+                      </Badge>
+                    )}
+                    <span className="text-[10px] text-muted-foreground ml-auto">
                       {format(new Date(q.created_at), "MMM d, yyyy 'at' h:mm a")}
                     </span>
                   </div>
+                  {q.raised_by && (
+                    <p className="text-[11px] text-muted-foreground">{q.raised_by}</p>
+                  )}
                   <p className="text-sm leading-relaxed whitespace-pre-line">
-                    {q.query_text || q.response_text}
+                    {messageText}
                   </p>
                 </div>
               </div>
