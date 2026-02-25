@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
@@ -146,6 +147,7 @@ const ProposalDetails: React.FC = () => {
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
   const [isConfirming, setIsConfirming] = useState(false);
   const [startedFresh, setStartedFresh] = useState(false);
+  const [eventsSheetOpen, setEventsSheetOpen] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
 
   /* ---------------- Data ---------------- */
@@ -312,12 +314,17 @@ const ProposalDetails: React.FC = () => {
               </p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
+          <div className="flex items-center gap-2 ml-4 shrink-0">
             <ProposalStatusBadge status={proposal.status} showIcon={false} />
             {isPostSubmission && proposal.contract_sent_at && (
               <span className="text-sm text-muted-foreground">
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
+            )}
+            {isReviewer1 && (
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
+                <History className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>
@@ -402,7 +409,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs defaultValue={(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? "feedback" : "book"}>
-          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -414,10 +421,6 @@ const ProposalDetails: React.FC = () => {
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
-            </TabsTrigger>
-            <TabsTrigger value="events" className="gap-1.5 text-xs sm:text-sm">
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline">Events</span>
             </TabsTrigger>
             {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) && (
               <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
@@ -580,70 +583,7 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* ---- EVENTS / AUDIT TRAIL (Decision Reviewer) ---- */}
-          <TabsContent value="events" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  Audit Trail
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {eventsLoading ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-muted-foreground">Loading events…</span>
-                  </div>
-                ) : proposalEvents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No events recorded yet.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {proposalEvents.map((evt) => (
-                      <div key={evt.id} className="flex items-start gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${
-                          evt.event_type === 'status_change' ? 'bg-[#2563eb]' :
-                          evt.event_type === 'assignment' ? 'bg-[#3d5a47]' :
-                          'bg-muted-foreground'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{evt.description}</p>
-                          <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground mt-0.5">
-                            <span>{format(new Date(evt.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
-                            {evt.changed_by && (
-                              <>
-                                <span>•</span>
-                                <span>{evt.changed_by}</span>
-                              </>
-                            )}
-                            {evt.changed_by_role && (
-                              <>
-                                <span>•</span>
-                                <span className="capitalize">{evt.changed_by_role.replace(/_/g, ' ')}</span>
-                              </>
-                            )}
-                          </div>
-                          {(evt.old_status || evt.new_status) && (
-                            <div className="flex items-center gap-2 mt-1">
-                              {evt.old_status && (
-                                <Badge variant="outline" className="text-xs capitalize">{evt.old_status.replace(/_/g, ' ')}</Badge>
-                              )}
-                              {evt.old_status && evt.new_status && (
-                                <span className="text-xs text-muted-foreground">→</span>
-                              )}
-                              {evt.new_status && (
-                                <Badge className="text-xs capitalize bg-[#3d5a47] hover:bg-[#3d5a47]">{evt.new_status.replace(/_/g, ' ')}</Badge>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Events Sheet moved to slide-out panel */}
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
@@ -995,6 +935,76 @@ const ProposalDetails: React.FC = () => {
 
 
         </Tabs>)}
+      {/* Events Audit Trail Sheet */}
+      {isReviewer1 && (
+        <Sheet open={eventsSheetOpen} onOpenChange={setEventsSheetOpen}>
+          <SheetContent className="w-[400px] sm:w-[480px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Audit Trail
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              {eventsLoading ? (
+                <div className="flex items-center gap-2 py-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading events…</span>
+                </div>
+              ) : proposalEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No events recorded yet.</p>
+              ) : (
+                <div className="space-y-5">
+                  {proposalEvents.map((evt, index) => (
+                    <div key={evt.id} className="relative flex items-start gap-3">
+                      {/* Timeline line */}
+                      {index < proposalEvents.length - 1 && (
+                        <div className="absolute left-[5px] top-5 bottom-0 w-px bg-border" style={{ height: 'calc(100% + 12px)' }} />
+                      )}
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${
+                        evt.event_type === 'status_change' ? 'bg-[#2563eb]' :
+                        evt.event_type === 'assignment' ? 'bg-[#3d5a47]' :
+                        'bg-muted-foreground'
+                      }`} />
+                      <div className="flex-1 min-w-0 pb-1">
+                        <p className="text-sm font-medium">{evt.description}</p>
+                        <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground mt-0.5">
+                          <span>{format(new Date(evt.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
+                          {evt.changed_by && (
+                            <>
+                              <span>•</span>
+                              <span>{evt.changed_by}</span>
+                            </>
+                          )}
+                          {evt.changed_by_role && (
+                            <>
+                              <span>•</span>
+                              <span className="capitalize">{evt.changed_by_role.replace(/_/g, ' ')}</span>
+                            </>
+                          )}
+                        </div>
+                        {(evt.old_status || evt.new_status) && (
+                          <div className="flex items-center gap-2 mt-1.5">
+                            {evt.old_status && (
+                              <Badge variant="outline" className="text-xs capitalize">{evt.old_status.replace(/_/g, ' ')}</Badge>
+                            )}
+                            {evt.old_status && evt.new_status && (
+                              <span className="text-xs text-muted-foreground">→</span>
+                            )}
+                            {evt.new_status && (
+                              <Badge className="text-xs capitalize bg-[#3d5a47] hover:bg-[#3d5a47]">{evt.new_status.replace(/_/g, ' ')}</Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>;
 
   /* ======================== RENDER ======================== */
