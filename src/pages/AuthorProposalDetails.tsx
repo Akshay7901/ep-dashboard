@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import api from "@/lib/api";
 import { extractCountry } from "@/lib/extractCountry";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -152,6 +153,12 @@ const AuthorProposalDetails: React.FC = () => {
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
   );
+  
+  // Contract signing URL state
+  const [signingUrl, setSigningUrl] = useState<string | null>(null);
+  const [signingLoading, setSigningLoading] = useState(false);
+  const [signingError, setSigningError] = useState<string | null>(null);
+  const [signingExpiresAt, setSigningExpiresAt] = useState<string | null>(null);
 
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
   const localId = proposal?.id || "";
@@ -159,6 +166,30 @@ const AuthorProposalDetails: React.FC = () => {
   const { data: comments = [] } = useProposalComments(localId, ticketNum);
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const addComment = useAddComment();
+
+  const fetchSigningUrl = async () => {
+    if (!ticketNum) return;
+    setSigningLoading(true);
+    setSigningError(null);
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNum)}/contract/signing-url`);
+      if (data?.signing_url) {
+        setSigningUrl(data.signing_url);
+        setSigningExpiresAt(data.expires_at || null);
+      } else {
+        setSigningError('No signing URL received from server.');
+      }
+    } catch (err: any) {
+      const status = err?.status || err?.response?.status;
+      if (status === 404) setSigningError('No active contract found for this proposal.');
+      else if (status === 400) setSigningError('No DocuSign envelope is associated with this contract.');
+      else if (status === 403) setSigningError('You do not have permission to sign this contract.');
+      else setSigningError(err?.message || 'Failed to generate signing URL.');
+    } finally {
+      setSigningLoading(false);
+    }
+  };
+
 
   // Extract reviews array from API response
   const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
@@ -600,7 +631,11 @@ const AuthorProposalDetails: React.FC = () => {
                   {/* Publishing Contract Section */}
                   {decisionReview?.is_submitted && (
                     <AccordionItem value="publishing-contract" className="border rounded-md overflow-hidden">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background" onClick={() => {
+                        if (!signingUrl && !signingLoading && !signingError) {
+                          fetchSigningUrl();
+                        }
+                      }}>
                         <h3 className="text-xl font-bold text-foreground">Publishing Contract</h3>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
@@ -610,83 +645,61 @@ const AuthorProposalDetails: React.FC = () => {
                             By signing this agreement, you confirm acceptance of the peer review feedback.
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Please review the contract terms carefully. If you have any questions, please use the "I have questions before signing" option below.
+                            Click the button below to open your contract for signing via DocuSign. The signing link expires after approximately 5 minutes — use "Get New Link" if it expires.
                           </p>
                         </div>
 
-                        {/* Contract document */}
-                        <div className="border rounded-md overflow-hidden">
-                          <div className="bg-muted/40 border-b px-5 py-3">
-                            <span className="text-sm font-semibold text-foreground">
-                              {decisionReview.review_data?.contractType === "edited_volume" ?
-                                "Edited Volume Publishing Agreement" :
-                                decisionReview.review_data?.contractType === "custom" ?
-                                "Custom Publishing Agreement" :
-                                "Standard Academic Publishing Agreement"}
-                            </span>
+                        {/* Signing URL states */}
+                        {signingLoading && (
+                          <div className="flex flex-col items-center justify-center py-10 space-y-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <p className="text-sm text-muted-foreground">Generating your signing link…</p>
                           </div>
-                          <div className="p-6 space-y-6 text-sm leading-relaxed">
-                            <div className="text-center space-y-1">
-                              <h4 className="text-lg font-bold tracking-wide">PUBLISHING AGREEMENT</h4>
-                              <p className="text-muted-foreground">Between Author and Publisher</p>
-                            </div>
-                            <div className="space-y-5">
-                              <div>
-                                <p className="font-bold">1. PARTIES</p>
-                                <p className="mt-1">
-                                  This Agreement is made between <span className="font-bold">{proposal.corresponding_author_name || proposal.author_name}</span> ("the Author") and Edinburgh International Press ("the Publisher").
-                                </p>
-                              </div>
-                              <div>
-                                <p className="font-bold">2. THE WORK</p>
-                                <p className="mt-1">The Author agrees to deliver to the Publisher a completed manuscript of the work currently entitled:</p>
-                                <p className="mt-2 pl-6 italic font-medium">"{proposal.name}"</p>
-                                <p className="mt-2">("the Work"), consisting of approximately {proposal.word_count || "N/A"} words, by {proposal.expected_completion_date || "the agreed date"}.</p>
-                              </div>
-                              <div>
-                                <p className="font-bold">3. GRANT OF RIGHTS</p>
-                                <p className="mt-1">The Author grants to the Publisher the exclusive right to publish and sell the Work in all formats (print, digital, and audio) throughout the world for the legal term of copyright and any renewals or extensions thereof.</p>
-                              </div>
-                              <div>
-                                <p className="font-bold">4. ROYALTIES</p>
-                                <p className="mt-1">The Publisher shall pay the Author the following royalties:</p>
-                                <ul className="mt-2 pl-10 space-y-1 list-none">
-                                  <li>10% of net receipts on hardcover sales</li>
-                                  <li>7.5% of net receipts on paperback sales</li>
-                                  <li>25% of net receipts on e-book sales</li>
-                                </ul>
-                              </div>
-                              <div>
-                                <p className="font-bold">5. AUTHOR'S WARRANTIES</p>
-                                <p className="mt-1">The Author warrants that the Work is original, has not been previously published, does not infringe any existing copyright, and contains nothing defamatory or unlawful.</p>
-                              </div>
-                              <div>
-                                <p className="font-bold">6. TERMINATION</p>
-                                <p className="mt-1">Either party may terminate this Agreement if the other party commits a material breach and fails to remedy such breach within 30 days of written notice.</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        )}
 
-                        {/* Action buttons */}
-                        <div className="space-y-3">
-                          <Button
-                            className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-6 text-base"
-                            onClick={async () => {
-                              setIsAccepting(true);
-                              try {
-                                await proposalApi.acceptContract(ticketNum);
-                                toast({ title: "Contract accepted", description: "You have successfully accepted the publishing agreement." });
-                                refetch();
-                              } catch (err: any) {
-                                toast({ title: "Error", description: err.message || "Failed to accept contract", variant: "destructive" });
-                              } finally {
-                                setIsAccepting(false);
-                              }
-                            }}
-                            disabled={isAccepting}>
-                            {isAccepting ? "Accepting..." : "Accept feedback & sign contract"}
-                          </Button>
+                        {signingError && (
+                          <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+                              <p className="text-sm font-medium text-destructive">{signingError}</p>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
+                              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
+                            </Button>
+                          </div>
+                        )}
+
+                        {signingUrl && !signingLoading && !signingError && (
+                          <div className="space-y-4">
+                            <div className="border rounded-md p-6 text-center space-y-4 bg-muted/20">
+                              <ExternalLink className="h-10 w-10 text-primary mx-auto" />
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">Your contract is ready for signing</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Click below to open DocuSign and sign your publishing agreement.
+                                </p>
+                                {signingExpiresAt && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Link expires: {format(new Date(signingExpiresAt), "MMM d, yyyy 'at' h:mm a")}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-2 max-w-sm mx-auto">
+                                <a href={signingUrl} target="_blank" rel="noopener noreferrer">
+                                  <Button className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base">
+                                    <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
+                                  </Button>
+                                </a>
+                                <Button variant="outline" size="sm" onClick={fetchSigningUrl}>
+                                  <RefreshCw className="mr-2 h-4 w-4" /> Get New Link
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Questions button */}
+                        <div>
                           <Button
                             variant="outline"
                             className="w-full py-6 text-base"
