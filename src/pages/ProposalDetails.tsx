@@ -151,6 +151,8 @@ const ProposalDetails: React.FC = () => {
   const [startedFresh, setStartedFresh] = useState(false);
   const [eventsSheetOpen, setEventsSheetOpen] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
+  const [drActiveTab, setDrActiveTab] = useState<string>((false) ? "feedback" : "book");
+  const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
 
   /* ---------------- Data ---------------- */
 
@@ -236,6 +238,14 @@ const ProposalDetails: React.FC = () => {
     return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || reviewData.review || reviewData || {};
   }, [reviewData]);
 
+  // Set initial DR tab to "feedback" when review is submitted
+  const drShouldShowFeedback = decisionReviewerSubmitted || (proposal && (
+    statusIs(proposal.status, "contract_issued", "approved", "locked") ||
+    (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted)
+  ));
+  React.useEffect(() => {
+    if (drShouldShowFeedback) setDrActiveTab("feedback");
+  }, [drShouldShowFeedback]);
 
   /* ---------------- Loading / Error ---------------- */
 
@@ -284,6 +294,7 @@ const ProposalDetails: React.FC = () => {
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
     statusIs(proposal.status, "contract_issued", "approved", "locked") || hasDecisionReviewInApi
   );
+
 
   const revertToNew = async () => {
     try {
@@ -411,7 +422,7 @@ const ProposalDetails: React.FC = () => {
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
-    <Tabs defaultValue={(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? "feedback" : "book"}>
+    <Tabs value={drActiveTab} onValueChange={(v) => { setDrActiveTab(v); setDrFeedbackAccordion(undefined); }}>
           <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
@@ -632,7 +643,7 @@ const ProposalDetails: React.FC = () => {
               );
 
               return (
-                <Accordion type="single" collapsible defaultValue="peer-review" className="space-y-2">
+                <Accordion type="single" collapsible value={drFeedbackAccordion} onValueChange={setDrFeedbackAccordion} className="space-y-2">
                   {/* Original Peer Review Feedback */}
                   <AccordionItem value="peer-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
