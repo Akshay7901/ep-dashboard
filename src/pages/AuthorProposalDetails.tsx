@@ -139,9 +139,11 @@ const AuthorProposalDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("proposal");
   const [hasSeenReview, setHasSeenReview] = useState(false);
   const [showQueryThread, setShowQueryThread] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState<string | undefined>("contract-details");
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    setOpenAccordion(value === "review" ? "contract-details" : undefined);
     if (value === "review") setHasSeenReview(true);
   };
   const [commentText, setCommentText] = useState("");
@@ -567,7 +569,7 @@ const AuthorProposalDetails: React.FC = () => {
                   proposal and provided the following assessment. Please review the feedback and contract details.
                 </div>
 
-                <Accordion type="multiple" defaultValue={["contract-details"]} className="space-y-4">
+                <Accordion type="single" collapsible value={openAccordion} onValueChange={setOpenAccordion} className="space-y-4">
 
                   {/* Peer Review Feedback Section */}
                   {(peerReview || decisionReview) && (
@@ -749,28 +751,30 @@ const AuthorProposalDetails: React.FC = () => {
 
                 {/* Contract Query Thread — shown on demand or when queries exist */}
                 {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) && (
-                  <div className="border rounded-md overflow-hidden">
-                    <div className="px-6 py-4 bg-background border-b">
-                      <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                        Contract Queries
-                        {contractQueries.length > 0 && (
-                          <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
-                        )}
-                      </h3>
-                    </div>
-                    <div className="px-6 pb-6 pt-4">
-                      <ContractQueryThread
-                        queries={contractQueries}
-                        isLoading={queriesLoading}
-                        viewAs="author"
-                        proposalStatus={proposal.status}
-                        onSend={async (text, category) => { await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' }); }}
-                        isSending={raiseQuery.isPending}
-                        hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
-                      />
-                    </div>
-                  </div>
+                  <Accordion type="single" collapsible className="space-y-4">
+                    <AccordionItem value="contract-queries" className="border rounded-md overflow-hidden">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
+                        <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                          <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                          Contract Queries
+                          {contractQueries.length > 0 && (
+                            <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                          )}
+                        </h3>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-6 pt-4">
+                        <ContractQueryThread
+                          queries={contractQueries}
+                          isLoading={queriesLoading}
+                          viewAs="author"
+                          proposalStatus={proposal.status}
+                          onSend={async (text, category) => { await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' }); }}
+                          isSending={raiseQuery.isPending}
+                          hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 )}
               </div>
             }
