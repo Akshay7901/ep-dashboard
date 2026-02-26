@@ -750,7 +750,11 @@ const AuthorProposalDetails: React.FC = () => {
                           isLoading={queriesLoading}
                           viewAs="author"
                           proposalStatus={proposal.status}
-                          onSend={async (text, category) => { await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' }); }}
+                          onSend={async (text, category) => {
+                            await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' });
+                            // Refetch proposal after a short delay to pick up status change to queries_raised
+                            setTimeout(() => { refetch(); refetchContract(); }, 1000);
+                          }}
                           isSending={raiseQuery.isPending}
                           hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
                         />
