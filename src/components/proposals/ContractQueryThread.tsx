@@ -43,10 +43,20 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
 
   const canSend =
     viewAs === "author"
-      ? isContractIssued || isQueriesRaised || hasActiveContract
+      ? (isContractIssued || isQueriesRaised || hasActiveContract)
       : isQueriesRaised;
 
-  const unansweredQueries = queries.filter((q) => q.type === "query");
+  // Check if author has a pending query (no response yet)
+  const responseParentIds = new Set(
+    queries.filter((q) => q.type === "response" && q.parent_query_id).map((q) => q.parent_query_id)
+  );
+  const hasPendingAuthorQuery = queries
+    .filter((q) => q.type === "query")
+    .some((q) => !responseParentIds.has(q.id));
+  const authorCanRaise = viewAs === "author" ? !hasPendingAuthorQuery : true;
+
+  const authorQueries = queries.filter((q) => q.type === "query");
+  const unansweredQueries = authorQueries;
 
   // Build a map of responses keyed by parent_query_id
   const responsesByParent = new Map<number, ContractQuery[]>();
@@ -215,105 +225,120 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       {/* Input area */}
       {canSend && (
         <div className="bg-muted/30 rounded-xl border p-4 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            {viewAs === "author" ? (
-              <MessageCircleQuestion className="h-4 w-4 text-blue-600" />
-            ) : (
-              <Reply className="h-4 w-4 text-emerald-600" />
-            )}
-            <span className="text-sm font-semibold">
-              {viewAs === "author" ? "Raise a Query" : "Respond to Query"}
-            </span>
-          </div>
-
-          {/* Author category selector */}
-          {viewAs === "author" && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Category</label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full bg-background">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {QUERY_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {viewAs === "author" && !authorCanRaise ? (
+            /* Author has a pending query — must wait for DR response */
+            <div className="flex items-center gap-3 p-3 border border-amber-300/50 bg-amber-50 rounded-lg">
+              <Clock className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900">Awaiting response</p>
+                <p className="text-xs text-amber-700/80">
+                  You can raise another query once the editorial team responds to your current one.
+                </p>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-1">
+                {viewAs === "author" ? (
+                  <MessageCircleQuestion className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <Reply className="h-4 w-4 text-emerald-600" />
+                )}
+                <span className="text-sm font-semibold">
+                  {viewAs === "author" ? "Raise a Query" : "Respond to Query"}
+                </span>
+              </div>
 
-          {/* DR query selector */}
-          {viewAs === "reviewer" && unansweredQueries.length > 0 && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Responding to</label>
-              <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
-                <SelectTrigger className="w-full bg-background">
-                  <SelectValue placeholder="Select a query to respond to…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {unansweredQueries.map((q) => {
-                    const preview = (q.text || q.query_text || "").substring(0, 50);
-                    return (
-                      <SelectItem key={q.id} value={String(q.id)}>
-                        <span className="font-medium">#{q.id}</span>
-                        <span className="text-muted-foreground ml-1.5">
-                          {preview}{preview.length >= 50 ? "…" : ""}
-                        </span>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Text input */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
-              {viewAs === "author" ? "Your question" : "Your response"}
-            </label>
-            <Textarea
-              className="bg-background resize-none"
-              placeholder={
-                viewAs === "author"
-                  ? "Describe your question about the contract…"
-                  : "Type your response to the author's query…"
-              }
-              value={text}
-              onChange={(e) => {
-                if (e.target.value.length <= 1000) setText(e.target.value);
-              }}
-              rows={3}
-            />
-          </div>
-
-          {/* Actions row */}
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] text-muted-foreground">
-              {text.length}/1,000
-            </span>
-            <Button
-              size="sm"
-              className={cn(
-                "gap-2 shadow-sm",
-                viewAs === "author"
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+              {/* Author category selector */}
+              {viewAs === "author" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Category</label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUERY_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
-              onClick={handleSubmit}
-              disabled={isSending || !text.trim() || (viewAs === "reviewer" && !selectedQueryId)}
-            >
-              {isSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
+
+              {/* DR query selector */}
+              {viewAs === "reviewer" && unansweredQueries.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Responding to</label>
+                  <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Select a query to respond to…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unansweredQueries.map((q) => {
+                        const preview = (q.text || q.query_text || "").substring(0, 50);
+                        return (
+                          <SelectItem key={q.id} value={String(q.id)}>
+                            <span className="font-medium">#{q.id}</span>
+                            <span className="text-muted-foreground ml-1.5">
+                              {preview}{preview.length >= 50 ? "…" : ""}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
-              {viewAs === "author" ? "Submit Query" : "Send Response"}
-            </Button>
-          </div>
+
+              {/* Text input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  {viewAs === "author" ? "Your question" : "Your response"}
+                </label>
+                <Textarea
+                  className="bg-background resize-none"
+                  placeholder={
+                    viewAs === "author"
+                      ? "Describe your question about the contract…"
+                      : "Type your response to the author's query…"
+                  }
+                  value={text}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 1000) setText(e.target.value);
+                  }}
+                  rows={3}
+                />
+              </div>
+
+              {/* Actions row */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-muted-foreground">
+                  {text.length}/1,000
+                </span>
+                <Button
+                  size="sm"
+                  className={cn(
+                    "gap-2 shadow-sm",
+                    viewAs === "author"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  )}
+                  onClick={handleSubmit}
+                  disabled={isSending || !text.trim() || (viewAs === "reviewer" && !selectedQueryId)}
+                >
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {viewAs === "author" ? "Submit Query" : "Send Response"}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
