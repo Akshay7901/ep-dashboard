@@ -10,13 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink, HelpCircle } from "lucide-react";
-import { useProposal, useProposalComments, useAddComment } from "@/hooks/useProposals";
+import { useProposal } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
-import { commentsApi, proposalApi, contractApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
 import { useContractQueries } from "@/hooks/useContractQueries";
@@ -146,8 +146,6 @@ const AuthorProposalDetails: React.FC = () => {
     setOpenAccordion(undefined);
     if (value === "review") setHasSeenReview(true);
   };
-  const [commentText, setCommentText] = useState("");
-  const [isSendingComment, setIsSendingComment] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
@@ -165,11 +163,9 @@ const AuthorProposalDetails: React.FC = () => {
   const { data: proposal, isLoading, error, refetch } = useProposal(id || "");
   const localId = proposal?.id || "";
   const ticketNum = proposal?.ticket_number || id || "";
-  const { data: comments = [] } = useProposalComments(localId, ticketNum);
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
-  const addComment = useAddComment();
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
@@ -225,20 +221,6 @@ const AuthorProposalDetails: React.FC = () => {
   const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
 
-  const handleSendComment = async () => {
-    if (!commentText.trim()) return;
-    setIsSendingComment(true);
-    try {
-      await commentsApi.add(proposal.ticket_number || id || "", { comment: commentText.trim() });
-      setCommentText("");
-      toast({ title: "Comment sent", description: "Your message has been sent successfully." });
-      refetch();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to send comment", variant: "destructive" });
-    } finally {
-      setIsSendingComment(false);
-    }
-  };
 
   return (
     <DashboardLayout title="Proposal Review">
