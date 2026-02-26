@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2, Users, LogOut } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import TruncatedCell from "@/components/ui/truncated-cell";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -357,19 +357,14 @@ const Proposals: React.FC = () => {
                         onClick={() => handleProposalClick(proposal.id)}
                       >
                         <TableCell className="font-medium text-foreground">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="line-clamp-2 cursor-pointer">{proposal.name}</span>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-sm text-sm">
-                                {proposal.name}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <TruncatedCell text={proposal.name} maxLines={2} />
                         </TableCell>
-                        <TableCell className="text-muted-foreground truncate">{proposal.author_name}</TableCell>
-                        <TableCell className="text-muted-foreground truncate text-sm">{proposal.author_email}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          <TruncatedCell text={proposal.author_name} maxLines={1} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          <TruncatedCell text={proposal.author_email} maxLines={1} />
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
                           {proposal.country || extractCountry(proposal.address) || "—"}
                         </TableCell>
