@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Proposal } from "@/types";
 
 const REVIEW_FIELDS = [
@@ -42,7 +40,10 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   isSubmitting,
   showContractSection = false,
 }) => {
-  const [sendContract, setSendContract] = useState<"yes" | "no">("yes");
+  const recommendation = formData.recommendation;
+  const isReject = recommendation === "reject";
+  // For proceed/minor/major revision, contract is mandatory; for reject, no contract
+  const contractRequired = showContractSection && !isReject;
   const [selectedContract, setSelectedContract] = useState("author");
 
   return (
@@ -100,35 +101,32 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
       {/* Contract option - only for decision reviewer */}
       {showContractSection && (
         <div className="mt-8 space-y-4">
-          <h2 className="text-base font-semibold">Send Contract with Submission?</h2>
-          <RadioGroup
-            value={sendContract}
-            onValueChange={(v) => setSendContract(v as "yes" | "no")}
-            className="flex gap-6"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="send-yes" />
-              <Label htmlFor="send-yes">Yes, send contract</Label>
+          {isReject ? (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
+              <p className="text-sm font-medium text-destructive">
+                No contract will be sent as the recommendation is "Reject".
+              </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="send-no" />
-              <Label htmlFor="send-no">No, submit without contract</Label>
-            </div>
-          </RadioGroup>
-
-          {sendContract === "yes" && (
-            <div>
-              <p className="text-sm font-medium mb-2">Select Contract Type</p>
-              <Select value={selectedContract} onValueChange={setSelectedContract}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a contract" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="author">Author Contract</SelectItem>
-                  <SelectItem value="editor">Editor Contract</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          ) : (
+            <>
+              <div className="bg-primary/10 border border-primary/20 rounded-md p-4">
+                <p className="text-sm font-medium text-primary">
+                  A contract will be sent with this submission.
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-2">Select Contract Type</p>
+                <Select value={selectedContract} onValueChange={setSelectedContract}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a contract" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="author">Author Contract</SelectItem>
+                    <SelectItem value="editor">Editor Contract</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -141,8 +139,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
-            const shouldSend = showContractSection && sendContract === "yes";
-            onConfirmSubmit(shouldSend, shouldSend ? selectedContract : undefined);
+            onConfirmSubmit(contractRequired, contractRequired ? selectedContract : undefined);
           }}
           disabled={isSubmitting}
         >
