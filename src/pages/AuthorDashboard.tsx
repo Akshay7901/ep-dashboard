@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import TruncatedCell from "@/components/ui/truncated-cell";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, LogOut } from "lucide-react";
 import { format } from "date-fns";
@@ -193,7 +194,7 @@ const AuthorDashboard: React.FC = () => {
                           onClick={() => navigate(`/author/proposals/${proposal.id}`)}
                         >
                           <TableCell className="font-medium text-foreground max-w-md">
-                            <span className="line-clamp-2">{proposal.name}</span>
+                            <TruncatedCell text={proposal.name} maxLines={2} />
                           </TableCell>
                           <TableCell className="text-muted-foreground whitespace-nowrap">
                             {proposal.created_at
