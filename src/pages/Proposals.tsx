@@ -314,37 +314,37 @@ const Proposals: React.FC = () => {
           {!isLoading && !error && displayedProposals.length > 0 && (
             <>
               <Card className="overflow-hidden">
-                <Table>
+                <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[30%]">
                         Title
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[14%]">
                         Author
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[18%]">
                         Email
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[8%]">
                         Country
                       </TableHead>
                       {isReviewer1 && (
-                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                          Date Submitted
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide whitespace-nowrap w-[10%]">
+                          Submitted
                         </TableHead>
                       )}
                       {isReviewer1 && (
-                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                          Assigned On
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide whitespace-nowrap w-[10%]">
+                          Assigned
                         </TableHead>
                       )}
                       {isReviewer2 && (
-                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                          Assigned On
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide whitespace-nowrap w-[10%]">
+                          Assigned
                         </TableHead>
                       )}
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide text-right">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide text-right w-[10%]">
                         Status
                       </TableHead>
                     </TableRow>
@@ -356,7 +356,7 @@ const Proposals: React.FC = () => {
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => handleProposalClick(proposal.id)}
                       >
-                        <TableCell className="font-medium text-foreground max-w-xs">
+                        <TableCell className="font-medium text-foreground">
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -368,27 +368,27 @@ const Proposals: React.FC = () => {
                             </Tooltip>
                           </TooltipProvider>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
-                        <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
+                        <TableCell className="text-muted-foreground truncate">{proposal.author_name}</TableCell>
+                        <TableCell className="text-muted-foreground truncate text-sm">{proposal.author_email}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {proposal.country || extractCountry(proposal.address) || "—"}
                         </TableCell>
                         {isReviewer1 && (
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
                             {proposal.created_at
                               ? format(new Date(proposal.created_at), "MMM d, yyyy")
                               : "—"}
                           </TableCell>
                         )}
                         {isReviewer1 && (
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
                             {proposal.assigned_at
                               ? format(new Date(proposal.assigned_at), "MMM d, yyyy")
                               : "—"}
                           </TableCell>
                         )}
                         {isReviewer2 && (
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
                             {proposal.assigned_at
                               ? format(new Date(proposal.assigned_at), "MMM d, yyyy")
                               : "—"}
