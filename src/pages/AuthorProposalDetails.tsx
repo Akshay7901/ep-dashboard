@@ -588,6 +588,14 @@ const AuthorProposalDetails: React.FC = () => {
                         const isDeclined = contractStatus === 'declined';
                         const isVoided = contractStatus === 'voided';
                         const proposalIsQueriesRaised = statusIs(proposal.status, 'queries_raised');
+                        // Also block signing if there are local pending (unanswered) queries
+                        const responseParentIds = new Set(
+                          contractQueries.filter((q) => q.type === 'response' && q.parent_query_id).map((q) => q.parent_query_id)
+                        );
+                        const hasPendingQuery = contractQueries
+                          .filter((q) => q.type === 'query')
+                          .some((q) => !responseParentIds.has(q.id));
+                        const signingBlocked = proposalIsQueriesRaised || hasPendingQuery;
 
                         return (
                           <div className="space-y-5">
@@ -646,7 +654,7 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 )}
 
-                                {!signingLoading && !signingError && !proposalIsQueriesRaised && (
+                                {!signingLoading && !signingError && !signingBlocked && (
                                   <div className="max-w-sm mx-auto text-center space-y-3">
                                     <Button
                                       className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
@@ -667,7 +675,7 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 )}
 
-                                {proposalIsQueriesRaised && !signingLoading && (
+                                {signingBlocked && !signingLoading && (
                                   <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
                                     <p className="text-sm font-medium text-[#c4940a]">Signing is disabled while your query is being reviewed</p>
                                     <p className="text-xs text-muted-foreground mt-1">The signing button will be re-enabled once the editorial team responds.</p>
