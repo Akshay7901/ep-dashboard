@@ -328,9 +328,16 @@ const Proposals: React.FC = () => {
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                         Country
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
-                        {isReviewer1 ? "Date Submitted" : "Submitted"}
-                      </TableHead>
+                      {isReviewer1 && (
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                          Date Submitted
+                        </TableHead>
+                      )}
+                      {isReviewer1 && (
+                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
+                          Assigned On
+                        </TableHead>
+                      )}
                       {isReviewer2 && (
                         <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide">
                           Assigned On
@@ -356,11 +363,20 @@ const Proposals: React.FC = () => {
                         <TableCell className="text-muted-foreground">
                           {proposal.country || extractCountry(proposal.address) || "—"}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {proposal.created_at
-                            ? format(new Date(proposal.created_at), "MMM d, yyyy")
-                            : "—"}
-                        </TableCell>
+                        {isReviewer1 && (
+                          <TableCell className="text-muted-foreground">
+                            {proposal.created_at
+                              ? format(new Date(proposal.created_at), "MMM d, yyyy")
+                              : "—"}
+                          </TableCell>
+                        )}
+                        {isReviewer1 && (
+                          <TableCell className="text-muted-foreground">
+                            {proposal.assigned_at
+                              ? format(new Date(proposal.assigned_at), "MMM d, yyyy")
+                              : "—"}
+                          </TableCell>
+                        )}
                         {isReviewer2 && (
                           <TableCell className="text-muted-foreground">
                             {proposal.assigned_at
