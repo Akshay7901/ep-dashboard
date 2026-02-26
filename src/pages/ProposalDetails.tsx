@@ -802,7 +802,7 @@ const ProposalDetails: React.FC = () => {
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
                         <p className="text-base font-semibold">
-                          Contract Queries
+                          Queries
                           {contractQueries.length > 0 && (
                             <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
                           )}

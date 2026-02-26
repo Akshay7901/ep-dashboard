@@ -746,7 +746,7 @@ const AuthorProposalDetails: React.FC = () => {
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                           <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                          Contract Queries
+                          Queries
                           {contractQueries.length > 0 && (
                             <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
                           )}
