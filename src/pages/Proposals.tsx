@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2, Users, LogOut } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -356,7 +357,16 @@ const Proposals: React.FC = () => {
                         onClick={() => handleProposalClick(proposal.id)}
                       >
                         <TableCell className="font-medium text-foreground max-w-xs">
-                          <span>{proposal.name}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="line-clamp-2 cursor-pointer">{proposal.name}</span>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-sm text-sm">
+                                {proposal.name}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
