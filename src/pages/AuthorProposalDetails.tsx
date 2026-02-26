@@ -296,13 +296,16 @@ const AuthorProposalDetails: React.FC = () => {
               const dateStr = step.completed_at || step.started_at;
               return (
                 <div key={step.stage_name} className="flex flex-col items-center text-center gap-1.5">
-                  {step.is_completed ?
-                  <CheckCircle2 className={cn("h-6 w-6", step.is_current ? "text-[#2563eb]" : "text-[#3d5a47]")} /> :
-                  step.is_current ?
-                  <CheckCircle2 className="h-6 w-6 text-[#2563eb]" /> :
-
-                  <Circle className="h-6 w-6 text-muted-foreground/40" />
-                  }
+                  {step.is_completed ? (
+                    <CheckCircle2 className="h-6 w-6 text-[#3d5a47]" />
+                  ) : step.is_current ? (
+                    <div className="relative flex items-center justify-center h-6 w-6">
+                      <Circle className="h-6 w-6 text-[#2563eb]" />
+                      <div className="absolute h-2.5 w-2.5 rounded-full bg-[#2563eb] animate-pulse" />
+                    </div>
+                  ) : (
+                    <Circle className="h-6 w-6 text-muted-foreground/40" />
+                  )}
                   <span
                     className={cn(
                       "text-[10px] leading-tight",
