@@ -356,7 +356,7 @@ const Proposals: React.FC = () => {
                         onClick={() => handleProposalClick(proposal.id)}
                       >
                         <TableCell className="font-medium text-foreground max-w-xs">
-                          <span className="line-clamp-2">{proposal.name}</span>
+                          <span>{proposal.name}</span>
                         </TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_name}</TableCell>
                         <TableCell className="text-muted-foreground">{proposal.author_email}</TableCell>
