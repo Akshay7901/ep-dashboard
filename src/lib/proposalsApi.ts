@@ -9,16 +9,6 @@ export interface PeerReviewer {
   assigned_proposals_count?: number;
 }
 
-export interface ProposalComment {
-  id: string;
-  ticket_number: string;
-  comment: string;
-  author: string;
-  author_email: string;
-  created_at: string;
-  role?: string;
-}
-
 export interface AssignmentRequest {
   reviewer_email: string;
 }
@@ -41,19 +31,6 @@ export const peerReviewersApi = {
 
   delete: async (reviewerId: string): Promise<void> => {
     await api.delete(`/api/proposals/users/peer-reviewers/${encodeURIComponent(reviewerId)}`);
-  },
-};
-
-// Comments API
-export const commentsApi = {
-  list: async (ticketNumber: string): Promise<ProposalComment[]> => {
-    const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/comments`);
-    return data?.comments || data || [];
-  },
-
-  add: async (ticketNumber: string, comment: { comment: string }): Promise<ProposalComment> => {
-    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/comments`, { comment_text: comment.comment });
-    return data;
   },
 };
 
