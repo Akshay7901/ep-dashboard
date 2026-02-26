@@ -56,7 +56,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   const authorCanRaise = viewAs === "author" ? !hasPendingAuthorQuery : true;
 
   const authorQueries = queries.filter((q) => q.type === "query");
-  const unansweredQueries = authorQueries;
+  const unansweredQueries = authorQueries.filter((q) => !responseParentIds.has(q.id));
 
   // Build a map of responses keyed by parent_query_id
   const responsesByParent = new Map<number, ContractQuery[]>();
@@ -67,6 +67,13 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       responsesByParent.set(q.parent_query_id, existing);
     }
   });
+
+  // Auto-select the single unanswered query for DR (since only one can exist at a time)
+  useEffect(() => {
+    if (viewAs === "reviewer" && unansweredQueries.length === 1) {
+      setSelectedQueryId(String(unansweredQueries[0].id));
+    }
+  }, [viewAs, unansweredQueries]);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -268,28 +275,16 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
                 </div>
               )}
 
-              {/* DR query selector */}
+              {/* DR: show which query is being responded to (auto-selected) */}
               {viewAs === "reviewer" && unansweredQueries.length > 0 && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Responding to</label>
-                  <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder="Select a query to respond to…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unansweredQueries.map((q) => {
-                        const preview = (q.text || q.query_text || "").substring(0, 50);
-                        return (
-                          <SelectItem key={q.id} value={String(q.id)}>
-                            <span className="font-medium">#{q.id}</span>
-                            <span className="text-muted-foreground ml-1.5">
-                              {preview}{preview.length >= 50 ? "…" : ""}
-                            </span>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background rounded-md px-3 py-2 border">
+                  <Reply className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    Responding to: <span className="font-medium text-foreground">
+                      {(unansweredQueries[0].text || unansweredQueries[0].query_text || "").substring(0, 80)}
+                      {(unansweredQueries[0].text || unansweredQueries[0].query_text || "").length > 80 ? "…" : ""}
+                    </span>
+                  </span>
                 </div>
               )}
 
