@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { GitCompareArrows, Equal, PenLine, Plus, Minus } from "lucide-react";
+import { GitCompareArrows, Equal, PenLine, Plus, Minus, Save } from "lucide-react";
 
 interface DiffCheckerDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface DiffCheckerDialogProps {
   decisionReviewData: Record<string, any>;
   peerReviewerName?: string;
   onDecisionFieldChange?: (field: string, value: string) => void;
+  onSaveDraft?: () => Promise<void>;
 }
 
 const REVIEW_FIELDS = [
@@ -149,10 +151,12 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
   decisionReviewData,
   peerReviewerName = "Peer Reviewer",
   onDecisionFieldChange,
+  onSaveDraft,
 }) => {
   // Local editable state for DR side, initialized from decisionReviewData
   const [localDrData, setLocalDrData] = useState<Record<string, string>>({});
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Sync local state when dialog opens or decisionReviewData changes
   useEffect(() => {
@@ -393,6 +397,28 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Footer with Save Draft */}
+        <Separator />
+        <div className="px-6 pb-5 pt-3 flex justify-end">
+          <Button
+            variant="outline"
+            disabled={isSavingDraft}
+            onClick={async () => {
+              if (!onSaveDraft) return;
+              setIsSavingDraft(true);
+              try {
+                await onSaveDraft();
+              } finally {
+                setIsSavingDraft(false);
+              }
+            }}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSavingDraft ? "Saving…" : "Save Draft"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

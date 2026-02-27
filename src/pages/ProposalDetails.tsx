@@ -1356,6 +1356,9 @@ const ProposalDetails: React.FC = () => {
         onDecisionFieldChange={(field, value) => {
           reviewFormRef.current?.setFieldValue(field, value);
         }}
+        onSaveDraft={async () => {
+          await reviewFormRef.current?.saveDraft();
+        }}
       />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
