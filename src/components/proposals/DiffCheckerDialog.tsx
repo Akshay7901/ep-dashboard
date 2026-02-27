@@ -33,6 +33,13 @@ const REVIEW_FIELDS = [
   { label: "Red Flags", key: "redFlags" },
 ];
 
+const RECOMMENDATION_OPTIONS = [
+  { value: "proceed", label: "Proceed", dotColor: "bg-[#3d5a47]" },
+  { value: "minor_revision", label: "Minor Revision", dotColor: "bg-[#c4940a]" },
+  { value: "major_revision", label: "Major Revision", dotColor: "bg-[#9b2c2c]" },
+  { value: "reject", label: "Reject", dotColor: "bg-foreground" },
+];
+
 const getRecommendationStyle = (rec: string) => {
   switch (rec) {
     case "proceed":
@@ -406,14 +413,24 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
                     <span className="text-muted-foreground/50 italic text-xs">— none —</span>
                   )}
                 </div>
-                <div className="p-3">
-                  {localDrData.recommendation ? (
-                    <Badge className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(localDrData.recommendation)}`}>
-                      {formatRecommendation(localDrData.recommendation)}
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground/50 italic text-xs">— none yet —</span>
-                  )}
+                <div className="p-3 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {RECOMMENDATION_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleDrFieldChange("recommendation", opt.value)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-all cursor-pointer ${
+                          localDrData.recommendation === opt.value
+                            ? getRecommendationStyle(opt.value) + " border-transparent ring-2 ring-offset-1 ring-blue-400"
+                            : "bg-background border-muted text-muted-foreground hover:border-foreground/30"
+                        }`}
+                      >
+                        <div className={`h-2 w-2 rounded-full ${opt.dotColor} shrink-0`} />
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
