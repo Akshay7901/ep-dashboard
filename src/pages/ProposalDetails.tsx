@@ -26,7 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +36,7 @@ import { usePeerReviewers } from "@/hooks/usePeerReviewers";
 import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
+import DiffCheckerDialog from "@/components/proposals/DiffCheckerDialog";
 import { useContract } from "@/hooks/useContract";
 
 /* ---------------- Helpers ---------------- */
@@ -153,6 +154,7 @@ const ProposalDetails: React.FC = () => {
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
   const [drActiveTab, setDrActiveTab] = useState<string>((false) ? "feedback" : "book");
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
+  const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
 
   /* ---------------- Data ---------------- */
 
@@ -1257,7 +1259,15 @@ const ProposalDetails: React.FC = () => {
 
               {!startedFresh ? (
                 <>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
+                      onClick={() => setDiffCheckerOpen(true)}
+                    >
+                      <GitCompareArrows className="h-4 w-4 mr-2" />
+                      Diff Checker
+                    </Button>
                     <Button
                       variant="outline"
                       className="text-[#c4940a] border-[#c4940a] hover:bg-[#c4940a]/10"
@@ -1364,6 +1374,14 @@ const ProposalDetails: React.FC = () => {
         toast({ variant: "destructive", title: "Failed to Decline", description: error?.message || "An error occurred while declining the proposal." });
       }
     }} isLoading={isBusy} />
+
+      <DiffCheckerDialog
+        open={diffCheckerOpen}
+        onOpenChange={setDiffCheckerOpen}
+        peerReviewData={reviewFormData || {}}
+        decisionReviewData={reviewFormRef.current?.formData || {}}
+        peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
+      />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
         <AlertDialogContent>
