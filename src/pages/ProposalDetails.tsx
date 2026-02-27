@@ -155,6 +155,7 @@ const ProposalDetails: React.FC = () => {
   const [drActiveTab, setDrActiveTab] = useState<string>((false) ? "feedback" : "book");
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
+  const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
 
   /* ---------------- Data ---------------- */
 
@@ -1261,7 +1262,10 @@ const ProposalDetails: React.FC = () => {
                 <Button
                   variant="outline"
                   className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
-                  onClick={() => setDiffCheckerOpen(true)}
+                  onClick={() => {
+                    setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
+                    setDiffCheckerOpen(true);
+                  }}
                 >
                   <GitCompareArrows className="h-4 w-4 mr-2" />
                   Diff Checker
@@ -1347,7 +1351,7 @@ const ProposalDetails: React.FC = () => {
         open={diffCheckerOpen}
         onOpenChange={setDiffCheckerOpen}
         peerReviewData={reviewFormData || {}}
-        decisionReviewData={reviewFormRef.current?.formData || {}}
+        decisionReviewData={diffCheckerDrData}
         peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
       />
 
