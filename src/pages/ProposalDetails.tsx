@@ -1353,6 +1353,9 @@ const ProposalDetails: React.FC = () => {
         peerReviewData={reviewFormData || {}}
         decisionReviewData={diffCheckerDrData}
         peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
+        onDecisionFieldChange={(field, value) => {
+          reviewFormRef.current?.setFieldValue(field, value);
+        }}
       />
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>

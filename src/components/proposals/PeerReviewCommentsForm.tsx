@@ -30,6 +30,7 @@ export interface PeerReviewCommentsFormHandle {
   canSubmit: boolean;
   progress: number;
   formData: Record<string, string>;
+  setFieldValue: (field: string, value: string) => void;
 }
 
 const REVIEW_FIELDS = [
@@ -270,7 +271,6 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       () => ({
         saveDraft: () => handleSave(false),
         submitReview: async () => {
-          // Use the same flow as the bottom button: open summary screen
           if (onSubmitReview) {
             onSubmitReview({ ...formData });
           }
@@ -280,8 +280,11 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         canSubmit: true,
         progress,
         formData,
+        setFieldValue: (field: string, value: string) => {
+          handleFieldChange(field, value);
+        },
       }),
-      [isSaving, formData, progress, onSubmitReview],
+      [isSaving, formData, progress, onSubmitReview, handleFieldChange],
     );
 
     if (isSubmitted) {
