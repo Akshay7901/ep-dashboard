@@ -20,8 +20,6 @@ interface PeerReviewCommentsFormProps {
   hideHeader?: boolean;
   /** When true, show pre-loaded text in red/destructive color */
   preloadedStyle?: boolean;
-  /** When true, fields are read-only (edits only via Diff Checker) */
-  readOnly?: boolean;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -125,7 +123,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle, readOnly }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle }, ref) => {
     const { saveDraft, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
@@ -324,8 +322,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
               placeholder={field.placeholder}
               rows={3}
-              readOnly={readOnly}
-              className={`resize-none bg-background ${readOnly ? "cursor-default opacity-80" : ""} ${preloadedStyle && formData[field.key]?.trim() ? "text-destructive" : ""}`}
+              className={`resize-none bg-background ${preloadedStyle && formData[field.key]?.trim() ? "text-destructive" : ""}`}
             />
           </div>
         ))}
@@ -339,7 +336,6 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
             value={formData.recommendation}
             onValueChange={(value) => handleFieldChange("recommendation", value)}
             className="space-y-3"
-            disabled={readOnly}
           >
             {RECOMMENDATION_OPTIONS.map((option) => (
               <label key={option.value} className="flex items-start gap-3 cursor-pointer">
