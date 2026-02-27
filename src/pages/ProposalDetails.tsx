@@ -1263,6 +1263,8 @@ const ProposalDetails: React.FC = () => {
                   variant="outline"
                   className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
                   onClick={() => {
+                    // Snapshot saved form data when opening diff checker
+                    setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
                     setDiffCheckerOpen(true);
                   }}
                 >
@@ -1350,7 +1352,7 @@ const ProposalDetails: React.FC = () => {
         open={diffCheckerOpen}
         onOpenChange={setDiffCheckerOpen}
         peerReviewData={reviewFormData || {}}
-        decisionReviewData={reviewFormRef.current?.formData || {}}
+        decisionReviewData={diffCheckerDrData}
         peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
         onDecisionFieldChange={(field, value) => {
           reviewFormRef.current?.setFieldValue(field, value);
@@ -1363,6 +1365,8 @@ const ProposalDetails: React.FC = () => {
           // Wait for React state to flush before saving
           await new Promise(resolve => setTimeout(resolve, 50));
           await reviewFormRef.current?.saveDraft();
+          // Update snapshot so diff checker reflects saved state
+          setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
         }}
       />
 
