@@ -203,11 +203,29 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
       <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col p-0">
         {/* Header */}
         <div className="px-6 pt-6 pb-0 space-y-4">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-center justify-between gap-4">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <GitCompareArrows className="h-5 w-5" />
               Review Comparison
             </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isSavingDraft}
+              onClick={async () => {
+                if (!onSaveDraft) return;
+                setIsSavingDraft(true);
+                try {
+                  await onSaveDraft();
+                } finally {
+                  setIsSavingDraft(false);
+                }
+              }}
+              className="gap-2 mr-6"
+            >
+              <Save className="h-4 w-4" />
+              {isSavingDraft ? "Saving…" : "Save Draft"}
+            </Button>
           </DialogHeader>
 
           {/* Stats bar */}
@@ -399,27 +417,8 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
           </div>
         </div>
 
-        {/* Footer with Save Draft */}
-        <Separator />
-        <div className="px-6 pb-5 pt-3 flex justify-end">
-          <Button
-            variant="outline"
-            disabled={isSavingDraft}
-            onClick={async () => {
-              if (!onSaveDraft) return;
-              setIsSavingDraft(true);
-              try {
-                await onSaveDraft();
-              } finally {
-                setIsSavingDraft(false);
-              }
-            }}
-            className="gap-2"
-          >
-            <Save className="h-4 w-4" />
-            {isSavingDraft ? "Saving…" : "Save Draft"}
-          </Button>
-        </div>
+
+
       </DialogContent>
     </Dialog>
   );
