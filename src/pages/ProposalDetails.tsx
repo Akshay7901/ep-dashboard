@@ -1357,10 +1357,12 @@ const ProposalDetails: React.FC = () => {
           reviewFormRef.current?.setFieldValue(field, value);
         }}
         onSaveDraft={async (localData) => {
-          // Push all local edits to form, then save
+          // Push all local edits to form first
           Object.entries(localData).forEach(([field, value]) => {
             reviewFormRef.current?.setFieldValue(field, value);
           });
+          // Wait for React state to flush before saving
+          await new Promise(resolve => setTimeout(resolve, 50));
           await reviewFormRef.current?.saveDraft();
         }}
       />
