@@ -1263,7 +1263,6 @@ const ProposalDetails: React.FC = () => {
                   variant="outline"
                   className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
                   onClick={() => {
-                    setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
                     setDiffCheckerOpen(true);
                   }}
                 >
@@ -1351,7 +1350,7 @@ const ProposalDetails: React.FC = () => {
         open={diffCheckerOpen}
         onOpenChange={setDiffCheckerOpen}
         peerReviewData={reviewFormData || {}}
-        decisionReviewData={diffCheckerDrData}
+        decisionReviewData={reviewFormRef.current?.formData || {}}
         peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
         onDecisionFieldChange={(field, value) => {
           reviewFormRef.current?.setFieldValue(field, value);
