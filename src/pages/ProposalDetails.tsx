@@ -1257,71 +1257,39 @@ const ProposalDetails: React.FC = () => {
                 </div>
               </div>
 
-              {!startedFresh ? (
-                <>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
-                      onClick={() => setDiffCheckerOpen(true)}
-                    >
-                      <GitCompareArrows className="h-4 w-4 mr-2" />
-                      Diff Checker
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-[#c4940a] border-[#c4940a] hover:bg-[#c4940a]/10"
-                      onClick={() => setStartedFresh(true)}
-                    >
-                      Start Fresh
-                    </Button>
-                  </div>
-                  <div className="border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg p-4 flex gap-3">
-                    <div className="shrink-0 mt-0.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#c4940a]" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">{reviewMeta?.reviewer_name || "Peer Reviewer"}'s Comments Pre-loaded</p>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        The form below contains {reviewMeta?.reviewer_name || "Peer Reviewer"}'s comments in <span className="text-destructive font-medium">red text</span>.
-                        You can edit any field directly, or click "Start Fresh" above to clear all fields.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="border border-muted bg-muted/30 rounded-lg p-4 flex gap-3">
-                  <div className="shrink-0 mt-0.5">
-                    <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{reviewMeta?.reviewer_name || "Peer Reviewer"}'s Comments Cleared</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      To reload {reviewMeta?.reviewer_name || "Peer Reviewer"}'s comments press here{" "}
-                      <button
-                        className="text-primary underline font-medium hover:opacity-80"
-                        onClick={async () => {
-                          await refetchReview();
-                          setStartedFresh(false);
-                        }}
-                      >
-                        reload
-                      </button>.
-                    </p>
-                  </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
+                  onClick={() => setDiffCheckerOpen(true)}
+                >
+                  <GitCompareArrows className="h-4 w-4 mr-2" />
+                  Diff Checker
+                </Button>
+              </div>
+              <div className="border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg p-4 flex gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#c4940a]" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
                 </div>
-              )}
+                <div>
+                  <p className="font-semibold text-sm">{reviewMeta?.reviewer_name || "Peer Reviewer"}'s Comments Pre-loaded</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    The form below contains {reviewMeta?.reviewer_name || "Peer Reviewer"}'s comments in <span className="text-destructive font-medium">red text</span>.
+                    You can edit any field directly.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <PeerReviewCommentsForm
               ref={reviewFormRef}
               proposal={proposal}
-              existingAssessment={startedFresh ? {} : (decisionReviewerDraft || reviewFormData || {})}
+              existingAssessment={decisionReviewerDraft || reviewFormData || {}}
               forceEditable
               hideHeader
-              preloadedStyle={!startedFresh && !decisionReviewerDraft}
+              preloadedStyle={!decisionReviewerDraft}
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
               onDraftSaved={() => {}}
