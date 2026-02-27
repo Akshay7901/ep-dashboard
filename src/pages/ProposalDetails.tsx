@@ -1356,7 +1356,11 @@ const ProposalDetails: React.FC = () => {
         onDecisionFieldChange={(field, value) => {
           reviewFormRef.current?.setFieldValue(field, value);
         }}
-        onSaveDraft={async () => {
+        onSaveDraft={async (localData) => {
+          // Push all local edits to form, then save
+          Object.entries(localData).forEach(([field, value]) => {
+            reviewFormRef.current?.setFieldValue(field, value);
+          });
           await reviewFormRef.current?.saveDraft();
         }}
       />

@@ -18,7 +18,7 @@ interface DiffCheckerDialogProps {
   decisionReviewData: Record<string, any>;
   peerReviewerName?: string;
   onDecisionFieldChange?: (field: string, value: string) => void;
-  onSaveDraft?: () => Promise<void>;
+  onSaveDraft?: (localData: Record<string, string>) => Promise<void>;
 }
 
 const REVIEW_FIELDS = [
@@ -168,8 +168,7 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
 
   const handleDrFieldChange = useCallback((key: string, value: string) => {
     setLocalDrData(prev => ({ ...prev, [key]: value }));
-    onDecisionFieldChange?.(key, value);
-  }, [onDecisionFieldChange]);
+  }, []);
 
   const diffs = useMemo(() => {
     const result: Record<string, { left: DiffSegment[]; right: DiffSegment[] }> = {};
@@ -216,7 +215,11 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
                 if (!onSaveDraft) return;
                 setIsSavingDraft(true);
                 try {
-                  await onSaveDraft();
+                  // Push all local edits to the main form first
+                  Object.entries(localDrData).forEach(([field, value]) => {
+                    onDecisionFieldChange?.(field, value);
+                  });
+                  await onSaveDraft(localDrData);
                 } finally {
                   setIsSavingDraft(false);
                 }
