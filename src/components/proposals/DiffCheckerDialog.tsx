@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GitCompareArrows } from "lucide-react";
+import { GitCompareArrows, Equal, PenLine, Plus, Minus } from "lucide-react";
 
 interface DiffCheckerDialogProps {
   open: boolean;
@@ -52,19 +52,15 @@ const formatRecommendation = (rec: string) =>
 type DiffSegment = { text: string; type: "same" | "added" | "removed" };
 
 function tokenize(str: string): string[] {
-  // Split into words while preserving whitespace/newlines as separate tokens
   return str.split(/(\s+)/).filter(Boolean);
 }
 
 function computeWordDiff(oldStr: string, newStr: string): { left: DiffSegment[]; right: DiffSegment[] } {
   const oldTokens = tokenize(oldStr);
   const newTokens = tokenize(newStr);
-
-  // LCS table
   const m = oldTokens.length;
   const n = newTokens.length;
 
-  // For very long texts, fall back to simple display
   if (m * n > 500000) {
     return {
       left: [{ text: oldStr, type: oldStr === newStr ? "same" : "removed" }],
@@ -83,11 +79,7 @@ function computeWordDiff(oldStr: string, newStr: string): { left: DiffSegment[];
     }
   }
 
-  // Backtrack to get diff
-  const leftSegments: DiffSegment[] = [];
-  const rightSegments: DiffSegment[] = [];
   let i = m, j = n;
-
   const leftStack: DiffSegment[] = [];
   const rightStack: DiffSegment[] = [];
 
@@ -108,7 +100,6 @@ function computeWordDiff(oldStr: string, newStr: string): { left: DiffSegment[];
   leftStack.reverse();
   rightStack.reverse();
 
-  // Merge consecutive segments of the same type
   const merge = (segments: DiffSegment[]): DiffSegment[] => {
     const merged: DiffSegment[] = [];
     for (const seg of segments) {
@@ -130,14 +121,14 @@ const DiffText: React.FC<{ segments: DiffSegment[]; side: "left" | "right" }> = 
       if (seg.type === "same") return <span key={i}>{seg.text}</span>;
       if (side === "left" && seg.type === "removed") {
         return (
-          <span key={i} className="bg-red-500/20 text-red-700 dark:text-red-400 rounded-sm px-0.5">
+          <span key={i} className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 line-through decoration-red-400/60 rounded-sm px-0.5">
             {seg.text}
           </span>
         );
       }
       if (side === "right" && seg.type === "added") {
         return (
-          <span key={i} className="bg-green-500/20 text-green-700 dark:text-green-400 rounded-sm px-0.5">
+          <span key={i} className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-sm px-0.5 font-medium">
             {seg.text}
           </span>
         );
@@ -156,7 +147,6 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
   decisionReviewData,
   peerReviewerName = "Peer Reviewer",
 }) => {
-  // Pre-compute diffs for all fields
   const diffs = useMemo(() => {
     const result: Record<string, { left: DiffSegment[]; right: DiffSegment[] }> = {};
     for (const { key } of REVIEW_FIELDS) {
@@ -169,49 +159,83 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
     return result;
   }, [peerReviewData, decisionReviewData]);
 
+  // Summary stats
+  const stats = useMemo(() => {
+    let modified = 0, added = 0, removed = 0, unchanged = 0;
+    for (const { key } of REVIEW_FIELDS) {
+      const peerVal = (peerReviewData[key] || "").trim();
+      const drVal = (decisionReviewData[key] || "").trim();
+      if (!peerVal && !drVal) continue;
+      if (peerVal === drVal) unchanged++;
+      else if (!peerVal && drVal) added++;
+      else if (peerVal && !drVal) removed++;
+      else modified++;
+    }
+    return { modified, added, removed, unchanged };
+  }, [peerReviewData, decisionReviewData]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <GitCompareArrows className="h-5 w-5" />
-            Review Comparison
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-0 space-y-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <GitCompareArrows className="h-5 w-5" />
+              Review Comparison
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Column headers */}
-        <div className="grid grid-cols-2 gap-6 px-1">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-[#c4940a]" />
-            <span className="text-sm font-semibold">
-              {peerReviewerName}'s Review
-            </span>
+          {/* Stats bar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {stats.modified > 0 && (
+              <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <PenLine className="h-3 w-3" />
+                {stats.modified} modified
+              </div>
+            )}
+            {stats.added > 0 && (
+              <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <Plus className="h-3 w-3" />
+                {stats.added} added
+              </div>
+            )}
+            {stats.removed > 0 && (
+              <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                <Minus className="h-3 w-3" />
+                {stats.removed} removed
+              </div>
+            )}
+            {stats.unchanged > 0 && (
+              <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground border">
+                <Equal className="h-3 w-3" />
+                {stats.unchanged} unchanged
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-[#2563eb]" />
-            <span className="text-sm font-semibold">
-              Your Review (Decision Reviewer)
-            </span>
-          </div>
-        </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground px-1">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-sm bg-red-500/20 border border-red-500/30" />
-            Removed
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-sm bg-green-500/20 border border-green-500/30" />
-            Added
-          </span>
+          {/* Column headers */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2.5">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#c4940a] shrink-0" />
+              <span className="text-sm font-semibold text-amber-900 dark:text-amber-200 truncate">
+                {peerReviewerName}'s Review
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2.5">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#2563eb] shrink-0" />
+              <span className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                Your Review (Decision Reviewer)
+              </span>
+            </div>
+          </div>
         </div>
 
         <Separator />
 
         {/* Scrollable comparison */}
-        <div className="overflow-y-auto flex-1 pr-1">
-          <div className="space-y-6">
+        <div className="overflow-y-auto flex-1 px-6 pb-6">
+          <div className="space-y-5 pt-2">
             {REVIEW_FIELDS.map(({ label, key }) => {
               const peerVal = (peerReviewData[key] || "").trim();
               const drVal = (decisionReviewData[key] || "").trim();
@@ -221,62 +245,70 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
 
               if (bothEmpty) return null;
 
+              const isModified = isChanged && peerVal && drVal;
+              const isAdded = !peerVal && drVal;
+              const isRemoved = peerVal && !drVal;
+
               return (
-                <div key={key} className="space-y-2">
-                  <div className="flex items-center gap-2">
+                <div
+                  key={key}
+                  className={`rounded-lg border transition-colors ${
+                    isModified
+                      ? "border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10"
+                      : isAdded
+                      ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10"
+                      : isRemoved
+                      ? "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/10"
+                      : "border-muted bg-muted/10"
+                  }`}
+                >
+                  {/* Field header */}
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-inherit">
                     <p className="text-sm font-semibold">{label}</p>
-                    {isChanged && drVal && peerVal && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-[#2563eb] text-[#2563eb]"
-                      >
+                    {isModified && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50">
+                        <PenLine className="h-2.5 w-2.5 mr-0.5" />
                         Modified
                       </Badge>
                     )}
-                    {!peerVal && drVal && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-[#3d5a47] text-[#3d5a47]"
-                      >
+                    {isAdded && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50">
+                        <Plus className="h-2.5 w-2.5 mr-0.5" />
                         Added
                       </Badge>
                     )}
-                    {peerVal && !drVal && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-destructive text-destructive"
-                      >
+                    {isRemoved && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50">
+                        <Minus className="h-2.5 w-2.5 mr-0.5" />
                         Removed
                       </Badge>
                     )}
+                    {!isChanged && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
+                        <Equal className="h-2.5 w-2.5 mr-0.5" />
+                        Unchanged
+                      </Badge>
+                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div
-                      className={`text-sm whitespace-pre-line rounded-md border p-3 min-h-[48px] ${
-                        peerVal
-                          ? "bg-[#c4940a]/5 border-[#c4940a]/20"
-                          : "bg-muted/30 border-muted text-muted-foreground italic"
-                      }`}
-                    >
+
+                  {/* Content columns */}
+                  <div className="grid grid-cols-2 gap-0 divide-x divide-inherit">
+                    <div className="p-3 text-sm whitespace-pre-line leading-relaxed min-h-[44px]">
                       {diff ? (
                         <DiffText segments={diff.left} side="left" />
+                      ) : peerVal ? (
+                        <span className={isRemoved ? "text-red-600 dark:text-red-400 line-through decoration-red-400/40" : ""}>{peerVal}</span>
                       ) : (
-                        peerVal || "No comment"
+                        <span className="text-muted-foreground/50 italic text-xs">— empty —</span>
                       )}
                     </div>
-                    <div
-                      className={`text-sm whitespace-pre-line rounded-md border p-3 min-h-[48px] ${
-                        drVal
-                          ? isChanged
-                            ? "bg-[#2563eb]/5 border-[#2563eb]/20"
-                            : "bg-muted/10 border-muted"
-                          : "bg-muted/30 border-muted text-muted-foreground italic"
-                      }`}
-                    >
+                    <div className="p-3 text-sm whitespace-pre-line leading-relaxed min-h-[44px]">
                       {diff ? (
                         <DiffText segments={diff.right} side="right" />
+                      ) : drVal ? (
+                        <span className={isAdded ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""}>{drVal}</span>
                       ) : (
-                        drVal || "No comment"
+                        <span className="text-muted-foreground/50 italic text-xs">— empty —</span>
                       )}
                     </div>
                   </div>
@@ -285,33 +317,37 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
             })}
 
             {/* Recommendation comparison */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">Final Recommendation</p>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="p-3 rounded-md border bg-[#c4940a]/5 border-[#c4940a]/20">
+            <div className={`rounded-lg border transition-colors ${
+              peerReviewData.recommendation !== decisionReviewData.recommendation
+                ? "border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10"
+                : "border-muted bg-muted/10"
+            }`}>
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-inherit">
+                <p className="text-sm font-semibold">Final Recommendation</p>
+                {peerReviewData.recommendation !== decisionReviewData.recommendation && peerReviewData.recommendation && decisionReviewData.recommendation && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50">
+                    <PenLine className="h-2.5 w-2.5 mr-0.5" />
+                    Changed
+                  </Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-0 divide-x divide-inherit">
+                <div className="p-3">
                   {peerReviewData.recommendation ? (
-                    <Badge
-                      className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(peerReviewData.recommendation)}`}
-                    >
+                    <Badge className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(peerReviewData.recommendation)}`}>
                       {formatRecommendation(peerReviewData.recommendation)}
                     </Badge>
                   ) : (
-                    <span className="text-sm text-muted-foreground italic">
-                      No recommendation
-                    </span>
+                    <span className="text-muted-foreground/50 italic text-xs">— none —</span>
                   )}
                 </div>
-                <div className="p-3 rounded-md border bg-[#2563eb]/5 border-[#2563eb]/20">
+                <div className="p-3">
                   {decisionReviewData.recommendation ? (
-                    <Badge
-                      className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(decisionReviewData.recommendation)}`}
-                    >
+                    <Badge className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(decisionReviewData.recommendation)}`}>
                       {formatRecommendation(decisionReviewData.recommendation)}
                     </Badge>
                   ) : (
-                    <span className="text-sm text-muted-foreground italic">
-                      No recommendation yet
-                    </span>
+                    <span className="text-muted-foreground/50 italic text-xs">— none yet —</span>
                   )}
                 </div>
               </div>
