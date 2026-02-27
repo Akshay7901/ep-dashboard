@@ -1294,6 +1294,7 @@ const ProposalDetails: React.FC = () => {
               forceEditable
               hideHeader
               preloadedStyle={!decisionReviewerDraft}
+              readOnly
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
               onDraftSaved={() => {}}
