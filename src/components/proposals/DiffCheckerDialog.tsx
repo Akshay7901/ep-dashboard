@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { GitCompareArrows, Equal, PenLine, Plus, Minus } from "lucide-react";
 
 interface DiffCheckerDialogProps {
@@ -15,6 +16,7 @@ interface DiffCheckerDialogProps {
   peerReviewData: Record<string, any>;
   decisionReviewData: Record<string, any>;
   peerReviewerName?: string;
+  onDecisionFieldChange?: (field: string, value: string) => void;
 }
 
 const REVIEW_FIELDS = [
@@ -146,25 +148,43 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
   peerReviewData,
   decisionReviewData,
   peerReviewerName = "Peer Reviewer",
+  onDecisionFieldChange,
 }) => {
+  // Local editable state for DR side, initialized from decisionReviewData
+  const [localDrData, setLocalDrData] = useState<Record<string, string>>({});
+  const [editingField, setEditingField] = useState<string | null>(null);
+
+  // Sync local state when dialog opens or decisionReviewData changes
+  useEffect(() => {
+    if (open) {
+      setLocalDrData({ ...decisionReviewData });
+      setEditingField(null);
+    }
+  }, [open, decisionReviewData]);
+
+  const handleDrFieldChange = useCallback((key: string, value: string) => {
+    setLocalDrData(prev => ({ ...prev, [key]: value }));
+    onDecisionFieldChange?.(key, value);
+  }, [onDecisionFieldChange]);
+
   const diffs = useMemo(() => {
     const result: Record<string, { left: DiffSegment[]; right: DiffSegment[] }> = {};
     for (const { key } of REVIEW_FIELDS) {
       const peerVal = (peerReviewData[key] || "").trim();
-      const drVal = (decisionReviewData[key] || "").trim();
+      const drVal = (localDrData[key] || "").trim();
       if (peerVal !== drVal && peerVal && drVal) {
         result[key] = computeWordDiff(peerVal, drVal);
       }
     }
     return result;
-  }, [peerReviewData, decisionReviewData]);
+  }, [peerReviewData, localDrData]);
 
   // Summary stats
   const stats = useMemo(() => {
     let modified = 0, added = 0, removed = 0, unchanged = 0;
     for (const { key } of REVIEW_FIELDS) {
       const peerVal = (peerReviewData[key] || "").trim();
-      const drVal = (decisionReviewData[key] || "").trim();
+      const drVal = (localDrData[key] || "").trim();
       if (!peerVal && !drVal) continue;
       if (peerVal === drVal) unchanged++;
       else if (!peerVal && drVal) added++;
@@ -172,7 +192,7 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
       else modified++;
     }
     return { modified, added, removed, unchanged };
-  }, [peerReviewData, decisionReviewData]);
+  }, [peerReviewData, localDrData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,12 +256,13 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
         {/* Scrollable comparison */}
         <div className="overflow-y-auto flex-1 px-6 pb-6">
           <div className="space-y-5 pt-2">
-            {REVIEW_FIELDS.map(({ label, key }) => {
+             {REVIEW_FIELDS.map(({ label, key }) => {
               const peerVal = (peerReviewData[key] || "").trim();
-              const drVal = (decisionReviewData[key] || "").trim();
+              const drVal = (localDrData[key] || "").trim();
               const isChanged = peerVal !== drVal;
               const bothEmpty = !peerVal && !drVal;
               const diff = diffs[key];
+              const isEditing = editingField === key;
 
               if (bothEmpty) return null;
 
@@ -302,13 +323,32 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
                         <span className="text-muted-foreground/50 italic text-xs">— empty —</span>
                       )}
                     </div>
-                    <div className="p-3 text-sm whitespace-pre-line leading-relaxed min-h-[44px]">
-                      {diff ? (
-                        <DiffText segments={diff.right} side="right" />
-                      ) : drVal ? (
-                        <span className={isAdded ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""}>{drVal}</span>
+                    {/* DR side - editable */}
+                    <div className="p-3 text-sm min-h-[44px]">
+                      {isEditing ? (
+                        <Textarea
+                          autoFocus
+                          value={localDrData[key] || ""}
+                          onChange={(e) => handleDrFieldChange(key, e.target.value)}
+                          onBlur={() => setEditingField(null)}
+                          className="resize-none text-sm min-h-[60px] bg-background border-blue-300 dark:border-blue-700 focus-visible:ring-blue-400"
+                          rows={3}
+                        />
                       ) : (
-                        <span className="text-muted-foreground/50 italic text-xs">— empty —</span>
+                        <div
+                          onClick={() => setEditingField(key)}
+                          className="cursor-pointer rounded-md px-2 py-1.5 -mx-2 -my-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors group whitespace-pre-line leading-relaxed"
+                          title="Click to edit"
+                        >
+                          {diff ? (
+                            <DiffText segments={diff.right} side="right" />
+                          ) : drVal ? (
+                            <span className={isAdded ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""}>{drVal}</span>
+                          ) : (
+                            <span className="text-muted-foreground/50 italic text-xs">— click to add —</span>
+                          )}
+                          <PenLine className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity inline-block ml-1.5" />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -318,13 +358,13 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
 
             {/* Recommendation comparison */}
             <div className={`rounded-lg border transition-colors ${
-              peerReviewData.recommendation !== decisionReviewData.recommendation
+              peerReviewData.recommendation !== localDrData.recommendation
                 ? "border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10"
                 : "border-muted bg-muted/10"
             }`}>
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-inherit">
                 <p className="text-sm font-semibold">Final Recommendation</p>
-                {peerReviewData.recommendation !== decisionReviewData.recommendation && peerReviewData.recommendation && decisionReviewData.recommendation && (
+                {peerReviewData.recommendation !== localDrData.recommendation && peerReviewData.recommendation && localDrData.recommendation && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50">
                     <PenLine className="h-2.5 w-2.5 mr-0.5" />
                     Changed
@@ -342,9 +382,9 @@ const DiffCheckerDialog: React.FC<DiffCheckerDialogProps> = ({
                   )}
                 </div>
                 <div className="p-3">
-                  {decisionReviewData.recommendation ? (
-                    <Badge className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(decisionReviewData.recommendation)}`}>
-                      {formatRecommendation(decisionReviewData.recommendation)}
+                  {localDrData.recommendation ? (
+                    <Badge className={`rounded-full px-3 py-1 text-xs ${getRecommendationStyle(localDrData.recommendation)}`}>
+                      {formatRecommendation(localDrData.recommendation)}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground/50 italic text-xs">— none yet —</span>
