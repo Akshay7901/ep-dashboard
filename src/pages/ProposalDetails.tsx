@@ -1181,6 +1181,7 @@ const ProposalDetails: React.FC = () => {
           <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
+                setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
                 if (statusIs(proposal.status, "pending", "new", "submitted")) {
                   // Status transitions managed by backend
                 }
@@ -1295,7 +1296,7 @@ const ProposalDetails: React.FC = () => {
               preloadedStyle={!decisionReviewerDraft}
               onSave={() => refetch()}
               onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
-              onDraftSaved={() => {}}
+              onDraftSaved={() => { setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) }); }}
             />
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
@@ -1348,9 +1349,14 @@ const ProposalDetails: React.FC = () => {
 
       <DiffCheckerDialog
         open={diffCheckerOpen}
-        onOpenChange={setDiffCheckerOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
+          }
+          setDiffCheckerOpen(open);
+        }}
         peerReviewData={reviewFormData || {}}
-        decisionReviewData={reviewFormRef.current?.formData || {}}
+        decisionReviewData={diffCheckerDrData}
         peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
         onDecisionFieldChange={(field, value) => {
           reviewFormRef.current?.setFieldValue(field, value);
@@ -1363,6 +1369,7 @@ const ProposalDetails: React.FC = () => {
           // Wait for React state to flush before saving
           await new Promise(resolve => setTimeout(resolve, 50));
           await reviewFormRef.current?.saveDraft();
+          setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
         }}
       />
 
