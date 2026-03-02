@@ -37,6 +37,7 @@ import { useDefaultReviewer } from "@/hooks/useDefaultReviewer";
 import ReviewCommentsDisplay from "@/components/proposals/ReviewCommentsDisplay";
 import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
 import DiffCheckerDialog from "@/components/proposals/DiffCheckerDialog";
+import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
 
 /* ---------------- Helpers ---------------- */
@@ -426,7 +427,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => { setDrActiveTab(v); setDrFeedbackAccordion(undefined); }}>
-          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -434,6 +435,10 @@ const ProposalDetails: React.FC = () => {
             <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Author Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Metadata</span>
             </TabsTrigger>
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
@@ -559,7 +564,11 @@ const ProposalDetails: React.FC = () => {
               </div>}
           </TabsContent>
 
-          
+          {/* ---- METADATA (Decision Reviewer) ---- */}
+          <TabsContent value="metadata" className="mt-4">
+            <PublicationMetadata proposal={proposal} />
+          </TabsContent>
+
 
           {/* ---- SUPPORTING DOCUMENTS (Decision Reviewer) ---- */}
           <TabsContent value="documents" className="mt-4">

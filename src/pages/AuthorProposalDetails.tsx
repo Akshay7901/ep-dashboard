@@ -23,6 +23,7 @@ import { useContractQueries } from "@/hooks/useContractQueries";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
+import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 
 /* ---- Timeline helpers ---- */
 
@@ -335,6 +336,12 @@ const AuthorProposalDetails: React.FC = () => {
               Proposal Information
             </TabsTrigger>
             <TabsTrigger
+              value="metadata"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+
+              Metadata
+            </TabsTrigger>
+            <TabsTrigger
               value="review"
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
@@ -538,6 +545,11 @@ const AuthorProposalDetails: React.FC = () => {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </TabsContent>
+
+          {/* ---- METADATA TAB ---- */}
+          <TabsContent value="metadata" className="mt-6">
+            <PublicationMetadata proposal={proposal} />
           </TabsContent>
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
