@@ -600,7 +600,7 @@ const ProposalDetails: React.FC = () => {
                     toast({ title: "Metadata saved", description: "Your changes have been saved." });
                   }}
                 >
-                  Save
+                  Save Draft
                 </Button>
                 <Button
                   className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
