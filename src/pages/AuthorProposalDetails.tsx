@@ -573,31 +573,32 @@ const AuthorProposalDetails: React.FC = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 pt-2">
+                <div className="space-y-3 pt-2">
                   <Input
                     placeholder="Add a comment about your requests...."
                     value={changeComment}
                     onChange={(e) => setChangeComment(e.target.value)}
-                    className="flex-1"
                   />
-                  <Button
-                    variant="outline"
-                    className="px-8"
-                    onClick={() => { setRequestingChanges(false); setChangeComment(""); }}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-                    disabled={!changeComment.trim()}
-                    onClick={() => {
-                      toast({ title: "Request submitted", description: "Your change request has been sent." });
-                      setRequestingChanges(false);
-                      setChangeComment("");
-                    }}
-                  >
-                    Submit request
-                  </Button>
+                  <div className="flex items-center justify-end gap-3">
+                    <Button
+                      variant="outline"
+                      className="px-8"
+                      onClick={() => { setRequestingChanges(false); setChangeComment(""); }}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+                      disabled={!changeComment.trim()}
+                      onClick={() => {
+                        toast({ title: "Request submitted", description: "Your change request has been sent." });
+                        setRequestingChanges(false);
+                        setChangeComment("");
+                      }}
+                    >
+                      Submit request
+                    </Button>
+                  </div>
                 </div>
               )}
             </TabsContent>
