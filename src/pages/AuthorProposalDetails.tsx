@@ -221,6 +221,7 @@ const AuthorProposalDetails: React.FC = () => {
   const actionBanner = getActionBanner(proposal.status);
   const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
+  const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
 
 
   return (
@@ -335,12 +336,13 @@ const AuthorProposalDetails: React.FC = () => {
 
               Proposal Information
             </TabsTrigger>
-            <TabsTrigger
-              value="metadata"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
-
-              Metadata
-            </TabsTrigger>
+            {isContractSigned && (
+              <TabsTrigger
+                value="metadata"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+                Metadata
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="review"
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
@@ -547,10 +549,12 @@ const AuthorProposalDetails: React.FC = () => {
             </Accordion>
           </TabsContent>
 
-          {/* ---- METADATA TAB ---- */}
-          <TabsContent value="metadata" className="mt-6">
-            <PublicationMetadata proposal={proposal} />
-          </TabsContent>
+          {/* ---- METADATA TAB (only after contract signed) ---- */}
+          {isContractSigned && (
+            <TabsContent value="metadata" className="mt-6">
+              <PublicationMetadata proposal={proposal} contractSigned />
+            </TabsContent>
+          )}
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">

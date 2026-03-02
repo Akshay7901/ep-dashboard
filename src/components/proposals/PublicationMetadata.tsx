@@ -1,9 +1,12 @@
 import React from "react";
+import { CheckCircle2 } from "lucide-react";
 import { extractCountry } from "@/lib/extractCountry";
+import { Badge } from "@/components/ui/badge";
 import type { Proposal } from "@/types";
 
 interface PublicationMetadataProps {
   proposal: Proposal;
+  contractSigned?: boolean;
 }
 
 const MetadataRow: React.FC<{ label: string; sublabel?: string; value?: string | null }> = ({ label, sublabel, value }) => (
@@ -24,13 +27,12 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
   </div>
 );
 
-const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal }) => {
+const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal, contractSigned }) => {
   const country = extractCountry(proposal.address) || proposal.country || "";
 
   // Try to split author name into first/last
   const fullName = proposal.corresponding_author_name || proposal.author_name || "";
   const nameParts = fullName.trim().split(/\s+/);
-  // Detect title prefix (Dr., Prof., Mr., Mrs., Ms.)
   const titlePrefixes = ["dr.", "prof.", "mr.", "mrs.", "ms.", "dr", "prof"];
   let titlePrefix = "";
   let firstNameParts = [...nameParts];
@@ -42,51 +44,63 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal }) =
   const firstName = firstNameParts.join(" ");
 
   return (
-    <div className="space-y-0 border border-border rounded-lg overflow-hidden">
-      {/* Publication Metadata header */}
-      <SectionHeader title="Publication Metadata" />
+    <div className="space-y-4">
+      {/* Contract Signed Badge */}
+      {contractSigned && (
+        <div className="flex items-center gap-2">
+          <Badge className="bg-[#3d5a47] text-white hover:bg-[#3d5a47] rounded-full px-4 py-1.5 text-sm font-medium gap-1.5">
+            <CheckCircle2 className="h-4 w-4" />
+            Contract Signed
+          </Badge>
+        </div>
+      )}
 
-      <MetadataRow label="DB Number" value={proposal.ticket_number} />
-      <MetadataRow
-        label="Title Full"
-        value={
-          [proposal.name, proposal.sub_title].filter(Boolean).join(": ") || proposal.name
-        }
-      />
-      <MetadataRow label="Title" value={proposal.name} />
-      <MetadataRow label="Subtitle" value={proposal.sub_title} />
-      <MetadataRow label="Category Auth/Ed" value={proposal.book_type || "Author"} />
+      <div className="space-y-0 border border-border rounded-lg overflow-hidden">
+        {/* Publication Metadata header */}
+        <SectionHeader title="Publication Metadata" />
 
-      {/* Primary Author/Editor */}
-      <SectionHeader title="Primary Author/Editor" />
+        <MetadataRow label="DB Number" value={proposal.ticket_number} />
+        <MetadataRow
+          label="Title Full"
+          value={
+            [proposal.name, proposal.sub_title].filter(Boolean).join(": ") || proposal.name
+          }
+        />
+        <MetadataRow label="Title" value={proposal.name} />
+        <MetadataRow label="Subtitle" value={proposal.sub_title} />
+        <MetadataRow label="Category Auth/Ed" value={proposal.book_type || "Author"} />
 
-      <MetadataRow label="Display Name(s)" value={fullName} />
-      <MetadataRow label="Display bio(s)" value={proposal.biography} />
-      <MetadataRow label="Title" value={titlePrefix || "—"} />
-      <MetadataRow label="First name" value={firstName} />
-      <MetadataRow label="Last name" value={lastName} />
-      <MetadataRow label="Email" value={proposal.author_email} />
-      <MetadataRow label="Email 2" value={proposal.secondary_email} />
-      <MetadataRow label="Institution" value={proposal.institution} />
-      <MetadataRow label="Country" value={country} />
+        {/* Primary Author/Editor */}
+        <SectionHeader title="Primary Author/Editor" />
 
-      {/* Book Information */}
-      <SectionHeader title="Book Information" />
+        <MetadataRow label="Display Name(s)" value={fullName} />
+        <MetadataRow label="Display bio(s)" value={proposal.biography} />
+        <MetadataRow label="Title" value={titlePrefix || "—"} />
+        <MetadataRow label="First name" value={firstName} />
+        <MetadataRow label="Last name" value={lastName} />
+        <MetadataRow label="Email" value={proposal.author_email} />
+        <MetadataRow label="Email 2" value={proposal.secondary_email} />
+        <MetadataRow label="Institution" value={proposal.institution} />
+        <MetadataRow label="Country" value={country} />
 
-      <MetadataRow label="Book description" sublabel="(max 2000 characters)" value={proposal.short_description} />
-      <MetadataRow label="Keywords/Tags" value={proposal.keywords} />
-      <MetadataRow label="Website Classification" value={(proposal as any).website_classification} />
-      <MetadataRow label="BIC" value={(proposal as any).bic} />
+        {/* Book Information */}
+        <SectionHeader title="Book Information" />
 
-      {/* Publication Timeline */}
-      <SectionHeader title="Publication Timeline" />
+        <MetadataRow label="Book description" sublabel="(max 2000 characters)" value={proposal.short_description} />
+        <MetadataRow label="Keywords/Tags" value={proposal.keywords} />
+        <MetadataRow label="Website Classification" value={(proposal as any).website_classification} />
+        <MetadataRow label="BIC" value={(proposal as any).bic} />
 
-      <MetadataRow label="Submission date" value={proposal.submitted_date || (proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null)} />
-      <MetadataRow label="Publication date" value={proposal.expected_completion_date} />
-      <MetadataRow label="Word Count" value={proposal.word_count} />
-      <MetadataRow label="Figures/Tables" value={proposal.figures_tables_count} />
-      <MetadataRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
-      <MetadataRow label="Co-Authors / Editors" value={proposal.co_authors_editors} />
+        {/* Publication Timeline */}
+        <SectionHeader title="Publication Timeline" />
+
+        <MetadataRow label="Submission date" value={proposal.submitted_date || (proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null)} />
+        <MetadataRow label="Publication date" value={proposal.expected_completion_date} />
+        <MetadataRow label="Word Count" value={proposal.word_count} />
+        <MetadataRow label="Figures/Tables" value={proposal.figures_tables_count} />
+        <MetadataRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
+        <MetadataRow label="Co-Authors / Editors" value={proposal.co_authors_editors} />
+      </div>
     </div>
   );
 };
