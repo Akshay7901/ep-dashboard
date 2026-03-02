@@ -6,12 +6,13 @@ interface PublicationMetadataProps {
   proposal: Proposal;
 }
 
-const MetadataRow: React.FC<{ label: string; value?: string | null }> = ({ label, value }) => (
+const MetadataRow: React.FC<{ label: string; sublabel?: string; value?: string | null }> = ({ label, sublabel, value }) => (
   <div className="grid grid-cols-[200px_1fr] border-b border-border">
     <div className="py-3 px-4 text-sm font-medium text-muted-foreground bg-muted/30">
       {label}
+      {sublabel && <span className="block text-xs font-normal text-muted-foreground/60">{sublabel}</span>}
     </div>
-    <div className="py-3 px-4 text-sm text-foreground">
+    <div className="py-3 px-4 text-sm text-foreground whitespace-pre-line">
       {value || "—"}
     </div>
   </div>
@@ -72,11 +73,18 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal }) =
       {/* Book Information */}
       <SectionHeader title="Book Information" />
 
-      <MetadataRow label="Book description" value={proposal.short_description} />
+      <MetadataRow label="Book description" sublabel="(max 2000 characters)" value={proposal.short_description} />
+      <MetadataRow label="Keywords/Tags" value={proposal.keywords} />
+      <MetadataRow label="Website Classification" value={(proposal as any).website_classification} />
+      <MetadataRow label="BIC" value={(proposal as any).bic} />
+
+      {/* Publication Timeline */}
+      <SectionHeader title="Publication Timeline" />
+
+      <MetadataRow label="Submission date" value={proposal.submitted_date || (proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null)} />
+      <MetadataRow label="Publication date" value={proposal.expected_completion_date} />
       <MetadataRow label="Word Count" value={proposal.word_count} />
-      <MetadataRow label="Expected Completion" value={proposal.expected_completion_date} />
       <MetadataRow label="Figures/Tables" value={proposal.figures_tables_count} />
-      <MetadataRow label="Keywords" value={proposal.keywords} />
       <MetadataRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
       <MetadataRow label="Co-Authors / Editors" value={proposal.co_authors_editors} />
     </div>
