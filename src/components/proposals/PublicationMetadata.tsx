@@ -9,8 +9,8 @@ interface PublicationMetadataProps {
   contractSigned?: boolean;
 }
 
-const MetadataRow: React.FC<{ label: string; sublabel?: string; value?: string | null }> = ({ label, sublabel, value }) => (
-  <div className="grid grid-cols-[200px_1fr] border-b border-border">
+const MetadataRow: React.FC<{label: string;sublabel?: string;value?: string | null;}> = ({ label, sublabel, value }) =>
+<div className="grid grid-cols-[200px_1fr] border-b border-border">
     <div className="py-3 px-4 text-sm font-medium text-muted-foreground bg-muted/30">
       {label}
       {sublabel && <span className="block text-xs font-normal text-muted-foreground/60">{sublabel}</span>}
@@ -18,14 +18,14 @@ const MetadataRow: React.FC<{ label: string; sublabel?: string; value?: string |
     <div className="py-3 px-4 text-sm text-foreground whitespace-pre-line">
       {value || "—"}
     </div>
-  </div>
-);
+  </div>;
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
-  <div className="bg-[#3d5a47] text-white py-2.5 px-4">
+
+const SectionHeader: React.FC<{title: string;}> = ({ title }) =>
+<div className="bg-[#3d5a47] text-white py-2.5 px-4">
     <p className="text-sm font-semibold uppercase tracking-wide">{title}</p>
-  </div>
-);
+  </div>;
+
 
 const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal, contractSigned }) => {
   const country = extractCountry(proposal.address) || proposal.country || "";
@@ -46,14 +46,14 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal, con
   return (
     <div className="space-y-4">
       {/* Contract Signed Badge */}
-      {contractSigned && (
-        <div className="flex items-center gap-2">
-          <Badge className="bg-[#3d5a47] text-white hover:bg-[#3d5a47] rounded-full px-4 py-1.5 text-sm font-medium gap-1.5">
-            <CheckCircle2 className="h-4 w-4" />
-            Contract Signed
-          </Badge>
-        </div>
-      )}
+      {contractSigned
+
+
+
+
+
+
+      }
 
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata header */}
@@ -63,9 +63,9 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal, con
         <MetadataRow
           label="Title Full"
           value={
-            [proposal.name, proposal.sub_title].filter(Boolean).join(": ") || proposal.name
-          }
-        />
+          [proposal.name, proposal.sub_title].filter(Boolean).join(": ") || proposal.name
+          } />
+
         <MetadataRow label="Title" value={proposal.name} />
         <MetadataRow label="Subtitle" value={proposal.sub_title} />
         <MetadataRow label="Category Auth/Ed" value={proposal.book_type || "Author"} />
@@ -101,8 +101,8 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({ proposal, con
         <MetadataRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
         <MetadataRow label="Co-Authors / Editors" value={proposal.co_authors_editors} />
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default PublicationMetadata;
