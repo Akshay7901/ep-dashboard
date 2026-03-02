@@ -24,7 +24,7 @@ import { useContractQueries } from "@/hooks/useContractQueries";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
-import PublicationMetadata from "@/components/proposals/PublicationMetadata";
+import AuthorPublicationMetadata from "@/components/proposals/AuthorPublicationMetadata";
 
 /* ---- Timeline helpers ---- */
 
@@ -154,8 +154,6 @@ const AuthorProposalDetails: React.FC = () => {
   );
   const [contractViewOpen, setContractViewOpen] = useState(false);
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
-  const [requestingChanges, setRequestingChanges] = useState(false);
-  const [changeComment, setChangeComment] = useState("");
   const [contractPdfLoading, setContractPdfLoading] = useState(false);
   
   // Contract signing URL state
@@ -555,54 +553,7 @@ const AuthorProposalDetails: React.FC = () => {
           {/* ---- METADATA TAB (only after contract signed) ---- */}
           {isContractSigned && (
             <TabsContent value="metadata" className="mt-6 space-y-6">
-              <PublicationMetadata proposal={proposal} contractSigned />
-              {!requestingChanges ? (
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <Button
-                    variant="outline"
-                    className="px-8"
-                    onClick={() => setRequestingChanges(true)}
-                  >
-                    Request changes
-                  </Button>
-                  <Button
-                    className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-                    onClick={() => toast({ title: "Metadata finalised", description: "Metadata has been locked." })}
-                  >
-                    Finalise &amp; Lock Metadata
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3 pt-2">
-                  <Textarea
-                    placeholder="Add a comment about your requests...."
-                    value={changeComment}
-                    onChange={(e) => setChangeComment(e.target.value)}
-                    rows={3}
-                    className="resize-none"
-                  />
-                  <div className="flex items-center justify-end gap-3">
-                    <Button
-                      variant="outline"
-                      className="px-8"
-                      onClick={() => { setRequestingChanges(false); setChangeComment(""); }}
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-                      disabled={!changeComment.trim()}
-                      onClick={() => {
-                        toast({ title: "Request submitted", description: "Your change request has been sent." });
-                        setRequestingChanges(false);
-                        setChangeComment("");
-                      }}
-                    >
-                      Submit request
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <AuthorPublicationMetadata proposal={proposal} contractSigned />
             </TabsContent>
           )}
 
