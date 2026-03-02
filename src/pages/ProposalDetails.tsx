@@ -441,16 +441,16 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            {isContractSigned && (
-              <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
-                <ClipboardList className="h-4 w-4" />
-                <span className="hidden sm:inline">Metadata</span>
-              </TabsTrigger>
-            )}
             {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) && (
               <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
+              </TabsTrigger>
+            )}
+            {isContractSigned && (
+              <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Metadata</span>
               </TabsTrigger>
             )}
           </TabsList>
