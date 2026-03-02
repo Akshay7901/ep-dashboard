@@ -551,8 +551,23 @@ const AuthorProposalDetails: React.FC = () => {
 
           {/* ---- METADATA TAB (only after contract signed) ---- */}
           {isContractSigned && (
-            <TabsContent value="metadata" className="mt-6">
+            <TabsContent value="metadata" className="mt-6 space-y-6">
               <PublicationMetadata proposal={proposal} contractSigned />
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="px-8"
+                  onClick={() => toast({ title: "Request submitted", description: "Your change request has been sent." })}
+                >
+                  Request changes
+                </Button>
+                <Button
+                  className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+                  onClick={() => toast({ title: "Metadata finalised", description: "Metadata has been locked." })}
+                >
+                  Finalise &amp; Lock Metadata
+                </Button>
+              </div>
             </TabsContent>
           )}
 
