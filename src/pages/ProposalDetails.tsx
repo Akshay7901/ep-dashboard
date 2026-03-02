@@ -50,9 +50,9 @@ const DetailRow = ({
   value?: string | null;
 }) => {
   if (!value) return null;
-  return <div className="flex gap-4 py-2">
-      <span className="text-sm text-muted-foreground w-40 shrink-0">{label}:</span>
-      <span className="text-sm font-medium flex-1">{value}</span>
+  return <div className="flex gap-4 py-2 min-w-0">
+      <span className="text-sm text-muted-foreground w-28 shrink-0">{label}:</span>
+      <span className="text-sm font-medium flex-1 min-w-0 break-words">{value}</span>
     </div>;
 };
 const ContentBlock = ({
