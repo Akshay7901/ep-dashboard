@@ -270,6 +270,7 @@ const ProposalDetails: React.FC = () => {
   /* ---------------- Derived values ---------------- */
 
   const files = proposal.file_uploads ? proposal.file_uploads.split(",").map((f: string) => f.trim()) : [];
+  const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
   const isBusy = isAssigning || isUnassigning;
   const showReviewForm = isReviewer2;
 
@@ -427,7 +428,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => { setDrActiveTab(v); setDrFeedbackAccordion(undefined); }}>
-          <TabsList className={`grid w-full ${(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + ((decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 1 : 0)}, minmax(0, 1fr))` }}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -436,14 +437,16 @@ const ProposalDetails: React.FC = () => {
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Author Info</span>
             </TabsTrigger>
-            <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Metadata</span>
-            </TabsTrigger>
             <TabsTrigger value="documents" className="gap-1.5 text-xs sm:text-sm">
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
+            {isContractSigned && (
+              <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Metadata</span>
+              </TabsTrigger>
+            )}
             {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) && (
               <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
@@ -564,10 +567,12 @@ const ProposalDetails: React.FC = () => {
               </div>}
           </TabsContent>
 
-          {/* ---- METADATA (Decision Reviewer) ---- */}
-          <TabsContent value="metadata" className="mt-4">
-            <PublicationMetadata proposal={proposal} />
-          </TabsContent>
+          {/* ---- METADATA (Decision Reviewer - only after contract signed) ---- */}
+          {isContractSigned && (
+            <TabsContent value="metadata" className="mt-4">
+              <PublicationMetadata proposal={proposal} contractSigned />
+            </TabsContent>
+          )}
 
 
           {/* ---- SUPPORTING DOCUMENTS (Decision Reviewer) ---- */}
