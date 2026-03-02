@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { extractCountry } from "@/lib/extractCountry";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -574,10 +574,12 @@ const AuthorProposalDetails: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3 pt-2">
-                  <Input
+                  <Textarea
                     placeholder="Add a comment about your requests...."
                     value={changeComment}
                     onChange={(e) => setChangeComment(e.target.value)}
+                    rows={3}
+                    className="resize-none"
                   />
                   <div className="flex items-center justify-end gap-3">
                     <Button
