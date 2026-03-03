@@ -159,8 +159,8 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   // Title Full auto-computed
   const titleFull = [title, subtitle].filter(Boolean).join(": ");
 
-  const sectionLabel = isAuthorType ? "Primary Author(s)" : "Primary Editor(s)";
-  const addButtonLabel = isAuthorType ? "Add Another Author" : "Add Another Editor";
+  const sectionLabel = "Primary Author(s)";
+  const addButtonLabel = "Add an author or editor";
 
   return (
     <div className="space-y-4">
@@ -199,7 +199,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
           <React.Fragment key={person.id}>
             <div className="bg-muted/50 py-2 px-4 flex items-center justify-between border-b border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Additional {isAuthorType ? "Author" : "Editor"} {idx + 1}
+                Additional Author {idx + 1}
               </p>
               <Button
                 variant="ghost"
