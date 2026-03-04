@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, Plus, Trash2, Loader2, MessageSquare } from "lucide-react";
+import { Check, CheckCircle2, Plus, Trash2, Loader2, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { extractCountry } from "@/lib/extractCountry";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +114,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const apiMeta = metadataResponse?.metadata;
   const metadataStatus = metadataResponse?.metadata_status;
   const isSentToAuthor = metadataStatus === "sent_to_author";
+  const isApproved = metadataStatus === "approved";
 
   // Check for pending (unanswered) queries from author
   const pendingQueries = useMemo(() =>
@@ -122,8 +123,8 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
     ), [metadataQueries]);
   const hasPendingQueries = pendingQueries.length > 0;
 
-  // Form is editable when not sent OR when there are pending queries to address
-  const isFormDisabled = isSentToAuthor && !hasPendingQueries;
+  // Form is editable when not sent OR when there are pending queries to address; always locked when approved
+  const isFormDisabled = isApproved || (isSentToAuthor && !hasPendingQueries);
   // Fallback values from proposal
   const country = extractCountry(proposal.address) || proposal.country || "";
   const fullName = proposal.corresponding_author_name || proposal.author_name || "";
@@ -406,7 +407,14 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
    return (
     <div className="space-y-4">
 
-      {isFormDisabled && (
+      {isApproved && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+          <Check className="h-4 w-4" />
+          Metadata has been approved and locked. No further changes can be made.
+        </div>
+      )}
+
+      {isFormDisabled && !isApproved && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
           Metadata has been sent to the author for approval. Editing is disabled until the author responds or you need to make changes.
         </div>
@@ -527,7 +535,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
       )}
 
       {/* Action buttons - show when form is editable */}
-      {!isFormDisabled && (
+      {!isFormDisabled && !isApproved && (
         <div className="flex items-center justify-end gap-3 pt-2">
           <Button
             variant="outline"

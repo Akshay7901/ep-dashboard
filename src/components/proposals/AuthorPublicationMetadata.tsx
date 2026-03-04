@@ -133,6 +133,9 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     enabled: !!ticketNumber && !!metadataResponse,
   });
 
+  const metadataStatus = metadataResponse?.metadata_status;
+  const isApproved = metadataStatus === "approved";
+
   // Check if author has a pending (unanswered) query
   const hasPendingQuery = metadataQueries.some(
     (q) => q.type === 'query' && !metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id)
@@ -296,6 +299,13 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   return (
     <div className="space-y-4">
+      {isApproved && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          Metadata has been approved and locked. No further changes can be made.
+        </div>
+      )}
+
       {contractSigned && (
         <Badge className="bg-emerald-600 text-white gap-1.5 px-3 py-1 text-xs rounded-full hover:bg-emerald-600">
           <CheckCircle2 className="h-3.5 w-3.5" /> Contract Signed
@@ -443,96 +453,62 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       )}
 
       {/* Change Requests Section */}
-      {requestingChanges ? (
-        <div className="space-y-4 border border-border rounded-lg p-4">
-          <div>
-            <h4 className="text-sm font-semibold mb-1">Request Changes</h4>
-            <p className="text-xs text-muted-foreground">
-              Select the field you want to change and provide the new content. You can request changes to multiple fields.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {changeRequests.map((req, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <div className="w-48 shrink-0">
-                  <Select value={req.field} onValueChange={(v) => updateChangeRequest(idx, "field", v)}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select field..." />
-                    </SelectTrigger>
+      {!isApproved && (
+        <>
+          {requestingChanges ? (
+            <div className="space-y-3 border border-amber-200 bg-amber-50/50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-amber-900">Request Changes to Metadata</h4>
+              {changeRequests.map((cr, idx) => (
+                <div key={idx} className="flex gap-2 items-start">
+                  <Select value={cr.field} onValueChange={(v) => updateChangeRequest(idx, "field", v)}>
+                    <SelectTrigger className="w-48 text-sm"><SelectValue placeholder="Select field" /></SelectTrigger>
                     <SelectContent>
-                      {FIELD_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={opt} className="text-xs">
-                          {opt}
-                        </SelectItem>
-                      ))}
+                      {FIELD_OPTIONS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <Input placeholder="Requested new value" value={cr.newValue} onChange={(e) => updateChangeRequest(idx, "newValue", e.target.value)} className="flex-1 text-sm" />
+                  {changeRequests.length > 1 && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => removeChangeRequest(idx)}><Trash2 className="h-4 w-4" /></Button>}
                 </div>
-                <div className="flex-1">
-                  <Textarea
-                    placeholder="Enter the new content for this field..."
-                    value={req.newValue}
-                    onChange={(e) => updateChangeRequest(idx, "newValue", e.target.value)}
-                    rows={2}
-                    className="resize-none text-sm"
-                  />
-                </div>
-                {changeRequests.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-destructive shrink-0"
-                    onClick={() => removeChangeRequest(idx)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
+              ))}
+              <Button variant="outline" size="sm" className="gap-1" onClick={addChangeRequestRow}><Plus className="h-3 w-3" /> Add Field</Button>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                <Button variant="ghost" size="sm" onClick={() => { setRequestingChanges(false); setChangeRequests([{ field: "", newValue: "" }]); }}>
+                  Cancel
+                </Button>
+                <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" onClick={handleSubmitChangeRequests} disabled={submittingQuery}>
+                  {submittingQuery && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                  Submit Change Request
+                </Button>
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={addChangeRequestRow} className="gap-1">
-              <Plus className="h-3.5 w-3.5" /> Add Another Field
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <Button variant="ghost" size="sm" onClick={() => { setRequestingChanges(false); setChangeRequests([{ field: "", newValue: "" }]); }}>
-              Cancel
-            </Button>
-            <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" onClick={handleSubmitChangeRequests} disabled={submittingQuery}>
-              {submittingQuery && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-              Submit Change Request
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
-            Request Changes to Publication Metadata
-          </Button>
-          {hasPendingQuery && (
-            <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
+                Request Changes to Publication Metadata
+              </Button>
+              {hasPendingQuery && (
+                <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Finalise */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-        <Button
-          className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-          onClick={handleFinalise}
-          disabled={hasPendingQuery || finalising}
-        >
-          {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Finalise &amp; Lock Metadata
-        </Button>
-        {hasPendingQuery && (
-          <span className="text-xs text-amber-600">Cannot finalise while a query is pending</span>
-        )}
-      </div>
+          {/* Finalise */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+              onClick={handleFinalise}
+              disabled={hasPendingQuery || finalising}
+            >
+              {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Finalise &amp; Lock Metadata
+            </Button>
+            {hasPendingQuery && (
+              <span className="text-xs text-amber-600">Cannot finalise while a query is pending</span>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
