@@ -218,8 +218,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     "Country",
     "Book description",
     "Keywords/Tags",
-    "Website Classification",
-    "BIC",
     "Publication date",
     "Word Count",
     "Figures/Tables",
@@ -415,8 +413,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
         <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={proposal.short_description} />
         <ReadOnlyRow label="Keywords/Tags" value={proposal.keywords} />
-        <ReadOnlyRow label="Website Classification" value={(proposal as any).website_classification} />
-        <ReadOnlyRow label="BIC" value={(proposal as any).bic} />
 
       </div>
 

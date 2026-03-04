@@ -229,8 +229,6 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
 
         <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" authorChange={authorChanges["book_description"] || null} />
         <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} authorChange={authorChanges["keywords"] || null} />
-        <EditableRow label="Website Classification" value={webClassification} onChange={setWebClassification} authorChange={authorChanges["website_classification"] || null} />
-        <EditableRow label="BIC" value={bic} onChange={setBic} authorChange={authorChanges["bic"] || null} />
 
       </div>
     </div>
