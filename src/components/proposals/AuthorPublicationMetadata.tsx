@@ -519,7 +519,9 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
               </AlertDialogHeader>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Please note that information cannot be amended once finalised. Make sure to check over the information thoroughly before proceeding.</p>
-                {!hasCoverImage && (
+                {hasCoverImage ? (
+                  <p>As you have provided a cover image, we will prepare your cover using this content. Images must be cleared of all copyrights and permissions and you must provide full information on source and ownership.</p>
+                ) : (
                   <p>As you have not provided a cover image, we will prepare a cover in line with our house style. The cover will be a neutral/abstract design, with the title and author/editor name clearly displayed. Once complete, it will not be able to be amended.</p>
                 )}
               </div>
