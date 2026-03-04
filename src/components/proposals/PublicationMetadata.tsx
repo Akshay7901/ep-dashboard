@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { metadataApi, type ProposalMetadata, type MetadataAuthor } from "@/lib/proposalsApi";
+import { metadataApi, metadataQueriesApi, type ProposalMetadata, type MetadataAuthor, type MetadataQuery } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
 interface PublicationMetadataProps {
@@ -102,6 +102,13 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
     enabled: !!ticketNumber,
   });
 
+  // Fetch metadata queries
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNumber],
+    queryFn: () => metadataQueriesApi.list(ticketNumber),
+    enabled: !!ticketNumber,
+  });
+
   const apiMeta = metadataResponse?.metadata;
   const metadataStatus = metadataResponse?.metadata_status;
   const isSentToAuthor = metadataStatus === "sent_to_author";
@@ -142,6 +149,9 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
 
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [respondingTo, setRespondingTo] = useState<number | null>(null);
+  const [responseText, setResponseText] = useState("");
+  const [respondingLoading, setRespondingLoading] = useState(false);
 
   // Populate form when API data loads
   useEffect(() => {
@@ -360,6 +370,75 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} disabled={isSentToAuthor} authorChange={authorChanges["keywords"] || null} />
 
       </div>
+
+      {/* Metadata Queries */}
+      {metadataQueries.length > 0 && (
+        <div className="space-y-3 border border-border rounded-lg p-4">
+          <h4 className="text-sm font-semibold">Queries from Author</h4>
+          <div className="space-y-2">
+            {metadataQueries.map((q) => (
+              <div key={q.id}>
+                <div className={`rounded-md p-3 text-sm ${q.type === 'query' ? 'bg-muted/40 border border-border' : 'bg-emerald-50 border border-emerald-200 ml-4'}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {q.raised_by_name || q.raised_by} ({q.raised_by_role})
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(q.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="whitespace-pre-line">{q.text}</p>
+                  {q.fields && q.fields.length > 0 && (
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                      {q.fields.map((f) => (
+                        <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Respond button for queries (not responses) */}
+                {q.type === 'query' && (
+                  respondingTo === q.id ? (
+                    <div className="ml-4 mt-2 space-y-2">
+                      <Textarea
+                        placeholder="Type your response..."
+                        value={responseText}
+                        onChange={(e) => setResponseText(e.target.value)}
+                        rows={2}
+                        className="resize-none text-sm"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" size="sm" onClick={() => { setRespondingTo(null); setResponseText(""); }}>Cancel</Button>
+                        <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" disabled={respondingLoading || !responseText.trim()} onClick={async () => {
+                          setRespondingLoading(true);
+                          try {
+                            await metadataQueriesApi.respond(ticketNumber, q.id, responseText);
+                            queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
+                            setRespondingTo(null);
+                            setResponseText("");
+                            toast({ title: "Response sent" });
+                          } catch (err: any) {
+                            toast({ title: "Failed", description: err?.message || "Could not send response.", variant: "destructive" });
+                          } finally {
+                            setRespondingLoading(false);
+                          }
+                        }}>
+                          {respondingLoading && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                          Send Response
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ml-4 mt-1">
+                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => setRespondingTo(q.id)}>Reply</Button>
+                    </div>
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action buttons */}
       {!isSentToAuthor && (

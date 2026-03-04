@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { metadataApi } from "@/lib/proposalsApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { metadataApi, metadataQueriesApi, type MetadataQuery } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
 interface AuthorPublicationMetadataProps {
@@ -117,11 +117,20 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   contractSigned,
   ticketNumber,
 }) => {
+  const queryClient = useQueryClient();
+
   // Fetch metadata from API
   const { data: metadataResponse, isLoading: metadataLoading } = useQuery({
     queryKey: ["metadata", ticketNumber],
     queryFn: () => metadataApi.get(ticketNumber),
     enabled: !!ticketNumber,
+  });
+
+  // Fetch metadata queries
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNumber],
+    queryFn: () => metadataQueriesApi.list(ticketNumber),
+    enabled: !!ticketNumber && !!metadataResponse,
   });
 
   const apiMeta = metadataResponse?.metadata;
@@ -157,8 +166,9 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   const [coverImageSource, setCoverImageSource] = useState("");
   const [coverImagePermission, setCoverImagePermission] = useState(false);
 
-  // Change request comments
+  // Change request
   const [requestingChanges, setRequestingChanges] = useState(false);
+  const [submittingQuery, setSubmittingQuery] = useState(false);
   const [changeRequests, setChangeRequests] = useState<ChangeRequestField[]>([
     { field: "", newValue: "" },
   ]);
@@ -208,15 +218,26 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     "Keywords/Tags",
   ];
 
-  const handleSubmitChangeRequests = () => {
+  const handleSubmitChangeRequests = async () => {
     const validRequests = changeRequests.filter((r) => r.field && r.newValue.trim());
     if (validRequests.length === 0) {
       toast({ title: "No changes", description: "Please specify at least one field and its new value." });
       return;
     }
-    toast({ title: "Request submitted", description: "Your change request has been sent to the reviewer." });
-    setRequestingChanges(false);
-    setChangeRequests([{ field: "", newValue: "" }]);
+    setSubmittingQuery(true);
+    try {
+      const queryText = validRequests.map((r) => `**${r.field}**: ${r.newValue}`).join("\n");
+      const fields = validRequests.map((r) => r.field.toLowerCase().replace(/[\s/()]+/g, "_"));
+      await metadataQueriesApi.raise(ticketNumber, queryText, fields);
+      queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
+      toast({ title: "Request submitted", description: "Your change request has been sent to the reviewer." });
+      setRequestingChanges(false);
+      setChangeRequests([{ field: "", newValue: "" }]);
+    } catch (err: any) {
+      toast({ title: "Failed", description: err?.message || "Could not submit change request.", variant: "destructive" });
+    } finally {
+      setSubmittingQuery(false);
+    }
   };
 
   const handleFinalise = () => {
@@ -372,6 +393,35 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
       </div>
 
+      {/* Previous Queries Thread */}
+      {metadataQueries.length > 0 && (
+        <div className="space-y-3 border border-border rounded-lg p-4">
+          <h4 className="text-sm font-semibold">Queries</h4>
+          <div className="space-y-2">
+            {metadataQueries.map((q) => (
+              <div key={q.id} className={`rounded-md p-3 text-sm ${q.type === 'query' ? 'bg-muted/40 border border-border' : 'bg-emerald-50 border border-emerald-200 ml-4'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {q.raised_by_name || q.raised_by} ({q.raised_by_role})
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(q.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="whitespace-pre-line">{q.text}</p>
+                {q.fields && q.fields.length > 0 && (
+                  <div className="flex gap-1 mt-1.5 flex-wrap">
+                    {q.fields.map((f) => (
+                      <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Change Requests Section */}
       {requestingChanges ? (
         <div className="space-y-4 border border-border rounded-lg p-4">
@@ -432,7 +482,8 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             <Button variant="ghost" size="sm" onClick={() => { setRequestingChanges(false); setChangeRequests([{ field: "", newValue: "" }]); }}>
               Cancel
             </Button>
-            <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" onClick={handleSubmitChangeRequests}>
+            <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" onClick={handleSubmitChangeRequests} disabled={submittingQuery}>
+              {submittingQuery && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Submit Change Request
             </Button>
           </div>

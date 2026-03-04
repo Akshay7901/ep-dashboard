@@ -200,6 +200,43 @@ export const metadataApi = {
   },
 };
 
+// Metadata Queries API
+export interface MetadataQuery {
+  id: number;
+  type: 'query' | 'response';
+  text?: string;
+  fields?: string[];
+  raised_by?: string;
+  raised_by_name?: string;
+  raised_by_role?: string;
+  parent_query_id?: number | null;
+  created_at: string;
+}
+
+export const metadataQueriesApi = {
+  list: async (ticketNumber: string): Promise<MetadataQuery[]> => {
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/queries`);
+      return data?.queries || data || [];
+    } catch (error: any) {
+      if (error?.status === 404 || error?.response?.status === 404) return [];
+      throw error;
+    }
+  },
+
+  raise: async (ticketNumber: string, queryText: string, fields?: string[]): Promise<any> => {
+    const payload: Record<string, any> = { query_text: queryText };
+    if (fields && fields.length > 0) payload.fields = fields;
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/query`, payload);
+    return data;
+  },
+
+  respond: async (ticketNumber: string, queryId: number, responseText: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/query/respond`, { query_id: queryId, response_text: responseText });
+    return data;
+  },
+};
+
 // Contract Queries API
 export interface ContractQuery {
   id: number;
