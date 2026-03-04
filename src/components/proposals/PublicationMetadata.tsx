@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { CheckCircle2, Plus, Trash2, Loader2 } from "lucide-react";
 import { extractCountry } from "@/lib/extractCountry";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { metadataApi, metadataQueriesApi, type ProposalMetadata, type MetadataAuthor, type MetadataQuery } from "@/lib/proposalsApi";
+import MetadataQueryDiffPanel from "@/components/proposals/MetadataQueryDiffPanel";
 import type { Proposal } from "@/types";
 
 interface PublicationMetadataProps {
@@ -112,6 +113,16 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const apiMeta = metadataResponse?.metadata;
   const metadataStatus = metadataResponse?.metadata_status;
   const isSentToAuthor = metadataStatus === "sent_to_author";
+
+  // Check for pending (unanswered) queries from author
+  const pendingQueries = useMemo(() =>
+    metadataQueries.filter(
+      (q) => q.type === 'query' && !metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id)
+    ), [metadataQueries]);
+  const hasPendingQueries = pendingQueries.length > 0;
+
+  // Form is editable when not sent OR when there are pending queries to address
+  const isFormDisabled = isSentToAuthor && !hasPendingQueries;
   // Fallback values from proposal
   const country = extractCountry(proposal.address) || proposal.country || "";
   const fullName = proposal.corresponding_author_name || proposal.author_name || "";
@@ -149,9 +160,66 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
 
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [respondingTo, setRespondingTo] = useState<number | null>(null);
-  const [responseText, setResponseText] = useState("");
   const [respondingLoading, setRespondingLoading] = useState(false);
+
+  // Field map for diff panel - maps normalized field keys to labels and current values
+  const fieldMap = useMemo(() => ({
+    title: { label: "Title", currentValue: title },
+    subtitle: { label: "Subtitle", currentValue: subtitle },
+    category_auth_ed: { label: "Category Auth/Ed", currentValue: categoryAuthEd },
+    display_name_s_: { label: "Display Name(s)", currentValue: displayName },
+    display_names: { label: "Display Name(s)", currentValue: displayName },
+    display_bio_s_: { label: "Display bio(s)", currentValue: displayBio },
+    display_bios: { label: "Display bio(s)", currentValue: displayBio },
+    salutation: { label: "Salutation", currentValue: salutation },
+    first_name: { label: "First name", currentValue: firstName },
+    last_name: { label: "Last name", currentValue: lastName },
+    email: { label: "Email", currentValue: email },
+    email_2: { label: "Email 2", currentValue: email2 },
+    institution: { label: "Institution", currentValue: institution },
+    country: { label: "Country", currentValue: countryVal },
+    book_description: { label: "Book description", currentValue: bookDesc },
+    keywords_tags: { label: "Keywords/Tags", currentValue: keywords },
+    keywords: { label: "Keywords/Tags", currentValue: keywords },
+  }), [title, subtitle, categoryAuthEd, displayName, displayBio, salutation, firstName, lastName, email, email2, institution, countryVal, bookDesc, keywords]);
+
+  // Apply a field value from a query diff
+  const handleApplyField = (fieldKey: string, value: string) => {
+    const setters: Record<string, (v: string) => void> = {
+      title: setTitle,
+      subtitle: setSubtitle,
+      category_auth_ed: setCategoryAuthEd,
+      display_name_s_: setDisplayName,
+      display_names: setDisplayName,
+      display_bio_s_: setDisplayBio,
+      display_bios: setDisplayBio,
+      salutation: setSalutation,
+      first_name: setFirstName,
+      last_name: setLastName,
+      email: setEmail,
+      email_2: setEmail2,
+      institution: setInstitution,
+      country: setCountryVal,
+      book_description: setBookDesc,
+      keywords_tags: setKeywords,
+      keywords: setKeywords,
+    };
+    const setter = setters[fieldKey];
+    if (setter) setter(value);
+  };
+
+  const handleRespondToQuery = async (queryId: number, text: string) => {
+    setRespondingLoading(true);
+    try {
+      await metadataQueriesApi.respond(ticketNumber, queryId, text);
+      queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
+      toast({ title: "Response sent" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err?.message || "Could not send response.", variant: "destructive" });
+    } finally {
+      setRespondingLoading(false);
+    }
+  };
 
   // Populate form when API data loads
   useEffect(() => {
@@ -299,9 +367,15 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
    return (
     <div className="space-y-4">
 
-      {isSentToAuthor && (
+      {isFormDisabled && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
           Metadata has been sent to the author for approval. Editing is disabled until the author responds or you need to make changes.
+        </div>
+      )}
+
+      {hasPendingQueries && isSentToAuthor && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+          The author has raised queries about the metadata. Review the changes below, update fields as needed, respond to the query, then re-send to the author.
         </div>
       )}
 
@@ -312,22 +386,22 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         {/* Title Full - non-editable, greyed out */}
         <EditableRow label="Title Full" value={titleFull} onChange={() => {}} disabled authorChange={authorChanges["title_full"] || null} />
 
-        <EditableRow label="Title" value={title} onChange={setTitle} disabled={isSentToAuthor} authorChange={authorChanges["title"] || null} />
-        <EditableRow label="Subtitle" value={subtitle} onChange={setSubtitle} disabled={isSentToAuthor} authorChange={authorChanges["subtitle"] || null} />
-        <EditableRow label="Category Auth/Ed" value={categoryAuthEd} onChange={setCategoryAuthEd} disabled={isSentToAuthor} authorChange={authorChanges["category"] || null} />
+        <EditableRow label="Title" value={title} onChange={setTitle} disabled={isFormDisabled} authorChange={authorChanges["title"] || null} />
+        <EditableRow label="Subtitle" value={subtitle} onChange={setSubtitle} disabled={isFormDisabled} authorChange={authorChanges["subtitle"] || null} />
+        <EditableRow label="Category Auth/Ed" value={categoryAuthEd} onChange={setCategoryAuthEd} disabled={isFormDisabled} authorChange={authorChanges["category"] || null} />
 
         {/* Primary Author(s) */}
         <SectionHeader title={sectionLabel} />
 
-        <EditableRow label="Display Name(s)" value={displayName} onChange={setDisplayName} disabled={isSentToAuthor} authorChange={authorChanges["display_name"] || null} />
-        <EditableRow label="Display bio(s)" value={displayBio} onChange={setDisplayBio} type="textarea" disabled={isSentToAuthor} authorChange={authorChanges["display_bio"] || null} />
-        <EditableRow label="Salutation" value={salutation} onChange={setSalutation} disabled={isSentToAuthor} authorChange={authorChanges["salutation"] || null} />
-        <EditableRow label="First name" value={firstName} onChange={setFirstName} disabled={isSentToAuthor} authorChange={authorChanges["first_name"] || null} />
-        <EditableRow label="Last name" value={lastName} onChange={setLastName} disabled={isSentToAuthor} authorChange={authorChanges["last_name"] || null} />
-        <EditableRow label="Email" value={email} onChange={setEmail} type="email" disabled={isSentToAuthor} authorChange={authorChanges["email"] || null} />
-        <EditableRow label="Email 2" value={email2} onChange={setEmail2} type="email" disabled={isSentToAuthor} authorChange={authorChanges["email_2"] || null} />
-        <EditableRow label="Institution" value={institution} onChange={setInstitution} disabled={isSentToAuthor} authorChange={authorChanges["institution"] || null} />
-        <EditableRow label="Country" value={countryVal} onChange={setCountryVal} disabled={isSentToAuthor} authorChange={authorChanges["country"] || null} />
+        <EditableRow label="Display Name(s)" value={displayName} onChange={setDisplayName} disabled={isFormDisabled} authorChange={authorChanges["display_name"] || null} />
+        <EditableRow label="Display bio(s)" value={displayBio} onChange={setDisplayBio} type="textarea" disabled={isFormDisabled} authorChange={authorChanges["display_bio"] || null} />
+        <EditableRow label="Salutation" value={salutation} onChange={setSalutation} disabled={isFormDisabled} authorChange={authorChanges["salutation"] || null} />
+        <EditableRow label="First name" value={firstName} onChange={setFirstName} disabled={isFormDisabled} authorChange={authorChanges["first_name"] || null} />
+        <EditableRow label="Last name" value={lastName} onChange={setLastName} disabled={isFormDisabled} authorChange={authorChanges["last_name"] || null} />
+        <EditableRow label="Email" value={email} onChange={setEmail} type="email" disabled={isFormDisabled} authorChange={authorChanges["email"] || null} />
+        <EditableRow label="Email 2" value={email2} onChange={setEmail2} type="email" disabled={isFormDisabled} authorChange={authorChanges["email_2"] || null} />
+        <EditableRow label="Institution" value={institution} onChange={setInstitution} disabled={isFormDisabled} authorChange={authorChanges["institution"] || null} />
+        <EditableRow label="Country" value={countryVal} onChange={setCountryVal} disabled={isFormDisabled} authorChange={authorChanges["country"] || null} />
 
         {/* Additional authors/editors */}
         {additionalPeople.map((person, idx) => (
@@ -336,7 +410,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Additional Author {idx + 1}
               </p>
-              {!isSentToAuthor && (
+              {!isFormDisabled && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -347,14 +421,14 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
                 </Button>
               )}
             </div>
-            <EditableRow label="Salutation" value={person.salutation} onChange={(v) => updatePerson(person.id, "salutation", v)} disabled={isSentToAuthor} />
-            <EditableRow label="First name" value={person.firstName} onChange={(v) => updatePerson(person.id, "firstName", v)} disabled={isSentToAuthor} />
-            <EditableRow label="Last name" value={person.lastName} onChange={(v) => updatePerson(person.id, "lastName", v)} disabled={isSentToAuthor} />
-            <EditableRow label="Email" value={person.email} onChange={(v) => updatePerson(person.id, "email", v)} type="email" disabled={isSentToAuthor} />
+            <EditableRow label="Salutation" value={person.salutation} onChange={(v) => updatePerson(person.id, "salutation", v)} disabled={isFormDisabled} />
+            <EditableRow label="First name" value={person.firstName} onChange={(v) => updatePerson(person.id, "firstName", v)} disabled={isFormDisabled} />
+            <EditableRow label="Last name" value={person.lastName} onChange={(v) => updatePerson(person.id, "lastName", v)} disabled={isFormDisabled} />
+            <EditableRow label="Email" value={person.email} onChange={(v) => updatePerson(person.id, "email", v)} type="email" disabled={isFormDisabled} />
           </React.Fragment>
         ))}
 
-        {!isSentToAuthor && (
+        {!isFormDisabled && (
           <div className="px-4 py-3 border-b border-border">
             <Button variant="outline" size="sm" onClick={addPerson} className="gap-1.5">
               <Plus className="h-3.5 w-3.5" />
@@ -366,82 +440,55 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         {/* Book Information */}
         <SectionHeader title="Book Information" />
 
-        <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" disabled={isSentToAuthor} authorChange={authorChanges["book_description"] || null} />
-        <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} disabled={isSentToAuthor} authorChange={authorChanges["keywords"] || null} />
+        <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" disabled={isFormDisabled} authorChange={authorChanges["book_description"] || null} />
+        <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} disabled={isFormDisabled} authorChange={authorChanges["keywords"] || null} />
 
       </div>
 
-      {/* Metadata Queries */}
+      {/* Metadata Queries - Diff Panel */}
       {metadataQueries.length > 0 && (
-        <div className="space-y-3 border border-border rounded-lg p-4">
-          <h4 className="text-sm font-semibold">Queries from Author</h4>
-          <div className="space-y-2">
-            {metadataQueries.map((q) => (
-              <div key={q.id}>
-                <div className={`rounded-md p-3 text-sm ${q.type === 'query' ? 'bg-muted/40 border border-border' : 'bg-emerald-50 border border-emerald-200 ml-4'}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {q.raised_by_name || q.raised_by} ({q.raised_by_role})
-                    </span>
+        <div className="space-y-3">
+          {/* Pending queries with diff */}
+          {pendingQueries.map((q) => (
+            <MetadataQueryDiffPanel
+              key={q.id}
+              query={q}
+              fieldMap={fieldMap}
+              onApplyField={handleApplyField}
+              onRespond={handleRespondToQuery}
+              respondingLoading={respondingLoading}
+              hasResponse={false}
+            />
+          ))}
+
+          {/* Responded queries (collapsed) */}
+          {metadataQueries
+            .filter((q) => q.type === 'query' && metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))
+            .map((q) => {
+              const response = metadataQueries.find((r) => r.type === 'response' && r.parent_query_id === q.id);
+              return (
+                <div key={q.id} className="border border-border rounded-lg overflow-hidden opacity-70">
+                  <div className="px-4 py-2 bg-muted/30 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {new Date(q.created_at).toLocaleString()}
+                      Query from {q.raised_by_name || q.raised_by} — {new Date(q.created_at).toLocaleString()}
                     </span>
+                    <Badge variant="secondary" className="text-[10px]">Responded</Badge>
                   </div>
-                  <p className="whitespace-pre-line">{q.text}</p>
-                  {q.fields && q.fields.length > 0 && (
-                    <div className="flex gap-1 mt-1.5 flex-wrap">
-                      {q.fields.map((f) => (
-                        <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
-                      ))}
+                  <div className="px-4 py-2 text-sm whitespace-pre-line border-b border-border">{q.text}</div>
+                  {response && (
+                    <div className="px-4 py-2 text-sm bg-emerald-50/50 whitespace-pre-line">
+                      <span className="text-xs font-medium text-emerald-700">Your response: </span>
+                      {response.text}
                     </div>
                   )}
                 </div>
-                {/* Respond button for queries (not responses) */}
-                {q.type === 'query' && (
-                  respondingTo === q.id ? (
-                    <div className="ml-4 mt-2 space-y-2">
-                      <Textarea
-                        placeholder="Type your response..."
-                        value={responseText}
-                        onChange={(e) => setResponseText(e.target.value)}
-                        rows={2}
-                        className="resize-none text-sm"
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => { setRespondingTo(null); setResponseText(""); }}>Cancel</Button>
-                        <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" disabled={respondingLoading || !responseText.trim()} onClick={async () => {
-                          setRespondingLoading(true);
-                          try {
-                            await metadataQueriesApi.respond(ticketNumber, q.id, responseText);
-                            queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
-                            setRespondingTo(null);
-                            setResponseText("");
-                            toast({ title: "Response sent" });
-                          } catch (err: any) {
-                            toast({ title: "Failed", description: err?.message || "Could not send response.", variant: "destructive" });
-                          } finally {
-                            setRespondingLoading(false);
-                          }
-                        }}>
-                          {respondingLoading && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-                          Send Response
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="ml-4 mt-1">
-                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => setRespondingTo(q.id)}>Reply</Button>
-                    </div>
-                  )
-                )}
-              </div>
-            ))}
-          </div>
+              );
+            })}
         </div>
       )}
 
-      {/* Action buttons */}
-      {!isSentToAuthor && (
+      {/* Action buttons - show when form is editable */}
+      {!isFormDisabled && (
         <div className="flex items-center justify-end gap-3 pt-2">
           <Button
             variant="outline"
