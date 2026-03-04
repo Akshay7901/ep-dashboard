@@ -129,6 +129,11 @@ export const proposalApi = {
     return data;
   },
 
+  sendContract: async (ticketNumber: string, payload: { contract_type: string; title?: string; subtitle?: string; expiry_days?: number; notes?: string }): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/send`, payload);
+    return data;
+  },
+
 
 
 

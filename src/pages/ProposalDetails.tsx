@@ -1284,17 +1284,35 @@ const ProposalDetails: React.FC = () => {
                     apiPayload[apiKey] = summaryFormData[formKey];
                   }
                 }
-                if (sendContract) {
-                  apiPayload.send_contract = true;
-                  apiPayload.contract_type = contractType || 'author';
-                } else {
-                  apiPayload.send_contract = false;
-                }
+                // Step 1: Submit the review (without contract fields)
                 await submitReviewApi(apiPayload);
+
+                // Step 2: If contract should be sent, call separate contract/send API
+                if (sendContract) {
+                  try {
+                    await proposalApi.sendContract(ticketNum, {
+                      contract_type: contractType || 'author',
+                      title: proposal?.name || '',
+                      subtitle: proposal?.sub_title || '',
+                    });
+                    toast({
+                      title: 'Contract Sent',
+                      description: 'The contract has been sent to the author.',
+                    });
+                  } catch (contractErr: any) {
+                    console.error('Contract send failed:', contractErr);
+                    toast({
+                      variant: 'destructive',
+                      title: 'Contract Send Failed',
+                      description: contractErr?.response?.data?.error || contractErr.message || 'Failed to send contract. Please try again.',
+                    });
+                  }
+                }
 
                 queryClient.invalidateQueries({ queryKey: ["proposals"] });
                 queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
                 queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
+                queryClient.invalidateQueries({ queryKey: ["contract", ticketNum] });
                 setDecisionReviewerSubmitted(true);
                 setShowingSummary(false);
               } catch (err) {
