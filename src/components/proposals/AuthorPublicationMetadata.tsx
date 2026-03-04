@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2 } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2, Check } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -249,6 +257,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   };
 
   const [finalising, setFinalising] = useState(false);
+  const [showFinaliseConfirm, setShowFinaliseConfirm] = useState(false);
 
   const handleFinalise = async () => {
     setFinalising(true);
@@ -260,6 +269,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       });
       queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
       queryClient.invalidateQueries({ queryKey: ["proposal"] });
+      setShowFinaliseConfirm(false);
       toast({
         title: "Metadata finalised",
         description: hasCoverImage
@@ -492,16 +502,40 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <Button
               className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-              onClick={handleFinalise}
+              onClick={() => setShowFinaliseConfirm(true)}
               disabled={hasPendingQuery || finalising}
             >
-              {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Finalise &amp; Lock Metadata
             </Button>
             {hasPendingQuery && (
               <span className="text-xs text-amber-600">Cannot finalise while a query is pending</span>
             )}
           </div>
+
+          <AlertDialog open={showFinaliseConfirm} onOpenChange={setShowFinaliseConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Finalise Metadata</AlertDialogTitle>
+              </AlertDialogHeader>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Please note that information cannot be amended once finalised. Make sure to check over the information thoroughly before proceeding.</p>
+                {!hasCoverImage && (
+                  <p>As you have not provided a cover image, we will prepare a cover in line with our house style. The cover will be a neutral/abstract design, with the title and author/editor name clearly displayed. Once complete, it will not be able to be amended.</p>
+                )}
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  className="bg-[#8B0000] hover:bg-[#6B0000] text-white"
+                  onClick={handleFinalise}
+                  disabled={finalising}
+                >
+                  {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Finalise Proposal
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </div>
