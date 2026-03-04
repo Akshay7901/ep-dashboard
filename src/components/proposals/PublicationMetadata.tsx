@@ -499,14 +499,19 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Save Draft
           </Button>
-          <Button
-            className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-            disabled={submitting}
-            onClick={handleSubmitToAuthor}
-          >
-            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Submit to Author for Finalization
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+              disabled={submitting || hasPendingQueries}
+              onClick={handleSubmitToAuthor}
+            >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Submit to Author for Finalization
+            </Button>
+            {hasPendingQueries && (
+              <span className="text-xs text-amber-600">Respond to all author queries before submitting</span>
+            )}
+          </div>
         </div>
       )}
     </div>
