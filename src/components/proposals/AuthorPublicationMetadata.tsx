@@ -306,11 +306,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         </div>
       )}
 
-      {contractSigned && (
-        <Badge className="bg-emerald-600 text-white gap-1.5 px-3 py-1 text-xs rounded-full hover:bg-emerald-600">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Contract Signed
-        </Badge>
-      )}
 
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata — READ ONLY */}
