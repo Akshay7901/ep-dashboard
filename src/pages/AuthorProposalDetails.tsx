@@ -40,12 +40,7 @@ interface TimelineStage {
 const getTimelineProgressFromApi = (timeline: TimelineStage[]): number => {
   if (!timeline?.length) return 0;
   const isDeclined = timeline.some((s) => s.stage_name === 'declined' && s.is_completed);
-  if (isDeclined) {
-    // For declined proposals, count only non-declined completed stages against total non-declined stages
-    const nonDeclined = timeline.filter((s) => s.stage_name !== 'declined');
-    const completedCount = nonDeclined.filter((s) => s.is_completed).length;
-    return Math.round(completedCount / nonDeclined.length * 100);
-  }
+  if (isDeclined) return 100;
   const completedCount = timeline.filter((s) => s.is_completed).length;
   return Math.round(completedCount / timeline.length * 100);
 };
