@@ -242,6 +242,17 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     );
   }
 
+  // If no metadata returned (404 = not yet sent by reviewer), show a message
+  if (!metadataResponse) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Publication metadata is not available yet. The reviewer has not sent it for your approval.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {contractSigned && (

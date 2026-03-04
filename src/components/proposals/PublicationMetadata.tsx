@@ -260,11 +260,14 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const handleSubmitToAuthor = async () => {
     setSubmitting(true);
     try {
+      // First save the current draft
       await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Submitted to author for finalization" });
+      // Then send to author via the dedicated endpoint
+      await metadataApi.send(ticketNumber);
       queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
-      toast({ title: "Submitted", description: "Metadata submitted to author for finalization." });
+      toast({ title: "Sent to Author", description: "Metadata has been sent to the author for approval." });
     } catch (err: any) {
-      toast({ title: "Submit failed", description: err?.message || "Could not submit metadata.", variant: "destructive" });
+      toast({ title: "Submit failed", description: err?.message || "Could not send metadata to author.", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

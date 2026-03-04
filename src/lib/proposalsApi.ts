@@ -171,6 +171,7 @@ export interface ProposalMetadata {
 export interface MetadataResponse {
   ticket_number: string;
   current_version: number;
+  metadata_status: string;
   metadata: ProposalMetadata;
   created_at: string;
   updated_at: string;
@@ -190,6 +191,11 @@ export const metadataApi = {
 
   update: async (ticketNumber: string, payload: Partial<ProposalMetadata> & { notes?: string; updated_by?: string }): Promise<any> => {
     const { data } = await api.put(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata`, payload);
+    return data;
+  },
+
+  send: async (ticketNumber: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/send`);
     return data;
   },
 };
