@@ -245,17 +245,32 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     }
   };
 
-  const handleFinalise = () => {
-    if (hasCoverImage) {
+  const [finalising, setFinalising] = useState(false);
+
+  const handleFinalise = async () => {
+    setFinalising(true);
+    try {
+      await metadataApi.approve(ticketNumber, {
+        notes: hasCoverImage
+          ? "Author approved metadata with cover image."
+          : "Author approved metadata without cover image — publisher will use default cover.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ["proposal"] });
       toast({
         title: "Metadata finalised",
-        description: "Your metadata and cover image have been submitted and locked.",
+        description: hasCoverImage
+          ? "Your metadata and cover image have been submitted and locked."
+          : "Your metadata has been submitted and locked. No cover image was provided — the publisher will use a default cover.",
       });
-    } else {
+    } catch (err: any) {
       toast({
-        title: "Metadata finalised",
-        description: "Your metadata has been submitted and locked. No cover image was provided — the publisher will use a default cover.",
+        title: "Failed to finalise",
+        description: err?.response?.data?.message || err?.message || "Could not approve metadata.",
+        variant: "destructive",
       });
+    } finally {
+      setFinalising(false);
     }
   };
 
@@ -509,8 +524,9 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <Button
           className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
           onClick={handleFinalise}
-          disabled={hasPendingQuery}
+          disabled={hasPendingQuery || finalising}
         >
+          {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Finalise &amp; Lock Metadata
         </Button>
         {hasPendingQuery && (
