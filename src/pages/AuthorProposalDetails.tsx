@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink, HelpCircle } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, Send, CheckCircle2, Circle, AlertCircle, Loader2, RefreshCw, ExternalLink, HelpCircle, XCircle } from "lucide-react";
 import { useProposal } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,13 @@ interface TimelineStage {
 
 const getTimelineProgressFromApi = (timeline: TimelineStage[]): number => {
   if (!timeline?.length) return 0;
+  const isDeclined = timeline.some((s) => s.stage_name === 'declined' && s.is_completed);
+  if (isDeclined) {
+    // For declined proposals, count only non-declined completed stages against total non-declined stages
+    const nonDeclined = timeline.filter((s) => s.stage_name !== 'declined');
+    const completedCount = nonDeclined.filter((s) => s.is_completed).length;
+    return Math.round(completedCount / nonDeclined.length * 100);
+  }
   const completedCount = timeline.filter((s) => s.is_completed).length;
   return Math.round(completedCount / timeline.length * 100);
 };
@@ -299,7 +306,9 @@ const AuthorProposalDetails: React.FC = () => {
               const dateStr = step.completed_at || step.started_at;
               return (
                 <div key={step.stage_name} className="flex flex-col items-center text-center gap-1.5">
-                  {step.is_completed ? (
+                  {step.stage_name === 'declined' && step.is_completed ? (
+                    <XCircle className="h-6 w-6 text-destructive" />
+                  ) : step.is_completed ? (
                     <CheckCircle2 className="h-6 w-6 text-[#3d5a47]" />
                   ) : step.is_current ? (
                     <div className="relative flex items-center justify-center h-6 w-6">
