@@ -384,7 +384,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
                       {q.raised_by_name || q.raised_by} ({q.raised_by_role})
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(q.created_at).toLocaleDateString()}
+                      {new Date(q.created_at).toLocaleString()}
                     </span>
                   </div>
                   <p className="whitespace-pre-line">{q.text}</p>
