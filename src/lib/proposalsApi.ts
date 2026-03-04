@@ -198,6 +198,11 @@ export const metadataApi = {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/send`);
     return data;
   },
+
+  approve: async (ticketNumber: string, payload?: { notes?: string }): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/approve`, payload || {});
+    return data;
+  },
 };
 
 // Metadata Queries API
