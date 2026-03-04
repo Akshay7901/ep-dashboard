@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { CheckCircle2, Plus, Trash2, Upload, ImageIcon } from "lucide-react";
-import { extractCountry } from "@/lib/extractCountry";
+import React, { useState, useEffect } from "react";
+import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,11 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { metadataApi } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
 interface AuthorPublicationMetadataProps {
   proposal: Proposal;
   contractSigned?: boolean;
+  ticketNumber: string;
 }
 
 /* ---- Read-only row ---- */
@@ -113,66 +115,53 @@ interface ChangeRequestField {
 const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   proposal,
   contractSigned,
+  ticketNumber,
 }) => {
-  const country = extractCountry(proposal.address) || proposal.country || "";
-  const fullName = proposal.corresponding_author_name || proposal.author_name || "";
-  const nameParts = fullName.trim().split(/\s+/);
-  const titlePrefixes = ["dr.", "prof.", "mr.", "mrs.", "ms.", "dr", "prof"];
-  let detectedTitle = "";
-  let firstNameParts = [...nameParts];
-  if (nameParts.length > 1 && titlePrefixes.includes(nameParts[0].toLowerCase())) {
-    detectedTitle = nameParts[0];
-    firstNameParts = nameParts.slice(1);
-  }
-  const detectedLast = firstNameParts.length > 1 ? firstNameParts.pop() || "" : "";
-  const detectedFirst = firstNameParts.join(" ");
+  // Fetch metadata from API
+  const { data: metadataResponse, isLoading: metadataLoading } = useQuery({
+    queryKey: ["metadata", ticketNumber],
+    queryFn: () => metadataApi.get(ticketNumber),
+    enabled: !!ticketNumber,
+  });
 
-  const isAuthorType = (proposal.book_type || "Author").toLowerCase().includes("author");
-  const titleFull = [proposal.name, proposal.sub_title].filter(Boolean).join(": ") || proposal.name;
+  const apiMeta = metadataResponse?.metadata;
+  const primaryAuthor = apiMeta?.authors?.[0];
 
-  // Editable fields (author section)
-  const [displayName, setDisplayName] = useState(fullName);
-  const [displayBio, setDisplayBio] = useState(proposal.biography || "");
-  const [salutation, setSalutation] = useState(detectedTitle || "");
-  const [firstName, setFirstName] = useState(detectedFirst);
-  const [lastName, setLastName] = useState(detectedLast);
-  const [email, setEmail] = useState(proposal.author_email || "");
-  const [email2, setEmail2] = useState(proposal.secondary_email || "");
-  const [institution, setInstitution] = useState(proposal.institution || "");
-  const [countryVal, setCountryVal] = useState(country);
-  const [pubDate, setPubDate] = useState(proposal.expected_completion_date || "");
+  // Derive values from API, fallback to proposal
+  const metaTitle = apiMeta?.title || proposal.name || "";
+  const metaSubtitle = apiMeta?.subtitle || proposal.sub_title || "";
+  const titleFull = apiMeta?.full_title || [metaTitle, metaSubtitle].filter(Boolean).join(": ");
+  const category = apiMeta?.category || proposal.book_type || "Author";
+  const displayNames = apiMeta?.display_names || proposal.corresponding_author_name || proposal.author_name || "";
+  const displayBios = apiMeta?.display_bios || proposal.biography || "";
+  const bookDescription = apiMeta?.book_description || proposal.short_description || "";
+  const keywordsVal = apiMeta?.keywords || proposal.keywords || "";
 
-  // Cover image
+  // Primary author fields from API
+  const authorSalutation = primaryAuthor?.title || "";
+  const authorFirstName = primaryAuthor?.first_name || "";
+  const authorLastName = primaryAuthor?.last_name || "";
+  const authorEmail = primaryAuthor?.email || proposal.author_email || "";
+  const authorEmail2 = primaryAuthor?.email_2 || proposal.secondary_email || "";
+  const authorInstitution = primaryAuthor?.institution || proposal.institution || "";
+  const authorCountry = primaryAuthor?.country || proposal.country || "";
+
+  // Additional authors from API (skip first)
+  const additionalAuthors = (apiMeta?.authors || []).slice(1);
+
+  const isAuthorType = category.toLowerCase().includes("author");
+
+  // Cover image (local state only - no API for this yet)
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [coverImageSource, setCoverImageSource] = useState("");
   const [coverImagePermission, setCoverImagePermission] = useState(false);
-
-  // Additional authors/editors
-  const [additionalPeople, setAdditionalPeople] = useState<AdditionalPerson[]>([]);
 
   // Change request comments
   const [requestingChanges, setRequestingChanges] = useState(false);
   const [changeRequests, setChangeRequests] = useState<ChangeRequestField[]>([
     { field: "", newValue: "" },
   ]);
-
-  const addPerson = () => {
-    setAdditionalPeople((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), salutation: "", firstName: "", lastName: "", email: "" },
-    ]);
-  };
-
-  const removePerson = (id: string) => {
-    setAdditionalPeople((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const updatePerson = (id: string, field: keyof AdditionalPerson, value: string) => {
-    setAdditionalPeople((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
-    );
-  };
 
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -201,7 +190,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   const hasCoverImage = !!coverImageFile;
 
   const sectionLabel = isAuthorType ? "Primary Author(s)" : "Primary Editor(s)";
-  const addButtonLabel = isAuthorType ? "Add Another Author" : "Add Another Editor";
 
   const FIELD_OPTIONS = [
     "Title",
@@ -218,11 +206,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     "Country",
     "Book description",
     "Keywords/Tags",
-    "Publication date",
-    "Word Count",
-    "Figures/Tables",
-    "Under Review Elsewhere",
-    "Co-Authors / Editors",
   ];
 
   const handleSubmitChangeRequests = () => {
@@ -250,6 +233,15 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     }
   };
 
+  if (metadataLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {contractSigned && (
@@ -263,9 +255,9 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <SectionHeader title="Publication Metadata" />
 
         <ReadOnlyRow label="Title Full" value={titleFull} />
-        <ReadOnlyRow label="Title" value={proposal.name} />
-        <ReadOnlyRow label="Subtitle" value={proposal.sub_title} />
-        <ReadOnlyRow label="Category Auth/Ed" value={proposal.book_type || "Author"} />
+        <ReadOnlyRow label="Title" value={metaTitle} />
+        <ReadOnlyRow label="Subtitle" value={metaSubtitle} />
+        <ReadOnlyRow label="Category Auth/Ed" value={category} />
 
         {/* Cover Image */}
         <SectionHeader title="Cover Image" />
@@ -333,86 +325,39 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           </div>
         </div>
 
-        {/* Primary Author(s) / Primary Editor(s) — EDITABLE */}
+        {/* Primary Author(s) — READ ONLY from API */}
         <SectionHeader title={sectionLabel} />
 
-        <EditableRow
-          label="Display Name(s)"
-          value={displayName}
-          onChange={setDisplayName}
-          helpText="This is the name that will appear on the publication."
-        />
-        <EditableRow label="Display bio(s)" value={displayBio} onChange={setDisplayBio} type="textarea" />
-        <EditableRow label="Salutation" value={salutation} onChange={setSalutation} />
-        <EditableRow label="First name" value={firstName} onChange={setFirstName} />
-        <EditableRow label="Last name" value={lastName} onChange={setLastName} />
-        <EditableRow label="Email" value={email} onChange={setEmail} type="email" />
-        <EditableRow label="Email 2" value={email2} onChange={setEmail2} type="email" />
-        <EditableRow
-          label="Institution"
-          value={institution}
-          onChange={setInstitution}
-          helpText="Your current affiliated institution or organisation."
-        />
-        <EditableRow
-          label="Country"
-          value={countryVal}
-          onChange={setCountryVal}
-          helpText="Country of primary residence or institutional affiliation."
-        />
+        <ReadOnlyRow label="Display Name(s)" value={displayNames} />
+        <ReadOnlyRow label="Display bio(s)" value={displayBios} />
+        <ReadOnlyRow label="Salutation" value={authorSalutation} />
+        <ReadOnlyRow label="First name" value={authorFirstName} />
+        <ReadOnlyRow label="Last name" value={authorLastName} />
+        <ReadOnlyRow label="Email" value={authorEmail} />
+        <ReadOnlyRow label="Email 2" value={authorEmail2} />
+        <ReadOnlyRow label="Institution" value={authorInstitution} />
+        <ReadOnlyRow label="Country" value={authorCountry} />
 
-        {/* Additional authors/editors */}
-        {additionalPeople.map((person, idx) => (
-          <React.Fragment key={person.id}>
+        {/* Additional authors from API */}
+        {additionalAuthors.map((person, idx) => (
+          <React.Fragment key={idx}>
             <div className="bg-muted/50 py-2 px-4 flex items-center justify-between border-b border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Additional {isAuthorType ? "Author" : "Editor"} {idx + 1}
               </p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => removePerson(person.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
             </div>
-            <EditableRow
-              label="Salutation"
-              value={person.salutation}
-              onChange={(v) => updatePerson(person.id, "salutation", v)}
-            />
-            <EditableRow
-              label="First name"
-              value={person.firstName}
-              onChange={(v) => updatePerson(person.id, "firstName", v)}
-            />
-            <EditableRow
-              label="Last name"
-              value={person.lastName}
-              onChange={(v) => updatePerson(person.id, "lastName", v)}
-            />
-            <EditableRow
-              label="Email"
-              value={person.email}
-              onChange={(v) => updatePerson(person.id, "email", v)}
-              type="email"
-            />
+            <ReadOnlyRow label="Salutation" value={person.title} />
+            <ReadOnlyRow label="First name" value={person.first_name} />
+            <ReadOnlyRow label="Last name" value={person.last_name} />
+            <ReadOnlyRow label="Email" value={person.email} />
           </React.Fragment>
         ))}
-
-        <div className="px-4 py-3 border-b border-border">
-          <Button variant="outline" size="sm" onClick={addPerson} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            {addButtonLabel}
-          </Button>
-        </div>
 
         {/* Book Information — READ ONLY */}
         <SectionHeader title="Book Information" />
 
-        <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={proposal.short_description} />
-        <ReadOnlyRow label="Keywords/Tags" value={proposal.keywords} />
+        <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={bookDescription} />
+        <ReadOnlyRow label="Keywords/Tags" value={keywordsVal} />
 
       </div>
 
@@ -466,42 +411,38 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             ))}
           </div>
 
-          <Button variant="outline" size="sm" onClick={addChangeRequestRow} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> Add Another Change
-          </Button>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              className="px-8"
-              onClick={() => {
-                setRequestingChanges(false);
-                setChangeRequests([{ field: "", newValue: "" }]);
-              }}
-            >
-              Back
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={addChangeRequestRow} className="gap-1">
+              <Plus className="h-3.5 w-3.5" /> Add Another Field
             </Button>
-            <Button
-              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-              onClick={handleSubmitChangeRequests}
-            >
-              Submit request
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+            <Button variant="ghost" size="sm" onClick={() => { setRequestingChanges(false); setChangeRequests([{ field: "", newValue: "" }]); }}>
+              Cancel
+            </Button>
+            <Button size="sm" className="bg-[#2f4b40] hover:opacity-90 text-white" onClick={handleSubmitChangeRequests}>
+              Submit Change Request
             </Button>
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button variant="outline" className="px-8" onClick={() => setRequestingChanges(true)}>
-            Request changes
-          </Button>
-          <Button
-            className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-            onClick={handleFinalise}
-          >
-            Finalise &amp; Lock Metadata
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5">
+            Request Changes to Publication Metadata
           </Button>
         </div>
       )}
+
+      {/* Finalise */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+        <Button
+          className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+          onClick={handleFinalise}
+        >
+          Finalise &amp; Lock Metadata
+        </Button>
+      </div>
     </div>
   );
 };
