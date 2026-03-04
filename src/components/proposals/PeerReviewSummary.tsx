@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Proposal } from "@/types";
 
 const REVIEW_FIELDS = [
@@ -26,7 +29,7 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: (sendContract: boolean, contractType?: string) => void;
+  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string) => void;
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
@@ -45,6 +48,9 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   // For proceed/minor/major revision, contract is mandatory; for reject, no contract
   const contractRequired = showContractSection && !isReject;
   const [selectedContract, setSelectedContract] = useState("author");
+  const [showContractDialog, setShowContractDialog] = useState(false);
+  const [contractTitle, setContractTitle] = useState(proposal?.name || "");
+  const [contractSubtitle, setContractSubtitle] = useState(proposal?.sub_title || "");
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
@@ -139,7 +145,14 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
-            onConfirmSubmit(contractRequired, contractRequired ? selectedContract : undefined);
+            if (contractRequired) {
+              // Open dialog to confirm title/subtitle before sending contract
+              setContractTitle(proposal?.name || "");
+              setContractSubtitle(proposal?.sub_title || "");
+              setShowContractDialog(true);
+            } else {
+              onConfirmSubmit(false);
+            }
           }}
           disabled={isSubmitting}
         >
@@ -150,6 +163,53 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
             : "Confirm & Submit"}
         </Button>
       </div>
+
+      {/* Contract Title/Subtitle Dialog */}
+      <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contract Details</DialogTitle>
+            <DialogDescription>
+              Confirm the title and subtitle for the contract before sending.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="contract-title">Title</Label>
+              <Input
+                id="contract-title"
+                value={contractTitle}
+                onChange={(e) => setContractTitle(e.target.value)}
+                placeholder="Enter title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contract-subtitle">Subtitle</Label>
+              <Input
+                id="contract-subtitle"
+                value={contractSubtitle}
+                onChange={(e) => setContractSubtitle(e.target.value)}
+                placeholder="Enter subtitle (optional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowContractDialog(false)} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              onClick={() => {
+                setShowContractDialog(false);
+                onConfirmSubmit(true, selectedContract, contractTitle, contractSubtitle);
+              }}
+              disabled={isSubmitting || !contractTitle.trim()}
+            >
+              {isSubmitting ? "Submitting..." : "Send Contract & Submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
