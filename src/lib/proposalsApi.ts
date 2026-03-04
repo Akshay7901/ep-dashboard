@@ -143,6 +143,57 @@ export const proposalApi = {
   },
 };
 
+// Metadata API
+export interface MetadataAuthor {
+  title?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  email_2?: string;
+  institution?: string;
+  country?: string;
+}
+
+export interface ProposalMetadata {
+  full_title?: string;
+  title?: string;
+  subtitle?: string;
+  category?: string;
+  display_names?: string;
+  display_bios?: string;
+  authors?: MetadataAuthor[];
+  book_description?: string;
+  keywords?: string;
+  website_classification?: string;
+  bic?: string;
+}
+
+export interface MetadataResponse {
+  ticket_number: string;
+  current_version: number;
+  metadata: ProposalMetadata;
+  created_at: string;
+  updated_at: string;
+  revisions?: any[];
+}
+
+export const metadataApi = {
+  get: async (ticketNumber: string): Promise<MetadataResponse | null> => {
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata`);
+      return data;
+    } catch (error: any) {
+      if (error?.status === 404 || error?.response?.status === 404) return null;
+      throw error;
+    }
+  },
+
+  update: async (ticketNumber: string, payload: Partial<ProposalMetadata> & { notes?: string; updated_by?: string }): Promise<any> => {
+    const { data } = await api.put(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata`, payload);
+    return data;
+  },
+};
+
 // Contract Queries API
 export interface ContractQuery {
   id: number;

@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Loader2 } from "lucide-react";
 import { extractCountry } from "@/lib/extractCountry";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { metadataApi, type ProposalMetadata, type MetadataAuthor } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
 interface PublicationMetadataProps {
   proposal: Proposal;
   contractSigned?: boolean;
   authorChanges?: Record<string, { old: string; new: string }>;
+  ticketNumber: string;
 }
 
 interface EditableRowProps {
@@ -87,7 +91,20 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   proposal,
   contractSigned,
   authorChanges = {},
+  ticketNumber,
 }) => {
+  const queryClient = useQueryClient();
+
+  // Fetch metadata from API
+  const { data: metadataResponse, isLoading } = useQuery({
+    queryKey: ["metadata", ticketNumber],
+    queryFn: () => metadataApi.get(ticketNumber),
+    enabled: !!ticketNumber,
+  });
+
+  const apiMeta = metadataResponse?.metadata;
+
+  // Fallback values from proposal
   const country = extractCountry(proposal.address) || proposal.country || "";
   const fullName = proposal.corresponding_author_name || proposal.author_name || "";
   const nameParts = fullName.trim().split(/\s+/);
@@ -101,43 +118,78 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const detectedLast = firstNameParts.length > 1 ? firstNameParts.pop() || "" : "";
   const detectedFirst = firstNameParts.join(" ");
 
-  const isAuthorType = (proposal.book_type || "Author").toLowerCase().includes("author");
+  const primaryAuthor = apiMeta?.authors?.[0];
 
-  // Editable form state
-  const [title, setTitle] = useState(proposal.name || "");
-  const [subtitle, setSubtitle] = useState(proposal.sub_title || "");
-  const [categoryAuthEd, setCategoryAuthEd] = useState(proposal.book_type || "Author");
-  const [displayName, setDisplayName] = useState(fullName);
-  const [displayBio, setDisplayBio] = useState(proposal.biography || "");
-  const [salutation, setSalutation] = useState(detectedTitle || "");
-  const [firstName, setFirstName] = useState(detectedFirst);
-  const [lastName, setLastName] = useState(detectedLast);
-  const [email, setEmail] = useState(proposal.author_email || "");
-  const [email2, setEmail2] = useState(proposal.secondary_email || "");
-  const [institution, setInstitution] = useState(proposal.institution || "");
-  const [countryVal, setCountryVal] = useState(country);
-  const [bookDesc, setBookDesc] = useState(proposal.short_description || "");
-  const [keywords, setKeywords] = useState(proposal.keywords || "");
-  const [webClassification, setWebClassification] = useState((proposal as any).website_classification || "");
-  const [bic, setBic] = useState((proposal as any).bic || "");
-  const [submissionDate, setSubmissionDate] = useState(
-    proposal.submitted_date ||
-      (proposal.created_at
-        ? new Date(proposal.created_at).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        : "")
-  );
-  const [pubDate, setPubDate] = useState(proposal.expected_completion_date || "");
-  const [wordCount, setWordCount] = useState(proposal.word_count || "");
-  const [figuresTables, setFiguresTables] = useState(proposal.figures_tables_count || "");
-  const [underReview, setUnderReview] = useState(proposal.under_review_elsewhere || "");
-  const [coAuthors, setCoAuthors] = useState(proposal.co_authors_editors || "");
+  // Editable form state - prefer API data, fallback to proposal
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [categoryAuthEd, setCategoryAuthEd] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [displayBio, setDisplayBio] = useState("");
+  const [salutation, setSalutation] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [email2, setEmail2] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [countryVal, setCountryVal] = useState("");
+  const [bookDesc, setBookDesc] = useState("");
+  const [keywords, setKeywords] = useState("");
 
   // Additional authors/editors
   const [additionalPeople, setAdditionalPeople] = useState<AdditionalPerson[]>([]);
+
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Populate form when API data loads
+  useEffect(() => {
+    if (apiMeta) {
+      setTitle(apiMeta.title || proposal.name || "");
+      setSubtitle(apiMeta.subtitle || proposal.sub_title || "");
+      setCategoryAuthEd(apiMeta.category || proposal.book_type || "Author");
+      setDisplayName(apiMeta.display_names || fullName);
+      setDisplayBio(apiMeta.display_bios || proposal.biography || "");
+      setSalutation(primaryAuthor?.title || detectedTitle || "");
+      setFirstName(primaryAuthor?.first_name || detectedFirst);
+      setLastName(primaryAuthor?.last_name || detectedLast);
+      setEmail(primaryAuthor?.email || proposal.author_email || "");
+      setEmail2(primaryAuthor?.email_2 || proposal.secondary_email || "");
+      setInstitution(primaryAuthor?.institution || proposal.institution || "");
+      setCountryVal(primaryAuthor?.country || country);
+      setBookDesc(apiMeta.book_description || proposal.short_description || "");
+      setKeywords(apiMeta.keywords || proposal.keywords || "");
+
+      // Load additional authors (skip first which is primary)
+      if (apiMeta.authors && apiMeta.authors.length > 1) {
+        setAdditionalPeople(
+          apiMeta.authors.slice(1).map((a) => ({
+            id: crypto.randomUUID(),
+            salutation: a.title || "",
+            firstName: a.first_name || "",
+            lastName: a.last_name || "",
+            email: a.email || "",
+          }))
+        );
+      }
+    } else if (!isLoading) {
+      // No API data yet, use proposal fallbacks
+      setTitle(proposal.name || "");
+      setSubtitle(proposal.sub_title || "");
+      setCategoryAuthEd(proposal.book_type || "Author");
+      setDisplayName(fullName);
+      setDisplayBio(proposal.biography || "");
+      setSalutation(detectedTitle || "");
+      setFirstName(detectedFirst);
+      setLastName(detectedLast);
+      setEmail(proposal.author_email || "");
+      setEmail2(proposal.secondary_email || "");
+      setInstitution(proposal.institution || "");
+      setCountryVal(country);
+      setBookDesc(proposal.short_description || "");
+      setKeywords(proposal.keywords || "");
+    }
+  }, [apiMeta, isLoading]);
 
   const addPerson = () => {
     setAdditionalPeople((prev) => [
@@ -159,6 +211,74 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   // Title Full auto-computed
   const titleFull = [title, subtitle].filter(Boolean).join(": ");
 
+  // Build payload for API
+  const buildPayload = (): Partial<ProposalMetadata> => {
+    const authors: MetadataAuthor[] = [
+      {
+        title: salutation,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        email_2: email2,
+        institution,
+        country: countryVal,
+      },
+      ...additionalPeople.map((p) => ({
+        title: p.salutation,
+        first_name: p.firstName,
+        last_name: p.lastName,
+        email: p.email,
+      })),
+    ];
+
+    return {
+      title,
+      subtitle,
+      full_title: titleFull,
+      category: categoryAuthEd,
+      display_names: displayName,
+      display_bios: displayBio,
+      authors,
+      book_description: bookDesc,
+      keywords,
+    };
+  };
+
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    try {
+      await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Draft saved" });
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
+      toast({ title: "Metadata saved", description: "Your changes have been saved." });
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err?.message || "Could not save metadata.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSubmitToAuthor = async () => {
+    setSubmitting(true);
+    try {
+      await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Submitted to author for finalization" });
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
+      toast({ title: "Submitted", description: "Metadata submitted to author for finalization." });
+    } catch (err: any) {
+      toast({ title: "Submit failed", description: err?.message || "Could not submit metadata.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
+      </div>
+    );
+  }
+
   const sectionLabel = "Primary Author(s)";
   const addButtonLabel = "Add an author or editor";
 
@@ -176,7 +296,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         <EditableRow label="Subtitle" value={subtitle} onChange={setSubtitle} authorChange={authorChanges["subtitle"] || null} />
         <EditableRow label="Category Auth/Ed" value={categoryAuthEd} onChange={setCategoryAuthEd} authorChange={authorChanges["category"] || null} />
 
-        {/* Primary Author(s) / Primary Editor(s) */}
+        {/* Primary Author(s) */}
         <SectionHeader title={sectionLabel} />
 
         <EditableRow label="Display Name(s)" value={displayName} onChange={setDisplayName} authorChange={authorChanges["display_name"] || null} />
@@ -225,6 +345,27 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" authorChange={authorChanges["book_description"] || null} />
         <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} authorChange={authorChanges["keywords"] || null} />
 
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <Button
+          variant="outline"
+          className="px-8"
+          disabled={saving}
+          onClick={handleSaveDraft}
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+          Save Draft
+        </Button>
+        <Button
+          className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+          disabled={submitting}
+          onClick={handleSubmitToAuthor}
+        >
+          {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+          Submit to Author for Finalization
+        </Button>
       </div>
     </div>
   );
