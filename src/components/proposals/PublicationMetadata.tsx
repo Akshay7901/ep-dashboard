@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, Plus, Trash2, Loader2 } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Loader2, MessageSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { extractCountry } from "@/lib/extractCountry";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -161,6 +162,8 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [respondingLoading, setRespondingLoading] = useState(false);
+  const [showRespondDialog, setShowRespondDialog] = useState(false);
+  const [dialogResponses, setDialogResponses] = useState<Record<number, string>>({});
 
   // Field map for diff panel - maps normalized field keys to labels and current values
   const fieldMap = useMemo(() => ({
@@ -336,12 +339,22 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
     }
   };
 
+  const handleSubmitToAuthorClick = () => {
+    if (hasPendingQueries) {
+      // Initialize dialog responses for each pending query
+      const initial: Record<number, string> = {};
+      pendingQueries.forEach((q) => { initial[q.id] = ""; });
+      setDialogResponses(initial);
+      setShowRespondDialog(true);
+    } else {
+      handleSubmitToAuthor();
+    }
+  };
+
   const handleSubmitToAuthor = async () => {
     setSubmitting(true);
     try {
-      // First save the current draft
       await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Submitted to author for finalization" });
-      // Then send to author via the dedicated endpoint
       await metadataApi.send(ticketNumber);
       queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
       toast({ title: "Sent to Author", description: "Metadata has been sent to the author for approval." });
@@ -351,6 +364,32 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
       setSubmitting(false);
     }
   };
+
+  const handleRespondAndSubmit = async () => {
+    setSubmitting(true);
+    try {
+      // 1. Respond to all pending queries
+      for (const q of pendingQueries) {
+        const text = dialogResponses[q.id]?.trim();
+        if (text) {
+          await metadataQueriesApi.respond(ticketNumber, q.id, text);
+        }
+      }
+      // 2. Save & submit to author
+      await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Submitted to author for finalization" });
+      await metadataApi.send(ticketNumber);
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
+      setShowRespondDialog(false);
+      toast({ title: "Sent to Author", description: "Queries responded and metadata sent to author." });
+    } catch (err: any) {
+      toast({ title: "Submit failed", description: err?.message || "Could not complete.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const allDialogResponsesFilled = pendingQueries.every((q) => dialogResponses[q.id]?.trim());
 
   if (isLoading) {
     return (
@@ -499,21 +538,72 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Save Draft
           </Button>
-          <div className="flex flex-col items-end gap-1">
-            <Button
-              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-              disabled={submitting || hasPendingQueries}
-              onClick={handleSubmitToAuthor}
-            >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Submit to Author for Finalization
-            </Button>
-            {hasPendingQueries && (
-              <span className="text-xs text-amber-600">Respond to all author queries before submitting</span>
-            )}
-          </div>
+          <Button
+            className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+            disabled={submitting}
+            onClick={handleSubmitToAuthorClick}
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Submit to Author for Finalization
+          </Button>
         </div>
       )}
+
+      {/* Respond & Submit Dialog */}
+      <Dialog open={showRespondDialog} onOpenChange={setShowRespondDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-amber-600" />
+              Respond to Author Queries
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Please respond to the author's queries before submitting the metadata.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto py-2">
+            {pendingQueries.map((q) => (
+              <div key={q.id} className="border border-amber-200 rounded-lg overflow-hidden">
+                <div className="px-3 py-2 bg-amber-50 border-b border-amber-200">
+                  <p className="text-xs font-medium text-amber-800">
+                    Query from {q.raised_by_name || q.raised_by}
+                  </p>
+                  <p className="text-sm mt-1 whitespace-pre-line">{q.text}</p>
+                  {q.fields && q.fields.length > 0 && (
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                      {q.fields.map((f: string) => (
+                        <span key={f} className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">{f}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <Textarea
+                    placeholder="Type your response..."
+                    value={dialogResponses[q.id] || ""}
+                    onChange={(e) => setDialogResponses((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                    rows={2}
+                    className="resize-none text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRespondDialog(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#2f4b40] hover:opacity-90 text-white"
+              disabled={submitting || !allDialogResponsesFilled}
+              onClick={handleRespondAndSubmit}
+            >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Respond & Submit to Author
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
