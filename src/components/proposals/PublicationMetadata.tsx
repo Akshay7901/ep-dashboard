@@ -103,7 +103,8 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   });
 
   const apiMeta = metadataResponse?.metadata;
-
+  const metadataStatus = metadataResponse?.metadata_status;
+  const isSentToAuthor = metadataStatus === "sent_to_author";
   // Fallback values from proposal
   const country = extractCountry(proposal.address) || proposal.country || "";
   const fullName = proposal.corresponding_author_name || proposal.author_name || "";
@@ -285,8 +286,14 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const sectionLabel = "Primary Author(s)";
   const addButtonLabel = "Add an author or editor";
 
-  return (
+   return (
     <div className="space-y-4">
+
+      {isSentToAuthor && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800">
+          Metadata has been sent to the author for approval. Editing is disabled until the author responds or you need to make changes.
+        </div>
+      )}
 
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata header */}
@@ -295,22 +302,22 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         {/* Title Full - non-editable, greyed out */}
         <EditableRow label="Title Full" value={titleFull} onChange={() => {}} disabled authorChange={authorChanges["title_full"] || null} />
 
-        <EditableRow label="Title" value={title} onChange={setTitle} authorChange={authorChanges["title"] || null} />
-        <EditableRow label="Subtitle" value={subtitle} onChange={setSubtitle} authorChange={authorChanges["subtitle"] || null} />
-        <EditableRow label="Category Auth/Ed" value={categoryAuthEd} onChange={setCategoryAuthEd} authorChange={authorChanges["category"] || null} />
+        <EditableRow label="Title" value={title} onChange={setTitle} disabled={isSentToAuthor} authorChange={authorChanges["title"] || null} />
+        <EditableRow label="Subtitle" value={subtitle} onChange={setSubtitle} disabled={isSentToAuthor} authorChange={authorChanges["subtitle"] || null} />
+        <EditableRow label="Category Auth/Ed" value={categoryAuthEd} onChange={setCategoryAuthEd} disabled={isSentToAuthor} authorChange={authorChanges["category"] || null} />
 
         {/* Primary Author(s) */}
         <SectionHeader title={sectionLabel} />
 
-        <EditableRow label="Display Name(s)" value={displayName} onChange={setDisplayName} authorChange={authorChanges["display_name"] || null} />
-        <EditableRow label="Display bio(s)" value={displayBio} onChange={setDisplayBio} type="textarea" authorChange={authorChanges["display_bio"] || null} />
-        <EditableRow label="Salutation" value={salutation} onChange={setSalutation} authorChange={authorChanges["salutation"] || null} />
-        <EditableRow label="First name" value={firstName} onChange={setFirstName} authorChange={authorChanges["first_name"] || null} />
-        <EditableRow label="Last name" value={lastName} onChange={setLastName} authorChange={authorChanges["last_name"] || null} />
-        <EditableRow label="Email" value={email} onChange={setEmail} type="email" authorChange={authorChanges["email"] || null} />
-        <EditableRow label="Email 2" value={email2} onChange={setEmail2} type="email" authorChange={authorChanges["email_2"] || null} />
-        <EditableRow label="Institution" value={institution} onChange={setInstitution} authorChange={authorChanges["institution"] || null} />
-        <EditableRow label="Country" value={countryVal} onChange={setCountryVal} authorChange={authorChanges["country"] || null} />
+        <EditableRow label="Display Name(s)" value={displayName} onChange={setDisplayName} disabled={isSentToAuthor} authorChange={authorChanges["display_name"] || null} />
+        <EditableRow label="Display bio(s)" value={displayBio} onChange={setDisplayBio} type="textarea" disabled={isSentToAuthor} authorChange={authorChanges["display_bio"] || null} />
+        <EditableRow label="Salutation" value={salutation} onChange={setSalutation} disabled={isSentToAuthor} authorChange={authorChanges["salutation"] || null} />
+        <EditableRow label="First name" value={firstName} onChange={setFirstName} disabled={isSentToAuthor} authorChange={authorChanges["first_name"] || null} />
+        <EditableRow label="Last name" value={lastName} onChange={setLastName} disabled={isSentToAuthor} authorChange={authorChanges["last_name"] || null} />
+        <EditableRow label="Email" value={email} onChange={setEmail} type="email" disabled={isSentToAuthor} authorChange={authorChanges["email"] || null} />
+        <EditableRow label="Email 2" value={email2} onChange={setEmail2} type="email" disabled={isSentToAuthor} authorChange={authorChanges["email_2"] || null} />
+        <EditableRow label="Institution" value={institution} onChange={setInstitution} disabled={isSentToAuthor} authorChange={authorChanges["institution"] || null} />
+        <EditableRow label="Country" value={countryVal} onChange={setCountryVal} disabled={isSentToAuthor} authorChange={authorChanges["country"] || null} />
 
         {/* Additional authors/editors */}
         {additionalPeople.map((person, idx) => (
@@ -319,57 +326,63 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Additional Author {idx + 1}
               </p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={() => removePerson(person.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {!isSentToAuthor && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={() => removePerson(person.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
-            <EditableRow label="Salutation" value={person.salutation} onChange={(v) => updatePerson(person.id, "salutation", v)} />
-            <EditableRow label="First name" value={person.firstName} onChange={(v) => updatePerson(person.id, "firstName", v)} />
-            <EditableRow label="Last name" value={person.lastName} onChange={(v) => updatePerson(person.id, "lastName", v)} />
-            <EditableRow label="Email" value={person.email} onChange={(v) => updatePerson(person.id, "email", v)} type="email" />
+            <EditableRow label="Salutation" value={person.salutation} onChange={(v) => updatePerson(person.id, "salutation", v)} disabled={isSentToAuthor} />
+            <EditableRow label="First name" value={person.firstName} onChange={(v) => updatePerson(person.id, "firstName", v)} disabled={isSentToAuthor} />
+            <EditableRow label="Last name" value={person.lastName} onChange={(v) => updatePerson(person.id, "lastName", v)} disabled={isSentToAuthor} />
+            <EditableRow label="Email" value={person.email} onChange={(v) => updatePerson(person.id, "email", v)} type="email" disabled={isSentToAuthor} />
           </React.Fragment>
         ))}
 
-        <div className="px-4 py-3 border-b border-border">
-          <Button variant="outline" size="sm" onClick={addPerson} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            {addButtonLabel}
-          </Button>
-        </div>
+        {!isSentToAuthor && (
+          <div className="px-4 py-3 border-b border-border">
+            <Button variant="outline" size="sm" onClick={addPerson} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              {addButtonLabel}
+            </Button>
+          </div>
+        )}
 
         {/* Book Information */}
         <SectionHeader title="Book Information" />
 
-        <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" authorChange={authorChanges["book_description"] || null} />
-        <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} authorChange={authorChanges["keywords"] || null} />
+        <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" disabled={isSentToAuthor} authorChange={authorChanges["book_description"] || null} />
+        <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} disabled={isSentToAuthor} authorChange={authorChanges["keywords"] || null} />
 
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <Button
-          variant="outline"
-          className="px-8"
-          disabled={saving}
-          onClick={handleSaveDraft}
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Save Draft
-        </Button>
-        <Button
-          className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-          disabled={submitting}
-          onClick={handleSubmitToAuthor}
-        >
-          {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Submit to Author for Finalization
-        </Button>
-      </div>
+      {!isSentToAuthor && (
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Button
+            variant="outline"
+            className="px-8"
+            disabled={saving}
+            onClick={handleSaveDraft}
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Save Draft
+          </Button>
+          <Button
+            className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+            disabled={submitting}
+            onClick={handleSubmitToAuthor}
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Submit to Author for Finalization
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
