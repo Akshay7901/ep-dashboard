@@ -232,7 +232,16 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         <EditableRow label="Website Classification" value={webClassification} onChange={setWebClassification} authorChange={authorChanges["website_classification"] || null} />
         <EditableRow label="BIC" value={bic} onChange={setBic} authorChange={authorChanges["bic"] || null} />
 
-        
+        {/* Publication Timeline */}
+        <SectionHeader title="Publication Timeline" />
+
+        <EditableRow label="Submission date" value={submissionDate} onChange={setSubmissionDate} authorChange={authorChanges["submission_date"] || null} />
+        <EditableRow label="Publication date" value={pubDate} onChange={setPubDate} authorChange={authorChanges["publication_date"] || null} />
+        <EditableRow label="Word Count" value={wordCount} onChange={setWordCount} authorChange={authorChanges["word_count"] || null} />
+        <EditableRow label="Figures/Tables" value={figuresTables} onChange={setFiguresTables} authorChange={authorChanges["figures_tables"] || null} />
+        <EditableRow label="Under Review Elsewhere" value={underReview} onChange={setUnderReview} authorChange={authorChanges["under_review"] || null} />
+        <EditableRow label="Co-Authors / Editors" value={coAuthors} onChange={setCoAuthors} authorChange={authorChanges["co_authors"] || null} />
+      </div>
     </div>
   );
 };
