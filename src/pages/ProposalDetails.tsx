@@ -572,25 +572,29 @@ const ProposalDetails: React.FC = () => {
             <TabsContent value="metadata" className="mt-4 space-y-6">
               <PublicationMetadata proposal={proposal} contractSigned />
 
-              {/* Comments from Author */}
+              {/* Queries from Author - only visible when author has submitted queries */}
+              {contractQueries.length > 0 && (
               <Accordion type="single" collapsible className="border border-border rounded-lg">
-                <AccordionItem value="comments" className="border-none">
+                <AccordionItem value="queries" className="border-none">
                   <AccordionTrigger className="px-4 py-3 hover:no-underline">
                     <div className="text-left">
-                      <p className="text-base font-semibold">Comments</p>
-                      <p className="text-sm text-muted-foreground font-normal">1 Unread comment made by the author</p>
+                      <p className="text-base font-semibold">Queries</p>
+                      <p className="text-sm text-muted-foreground font-normal">{contractQueries.length} {contractQueries.length === 1 ? 'query' : 'queries'} from the author</p>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-3">
-                      <div className="border border-border rounded-md p-3 bg-muted/30">
-                        <p className="text-xs text-muted-foreground mb-1">Author — just now</p>
-                        <p className="text-sm">No comments yet.</p>
-                      </div>
+                      {contractQueries.map((q: any, i: number) => (
+                        <div key={i} className="border border-border rounded-md p-3 bg-muted/30">
+                          <p className="text-xs text-muted-foreground mb-1">Author — {q.created_at ? new Date(q.created_at).toLocaleDateString() : 'just now'}</p>
+                          <p className="text-sm">{q.message || q.query_text || 'No content'}</p>
+                        </div>
+                      ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+              )}
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <Button
