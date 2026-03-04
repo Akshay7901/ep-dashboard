@@ -133,6 +133,11 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     enabled: !!ticketNumber && !!metadataResponse,
   });
 
+  // Check if author has a pending (unanswered) query
+  const hasPendingQuery = metadataQueries.some(
+    (q) => q.type === 'query' && !metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id)
+  );
+
   const apiMeta = metadataResponse?.metadata;
   const primaryAuthor = apiMeta?.authors?.[0];
 
@@ -490,9 +495,12 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
             Request Changes to Publication Metadata
           </Button>
+          {hasPendingQuery && (
+            <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
+          )}
         </div>
       )}
 
@@ -501,9 +509,13 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <Button
           className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
           onClick={handleFinalise}
+          disabled={hasPendingQuery}
         >
           Finalise &amp; Lock Metadata
         </Button>
+        {hasPendingQuery && (
+          <span className="text-xs text-amber-600">Cannot finalise while a query is pending</span>
+        )}
       </div>
     </div>
   );
