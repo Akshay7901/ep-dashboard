@@ -418,32 +418,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <ReadOnlyRow label="Website Classification" value={(proposal as any).website_classification} />
         <ReadOnlyRow label="BIC" value={(proposal as any).bic} />
 
-        {/* Publication Timeline */}
-        <SectionHeader title="Publication Timeline" />
-
-        <ReadOnlyRow
-          label="Submission date"
-          value={
-            proposal.submitted_date ||
-            (proposal.created_at
-              ? new Date(proposal.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
-              : null)
-          }
-        />
-        <EditableRow
-          label="Publication date"
-          value={pubDate}
-          onChange={setPubDate}
-          helpText="Expected or agreed publication date."
-        />
-        <ReadOnlyRow label="Word Count" value={proposal.word_count} />
-        <ReadOnlyRow label="Figures/Tables" value={proposal.figures_tables_count} />
-        <ReadOnlyRow label="Under Review Elsewhere" value={proposal.under_review_elsewhere} />
-        <ReadOnlyRow label="Co-Authors / Editors" value={proposal.co_authors_editors} />
       </div>
 
       {/* Change Requests Section */}
