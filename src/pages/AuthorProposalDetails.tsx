@@ -141,15 +141,20 @@ const AuthorProposalDetails: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("proposal");
-  const [hasSeenReview, setHasSeenReview] = useState(false);
   const [showQueryThread, setShowQueryThread] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>("contract-details");
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
-    if (value === "review") setHasSeenReview(true);
+    if (value === "review" && id) {
+      localStorage.setItem(`review_seen_${id}`, "true");
+      setHasSeenReview(true);
+    }
   };
+  const [hasSeenReview, setHasSeenReview] = useState(() => {
+    return id ? localStorage.getItem(`review_seen_${id}`) === "true" : false;
+  });
   const [isAccepting, setIsAccepting] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
