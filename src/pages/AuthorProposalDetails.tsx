@@ -136,6 +136,8 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
 
 /* ---- Main ---- */
 
+const seenReviewSignatures = new Map<string, string>();
+
 const AuthorProposalDetails: React.FC = () => {
   const { id } = useParams<{id: string;}>();
   const navigate = useNavigate();
@@ -144,12 +146,6 @@ const AuthorProposalDetails: React.FC = () => {
   const [hasSeenReview, setHasSeenReview] = useState(false);
   const [showQueryThread, setShowQueryThread] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>("contract-details");
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setOpenAccordion(value === "review" ? "contract-details" : undefined);
-    if (value === "review") setHasSeenReview(true);
-  };
   const [isAccepting, setIsAccepting] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
     null
@@ -200,6 +196,41 @@ const AuthorProposalDetails: React.FC = () => {
   const reviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
   const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
   const decisionReview = reviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+
+  const latestReviewTimestamp = reviews
+    .map((r: any) => r?.updated_at || r?.submitted_at || r?.created_at || "")
+    .filter(Boolean)
+    .sort()
+    .slice(-1)[0] || "";
+
+  const latestContractTimestamp =
+    latestContract?.updated_at ||
+    latestContract?.created_at ||
+    latestContract?.docusign_sent_at ||
+    latestContract?.docusign_completed_at ||
+    "";
+
+  const reviewNotificationSignature = [
+    normalizeStatus(proposal?.status || ""),
+    reviews.length,
+    latestReviewTimestamp,
+    latestContract?.id || "",
+    latestContractTimestamp,
+  ].join("|");
+
+  useEffect(() => {
+    if (!id) return;
+    setHasSeenReview(seenReviewSignatures.get(id) === reviewNotificationSignature);
+  }, [id, reviewNotificationSignature]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setOpenAccordion(value === "review" ? "contract-details" : undefined);
+    if (value === "review" && id) {
+      seenReviewSignatures.set(id, reviewNotificationSignature);
+      setHasSeenReview(true);
+    }
+  };
 
   if (isLoading) {
     return (
