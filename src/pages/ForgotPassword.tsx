@@ -76,7 +76,7 @@ const ForgotPassword: React.FC = () => {
       toast({
         variant: 'destructive',
         title: 'Verification failed',
-        description: error.response?.data?.message || 'Invalid or expired code. Please try again.',
+        description: error.response?.data?.error || error.message || 'Invalid or expired code. Please try again.',
       });
     } finally {
       setIsLoading(false);

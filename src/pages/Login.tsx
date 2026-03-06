@@ -94,7 +94,7 @@ const Login: React.FC = () => {
     try {
       const response = await authApi.verifyOtp(email, otp);
 
-      if (response.requires_password_setup && response.temp_token) {
+      if (response.temp_token) {
         setTempToken(response.temp_token);
         setStep('set-password');
       } else if (response.token) {
@@ -103,10 +103,11 @@ const Login: React.FC = () => {
         redirectToDashboard(response.user?.role || response.role);
       }
     } catch (error: any) {
+      const msg = error.response?.data?.error || error.message || "Invalid or expired code. Please try again.";
       toast({
         variant: "destructive",
         title: "Verification failed",
-        description: error.response?.data?.message || "Invalid or expired code. Please try again.",
+        description: msg,
       });
     } finally {
       setIsLoading(false);
