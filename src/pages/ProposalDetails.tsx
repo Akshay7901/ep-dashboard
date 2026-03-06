@@ -394,12 +394,8 @@ const ProposalDetails: React.FC = () => {
 
           {statusIs(proposal.status, "new", "submitted") && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
-          if (!selectedReviewer) {
-            setPendingAction("accept");
-            setIsAssignDialogOpen(true);
-            return;
-          }
-          assignReviewers({ reviewerEmail: selectedReviewer });
+          setPendingAction("accept");
+          setIsAssignDialogOpen(true);
         }} disabled={isAssigning}>
                 Submit for review
               </Button>
