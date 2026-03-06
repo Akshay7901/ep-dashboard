@@ -197,8 +197,7 @@ const Login: React.FC = () => {
                   className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
                   {...register("password")}
                 />
-                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-              </div>
+                <p className="text-xs text-muted-foreground">Leave blank for first-time login</p>
 
               <Button
                 type="submit"
