@@ -16,33 +16,36 @@ import OtpScreen from "@/components/auth/OtpScreen";
 import SetPasswordScreen from "@/components/auth/SetPasswordScreen";
 import { authApi } from "@/lib/authApi";
 
-const loginSchema = z.object({
+const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().optional(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+const passwordSchema = z.object({
+  password: z.string().min(1, "Please enter your password"),
+});
 
-type LoginStep = 'credentials' | 'otp' | 'set-password';
+type EmailFormData = z.infer<typeof emailSchema>;
+type PasswordFormData = z.infer<typeof passwordSchema>;
+
+type LoginStep = 'email' | 'password' | 'otp' | 'set-password';
 
 const Login: React.FC = () => {
   const { loginWithToken } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<LoginStep>('credentials');
+  const [step, setStep] = useState<LoginStep>('email');
   const [email, setEmail] = useState('');
   const [tempToken, setTempToken] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const emailForm = useForm<EmailFormData>({
+    resolver: zodResolver(emailSchema),
+  });
+
+  const passwordForm = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
   });
 
   const redirectToDashboard = (role?: string) => {
-    // Check role from parameter or localStorage if not provided
     let userRole = role;
     if (!userRole) {
       const userStr = localStorage.getItem('user');
@@ -57,28 +60,58 @@ const Login: React.FC = () => {
     }
   };
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onEmailSubmit = async (data: EmailFormData) => {
     setIsLoading(true);
     try {
-      const password = data.password && data.password.trim() ? data.password : undefined;
-      const response = await authApi.login(data.email, password);
+      // Call login with email only (no password) to check user status
+      const response = await authApi.login(data.email);
+
+      setEmail(data.email);
 
       if (response.requires_otp) {
-        setEmail(data.email);
+        // First-time user → OTP flow
         setStep('otp');
         toast({
           title: "OTP sent",
           description: response.message || "Check your email for a verification code.",
         });
       } else if (response.token) {
+        // This shouldn't normally happen without a password, but handle it
         loginWithToken(response.token, response);
         toast({ title: "Welcome back!", description: "You have successfully logged in." });
         redirectToDashboard(response.user?.role || response.role);
       }
     } catch (error: any) {
-      console.error(error);
-      const msg = error.response?.data?.message || error.message || "Please check your credentials and try again.";
-      
+      const errorMsg = error.response?.data?.error || error.message || '';
+
+      // If the API returns an error indicating password is required, show password step
+      if (errorMsg.toLowerCase().includes('password') || error.response?.status === 401) {
+        setEmail(data.email);
+        setStep('password');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMsg || "Something went wrong. Please try again.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await authApi.login(email, data.password);
+
+      if (response.token) {
+        loginWithToken(response.token, response);
+        toast({ title: "Welcome back!", description: "You have successfully logged in." });
+        redirectToDashboard(response.user?.role || response.role);
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.error || error.message || "Invalid credentials. Please try again.";
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -126,7 +159,7 @@ const Login: React.FC = () => {
       toast({
         variant: "destructive",
         title: "Failed to set password",
-        description: error.response?.data?.message || "Please try again.",
+        description: error.response?.data?.error || error.message || "Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -141,7 +174,7 @@ const Login: React.FC = () => {
             email={email} 
             onVerify={handleOtpVerify} 
             isLoading={isLoading} 
-            onBack={() => setStep('credentials')}
+            onBack={() => setStep('email')}
           />
         );
       case 'set-password':
@@ -152,7 +185,7 @@ const Login: React.FC = () => {
             isLoading={isLoading} 
           />
         );
-      default:
+      case 'password':
         return (
           <div className="animate-fade-in">
             <div className="flex items-center justify-center mb-6">
@@ -160,25 +193,11 @@ const Login: React.FC = () => {
             </div>
             
             <div className="text-center space-y-2 mb-8">
-              <h1 className="text-2xl font-semibold text-foreground">Proposal Portal</h1>
-              <p className="text-muted-foreground">Access your academic review dashboard</p>
+              <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
+              <p className="text-muted-foreground text-sm">{email}</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium">
-                  Email address
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@university.edu"
-                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
-                  {...register("email")}
-                />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-              </div>
-
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-5">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-foreground font-medium">
@@ -196,9 +215,11 @@ const Login: React.FC = () => {
                   type="password"
                   placeholder="Enter your password"
                   className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
-                  {...register("password")}
+                  {...passwordForm.register("password")}
                 />
-                <p className="text-xs text-muted-foreground">Leave blank for first-time login</p>
+                {passwordForm.formState.errors.password && (
+                  <p className="text-sm text-destructive">{passwordForm.formState.errors.password.message}</p>
+                )}
               </div>
 
               <Button
@@ -213,6 +234,60 @@ const Login: React.FC = () => {
                   </>
                 ) : (
                   "Log in"
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => { setStep('email'); passwordForm.reset(); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Use a different email
+              </button>
+            </form>
+          </div>
+        );
+      default:
+        return (
+          <div className="animate-fade-in">
+            <div className="flex items-center justify-center mb-6">
+              <img src={brandLogo} alt="Ethics Press" className="h-14 w-14 object-contain" />
+            </div>
+            
+            <div className="text-center space-y-2 mb-8">
+              <h1 className="text-2xl font-semibold text-foreground">Proposal Portal</h1>
+              <p className="text-muted-foreground">Access your academic review dashboard</p>
+            </div>
+
+            <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground font-medium">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@university.edu"
+                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
+                  {...emailForm.register("email")}
+                />
+                {emailForm.formState.errors.email && (
+                  <p className="text-sm text-destructive">{emailForm.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  "Next"
                 )}
               </Button>
             </form>
