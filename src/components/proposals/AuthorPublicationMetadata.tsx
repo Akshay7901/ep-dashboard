@@ -681,27 +681,29 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                     />
                   </div>
 
-                  <div className="flex items-start gap-2">
-                    <Checkbox
-                      id="cover-permission"
-                      checked={coverImagePermission}
-                      onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
-                    />
-                    <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
-                      I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
-                    </Label>
-                  </div>
-
                   {coverImageFile && (
-                    <Button
-                      size="sm"
-                      className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
-                      onClick={handleUploadCoverImage}
-                      disabled={uploadingCoverImage || !coverImagePermission}
-                    >
-                      {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                      Save Cover Image
-                    </Button>
+                    <>
+                      <div className="flex items-start gap-2">
+                        <Checkbox
+                          id="cover-permission"
+                          checked={coverImagePermission}
+                          onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
+                        />
+                        <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                          I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
+                        </Label>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
+                        onClick={handleUploadCoverImage}
+                        disabled={uploadingCoverImage || !coverImagePermission}
+                      >
+                        {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        Save Cover Image
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
