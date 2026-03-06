@@ -6,6 +6,8 @@ export interface ContractDetails {
   contract_version: number;
   contract_type: string;
   status: string;
+  title?: string;
+  subtitle?: string;
   docusign_envelope_id?: string;
   docusign_status?: string;
   docusign_signing_url?: string;
