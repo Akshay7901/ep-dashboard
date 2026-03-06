@@ -1,6 +1,7 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -170,6 +171,7 @@ const ProposalDetails: React.FC = () => {
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{ queryId: number; responseText: string } | null>(null);
+  const [includeContract, setIncludeContract] = useState(true);
 
   /* ---------------- Data ---------------- */
 
@@ -1530,44 +1532,56 @@ const ProposalDetails: React.FC = () => {
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Response & Contract</DialogTitle>
+            <DialogTitle>Send Response</DialogTitle>
             <DialogDescription>
-              Your response and a new contract will be sent together to the author. Close to cancel both.
+              Send your response to the author. You can optionally include a new contract.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Contract Type</Label>
-              <Select value={resendContractType} onValueChange={setResendContractType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select contract type" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="author">Author Contract</SelectItem>
-                  <SelectItem value="editor">Editor Contract</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="resend-contract-title">Title</Label>
-              <input
-                id="resend-contract-title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractTitle}
-                onChange={(e) => setResendContractTitle(e.target.value)}
-                placeholder="Enter title"
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="include-contract"
+                checked={includeContract}
+                onCheckedChange={(checked) => setIncludeContract(!!checked)}
               />
+              <Label htmlFor="include-contract" className="cursor-pointer">Include new contract</Label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
-              <input
-                id="resend-contract-subtitle"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractSubtitle}
-                onChange={(e) => setResendContractSubtitle(e.target.value)}
-                placeholder="Enter subtitle (optional)"
-              />
-            </div>
+            {includeContract && (
+              <>
+                <div className="space-y-2">
+                  <Label>Contract Type</Label>
+                  <Select value={resendContractType} onValueChange={setResendContractType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select contract type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="author">Author Contract</SelectItem>
+                      <SelectItem value="editor">Editor Contract</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="resend-contract-title">Title</Label>
+                  <input
+                    id="resend-contract-title"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={resendContractTitle}
+                    onChange={(e) => setResendContractTitle(e.target.value)}
+                    placeholder="Enter title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
+                  <input
+                    id="resend-contract-subtitle"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={resendContractSubtitle}
+                    onChange={(e) => setResendContractSubtitle(e.target.value)}
+                    placeholder="Enter subtitle (optional)"
+                  />
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setResendContractOpen(false); setPendingQueryResponse(null); }} disabled={isResendingContract}>
@@ -1575,7 +1589,7 @@ const ProposalDetails: React.FC = () => {
             </Button>
             <Button
               className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-              disabled={isResendingContract || !resendContractTitle.trim()}
+              disabled={isResendingContract || (includeContract && !resendContractTitle.trim())}
               onClick={async () => {
                 setIsResendingContract(true);
                 try {
@@ -1583,27 +1597,30 @@ const ProposalDetails: React.FC = () => {
                   if (pendingQueryResponse) {
                     await respondToQuery.mutateAsync(pendingQueryResponse);
                   }
-                  // Then send contract
-                  await proposalApi.sendContract(ticketNum, {
-                    contract_type: resendContractType,
-                    title: resendContractTitle,
-                    subtitle: resendContractSubtitle,
-                  });
-                  toast({ title: 'Sent Successfully', description: 'Response and contract have been sent to the author.' });
+                  // Then send contract if included
+                  if (includeContract) {
+                    await proposalApi.sendContract(ticketNum, {
+                      contract_type: resendContractType,
+                      title: resendContractTitle,
+                      subtitle: resendContractSubtitle,
+                    });
+                  }
+                  toast({ title: 'Sent Successfully', description: includeContract ? 'Response and contract have been sent to the author.' : 'Response has been sent to the author.' });
                   queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
                   queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
                   queryClient.invalidateQueries({ queryKey: ['proposals'] });
                   queryClient.invalidateQueries({ queryKey: ['contract-queries', ticketNum] });
                 } catch (err: any) {
-                  toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send response and contract.' });
+                  toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send.' });
                 } finally {
                   setIsResendingContract(false);
                   setResendContractOpen(false);
                   setPendingQueryResponse(null);
+                  setIncludeContract(true);
                 }
               }}
             >
-              {isResendingContract ? 'Sending...' : 'Send Response & Contract'}
+              {isResendingContract ? 'Sending...' : includeContract ? 'Send Response & Contract' : 'Send Response Only'}
             </Button>
           </DialogFooter>
         </DialogContent>
