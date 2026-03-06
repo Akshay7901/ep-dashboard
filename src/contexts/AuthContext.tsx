@@ -54,9 +54,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (token && userStr) {
       try {
-        const user = JSON.parse(userStr);
+        const parsedUser = JSON.parse(userStr);
+        const normalizedUser: User = {
+          ...parsedUser,
+          role: mapApiRole(parsedUser?.role),
+        };
+
+        // Keep localStorage in sync with normalized role values
+        localStorage.setItem('user', JSON.stringify(normalizedUser));
+
         setState({
-          user,
+          user: normalizedUser,
           profile: null,
           isAuthenticated: true,
           isLoading: false,
