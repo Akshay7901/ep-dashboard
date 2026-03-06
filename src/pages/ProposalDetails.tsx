@@ -9,7 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi } from "@/lib/proposalsApi";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
 import { Separator } from "@/components/ui/separator";
@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useProposalActions } from "@/hooks/useProposalActions";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePeerReviewers } from "@/hooks/usePeerReviewers";
@@ -206,6 +206,13 @@ const ProposalDetails: React.FC = () => {
     data: logs = []
   } = useWorkflowLogs(localId);
   const { data: proposalEvents = [], isLoading: eventsLoading } = useProposalEvents(ticketNum);
+  const { data: metadataResponse } = useQuery({
+    queryKey: ["metadata", ticketNum],
+    queryFn: () => metadataApi.get(ticketNum),
+    enabled: !!ticketNum,
+  });
+  const proposedTitle = metadataResponse?.metadata?.full_title || metadataResponse?.metadata?.title;
+  const proposedSubtitle = metadataResponse?.metadata?.subtitle;
   const {
     assignReviewers,
     isAssigning,
@@ -331,6 +338,19 @@ const ProposalDetails: React.FC = () => {
             {proposal.sub_title && <p className="text-base text-muted-foreground mt-1 italic">
                 {proposal.sub_title}
               </p>}
+            {/* Proposed title from metadata (if different from original) */}
+            {proposedTitle && proposedTitle !== proposal.name && (
+              <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border">
+                <FileCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Proposed Title</p>
+                  <p className="text-sm font-semibold text-foreground">{proposedTitle}</p>
+                  {proposedSubtitle && proposedSubtitle !== proposal.sub_title && (
+                    <p className="text-sm text-muted-foreground italic">{proposedSubtitle}</p>
+                  )}
+                </div>
+              </div>
+            )}
             {/* Submitted date - shown in post-submission state */}
             {isPostSubmission && proposal.created_at && (
               <p className="text-sm text-muted-foreground mt-1">
