@@ -222,6 +222,7 @@ const ProposalDetails: React.FC = () => {
     queryKey: ["metadata", ticketNum],
     queryFn: () => metadataApi.get(ticketNum),
     enabled: !!ticketNum,
+    staleTime: 0,
   });
   const proposedTitle = metadataResponse?.metadata?.title;
   const proposedSubtitle = metadataResponse?.metadata?.subtitle;
@@ -1639,6 +1640,7 @@ const ProposalDetails: React.FC = () => {
                   queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
                   queryClient.invalidateQueries({ queryKey: ['proposals'] });
                   queryClient.invalidateQueries({ queryKey: ['contract-queries', ticketNum] });
+                  queryClient.invalidateQueries({ queryKey: ['metadata', ticketNum] });
                 } catch (err: any) {
                   toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send.' });
                 } finally {
