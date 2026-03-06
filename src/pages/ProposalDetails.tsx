@@ -920,6 +920,36 @@ const ProposalDetails: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
+                  {/* Contract Queries */}
+                  <AccordionItem value="queries" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="text-left">
+                        <p className="text-base font-semibold">
+                          Queries
+                          {contractQueries.length > 0 && (
+                            <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                          )}
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      <ContractQueryThread
+                        queries={contractQueries}
+                        isLoading={queriesLoading}
+                        viewAs="reviewer"
+                        proposalStatus={proposal.status}
+                        onSend={async (text, _category, queryId) => {
+                          // Store pending response — don't send yet, wait for contract dialog
+                          setPendingQueryResponse({ queryId: queryId!, responseText: text });
+                          setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
+                          setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
+                          setResendContractType(latestContract?.contract_type || 'author');
+                          setResendContractOpen(true);
+                        }}
+                        isSending={respondToQuery.isPending}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               );
             })()}
