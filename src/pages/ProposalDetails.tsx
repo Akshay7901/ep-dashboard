@@ -1,6 +1,7 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -144,6 +145,8 @@ const ProposalDetails: React.FC = () => {
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
   const [contractPdfLoading, setContractPdfLoading] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [assignNote, setAssignNote] = useState("");
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
@@ -394,15 +397,39 @@ const ProposalDetails: React.FC = () => {
 
           {statusIs(proposal.status, "new", "submitted") && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
-          setPendingAction("accept");
-          setIsAssignDialogOpen(true);
-        }} disabled={isAssigning}>
+                if (!selectedReviewer) {
+                  setPendingAction("accept");
+                  setIsAssignDialogOpen(true);
+                  return;
+                }
+                assignReviewers({ reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined });
+              }} disabled={isAssigning}>
+                {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Submit for review
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => setShowNoteInput(!showNoteInput)}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                {showNoteInput ? "Hide note" : "Add note"}
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
               </Button>
             </>}
+          {showNoteInput && statusIs(proposal.status, "new", "submitted") && (
+            <div className="w-full">
+              <Textarea
+                placeholder="Optional note for the reviewer, e.g. 'Please focus on the methodology section.'"
+                value={assignNote}
+                onChange={(e) => setAssignNote(e.target.value)}
+                className="min-h-[70px] resize-none text-sm"
+              />
+            </div>
+          )}
 
           {statusIs(proposal.status, "in_review", "under_review") && (() => {
             const assignedEmails = (proposal as any)?.assigned_reviewer_emails
