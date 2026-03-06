@@ -22,8 +22,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Auth endpoints are under /api/proposals/auth/
-    const targetUrl = `${API_BASE_URL}/api/proposals/auth${endpoint}`;
+    // Auth endpoints are under /api/proposals/
+    const targetUrl = `${API_BASE_URL}/api/proposals${endpoint}`;
 
     console.log(`Proxying to: ${targetUrl}`);
     console.log(`Payload: ${JSON.stringify(payload)}`);
