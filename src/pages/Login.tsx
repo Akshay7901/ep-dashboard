@@ -74,10 +74,11 @@ const Login: React.FC = () => {
         });
       } else {
         // User already has a password set
+        passwordForm.reset({ password: '' });
         setStep('password');
       }
     } catch (error: any) {
-      // If error indicates credentials needed, user has a password → show password screen
+      passwordForm.reset({ password: '' });
       setStep('password');
     } finally {
       setIsLoading(false);
@@ -188,10 +189,10 @@ const Login: React.FC = () => {
               <p className="text-muted-foreground text-sm">{email}</p>
             </div>
 
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-5">
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-5" autoComplete="off">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-foreground font-medium">
+                  <Label htmlFor="login-password" className="text-foreground font-medium">
                     Password
                   </Label>
                   <Link
@@ -202,10 +203,12 @@ const Login: React.FC = () => {
                   </Link>
                 </div>
                 <Input
-                  id="password"
+                  id="login-password"
+                  name="login-password"
                   type="password"
                   placeholder="Enter your password"
-                  autoComplete="new-password"
+                  autoComplete="off"
+                  defaultValue=""
                   className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
                   {...passwordForm.register("password")}
                 />
