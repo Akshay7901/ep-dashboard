@@ -177,6 +177,7 @@ export interface Proposal {
   // Assignment data
   assigned_at?: string | null;
   assigned_reviewers?: Array<{ email: string; name?: string; assigned_at?: string }> | null;
+  assignments?: Array<{ assigned_at?: string; note?: string; email?: string }> | null;
   // Timeline from API
   timeline?: Array<{
     stage_name: string;

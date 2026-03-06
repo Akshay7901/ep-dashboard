@@ -14,30 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      assignment_notes: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          note: string
-          ticket_number: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          note: string
-          ticket_number: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          note?: string
-          ticket_number?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
