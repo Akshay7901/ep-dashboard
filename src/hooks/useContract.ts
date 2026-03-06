@@ -34,6 +34,7 @@ export const useContract = (ticketNumber: string | undefined) => {
     enabled: !!ticketNumber,
     staleTime: 0,
     refetchOnMount: 'always' as const,
+    refetchInterval: 30000,
     retry: false,
   });
 
