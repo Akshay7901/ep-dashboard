@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2, Check, X } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2, Check, X, AlertCircle, FileImage } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -189,6 +189,14 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   const [coverImagePermission, setCoverImagePermission] = useState(false);
   const [uploadingCoverImage, setUploadingCoverImage] = useState(false);
   const [deletingCoverImage, setDeletingCoverImage] = useState(false);
+  const [coverImageValidation, setCoverImageValidation] = useState<{
+    fileName?: string;
+    fileSize?: number;
+    width?: number;
+    height?: number;
+    errors: string[];
+    isValid: boolean;
+  } | null>(null);
 
   // Sync API cover image data to local preview
   useEffect(() => {
@@ -227,35 +235,45 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const errors: string[] = [];
+    const fileName = file.name;
+    const fileSize = file.size;
+    let width = 0;
+    let height = 0;
+
     // File type check
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      toast({ title: "Invalid file type", description: "Only JPEG and PNG images are accepted.", variant: "destructive" });
-      e.target.value = "";
-      return;
+      errors.push(`Invalid file type "${file.type.split("/")[1]?.toUpperCase() || "unknown"}". Only JPEG and PNG are accepted.`);
     }
 
     // File size check
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      toast({ title: "File too large", description: `Maximum file size is ${MAX_FILE_SIZE_MB}MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`, variant: "destructive" });
-      e.target.value = "";
-      return;
+    if (fileSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      errors.push(`File size ${(fileSize / (1024 * 1024)).toFixed(1)}MB exceeds the ${MAX_FILE_SIZE_MB}MB limit.`);
     }
 
-    // Dimension check
-    try {
-      const { width, height } = await validateImageDimensions(file);
-      if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
-        toast({
-          title: "Image too small",
-          description: `Image must be at least ${MIN_DIMENSION}×${MIN_DIMENSION}px (≈200mm × 200mm at 300 DPI). Your image is ${width}×${height}px.`,
-          variant: "destructive",
-        });
-        e.target.value = "";
-        return;
+    // Dimension check (only if file type is valid image)
+    if (["image/jpeg", "image/png"].includes(file.type)) {
+      try {
+        const dims = await validateImageDimensions(file);
+        width = dims.width;
+        height = dims.height;
+        if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
+          errors.push(`Image dimensions ${width}×${height}px are below the minimum ${MIN_DIMENSION}×${MIN_DIMENSION}px (≈200mm × 200mm at 300 DPI).`);
+        }
+      } catch {
+        errors.push("Could not read image dimensions. The file may be corrupted.");
       }
-    } catch {
-      toast({ title: "Invalid image", description: "Could not read image dimensions.", variant: "destructive" });
-      e.target.value = "";
+    }
+
+    setCoverImageValidation({ fileName, fileSize, width, height, errors, isValid: errors.length === 0 });
+
+    if (errors.length > 0) {
+      // Still show a preview for context but don't set the file as uploadable
+      setCoverImageFile(null);
+      // Show local preview anyway so user sees what they picked
+      const reader = new FileReader();
+      reader.onload = () => setCoverImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
       return;
     }
 
@@ -293,6 +311,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       setCoverImagePreview(null);
       setCoverImageSource("");
       setCoverImagePermission(false);
+      setCoverImageValidation(null);
       toast({ title: "Cover image removed" });
     } catch (err: any) {
       toast({ title: "Failed to remove", description: err?.message || "Could not remove cover image.", variant: "destructive" });
@@ -438,11 +457,26 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <SectionHeader title="Cover Image" />
 
         <div className="p-4 space-y-4 border-b border-border">
-          <p className="text-sm text-muted-foreground">
-            Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
-            The image must be in JPEG or PNG format, minimum {MIN_DIMENSION}×{MIN_DIMENSION}px (≈200mm × 200mm at 300 DPI),
-            and no larger than {MAX_FILE_SIZE_MB}MB.
-          </p>
+          {/* Requirements list */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                { label: "Format", value: "JPEG or PNG" },
+                { label: "Min. dimensions", value: `${MIN_DIMENSION}×${MIN_DIMENSION}px` },
+                { label: "Max. file size", value: `${MAX_FILE_SIZE_MB}MB` },
+              ].map((req) => (
+                <div key={req.label} className="flex items-center gap-1.5 rounded-md bg-muted/30 px-3 py-2 border border-border">
+                  <FileImage className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-muted-foreground">
+                    <span className="font-medium">{req.label}:</span> {req.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {coverImageLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -451,11 +485,19 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           ) : (
             <div className="flex items-start gap-4">
               {coverImagePreview ? (
-                <div className="relative w-32 h-44 rounded-md overflow-hidden border border-border">
+                <div className={`relative w-32 h-44 rounded-md overflow-hidden border-2 ${coverImageValidation && !coverImageValidation.isValid ? 'border-destructive' : 'border-border'}`}>
                   <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
                   {!isApproved && (
                     <button
-                      onClick={handleDeleteCoverImage}
+                      onClick={() => {
+                        if (coverImageData?.url) {
+                          handleDeleteCoverImage();
+                        } else {
+                          setCoverImageFile(null);
+                          setCoverImagePreview(null);
+                          setCoverImageValidation(null);
+                        }
+                      }}
                       disabled={deletingCoverImage}
                       className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:opacity-80"
                       title="Remove cover image"
@@ -489,6 +531,41 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                       onChange={handleCoverImageChange}
                     />
                   </div>
+
+                  {/* Inline validation feedback */}
+                  {coverImageValidation && (
+                    <div className={`rounded-md p-3 text-xs space-y-1.5 border ${coverImageValidation.isValid ? 'bg-emerald-50 border-emerald-200' : 'bg-destructive/5 border-destructive/30'}`}>
+                      <div className="flex items-center gap-2 font-medium">
+                        {coverImageValidation.isValid ? (
+                          <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> <span className="text-emerald-800">Image meets all requirements</span></>
+                        ) : (
+                          <><AlertCircle className="h-3.5 w-3.5 text-destructive" /> <span className="text-destructive">Image does not meet requirements</span></>
+                        )}
+                      </div>
+                      <div className="space-y-0.5 text-muted-foreground">
+                        {coverImageValidation.fileName && (
+                          <p>File: <span className="font-medium text-foreground">{coverImageValidation.fileName}</span></p>
+                        )}
+                        {coverImageValidation.fileSize != null && (
+                          <p>Size: <span className={`font-medium ${coverImageValidation.fileSize > MAX_FILE_SIZE_MB * 1024 * 1024 ? 'text-destructive' : 'text-foreground'}`}>
+                            {(coverImageValidation.fileSize / (1024 * 1024)).toFixed(2)}MB
+                          </span> <span className="text-muted-foreground/60">(max {MAX_FILE_SIZE_MB}MB)</span></p>
+                        )}
+                        {(coverImageValidation.width > 0 || coverImageValidation.height > 0) && (
+                          <p>Dimensions: <span className={`font-medium ${(coverImageValidation.width < MIN_DIMENSION || coverImageValidation.height < MIN_DIMENSION) ? 'text-destructive' : 'text-foreground'}`}>
+                            {coverImageValidation.width}×{coverImageValidation.height}px
+                          </span> <span className="text-muted-foreground/60">(min {MIN_DIMENSION}×{MIN_DIMENSION}px)</span></p>
+                        )}
+                      </div>
+                      {coverImageValidation.errors.length > 0 && (
+                        <ul className="list-disc list-inside text-destructive space-y-0.5 pt-1">
+                          {coverImageValidation.errors.map((err, i) => (
+                            <li key={i}>{err}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
                     <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
