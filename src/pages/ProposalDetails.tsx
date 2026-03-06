@@ -656,8 +656,9 @@ const ProposalDetails: React.FC = () => {
           {/* ---- METADATA (Decision Reviewer - only after contract signed) ---- */}
           {isContractSigned && (
             <TabsContent value="metadata" className="mt-4 space-y-6">
-              {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
-                <div className="flex justify-end">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">Publication Metadata</h2>
+                {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -668,8 +669,8 @@ const ProposalDetails: React.FC = () => {
                     {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                     Lock
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
               <PublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
             </TabsContent>
           )}
