@@ -938,6 +938,11 @@ const ProposalDetails: React.FC = () => {
                         proposalStatus={proposal.status}
                         onSend={async (text, _category, queryId) => {
                           await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text });
+                          // After successful response, open resend contract dialog
+                          setResendContractTitle(latestContract?.title || proposal?.name || '');
+                          setResendContractSubtitle(latestContract?.subtitle || proposal?.sub_title || '');
+                          setResendContractType(latestContract?.contract_type || 'author');
+                          setResendContractOpen(true);
                         }}
                         isSending={respondToQuery.isPending}
                       />
