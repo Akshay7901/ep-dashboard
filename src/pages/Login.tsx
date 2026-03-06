@@ -60,14 +60,15 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const response = await authApi.login(data.email, data.password);
+      const password = data.password && data.password.trim() ? data.password : undefined;
+      const response = await authApi.login(data.email, password);
 
       if (response.requires_otp) {
         setEmail(data.email);
         setStep('otp');
         toast({
           title: "OTP sent",
-          description: "Check your email for a verification code.",
+          description: response.message || "Check your email for a verification code.",
         });
       } else if (response.token) {
         loginWithToken(response.token, response);
@@ -76,7 +77,6 @@ const Login: React.FC = () => {
       }
     } catch (error: any) {
       console.error(error);
-      // If the backend sends 400/401 with specific message
       const msg = error.response?.data?.message || error.message || "Please check your credentials and try again.";
       
       toast({
