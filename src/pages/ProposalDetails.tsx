@@ -1522,7 +1522,7 @@ const ProposalDetails: React.FC = () => {
 
       {/* Resend Contract Dialog (after query response) */}
       <Dialog open={resendContractOpen} onOpenChange={(open) => { if (!open) return; setResendContractOpen(open); }}>
-        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+        <DialogContent className="sm:max-w-md [&>button[class*='absolute']]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Resend Contract</DialogTitle>
             <DialogDescription>
