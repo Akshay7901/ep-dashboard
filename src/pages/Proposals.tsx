@@ -221,10 +221,7 @@ const Proposals: React.FC = () => {
                 Peer Reviewers
               </Button>
             )}
-            <Button variant="outline" className="gap-2" onClick={() => { logout(); navigate("/login"); }}>
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <ProfileDropdown />
           </div>
         </div>
 

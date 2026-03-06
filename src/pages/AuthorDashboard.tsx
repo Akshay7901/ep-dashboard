@@ -95,14 +95,7 @@ const AuthorDashboard: React.FC = () => {
             <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
             <h1 className="text-2xl font-bold text-foreground">Author Dashboard</h1>
           </div>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => { logout(); navigate("/login"); }}
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
+          <ProfileDropdown />
         </div>
 
         {/* Status Chips — dynamically rendered from API status_summary */}
