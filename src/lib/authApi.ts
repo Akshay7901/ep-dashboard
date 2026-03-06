@@ -78,17 +78,17 @@ export const authApi = {
   },
 
   verifyOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {
-    return invokeAuthProxy<VerifyOtpResponse>('/verify-otp', { email, otp });
+    return invokeAuthProxy<VerifyOtpResponse>('/auth/verify-otp', { email, otp });
   },
 
   setPassword: async (tempToken: string, password: string): Promise<SetPasswordResponse> => {
-    return invokeAuthProxy<SetPasswordResponse>('/set-password', {
+    return invokeAuthProxy<SetPasswordResponse>('/auth/set-password', {
       temp_token: tempToken,
       password,
     });
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
-    return invokeAuthProxy<{ message: string }>('/forgot-password', { email });
+    return invokeAuthProxy<{ message: string }>('/auth/forgot-password', { email });
   },
 };
