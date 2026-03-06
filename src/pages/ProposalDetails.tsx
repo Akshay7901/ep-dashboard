@@ -211,7 +211,7 @@ const ProposalDetails: React.FC = () => {
     queryFn: () => metadataApi.get(ticketNum),
     enabled: !!ticketNum,
   });
-  const proposedTitle = metadataResponse?.metadata?.full_title || metadataResponse?.metadata?.title;
+  const proposedTitle = metadataResponse?.metadata?.title;
   const proposedSubtitle = metadataResponse?.metadata?.subtitle;
   const {
     assignReviewers,
