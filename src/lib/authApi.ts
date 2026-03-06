@@ -1,4 +1,6 @@
-import { supabase } from '@/integrations/supabase/client';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
 
 export interface LoginResponse {
   token?: string;
@@ -50,22 +52,19 @@ export interface SetPasswordResponse {
   role?: string;
 }
 
-async function invokeAuthProxy<T>(endpoint: string, payload: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('auth-proxy', {
-    body: { endpoint, ...payload },
+async function postAuth<T>(endpoint: string, payload: Record<string, unknown>): Promise<T> {
+  const { data } = await axios.post<T>(`${API_BASE_URL}/api/proposals${endpoint}`, payload, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 30000,
   });
 
-  if (error) {
-    throw error;
-  }
-
-  if (data?.error) {
-    const err: any = new Error(data.error);
+  if ((data as any)?.error) {
+    const err: any = new Error((data as any).error);
     err.response = { data };
     throw err;
   }
 
-  return data as T;
+  return data;
 }
 
 export const authApi = {
@@ -74,21 +73,21 @@ export const authApi = {
     if (password) {
       payload.password = password;
     }
-    return invokeAuthProxy<LoginResponse>('/login', payload);
+    return postAuth<LoginResponse>('/login', payload);
   },
 
   verifyOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {
-    return invokeAuthProxy<VerifyOtpResponse>('/auth/verify-otp', { email, otp });
+    return postAuth<VerifyOtpResponse>('/auth/verify-otp', { email, otp });
   },
 
   setPassword: async (tempToken: string, password: string): Promise<SetPasswordResponse> => {
-    return invokeAuthProxy<SetPasswordResponse>('/auth/set-password', {
+    return postAuth<SetPasswordResponse>('/auth/set-password', {
       temp_token: tempToken,
       password,
     });
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
-    return invokeAuthProxy<{ message: string }>('/auth/forgot-password', { email });
+    return postAuth<{ message: string }>('/auth/forgot-password', { email });
   },
 };
