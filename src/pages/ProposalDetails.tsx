@@ -938,11 +938,6 @@ const ProposalDetails: React.FC = () => {
                         proposalStatus={proposal.status}
                         onSend={async (text, _category, queryId) => {
                           await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text });
-                          // After successful response, open resend contract dialog with last contract's title/subtitle
-                          setResendContractTitle(latestContract?.title || proposal?.name || '');
-                          setResendContractSubtitle(latestContract?.subtitle || proposal?.sub_title || '');
-                          setResendContractType(latestContract?.contract_type || 'author');
-                          setResendContractOpen(true);
                         }}
                         isSending={respondToQuery.isPending}
                       />
@@ -1521,8 +1516,8 @@ const ProposalDetails: React.FC = () => {
       </AlertDialog>
 
       {/* Resend Contract Dialog (after query response) */}
-      <Dialog open={resendContractOpen} onOpenChange={(open) => { if (!open) return; setResendContractOpen(open); }}>
-        <DialogContent className="sm:max-w-md [&>button[class*='absolute']]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <Dialog open={resendContractOpen} onOpenChange={setResendContractOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Resend Contract</DialogTitle>
             <DialogDescription>
