@@ -10,6 +10,8 @@ export const useContractQueries = (ticketNumber: string) => {
     queryKey,
     queryFn: () => contractQueriesApi.list(ticketNumber),
     enabled: !!ticketNumber,
+    staleTime: 0,
+    refetchInterval: 10000,
   });
 
   const refreshAll = () => {

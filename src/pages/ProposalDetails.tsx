@@ -223,6 +223,7 @@ const ProposalDetails: React.FC = () => {
     queryFn: () => metadataApi.get(ticketNum),
     enabled: !!ticketNum,
     staleTime: 0,
+    refetchInterval: 10000,
   });
   const proposedTitle = metadataResponse?.metadata?.title;
   const proposedSubtitle = metadataResponse?.metadata?.subtitle;
