@@ -194,6 +194,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     fileSize?: number;
     width?: number;
     height?: number;
+    dpi?: number | null;
     errors: string[];
     isValid: boolean;
   } | null>(null);
@@ -215,6 +216,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const MIN_DIMENSION = 2360;
   const MAX_FILE_SIZE_MB = 10;
+  const MIN_DPI = 300;
 
   const validateImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
     return new Promise((resolve, reject) => {
@@ -231,6 +233,91 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     });
   };
 
+  /** Parse DPI from JPEG JFIF (APP0) or EXIF (APP1) headers */
+  const extractJpegDpi = (buffer: ArrayBuffer): number | null => {
+    const view = new DataView(buffer);
+    if (view.getUint16(0) !== 0xFFD8) return null; // Not JPEG
+
+    let offset = 2;
+    while (offset < view.byteLength - 4) {
+      const marker = view.getUint16(offset);
+      if (marker === 0xFFDA) break; // Start of scan – stop
+
+      const segLen = view.getUint16(offset + 2);
+
+      // JFIF APP0
+      if (marker === 0xFFE0 && segLen >= 14) {
+        const units = view.getUint8(offset + 11);
+        const xDensity = view.getUint16(offset + 12);
+        const yDensity = view.getUint16(offset + 14);
+        if (units === 1 && xDensity > 0 && yDensity > 0) {
+          return Math.min(xDensity, yDensity); // DPI
+        }
+        if (units === 2 && xDensity > 0 && yDensity > 0) {
+          return Math.min(Math.round(xDensity * 2.54), Math.round(yDensity * 2.54)); // dots/cm → DPI
+        }
+      }
+
+      // EXIF APP1
+      if (marker === 0xFFE1) {
+        const exifStart = offset + 4;
+        // Check "Exif\0\0"
+        if (
+          view.getUint8(exifStart) === 0x45 && view.getUint8(exifStart + 1) === 0x78 &&
+          view.getUint8(exifStart + 2) === 0x69 && view.getUint8(exifStart + 3) === 0x66
+        ) {
+          const tiffStart = exifStart + 6;
+          const isLE = view.getUint16(tiffStart) === 0x4949;
+          const getU16 = (o: number) => view.getUint16(o, isLE);
+          const getU32 = (o: number) => view.getUint32(o, isLE);
+
+          try {
+            const ifdOffset = getU32(tiffStart + 4);
+            const ifdStart = tiffStart + ifdOffset;
+            const entries = getU16(ifdStart);
+            let xRes: number | null = null;
+            let yRes: number | null = null;
+            let resUnit = 2; // default inches
+
+            for (let i = 0; i < entries; i++) {
+              const entryOff = ifdStart + 2 + i * 12;
+              if (entryOff + 12 > view.byteLength) break;
+              const tag = getU16(entryOff);
+              const type = getU16(entryOff + 2);
+
+              if (tag === 0x011A && type === 5) { // XResolution RATIONAL
+                const valOff = tiffStart + getU32(entryOff + 8);
+                if (valOff + 8 <= view.byteLength) {
+                  xRes = getU32(valOff) / getU32(valOff + 4);
+                }
+              }
+              if (tag === 0x011B && type === 5) { // YResolution RATIONAL
+                const valOff = tiffStart + getU32(entryOff + 8);
+                if (valOff + 8 <= view.byteLength) {
+                  yRes = getU32(valOff) / getU32(valOff + 4);
+                }
+              }
+              if (tag === 0x0128) { // ResolutionUnit
+                resUnit = getU32(entryOff + 8);
+              }
+            }
+
+            if (xRes != null && yRes != null && xRes > 0 && yRes > 0) {
+              let dpi = Math.min(xRes, yRes);
+              if (resUnit === 3) dpi = Math.round(dpi * 2.54); // cm → inches
+              return dpi;
+            }
+          } catch {
+            // EXIF parse failed – fall through
+          }
+        }
+      }
+
+      offset += 2 + segLen;
+    }
+    return null;
+  };
+
   const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -240,6 +327,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     const fileSize = file.size;
     let width = 0;
     let height = 0;
+    let dpi: number | null = null;
 
     // File type check
     if (!["image/jpeg", "image/tiff"].includes(file.type)) {
@@ -251,7 +339,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       errors.push(`File size ${(fileSize / (1024 * 1024)).toFixed(1)}MB exceeds the ${MAX_FILE_SIZE_MB}MB limit.`);
     }
 
-    // Dimension check (only if file type is valid image)
+    // Dimension & DPI check (only if file type is valid image)
     if (["image/jpeg", "image/tiff"].includes(file.type)) {
       try {
         const dims = await validateImageDimensions(file);
@@ -263,14 +351,27 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       } catch {
         errors.push("Could not read image dimensions. The file may be corrupted.");
       }
+
+      // DPI check (JPEG only — TIFF DPI parsing is complex, let API handle it)
+      if (file.type === "image/jpeg") {
+        try {
+          const buffer = await file.arrayBuffer();
+          dpi = extractJpegDpi(buffer);
+          if (dpi === null) {
+            errors.push(`Could not read DPI metadata from the image. Please ensure the file has DPI information embedded (minimum ${MIN_DPI} DPI).`);
+          } else if (dpi < MIN_DPI) {
+            errors.push(`Image DPI is ${dpi}, which is below the minimum ${MIN_DPI} DPI required for print quality.`);
+          }
+        } catch {
+          errors.push("Could not read DPI metadata from the image.");
+        }
+      }
     }
 
-    setCoverImageValidation({ fileName, fileSize, width, height, errors, isValid: errors.length === 0 });
+    setCoverImageValidation({ fileName, fileSize, width, height, dpi, errors, isValid: errors.length === 0 });
 
     if (errors.length > 0) {
-      // Still show a preview for context but don't set the file as uploadable
       setCoverImageFile(null);
-      // Show local preview anyway so user sees what they picked
       const reader = new FileReader();
       reader.onload = () => setCoverImagePreview(reader.result as string);
       reader.readAsDataURL(file);
@@ -462,10 +563,11 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             <p className="text-sm text-muted-foreground">
               Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
               {[
                 { label: "Format", value: "JPEG or TIFF" },
                 { label: "Min. dimensions", value: `${MIN_DIMENSION}×${MIN_DIMENSION}px` },
+                { label: "Min. DPI", value: `${MIN_DPI} DPI` },
                 { label: "Max. file size", value: `${MAX_FILE_SIZE_MB}MB` },
               ].map((req) => (
                 <div key={req.label} className="flex items-center gap-1.5 rounded-md bg-muted/30 px-3 py-2 border border-border">
@@ -555,6 +657,11 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                           <p>Dimensions: <span className={`font-medium ${(coverImageValidation.width < MIN_DIMENSION || coverImageValidation.height < MIN_DIMENSION) ? 'text-destructive' : 'text-foreground'}`}>
                             {coverImageValidation.width}×{coverImageValidation.height}px
                           </span> <span className="text-muted-foreground/60">(min {MIN_DIMENSION}×{MIN_DIMENSION}px)</span></p>
+                        )}
+                        {coverImageValidation.dpi !== undefined && (
+                          <p>DPI: <span className={`font-medium ${coverImageValidation.dpi === null || coverImageValidation.dpi < MIN_DPI ? 'text-destructive' : 'text-foreground'}`}>
+                            {coverImageValidation.dpi === null ? 'Not found' : coverImageValidation.dpi}
+                          </span> <span className="text-muted-foreground/60">(min {MIN_DPI} DPI)</span></p>
                         )}
                       </div>
                       {coverImageValidation.errors.length > 0 && (
