@@ -205,11 +205,61 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     { field: "", newValue: "" },
   ]);
 
+  const MIN_DIMENSION = 2360;
+  const MAX_FILE_SIZE_MB = 10;
+
+  const validateImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({ width: img.width, height: img.height });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error("Could not read image file."));
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // File type check
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Only JPEG and PNG images are accepted.", variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+
+    // File size check
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast({ title: "File too large", description: `Maximum file size is ${MAX_FILE_SIZE_MB}MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`, variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+
+    // Dimension check
+    try {
+      const { width, height } = await validateImageDimensions(file);
+      if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
+        toast({
+          title: "Image too small",
+          description: `Image must be at least ${MIN_DIMENSION}×${MIN_DIMENSION}px (≈200mm × 200mm at 300 DPI). Your image is ${width}×${height}px.`,
+          variant: "destructive",
+        });
+        e.target.value = "";
+        return;
+      }
+    } catch {
+      toast({ title: "Invalid image", description: "Could not read image dimensions.", variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+
     setCoverImageFile(file);
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onload = () => setCoverImagePreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -390,8 +440,8 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <div className="p-4 space-y-4 border-b border-border">
           <p className="text-sm text-muted-foreground">
             Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
-            The image should be high resolution (minimum 300 DPI) and in JPEG or PNG format. Recommended dimensions are
-            6" × 9" (1800 × 2700 pixels).
+            The image must be in JPEG or PNG format, minimum {MIN_DIMENSION}×{MIN_DIMENSION}px (≈200mm × 200mm at 300 DPI),
+            and no larger than {MAX_FILE_SIZE_MB}MB.
           </p>
 
           {coverImageLoading ? (
