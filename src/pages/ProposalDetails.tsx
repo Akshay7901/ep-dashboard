@@ -10,7 +10,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi, metadataApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, lockProposalApi } from "@/lib/proposalsApi";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
 import { Separator } from "@/components/ui/separator";
@@ -30,7 +30,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -163,6 +163,8 @@ const ProposalDetails: React.FC = () => {
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
+  const [isLocking, setIsLocking] = useState(false);
+  const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
 
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
@@ -371,6 +373,18 @@ const ProposalDetails: React.FC = () => {
               <span className="text-sm text-muted-foreground">
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
+            )}
+            {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
+                onClick={() => setLockConfirmOpen(true)}
+                disabled={isLocking}
+              >
+                {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                Lock
+              </Button>
             )}
             {isReviewer1 && (
               <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
@@ -1457,6 +1471,46 @@ const ProposalDetails: React.FC = () => {
         toast({ variant: "destructive", title: "Failed to Decline", description: error?.message || "An error occurred while declining the proposal." });
       }
     }} isLoading={isBusy} />
+
+      {/* Lock Proposal Confirmation Dialog */}
+      <AlertDialog open={lockConfirmOpen} onOpenChange={setLockConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Lock Proposal
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will generate all production files and lock the proposal. This action cannot be undone. Are you sure you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLocking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isLocking}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsLocking(true);
+                try {
+                  const ticketNum = proposal.ticket_number || id;
+                  await lockProposalApi.lock(ticketNum!);
+                  queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                  queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
+                  toast({ title: "Proposal Locked", description: "Production files have been generated and the proposal is now locked." });
+                  setLockConfirmOpen(false);
+                } catch (error: any) {
+                  toast({ variant: "destructive", title: "Failed to Lock", description: error?.message || "An error occurred while locking the proposal." });
+                } finally {
+                  setIsLocking(false);
+                }
+              }}
+            >
+              {isLocking && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Lock Proposal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <DiffCheckerDialog
         open={diffCheckerOpen}

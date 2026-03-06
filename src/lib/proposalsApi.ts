@@ -1,5 +1,13 @@
 import api from '@/lib/api';
 
+// Lock proposal API
+export const lockProposalApi = {
+  lock: async (ticketNumber: string): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/lock`);
+    return data;
+  },
+};
+
 // Types for API responses
 export interface PeerReviewer {
   id: string;
