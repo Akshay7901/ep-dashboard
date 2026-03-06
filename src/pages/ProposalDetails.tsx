@@ -173,7 +173,7 @@ const ProposalDetails: React.FC = () => {
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{ queryId: number; responseText: string } | null>(null);
-  const [includeContract, setIncludeContract] = useState(true);
+  const [includeContract, setIncludeContract] = useState(false);
 
   /* ---------------- Data ---------------- */
 
@@ -1645,7 +1645,7 @@ const ProposalDetails: React.FC = () => {
                   setIsResendingContract(false);
                   setResendContractOpen(false);
                   setPendingQueryResponse(null);
-                  setIncludeContract(true);
+                  setIncludeContract(false);
                 }
               }}
             >
