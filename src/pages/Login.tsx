@@ -198,6 +198,7 @@ const Login: React.FC = () => {
                   {...register("password")}
                 />
                 <p className="text-xs text-muted-foreground">Leave blank for first-time login</p>
+              </div>
 
               <Button
                 type="submit"
