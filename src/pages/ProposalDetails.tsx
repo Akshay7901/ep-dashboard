@@ -376,18 +376,6 @@ const ProposalDetails: React.FC = () => {
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
             )}
-            {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
-                onClick={() => setLockConfirmOpen(true)}
-                disabled={isLocking}
-              >
-                {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                Lock
-              </Button>
-            )}
             {isReviewer1 && (
               <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
                 <History className="h-4 w-4" />
@@ -668,6 +656,20 @@ const ProposalDetails: React.FC = () => {
           {/* ---- METADATA (Decision Reviewer - only after contract signed) ---- */}
           {isContractSigned && (
             <TabsContent value="metadata" className="mt-4 space-y-6">
+              {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
+                    onClick={() => setLockConfirmOpen(true)}
+                    disabled={isLocking}
+                  >
+                    {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                    Lock
+                  </Button>
+                </div>
+              )}
               <PublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
             </TabsContent>
           )}
