@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { authApi } from '@/lib/authApi';
 import { UserCircle, KeyRound, LogOut, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ProfileDropdown: React.FC = () => {
   const { logout, user } = useAuth();
