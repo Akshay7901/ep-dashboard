@@ -289,17 +289,19 @@ const Proposals: React.FC = () => {
             </SelectContent>
           </Select>
 
-          <button
-            onClick={() => { setActionRequiredFilter((prev) => !prev); setDisplayCount(ITEMS_PER_PAGE); }}
-            className={cn(
-              "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
-              actionRequiredFilter
-                ? "bg-[#c05621] text-white border-[#c05621] ring-2 ring-offset-2 ring-[#c05621]"
-                : "bg-background text-[#c05621] border-[#c05621] hover:bg-[#c05621]/10"
-            )}
-          >
-            Action Required
-          </button>
+          {isReviewer1 && (
+            <button
+              onClick={() => { setActionRequiredFilter((prev) => !prev); setDisplayCount(ITEMS_PER_PAGE); }}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+                actionRequiredFilter
+                  ? "bg-[#c05621] text-white border-[#c05621] ring-2 ring-offset-2 ring-[#c05621]"
+                  : "bg-background text-[#c05621] border-[#c05621] hover:bg-[#c05621]/10"
+              )}
+            >
+              Action Required
+            </button>
+          )}
         </div>
 
         {/* Section label */}
