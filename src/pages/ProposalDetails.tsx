@@ -396,6 +396,15 @@ const ProposalDetails: React.FC = () => {
             </>}
 
           {statusIs(proposal.status, "new", "submitted") && <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => setShowNoteInput(!showNoteInput)}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                {showNoteInput ? "Hide note" : "Add note"}
+              </Button>
               <Button className="bg-[#3d5a47]" onClick={() => {
                 if (!selectedReviewer) {
                   setPendingAction("accept");
@@ -406,15 +415,6 @@ const ProposalDetails: React.FC = () => {
               }} disabled={isAssigning}>
                 {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Submit for review
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => setShowNoteInput(!showNoteInput)}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                {showNoteInput ? "Hide note" : "Add note"}
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
