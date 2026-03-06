@@ -352,7 +352,7 @@ const ProposalDetails: React.FC = () => {
             {proposedTitle && proposedTitle !== proposal.name && (
               <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
                 <FileCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span className="font-medium shrink-0">Proposed:</span>
+                <span className="font-medium shrink-0">Proposed Title:</span>
                 <span className="font-semibold text-foreground break-words">
                   {proposedTitle}{proposedSubtitle ? `: ${proposedSubtitle}` : ''}
                 </span>
