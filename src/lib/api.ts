@@ -36,8 +36,9 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
     
+    const responseData = error.response?.data as Record<string, any> | undefined;
     const apiError: ApiError = {
-      message: error.response?.data?.message || error.message || 'An error occurred',
+      message: responseData?.message || responseData?.error || error.message || 'An error occurred',
       status: error.response?.status || 500,
     };
     
