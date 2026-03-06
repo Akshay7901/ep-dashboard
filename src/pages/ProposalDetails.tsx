@@ -163,6 +163,13 @@ const ProposalDetails: React.FC = () => {
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
 
+  // Resend contract dialog state (after query response)
+  const [resendContractOpen, setResendContractOpen] = useState(false);
+  const [resendContractType, setResendContractType] = useState("author");
+  const [resendContractTitle, setResendContractTitle] = useState("");
+  const [resendContractSubtitle, setResendContractSubtitle] = useState("");
+  const [isResendingContract, setIsResendingContract] = useState(false);
+
   /* ---------------- Data ---------------- */
 
   const {
@@ -929,7 +936,14 @@ const ProposalDetails: React.FC = () => {
                         isLoading={queriesLoading}
                         viewAs="reviewer"
                         proposalStatus={proposal.status}
-                        onSend={async (text, _category, queryId) => { await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text }); }}
+                        onSend={async (text, _category, queryId) => {
+                          await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text });
+                          // After successful response, open resend contract dialog
+                          setResendContractTitle(proposal?.name || '');
+                          setResendContractSubtitle(proposal?.sub_title || '');
+                          setResendContractType('author');
+                          setResendContractOpen(true);
+                        }}
                         isSending={respondToQuery.isPending}
                       />
                     </AccordionContent>
@@ -1505,6 +1519,82 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Resend Contract Dialog (after query response) */}
+      <Dialog open={resendContractOpen} onOpenChange={setResendContractOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Resend Contract</DialogTitle>
+            <DialogDescription>
+              Confirm the contract details to resend to the author.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Contract Type</Label>
+              <Select value={resendContractType} onValueChange={setResendContractType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select contract type" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="author">Author Contract</SelectItem>
+                  <SelectItem value="editor">Editor Contract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resend-contract-title">Title</Label>
+              <input
+                id="resend-contract-title"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={resendContractTitle}
+                onChange={(e) => setResendContractTitle(e.target.value)}
+                placeholder="Enter title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
+              <input
+                id="resend-contract-subtitle"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={resendContractSubtitle}
+                onChange={(e) => setResendContractSubtitle(e.target.value)}
+                placeholder="Enter subtitle (optional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResendContractOpen(false)} disabled={isResendingContract}>
+              Skip
+            </Button>
+            <Button
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              disabled={isResendingContract || !resendContractTitle.trim()}
+              onClick={async () => {
+                setIsResendingContract(true);
+                try {
+                  await proposalApi.sendContract(ticketNum, {
+                    contract_type: resendContractType,
+                    title: resendContractTitle,
+                    subtitle: resendContractSubtitle,
+                  });
+                  toast({ title: 'Contract Sent', description: 'The contract has been resent to the author.' });
+                  queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
+                  queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
+                  queryClient.invalidateQueries({ queryKey: ['proposals'] });
+                } catch (err: any) {
+                  toast({ variant: 'destructive', title: 'Contract Send Failed', description: err?.message || 'Failed to send contract.' });
+                } finally {
+                  setIsResendingContract(false);
+                  setResendContractOpen(false);
+                }
+              }}
+            >
+              {isResendingContract ? 'Sending...' : 'Send Contract'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>;
 };
 export default ProposalDetails;
