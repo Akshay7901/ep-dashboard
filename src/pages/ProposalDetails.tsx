@@ -350,12 +350,17 @@ const ProposalDetails: React.FC = () => {
               </p>}
             {/* Proposed title from metadata (if different from original) */}
             {proposedTitle && proposedTitle !== proposal.name && (
-              <div className="mt-3 flex flex-wrap items-start gap-2 text-sm text-muted-foreground">
-                <FileCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span className="font-medium shrink-0">Proposed:</span>
-                <span className="font-semibold text-foreground break-words">{proposedTitle}</span>
-                {proposedSubtitle && proposedSubtitle !== proposal.sub_title && (
-                  <span className="italic break-words">— {proposedSubtitle}</span>
+              <div className="mt-3 flex flex-col gap-1 text-sm">
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <FileCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span className="font-medium shrink-0">Proposed Title:</span>
+                  <span className="font-semibold text-foreground break-words">{proposedTitle}</span>
+                </div>
+                {proposedSubtitle && (
+                  <div className="flex items-start gap-2 text-muted-foreground ml-[1.375rem]">
+                    <span className="font-medium shrink-0">Proposed Subtitle:</span>
+                    <span className="font-semibold text-foreground break-words">{proposedSubtitle}</span>
+                  </div>
                 )}
               </div>
             )}
