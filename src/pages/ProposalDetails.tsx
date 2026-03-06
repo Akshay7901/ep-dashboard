@@ -146,7 +146,7 @@ const ProposalDetails: React.FC = () => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"accept" | "decline" | "reassign" | null>(null);
   const [showingSummary, setShowingSummary] = useState(false);
   const [summaryFormData, setSummaryFormData] = useState<Record<string, string>>({});
   const [isConfirming, setIsConfirming] = useState(false);
@@ -408,21 +408,18 @@ const ProposalDetails: React.FC = () => {
               </Button>
             </>}
 
-          {statusIs(proposal.status, "in_review", "under_review") && (() => {
-            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
-              || [];
-            const currentAssigned = assignedEmails.filter(Boolean)[0] || "";
-            const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
-            return <Button
+          {statusIs(proposal.status, "in_review", "under_review") && (
+            <Button
               className="bg-[#3d5a47]"
-               onClick={() => assignReviewers({ reviewerEmail: selectedReviewer })}
-               disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
-              title={isSameReviewer ? "Select a different reviewer to reassign" : ""}
+              onClick={() => {
+                setPendingAction("reassign");
+                setIsAssignDialogOpen(true);
+              }}
+              disabled={isAssigning}
             >
               Reassign
-            </Button>;
-          })()}
+            </Button>
+          )}
         </div>}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
