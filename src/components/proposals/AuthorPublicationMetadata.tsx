@@ -242,8 +242,8 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     let height = 0;
 
     // File type check
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      errors.push(`Invalid file type "${file.type.split("/")[1]?.toUpperCase() || "unknown"}". Only JPEG and PNG are accepted.`);
+    if (!["image/jpeg", "image/tiff"].includes(file.type)) {
+      errors.push(`Invalid file type "${file.type.split("/")[1]?.toUpperCase() || "unknown"}". Only JPEG and TIFF files are accepted.`);
     }
 
     // File size check
@@ -252,7 +252,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     }
 
     // Dimension check (only if file type is valid image)
-    if (["image/jpeg", "image/png"].includes(file.type)) {
+    if (["image/jpeg", "image/tiff"].includes(file.type)) {
       try {
         const dims = await validateImageDimensions(file);
         width = dims.width;
@@ -464,7 +464,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {[
-                { label: "Format", value: "JPEG or PNG" },
+                { label: "Format", value: "JPEG or TIFF" },
                 { label: "Min. dimensions", value: `${MIN_DIMENSION}×${MIN_DIMENSION}px` },
                 { label: "Max. file size", value: `${MAX_FILE_SIZE_MB}MB` },
               ].map((req) => (
@@ -526,7 +526,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                     <input
                       id="cover-upload"
                       type="file"
-                      accept="image/jpeg,image/png"
+                      accept="image/jpeg,image/tiff,.tif,.tiff"
                       className="hidden"
                       onChange={handleCoverImageChange}
                     />
