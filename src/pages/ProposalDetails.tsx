@@ -1386,7 +1386,11 @@ const ProposalDetails: React.FC = () => {
            setPendingAction(null);
          }
        });
-    }} isLoading={isAssigning} />
+    }} isLoading={isAssigning} currentAssignedEmail={
+      ((proposal as any)?.assigned_reviewer_emails
+        || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
+        || []).filter(Boolean)[0] || undefined
+    } />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
       try {
