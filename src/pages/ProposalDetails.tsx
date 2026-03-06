@@ -379,38 +379,6 @@ const ProposalDetails: React.FC = () => {
         )}
       </div>
 
-      {/* Assignment note for peer reviewer */}
-      {isReviewer2 && (() => {
-        console.log('[AssignmentNote] assigned_reviewers:', JSON.stringify(proposal?.assigned_reviewers), 'proposal keys with note:', Object.keys(proposal as any).filter(k => k.toLowerCase().includes('note')), 'events:', JSON.stringify(proposalEvents.slice(0, 3)));
-        // Try multiple sources for the assignment note
-        const assignedReviewers = proposal?.assigned_reviewers || [];
-        const noteFromAssignment = assignedReviewers.length > 0
-          ? (assignedReviewers[0] as any)?.note
-          : null;
-        const noteFromProposal = (proposal as any)?.assignment_note || (proposal as any)?.reviewer_note || (proposal as any)?.note;
-        
-        // Also check events for the most recent assignment event with a note
-        const assignEvent = [...proposalEvents].reverse().find((e: any) =>
-          (e.event_type === 'reviewer_assigned' || e.event_type === 'assigned' || e.event_type === 'status_change')
-          && e.description && e.description.length > 0
-          && (e.description.toLowerCase().includes('note:') || e.event_type === 'reviewer_assigned')
-        );
-        const noteFromEvent = assignEvent?.description
-          ? (assignEvent.description.match(/note:\s*(.+)/i)?.[1]?.trim() || null)
-          : null;
-
-        const assignmentNote = noteFromAssignment || noteFromProposal || noteFromEvent;
-        if (!assignmentNote) return null;
-        return (
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
-            <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Decision Reviewer</p>
-              <p className="text-sm text-foreground">{assignmentNote}</p>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
       {isReviewer1 && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review")) && <div className="flex items-center gap-3 flex-wrap">
@@ -480,7 +448,15 @@ const ProposalDetails: React.FC = () => {
                     }
                     assignReviewers(
                       { reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined },
-                      { onSuccess: () => setIsAssignDialogOpen(false) }
+                      { onSuccess: () => {
+                        // Store note in localStorage for peer reviewer to see
+                        if (assignNote.trim()) {
+                          localStorage.setItem(`assignment_note_${proposal.ticket_number}`, assignNote.trim());
+                        } else {
+                          localStorage.removeItem(`assignment_note_${proposal.ticket_number}`);
+                        }
+                        setIsAssignDialogOpen(false);
+                      }}
                     );
                   }}
                   disabled={isAssigning}

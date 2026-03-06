@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Save } from "lucide-react";
+import { CheckCircle, Save, MessageSquare } from "lucide-react";
 import { Proposal } from "@/types";
 import { useReview } from "@/hooks/useReview";
 
@@ -311,6 +311,24 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
             <Progress value={progress} className="mt-3 h-2" />
           </div>
         )}
+
+        {/* Assignment note from decision reviewer */}
+        {(() => {
+          try {
+            const noteKey = `assignment_note_${proposal?.ticket_number}`;
+            const assignmentNote = proposal?.ticket_number ? localStorage.getItem(noteKey) : null;
+            if (!assignmentNote) return null;
+            return (
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
+                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Decision Reviewer</p>
+                  <p className="text-sm text-foreground">{assignmentNote}</p>
+                </div>
+              </div>
+            );
+          } catch { return null; }
+        })()}
 
         {/* Form Fields */}
         {REVIEW_FIELDS.map((field) => (
