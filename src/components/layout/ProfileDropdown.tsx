@@ -37,8 +37,16 @@ const ProfileDropdown: React.FC = () => {
           </div>
           <div className="py-1">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setOpen(false);
+                if (user?.email) {
+                  try {
+                    await authApi.forgotPassword(user.email);
+                    toast.success('Verification code sent to your email');
+                  } catch {
+                    toast.error('Failed to send verification code');
+                  }
+                }
                 navigate('/forgot-password', { state: { prefillEmail: user?.email } });
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
