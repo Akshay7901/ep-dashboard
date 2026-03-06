@@ -1,16 +1,9 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
-
-const authClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: { 'Content-Type': 'application/json' },
-});
+import { supabase } from '@/integrations/supabase/client';
 
 export interface LoginResponse {
   token?: string;
   requires_otp?: boolean;
+  purpose?: string;
   user?: {
     id?: string;
     email?: string;
@@ -57,27 +50,45 @@ export interface SetPasswordResponse {
   role?: string;
 }
 
+async function invokeAuthProxy<T>(endpoint: string, payload: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('auth-proxy', {
+    body: { endpoint, ...payload },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (data?.error) {
+    const err: any = new Error(data.error);
+    err.response = { data };
+    throw err;
+  }
+
+  return data as T;
+}
+
 export const authApi = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
-    const res = await authClient.post('/api/auth/login', { email, password });
-    return res.data;
+  login: async (email: string, password?: string): Promise<LoginResponse> => {
+    const payload: Record<string, unknown> = { email };
+    if (password) {
+      payload.password = password;
+    }
+    return invokeAuthProxy<LoginResponse>('/login', payload);
   },
 
   verifyOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {
-    const res = await authClient.post('/api/auth/verify-otp', { email, otp });
-    return res.data;
+    return invokeAuthProxy<VerifyOtpResponse>('/auth/verify-otp', { email, otp });
   },
 
   setPassword: async (tempToken: string, password: string): Promise<SetPasswordResponse> => {
-    const res = await authClient.post('/api/auth/set-password', {
+    return invokeAuthProxy<SetPasswordResponse>('/auth/set-password', {
       temp_token: tempToken,
       password,
     });
-    return res.data;
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
-    const res = await authClient.post('/api/auth/forgot-password', { email });
-    return res.data;
+    return invokeAuthProxy<{ message: string }>('/auth/forgot-password', { email });
   },
 };

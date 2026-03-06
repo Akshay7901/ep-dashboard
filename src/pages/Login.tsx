@@ -18,7 +18,7 @@ import { authApi } from "@/lib/authApi";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -60,14 +60,15 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const response = await authApi.login(data.email, data.password);
+      const password = data.password && data.password.trim() ? data.password : undefined;
+      const response = await authApi.login(data.email, password);
 
       if (response.requires_otp) {
         setEmail(data.email);
         setStep('otp');
         toast({
           title: "OTP sent",
-          description: "Check your email for a verification code.",
+          description: response.message || "Check your email for a verification code.",
         });
       } else if (response.token) {
         loginWithToken(response.token, response);
@@ -76,7 +77,6 @@ const Login: React.FC = () => {
       }
     } catch (error: any) {
       console.error(error);
-      // If the backend sends 400/401 with specific message
       const msg = error.response?.data?.message || error.message || "Please check your credentials and try again.";
       
       toast({
@@ -197,7 +197,7 @@ const Login: React.FC = () => {
                   className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
                   {...register("password")}
                 />
-                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+                <p className="text-xs text-muted-foreground">Leave blank for first-time login</p>
               </div>
 
               <Button
