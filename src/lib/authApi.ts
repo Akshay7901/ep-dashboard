@@ -50,16 +50,15 @@ export interface SetPasswordResponse {
   role?: string;
 }
 
-async function invokeAuthProxy<T>(endpoint: string, body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(`auth-proxy${endpoint}`, {
-    body,
+async function invokeAuthProxy<T>(endpoint: string, payload: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('auth-proxy', {
+    body: { endpoint, ...payload },
   });
 
   if (error) {
     throw error;
   }
 
-  // If the response contains an error field, throw it
   if (data?.error) {
     const err: any = new Error(data.error);
     err.response = { data };
@@ -71,11 +70,11 @@ async function invokeAuthProxy<T>(endpoint: string, body: Record<string, unknown
 
 export const authApi = {
   login: async (email: string, password?: string): Promise<LoginResponse> => {
-    const body: Record<string, unknown> = { email };
+    const payload: Record<string, unknown> = { email };
     if (password) {
-      body.password = password;
+      payload.password = password;
     }
-    return invokeAuthProxy<LoginResponse>('/login', body);
+    return invokeAuthProxy<LoginResponse>('/login', payload);
   },
 
   verifyOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {

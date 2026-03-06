@@ -13,34 +13,36 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    // Extract the auth endpoint from the path: /auth-proxy/login → /api/auth/login
-    const pathParts = url.pathname.split('/auth-proxy');
-    const authPath = pathParts[1] || '';
-    const targetUrl = `${API_BASE_URL}/api/auth${authPath}`;
+    const { endpoint, ...payload } = await req.json();
 
-    const body = await req.text();
+    if (!endpoint) {
+      return new Response(JSON.stringify({ error: 'Missing endpoint' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const targetUrl = `${API_BASE_URL}/api/auth${endpoint}`;
 
     const response = await fetch(targetUrl, {
-      method: req.method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: body || undefined,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
 
     const data = await response.text();
 
     return new Response(data, {
-      status: response.status,
+      status: 200, // Always return 200 so supabase.functions.invoke doesn't throw
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
+        'X-Backend-Status': response.status.toString(),
       },
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
