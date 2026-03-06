@@ -379,6 +379,24 @@ const ProposalDetails: React.FC = () => {
         )}
       </div>
 
+      {/* Assignment note for peer reviewer */}
+      {isReviewer2 && (() => {
+        const assignedReviewers = proposal?.assigned_reviewers || [];
+        const assignmentNote = assignedReviewers.length > 0
+          ? (assignedReviewers[0] as any)?.note || (proposal as any)?.assignment_note
+          : (proposal as any)?.assignment_note;
+        if (!assignmentNote) return null;
+        return (
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
+            <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Decision Reviewer</p>
+              <p className="text-sm text-foreground">{assignmentNote}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
       {isReviewer1 && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
