@@ -90,4 +90,25 @@ export const authApi = {
   forgotPassword: async (email: string): Promise<{ message: string }> => {
     return postAuth<{ message: string }>('/auth/forgot-password', { email });
   },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ status: string; message: string }> => {
+    const token = localStorage.getItem('auth_token');
+    const { data } = await axios.post<{ status: string; message: string }>(
+      `${API_BASE_URL}/api/proposals/auth/change-password`,
+      { current_password: currentPassword, new_password: newPassword },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        timeout: 30000,
+      }
+    );
+    if ((data as any)?.error) {
+      const err: any = new Error((data as any).error);
+      err.response = { data };
+      throw err;
+    }
+    return data;
+  },
 };
