@@ -217,7 +217,7 @@ export const metadataApi = {
 
   uploadCoverImage: async (ticketNumber: string, file: File, source?: string): Promise<any> => {
     const formData = new FormData();
-    formData.append('cover_image', file);
+    formData.append('file', file);
     if (source) formData.append('source', source);
     const { data } = await api.post(
       `/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/cover-image`,
