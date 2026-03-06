@@ -2,6 +2,8 @@
 
 import React, { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -17,7 +19,7 @@ import PeerReviewCommentsForm, { type PeerReviewCommentsFormHandle } from "@/com
 import PeerReviewSummary from "@/components/proposals/PeerReviewSummary";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
-import AssignReviewersDialog from "@/components/proposals/AssignReviewersDialog";
+
 import DeclineProposalDialog from "@/components/proposals/DeclineProposalDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -145,7 +147,7 @@ const ProposalDetails: React.FC = () => {
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
   const [contractPdfLoading, setContractPdfLoading] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [showNoteInput, setShowNoteInput] = useState(false);
+  
   const [assignNote, setAssignNote] = useState("");
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
@@ -396,40 +398,66 @@ const ProposalDetails: React.FC = () => {
             </>}
 
           {statusIs(proposal.status, "new", "submitted") && <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => setShowNoteInput(!showNoteInput)}
-              >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                {showNoteInput ? "Hide note" : "Add note"}
-              </Button>
               <Button className="bg-[#3d5a47]" onClick={() => {
-                if (!selectedReviewer) {
-                  setPendingAction("accept");
-                  setIsAssignDialogOpen(true);
-                  return;
-                }
-                assignReviewers({ reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined });
+                setAssignNote("");
+                setIsAssignDialogOpen(true);
               }} disabled={isAssigning}>
-                {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Submit for review
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
               </Button>
             </>}
-          {showNoteInput && statusIs(proposal.status, "new", "submitted") && (
-            <div className="w-full">
-              <Textarea
-                placeholder="Optional note for the reviewer, e.g. 'Please focus on the methodology section.'"
-                value={assignNote}
-                onChange={(e) => setAssignNote(e.target.value)}
-                className="min-h-[70px] resize-none text-sm"
-              />
-            </div>
-          )}
+
+          {/* Submit for Review confirmation dialog with optional note */}
+          <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5" />
+                  Submit for Review
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to submit this proposal for peer review?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label htmlFor="assign-note" className="text-sm font-medium">
+                  Note for Reviewer <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  id="assign-note"
+                  placeholder="E.g., Please pay particular attention to the methodology section."
+                  value={assignNote}
+                  onChange={(e) => setAssignNote(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+                  onClick={() => {
+                    if (!selectedReviewer) {
+                      toast({ title: "No reviewer selected", description: "Please select a reviewer first.", variant: "destructive" });
+                      setIsAssignDialogOpen(false);
+                      return;
+                    }
+                    assignReviewers(
+                      { reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined },
+                      { onSuccess: () => setIsAssignDialogOpen(false) }
+                    );
+                  }}
+                  disabled={isAssigning}
+                >
+                  {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Submit for review
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {statusIs(proposal.status, "in_review", "under_review") && (() => {
             const assignedEmails = (proposal as any)?.assigned_reviewer_emails
@@ -1402,17 +1430,6 @@ const ProposalDetails: React.FC = () => {
         downloadFileName={`${ticketNum || "contract"}.pdf`}
       />
 
-      <AssignReviewersDialog open={isAssignDialogOpen} onOpenChange={open => {
-      setIsAssignDialogOpen(open);
-      if (!open) setPendingAction(null);
-     }} onAssign={(reviewerIds, note) => {
-       assignReviewers({ reviewerEmail: reviewerIds[0], note }, {
-         onSuccess: () => {
-           setIsAssignDialogOpen(false);
-           setPendingAction(null);
-         }
-       });
-    }} isLoading={isAssigning} />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
       try {
