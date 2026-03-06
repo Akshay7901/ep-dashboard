@@ -378,7 +378,7 @@ const ProposalDetails: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 bg-[#3d5a47] text-white hover:bg-[#3d5a47]/90"
+                className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
                 onClick={() => setLockConfirmOpen(true)}
                 disabled={isLocking}
               >
