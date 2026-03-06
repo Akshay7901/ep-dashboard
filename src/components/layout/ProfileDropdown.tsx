@@ -35,7 +35,10 @@ const ProfileDropdown: React.FC = () => {
           </div>
           <div className="py-1">
             <button
-              onClick={() => { setOpen(false); navigate('/forgot-password'); }}
+              onClick={() => {
+                setOpen(false);
+                navigate('/forgot-password', { state: { prefillEmail: user?.email } });
+              }}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
               <KeyRound className="h-4 w-4 text-muted-foreground" />
