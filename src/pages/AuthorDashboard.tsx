@@ -18,17 +18,7 @@ const ITEMS_PER_PAGE = 10;
 
 // Status badge and config removed — using ProposalStatusBadge which reads raw API display text
 
-/* ---- Action Required logic ---- */
-const getActionRequired = (status: string): { label: string; hasAction: boolean } => {
-  const normalized = status.trim().toLowerCase().replace(/\s+/g, '_');
-  switch (normalized) {
-    case "feedback_&_agreement_pending":
-    case "final_review_&_confirmation":
-      return { label: "Action Required", hasAction: true };
-    default:
-      return { label: "No action", hasAction: false };
-  }
-};
+/* ---- Action Required logic — now driven by API field ---- */
 
 /* ---- Status Chip ---- */
 interface StatusChipProps {
@@ -185,9 +175,7 @@ const AuthorDashboard: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayedProposals.map((proposal) => {
-                      const action = getActionRequired(proposal.status);
-                      return (
+                    {displayedProposals.map((proposal) => (
                         <TableRow
                           key={proposal.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -205,17 +193,16 @@ const AuthorDashboard: React.FC = () => {
                             <ProposalStatusBadge status={proposal.status} showIcon={false} />
                           </TableCell>
                           <TableCell className="text-right">
-                            {action.hasAction ? (
+                            {proposal.action_required ? (
                               <Badge variant="outline" className="rounded-full px-4 py-1 font-medium text-xs border-[#c05621] text-[#c05621]">
-                                {action.label}
+                                Action Required
                               </Badge>
                             ) : (
-                              <span className="text-sm text-muted-foreground">{action.label}</span>
+                              <span className="text-sm text-muted-foreground">No action</span>
                             )}
                           </TableCell>
                         </TableRow>
-                      );
-                    })}
+                    ))}
                   </TableBody>
                 </Table>
               </Card>

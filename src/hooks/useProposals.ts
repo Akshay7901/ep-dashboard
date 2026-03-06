@@ -61,6 +61,7 @@ const mapApiProposal = (apiProposal: any): Proposal => {
     country: apiProposal.country || null,
     assigned_at: apiProposal.assigned_at || extractAssignedAt(apiProposal.assigned_reviewers || apiProposal.assignments),
     assigned_reviewers: normalizeAssignments(apiProposal.assigned_reviewers || apiProposal.assignments),
+    action_required: apiProposal.action_required ?? false,
   };
 };
 

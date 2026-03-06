@@ -187,6 +187,8 @@ export interface Proposal {
     is_current: boolean;
     is_completed: boolean;
   }> | null;
+  // Action required flag from API
+  action_required?: boolean;
   // Legacy compatibility
   client?: string;
   clientEmail?: string;
