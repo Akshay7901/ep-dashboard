@@ -176,12 +176,8 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const isAuthorType = category.toLowerCase().includes("author");
 
-  // Cover image from API
-  const { data: coverImageData, isLoading: coverImageLoading } = useQuery({
-    queryKey: ["cover-image", ticketNumber],
-    queryFn: () => metadataApi.getCoverImage(ticketNumber),
-    enabled: !!ticketNumber && !!metadataResponse,
-  });
+  // Cover image from metadata response
+  const coverImageData = metadataResponse?.cover_image || null;
 
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
@@ -201,9 +197,8 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   // Sync API cover image data to local preview
   useEffect(() => {
-    if (coverImageData?.url && !coverImageFile) {
-      setCoverImagePreview(coverImageData.url);
-      if (coverImageData.source) setCoverImageSource(coverImageData.source);
+    if (coverImageData?.s3_url && !coverImageFile) {
+      setCoverImagePreview(coverImageData.s3_url);
     }
   }, [coverImageData, coverImageFile]);
 
@@ -393,7 +388,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     setUploadingCoverImage(true);
     try {
       await metadataApi.uploadCoverImage(ticketNumber, coverImageFile, coverImageSource || undefined);
-      queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
       setCoverImageFile(null);
       toast({ title: "Cover image uploaded", description: "Your cover image has been saved." });
     } catch (err: any) {
@@ -407,7 +402,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     setDeletingCoverImage(true);
     try {
       await metadataApi.deleteCoverImage(ticketNumber);
-      queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
       setCoverImageFile(null);
       setCoverImagePreview(null);
       setCoverImageSource("");
@@ -435,7 +430,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     setChangeRequests((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const hasCoverImage = !!coverImageFile || !!coverImageData?.url;
+  const hasCoverImage = !!coverImageFile || !!coverImageData?.s3_url;
 
   const sectionLabel = isAuthorType ? "Primary Author(s)" : "Primary Editor(s)";
 
@@ -487,7 +482,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       // Upload pending cover image before finalising
       if (coverImageFile && coverImagePermission) {
         await metadataApi.uploadCoverImage(ticketNumber, coverImageFile, coverImageSource || undefined);
-        queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+        queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
         setCoverImageFile(null);
       }
       await metadataApi.approve(ticketNumber, {
@@ -580,7 +575,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             </div>
           </div>
 
-          {coverImageLoading ? (
+          {metadataLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading cover image...
             </div>
@@ -592,7 +587,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   {!isApproved && (
                     <button
                       onClick={() => {
-                        if (coverImageData?.url) {
+                        if (coverImageData?.s3_url) {
                           handleDeleteCoverImage();
                         } else {
                           setCoverImageFile(null);
@@ -621,7 +616,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                       <Button variant="outline" size="sm" className="gap-1.5" asChild>
                         <span>
                           <Upload className="h-3.5 w-3.5" />
-                          {coverImageFile ? "Replace Image" : coverImageData?.url ? "Change Image" : "Upload Image"}
+                          {coverImageFile ? "Replace Image" : coverImageData?.s3_url ? "Change Image" : "Upload Image"}
                         </span>
                       </Button>
                     </Label>

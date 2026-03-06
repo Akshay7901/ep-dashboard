@@ -168,6 +168,18 @@ export interface ProposalMetadata {
   bic?: string;
 }
 
+export interface CoverImageData {
+  s3_url: string;
+  filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  width_px: number;
+  height_px: number;
+  dpi: number;
+  version: number;
+  uploaded_at: string;
+}
+
 export interface MetadataResponse {
   ticket_number: string;
   current_version: number;
@@ -175,6 +187,8 @@ export interface MetadataResponse {
   metadata: ProposalMetadata;
   created_at: string;
   updated_at: string;
+  approved_at?: string | null;
+  cover_image?: CoverImageData | null;
   revisions?: any[];
 }
 
@@ -205,15 +219,6 @@ export const metadataApi = {
   },
 
   // Cover image endpoints
-  getCoverImage: async (ticketNumber: string): Promise<{ url: string; source?: string } | null> => {
-    try {
-      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/cover-image`);
-      return data;
-    } catch (error: any) {
-      if (error?.status === 404 || error?.response?.status === 404) return null;
-      throw error;
-    }
-  },
 
   uploadCoverImage: async (ticketNumber: string, file: File, source?: string): Promise<any> => {
     const formData = new FormData();
