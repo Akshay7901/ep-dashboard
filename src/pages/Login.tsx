@@ -62,9 +62,26 @@ const Login: React.FC = () => {
 
   const onEmailSubmit = async (data: EmailFormData) => {
     setEmail(data.email);
-    // Move directly to the password step — the actual API call happens on password submit.
-    // If the user is first-time (no password), the login API will return requires_otp.
-    setStep('password');
+    setIsLoading(true);
+    try {
+      // Call login with email only to check if user has a password or needs OTP
+      const response = await authApi.login(data.email);
+      if (response.requires_otp) {
+        setStep('otp');
+        toast({
+          title: "OTP sent",
+          description: response.message || "Check your email for a verification code.",
+        });
+      } else {
+        // User already has a password set
+        setStep('password');
+      }
+    } catch (error: any) {
+      // If error indicates credentials needed, user has a password → show password screen
+      setStep('password');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onPasswordSubmit = async (data: PasswordFormData) => {
