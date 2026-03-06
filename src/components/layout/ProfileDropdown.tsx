@@ -24,9 +24,6 @@ const ProfileDropdown: React.FC = () => {
         className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground hover:bg-muted transition-colors"
       >
         <UserCircle className="h-5 w-5 text-muted-foreground" />
-        <span className="hidden sm:inline max-w-[120px] truncate">
-          {user?.name || user?.email || 'Profile'}
-        </span>
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
       </button>
 
