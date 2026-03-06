@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Search, Loader2, Users, LogOut } from "lucide-react";
 import TruncatedCell from "@/components/ui/truncated-cell";
 import { format } from "date-fns";
@@ -85,6 +86,7 @@ const Proposals: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
     page: 1,
@@ -135,9 +137,15 @@ const Proposals: React.FC = () => {
 
   const filteredProposals = React.useMemo(() => {
     if (!roleFilteredProposals.length) return [];
-    if (statusFilter === "all") return roleFilteredProposals;
-    return roleFilteredProposals.filter((p) => normalizeStatus(p.status) === statusFilter);
-  }, [roleFilteredProposals, statusFilter]);
+    let result = roleFilteredProposals;
+    if (statusFilter !== "all") {
+      result = result.filter((p) => normalizeStatus(p.status) === statusFilter);
+    }
+    if (actionRequiredFilter) {
+      result = result.filter((p) => p.action_required === true);
+    }
+    return result;
+  }, [roleFilteredProposals, statusFilter, actionRequiredFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
@@ -280,6 +288,18 @@ const Proposals: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
+
+          <button
+            onClick={() => { setActionRequiredFilter((prev) => !prev); setDisplayCount(ITEMS_PER_PAGE); }}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+              actionRequiredFilter
+                ? "bg-[#c05621] text-white border-[#c05621] ring-2 ring-offset-2 ring-[#c05621]"
+                : "bg-background text-[#c05621] border-[#c05621] hover:bg-[#c05621]/10"
+            )}
+          >
+            Action Required
+          </button>
         </div>
 
         {/* Section label */}
