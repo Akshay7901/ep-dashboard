@@ -448,15 +448,7 @@ const ProposalDetails: React.FC = () => {
                     }
                     assignReviewers(
                       { reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined },
-                      { onSuccess: () => {
-                        // Store note in localStorage for peer reviewer to see
-                        if (assignNote.trim()) {
-                          localStorage.setItem(`assignment_note_${proposal.ticket_number}`, assignNote.trim());
-                        } else {
-                          localStorage.removeItem(`assignment_note_${proposal.ticket_number}`);
-                        }
-                        setIsAssignDialogOpen(false);
-                      }}
+                      { onSuccess: () => setIsAssignDialogOpen(false) }
                     );
                   }}
                   disabled={isAssigning}

@@ -314,20 +314,18 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
 
         {/* Assignment note from decision reviewer */}
         {(() => {
-          try {
-            const noteKey = `assignment_note_${proposal?.ticket_number}`;
-            const assignmentNote = proposal?.ticket_number ? localStorage.getItem(noteKey) : null;
-            if (!assignmentNote) return null;
-            return (
-              <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
-                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Decision Reviewer</p>
-                  <p className="text-sm text-foreground">{assignmentNote}</p>
-                </div>
+          const assignments = (proposal as any)?.assignments || [];
+          const latestNote = assignments.length > 0 ? assignments[assignments.length - 1]?.note : null;
+          if (!latestNote) return null;
+          return (
+            <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
+              <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Decision Reviewer</p>
+                <p className="text-sm text-foreground">{latestNote}</p>
               </div>
-            );
-          } catch { return null; }
+            </div>
+          );
         })()}
 
         {/* Form Fields */}
