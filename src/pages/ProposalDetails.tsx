@@ -340,15 +340,13 @@ const ProposalDetails: React.FC = () => {
               </p>}
             {/* Proposed title from metadata (if different from original) */}
             {proposedTitle && proposedTitle !== proposal.name && (
-              <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border">
-                <FileCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Proposed Title</p>
-                  <p className="text-sm font-semibold text-foreground">{proposedTitle}</p>
-                  {proposedSubtitle && proposedSubtitle !== proposal.sub_title && (
-                    <p className="text-sm text-muted-foreground italic">{proposedSubtitle}</p>
-                  )}
-                </div>
+              <div className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <FileCheck className="h-3.5 w-3.5 shrink-0" />
+                <span className="font-medium">Proposed:</span>
+                <span className="font-semibold text-foreground">{proposedTitle}</span>
+                {proposedSubtitle && proposedSubtitle !== proposal.sub_title && (
+                  <span className="italic">— {proposedSubtitle}</span>
+                )}
               </div>
             )}
             {/* Submitted date - shown in post-submission state */}
