@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const QUERY_CATEGORIES = [
   { value: "contract", label: "Contract" },
-  { value: "feedback", label: "Feedback" },
+  { value: "feedback", label: "Peer Review Feedback" },
 ];
 
 interface ContractQueryThreadProps {
@@ -106,7 +106,8 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
     const alignRight = (viewAs === "author" && !isQuery) || (viewAs === "reviewer" && isQuery);
     const messageText = q.text || q.query_text || q.response_text || "";
     const senderName = q.raised_by_name || q.created_by || (isQuery ? "Author" : "Reviewer");
-    const categoryLabel = q.category ? q.category.charAt(0).toUpperCase() + q.category.slice(1) : null;
+    const categoryLabelMap: Record<string, string> = { feedback: "Peer Review Feedback" };
+    const categoryLabel = q.category ? (categoryLabelMap[q.category] || q.category.charAt(0).toUpperCase() + q.category.slice(1)) : null;
     const initials = getInitials(senderName);
 
     return (
