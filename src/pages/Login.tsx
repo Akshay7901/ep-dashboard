@@ -72,7 +72,14 @@ const Login: React.FC = () => {
     try {
       const response = await authApi.login(email, data.password);
 
-      if (response.token) {
+      if (response.requires_otp) {
+        // First-time user or OTP required → switch to OTP flow
+        setStep('otp');
+        toast({
+          title: "OTP sent",
+          description: response.message || "Check your email for a verification code.",
+        });
+      } else if (response.token) {
         loginWithToken(response.token, response);
         toast({ title: "Welcome back!", description: "You have successfully logged in." });
         redirectToDashboard(response.user?.role || response.role);
