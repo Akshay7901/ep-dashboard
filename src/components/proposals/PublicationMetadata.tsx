@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Check, CheckCircle2, Plus, Trash2, Loader2, MessageSquare } from "lucide-react";
+import { Check, CheckCircle2, Plus, Trash2, Loader2, MessageSquare, ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { extractCountry } from "@/lib/extractCountry";
 import { Badge } from "@/components/ui/badge";
@@ -489,6 +489,30 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
 
         <EditableRow label="Book description" sublabel="(max 2000 characters)" value={bookDesc} onChange={setBookDesc} type="textarea" disabled={isFormDisabled} authorChange={authorChanges["book_description"] || null} />
         <EditableRow label="Keywords/Tags" value={keywords} onChange={setKeywords} disabled={isFormDisabled} authorChange={authorChanges["keywords"] || null} />
+
+        {/* Cover Image Section */}
+        <SectionHeader title="Cover Image" />
+        <div className="p-4">
+          {metadataResponse?.cover_image ? (
+            <div className="flex items-start gap-4">
+              <div className="relative w-32 h-44 rounded-md overflow-hidden border-2 border-border">
+                <img src={metadataResponse.cover_image.s3_url} alt="Cover" className="w-full h-full object-cover" />
+              </div>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p><span className="font-medium text-foreground">File:</span> {metadataResponse.cover_image.filename}</p>
+                <p><span className="font-medium text-foreground">Dimensions:</span> {metadataResponse.cover_image.width_px} × {metadataResponse.cover_image.height_px}px</p>
+                <p><span className="font-medium text-foreground">DPI:</span> {metadataResponse.cover_image.dpi}</p>
+                <p><span className="font-medium text-foreground">Size:</span> {(metadataResponse.cover_image.file_size_bytes / (1024 * 1024)).toFixed(2)} MB</p>
+                <p><span className="font-medium text-foreground">Uploaded:</span> {new Date(metadataResponse.cover_image.uploaded_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ImageIcon className="h-4 w-4" />
+              No cover image uploaded
+            </div>
+          )}
+        </div>
 
       </div>
 
