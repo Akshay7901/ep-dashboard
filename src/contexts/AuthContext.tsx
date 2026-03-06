@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, AuthState, LoginCredentials, ForgotPasswordRequest } from '@/types';
+import { User, AuthState, LoginCredentials, ForgotPasswordRequest, AuthResponse } from '@/types';
+import { authApi, LoginResponse } from '@/lib/authApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
+  loginWithToken: (token: string, userData: any) => void;
   logout: () => Promise<void>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<void>;
   getToken: () => string | null;
@@ -61,31 +63,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    const response = await fetch(`${API_BASE_URL}/api/proposals/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: credentials.email, access_code: credentials.password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw { message: data.message || data.error || 'Login failed', status: response.status };
-    }
-    
-    if (!data.token) {
-      throw { message: data.error || 'Login failed', status: 401 };
-    }
-
+  const loginWithToken = useCallback((token: string, data: any) => {
     // Store token
-    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('auth_token', token);
 
     // Map user data
     const user: User = {
-      id: data.user?.id || data.id || credentials.email,
-      email: data.user?.email || credentials.email,
-      name: data.user?.name || data.name || credentials.email.split('@')[0],
+      id: data.user?.id || data.id || data.email,
+      email: data.user?.email || data.email,
+      name: data.user?.name || data.name || data.email.split('@')[0],
       role: mapApiRole(data.user?.role || data.role || ''),
     };
 
@@ -99,6 +85,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    // This is the old flow, kept for compatibility if needed, but the new flow uses authApi directly
+    // and calls loginWithToken on success.
+    // However, for strict compatibility with existing code calling login(), we can wrap it.
+    
+    const response = await authApi.login(credentials.email, credentials.password);
+    
+    if (response.token) {
+      loginWithToken(response.token, response);
+    } else if (response.requires_otp) {
+      // If the old login() is called but OTP is required, we can't fully handle it here without UI changes.
+      // The calling component needs to handle requires_otp.
+      // For now, we'll throw a specific error or let the component handle it.
+      throw { message: 'OTP required', requires_otp: true };
+    }
+  }, [loginWithToken]);
+
   const logout = useCallback(async () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
@@ -111,8 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const forgotPassword = useCallback(async (data: ForgotPasswordRequest) => {
-    // For now, just show a message - the external API may have its own flow
-    console.log('Password reset requested for:', data.email);
+    await authApi.forgotPassword(data.email);
   }, []);
 
   const getToken = useCallback(() => {
@@ -129,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{ 
         ...state, 
         login, 
+        loginWithToken,
         logout, 
         forgotPassword, 
         getToken,
