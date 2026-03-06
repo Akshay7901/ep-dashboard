@@ -12,12 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Loader2, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { usePeerReviewers } from '@/hooks/usePeerReviewers';
 
 interface AssignReviewersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAssign: (reviewerEmails: string[]) => void;
+  onAssign: (reviewerEmails: string[], note?: string) => void;
   isLoading: boolean;
 }
 
@@ -28,13 +29,14 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
   isLoading,
 }) => {
   const [selectedReviewer, setSelectedReviewer] = useState<string>('');
+  const [note, setNote] = useState<string>('');
   const { reviewers, isLoading: isLoadingReviewers } = usePeerReviewers();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const reviewer = reviewers.find((r) => String(r.id) === selectedReviewer);
     if (reviewer) {
-      onAssign([reviewer.email]);
+      onAssign([reviewer.email], note.trim() || undefined);
     }
   };
  
@@ -89,6 +91,19 @@ const AssignReviewersDialog: React.FC<AssignReviewersDialogProps> = ({
                 ))}
               </RadioGroup>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="reviewer-note" className="text-sm font-medium">
+                Note for Reviewer <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Textarea
+                id="reviewer-note"
+                placeholder="E.g., Please pay particular attention to the methodology section."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="min-h-[80px] resize-none"
+              />
+            </div>
 
             <DialogFooter>
               <Button

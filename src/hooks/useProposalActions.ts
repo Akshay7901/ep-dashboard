@@ -7,8 +7,8 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   const { toast } = useToast();
 
   const assignMutation = useMutation({
-    mutationFn: (reviewerEmail: string) => 
-      assignmentsApi.assign(ticketNumber!, { reviewer_email: reviewerEmail }),
+    mutationFn: ({ reviewerEmail, note }: { reviewerEmail: string; note?: string }) => 
+      assignmentsApi.assign(ticketNumber!, { reviewer_email: reviewerEmail, ...(note ? { note } : {}) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
@@ -60,7 +60,7 @@ export const useProposalActions = (ticketNumber: string | undefined) => {
   });
 
   return {
-    assignReviewers: assignMutation.mutate as (email: string, options?: any) => void,
+    assignReviewers: assignMutation.mutate as (params: { reviewerEmail: string; note?: string }, options?: any) => void,
     isAssigning: assignMutation.isPending,
     unassignReviewers: unassignMutation.mutateAsync,
     isUnassigning: unassignMutation.isPending,
