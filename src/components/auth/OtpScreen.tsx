@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Mail } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft } from 'lucide-react';
 
 interface OtpScreenProps {
   email: string;
   onVerify: (otp: string) => Promise<void>;
   isLoading: boolean;
+  onBack?: () => void;
 }
 
 const OTP_EXPIRY_SECONDS = 15 * 60; // 15 minutes
 
-const OtpScreen: React.FC<OtpScreenProps> = ({ email, onVerify, isLoading }) => {
+const OtpScreen: React.FC<OtpScreenProps> = ({ email, onVerify, isLoading, onBack }) => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -62,7 +63,7 @@ const OtpScreen: React.FC<OtpScreenProps> = ({ email, onVerify, isLoading }) => 
   const isExpired = timeLeft <= 0;
 
   return (
-    <div className="space-y-6 text-center">
+    <div className="space-y-6 text-center animate-fade-in">
       <div className="flex justify-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3d5a47]/10">
           <Mail className="h-7 w-7 text-[#3d5a47]" />
@@ -87,7 +88,7 @@ const OtpScreen: React.FC<OtpScreenProps> = ({ email, onVerify, isLoading }) => 
             value={digit}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="h-12 w-12 text-center text-lg font-semibold bg-[#f0f4f8] border-0"
+            className="h-12 w-10 sm:w-12 text-center text-lg font-semibold bg-[#f0f4f8] border-0 focus-visible:ring-[#3d5a47]"
             disabled={isLoading || isExpired}
           />
         ))}
@@ -115,6 +116,17 @@ const OtpScreen: React.FC<OtpScreenProps> = ({ email, onVerify, isLoading }) => 
           'Verify'
         )}
       </Button>
+
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mt-4"
+          type="button"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </button>
+      )}
     </div>
   );
 };

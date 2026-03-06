@@ -41,10 +41,16 @@ const Login: React.FC = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const redirectToDashboard = () => {
-    const userStr = localStorage.getItem('user');
-    const userData = userStr ? JSON.parse(userStr) : null;
-    if (userData?.role === 'author') {
+  const redirectToDashboard = (role?: string) => {
+    // Check role from parameter or localStorage if not provided
+    let userRole = role;
+    if (!userRole) {
+      const userStr = localStorage.getItem('user');
+      const userData = userStr ? JSON.parse(userStr) : null;
+      userRole = userData?.role;
+    }
+
+    if (userRole === 'author') {
       navigate("/author/proposals");
     } else {
       navigate("/proposals");
@@ -66,13 +72,17 @@ const Login: React.FC = () => {
       } else if (response.token) {
         loginWithToken(response.token, response);
         toast({ title: "Welcome back!", description: "You have successfully logged in." });
-        redirectToDashboard();
+        redirectToDashboard(response.user?.role || response.role);
       }
     } catch (error: any) {
+      console.error(error);
+      // If the backend sends 400/401 with specific message
+      const msg = error.response?.data?.message || error.message || "Please check your credentials and try again.";
+      
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error?.message || "Please check your credentials and try again.",
+        description: msg,
       });
     } finally {
       setIsLoading(false);
@@ -90,13 +100,13 @@ const Login: React.FC = () => {
       } else if (response.token) {
         loginWithToken(response.token, response);
         toast({ title: "Welcome back!", description: "You have successfully logged in." });
-        redirectToDashboard();
+        redirectToDashboard(response.user?.role || response.role);
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Verification failed",
-        description: error?.message || "Invalid or expired code. Please try again.",
+        description: error.response?.data?.message || "Invalid or expired code. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -110,12 +120,12 @@ const Login: React.FC = () => {
       const response = await authApi.setPassword(tempToken, password);
       loginWithToken(response.token, response);
       toast({ title: "Password set!", description: "Your account is ready." });
-      redirectToDashboard();
+      redirectToDashboard(response.user?.role || response.role);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Failed to set password",
-        description: error?.message || "Please try again.",
+        description: error.response?.data?.message || "Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -125,42 +135,71 @@ const Login: React.FC = () => {
   const renderStep = () => {
     switch (step) {
       case 'otp':
-        return <OtpScreen email={email} onVerify={handleOtpVerify} isLoading={isLoading} />;
+        return (
+          <OtpScreen 
+            email={email} 
+            onVerify={handleOtpVerify} 
+            isLoading={isLoading} 
+            onBack={() => setStep('credentials')}
+          />
+        );
       case 'set-password':
-        return <SetPasswordScreen title="Set your password" onSubmit={handleSetPassword} isLoading={isLoading} />;
+        return (
+          <SetPasswordScreen 
+            title="Set your password" 
+            onSubmit={handleSetPassword} 
+            isLoading={isLoading} 
+          />
+        );
       default:
         return (
-          <>
-            <div className="flex items-center justify-center">
+          <div className="animate-fade-in">
+            <div className="flex items-center justify-center mb-6">
               <img src={brandLogo} alt="Ethics Press" className="h-14 w-14 object-contain" />
             </div>
-            <div className="text-center space-y-2">
+            
+            <div className="text-center space-y-2 mb-8">
               <h1 className="text-2xl font-semibold text-foreground">Proposal Portal</h1>
               <p className="text-muted-foreground">Access your academic review dashboard</p>
             </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium">Email address</Label>
+                <Label htmlFor="email" className="text-foreground font-medium">
+                  Email address
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="your.email@university.edu"
-                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60"
+                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
                   {...register("email")}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-foreground font-medium">
+                    Password
+                  </Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-[#3d5a47] hover:text-[#2d4a37] transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
                   placeholder="Enter your password"
-                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60"
+                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
                   {...register("password")}
                 />
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
+
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white"
@@ -176,15 +215,7 @@ const Login: React.FC = () => {
                 )}
               </Button>
             </form>
-            <div className="text-center">
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-[#3d5a47] hover:text-[#2d4a37] transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          </>
+          </div>
         );
     }
   };

@@ -32,7 +32,7 @@ const SetPasswordScreen: React.FC<SetPasswordScreenProps> = ({ title, onSubmit, 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="text-center space-y-2">
         <div className="flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#3d5a47]/10">
@@ -53,13 +53,13 @@ const SetPasswordScreen: React.FC<SetPasswordScreenProps> = ({ title, onSubmit, 
               placeholder="Min. 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12 text-base bg-[#f0f4f8] border-0 pr-10"
+              className="h-12 text-base bg-[#f0f4f8] border-0 pr-10 focus-visible:ring-[#3d5a47]"
               disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -76,13 +76,13 @@ const SetPasswordScreen: React.FC<SetPasswordScreenProps> = ({ title, onSubmit, 
               placeholder="Re-enter your password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="h-12 text-base bg-[#f0f4f8] border-0 pr-10"
+              className="h-12 text-base bg-[#f0f4f8] border-0 pr-10 focus-visible:ring-[#3d5a47]"
               disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2"
               tabIndex={-1}
             >
               {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -90,7 +90,7 @@ const SetPasswordScreen: React.FC<SetPasswordScreenProps> = ({ title, onSubmit, 
           </div>
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
         <Button
           type="submit"
