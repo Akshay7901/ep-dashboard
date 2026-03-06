@@ -19,12 +19,20 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Map API roles to internal roles
-const mapApiRole = (apiRole: string): 'reviewer_1' | 'reviewer_2' | 'author' => {
-  switch (apiRole) {
+const mapApiRole = (apiRole?: string | null): 'reviewer_1' | 'reviewer_2' | 'author' => {
+  const normalizedRole = (apiRole || '').toString().trim().toLowerCase();
+
+  switch (normalizedRole) {
     case 'admin':
     case 'decision_reviewer':
+    case 'reviewer_1':
+    case 'reviewer1':
+    case 'dr':
       return 'reviewer_1';
     case 'peer_reviewer':
+    case 'reviewer_2':
+    case 'reviewer2':
+    case 'pr':
       return 'reviewer_2';
     default:
       return 'author'; // Authors and any other role default to author dashboard
