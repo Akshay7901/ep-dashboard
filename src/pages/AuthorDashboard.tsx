@@ -47,7 +47,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 
 const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 

@@ -83,7 +83,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 
 const Proposals: React.FC = () => {
   const navigate = useNavigate();
-  const { isAnyReviewer, isReviewer1, isReviewer2, logout, isAuthor } = useAuth();
+  const { isAnyReviewer, isReviewer1, isReviewer2, isAuthor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<string>("all");
