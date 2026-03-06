@@ -203,6 +203,34 @@ export const metadataApi = {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/approve`, payload || {});
     return data;
   },
+
+  // Cover image endpoints
+  getCoverImage: async (ticketNumber: string): Promise<{ url: string; source?: string } | null> => {
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/cover-image`);
+      return data;
+    } catch (error: any) {
+      if (error?.status === 404 || error?.response?.status === 404) return null;
+      throw error;
+    }
+  },
+
+  uploadCoverImage: async (ticketNumber: string, file: File, source?: string): Promise<any> => {
+    const formData = new FormData();
+    formData.append('cover_image', file);
+    if (source) formData.append('source', source);
+    const { data } = await api.post(
+      `/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/cover-image`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return data;
+  },
+
+  deleteCoverImage: async (ticketNumber: string): Promise<any> => {
+    const { data } = await api.delete(`/api/proposals/${encodeURIComponent(ticketNumber)}/metadata/cover-image`);
+    return data;
+  },
 };
 
 // Metadata Queries API
