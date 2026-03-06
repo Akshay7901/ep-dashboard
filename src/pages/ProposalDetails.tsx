@@ -381,10 +381,25 @@ const ProposalDetails: React.FC = () => {
 
       {/* Assignment note for peer reviewer */}
       {isReviewer2 && (() => {
+        console.log('[AssignmentNote] assigned_reviewers:', JSON.stringify(proposal?.assigned_reviewers), 'proposal keys with note:', Object.keys(proposal as any).filter(k => k.toLowerCase().includes('note')), 'events:', JSON.stringify(proposalEvents.slice(0, 3)));
+        // Try multiple sources for the assignment note
         const assignedReviewers = proposal?.assigned_reviewers || [];
-        const assignmentNote = assignedReviewers.length > 0
-          ? (assignedReviewers[0] as any)?.note || (proposal as any)?.assignment_note
-          : (proposal as any)?.assignment_note;
+        const noteFromAssignment = assignedReviewers.length > 0
+          ? (assignedReviewers[0] as any)?.note
+          : null;
+        const noteFromProposal = (proposal as any)?.assignment_note || (proposal as any)?.reviewer_note || (proposal as any)?.note;
+        
+        // Also check events for the most recent assignment event with a note
+        const assignEvent = [...proposalEvents].reverse().find((e: any) =>
+          (e.event_type === 'reviewer_assigned' || e.event_type === 'assigned' || e.event_type === 'status_change')
+          && e.description && e.description.length > 0
+          && (e.description.toLowerCase().includes('note:') || e.event_type === 'reviewer_assigned')
+        );
+        const noteFromEvent = assignEvent?.description
+          ? (assignEvent.description.match(/note:\s*(.+)/i)?.[1]?.trim() || null)
+          : null;
+
+        const assignmentNote = noteFromAssignment || noteFromProposal || noteFromEvent;
         if (!assignmentNote) return null;
         return (
           <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
