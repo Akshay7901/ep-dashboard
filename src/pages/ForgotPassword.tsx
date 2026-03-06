@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,36 +7,47 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, FileText, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import loginBg from '@/assets/login-bg.jpg';
+import brandLogo from '@/assets/brand-logo.webp';
+import OtpScreen from '@/components/auth/OtpScreen';
+import SetPasswordScreen from '@/components/auth/SetPasswordScreen';
+import { authApi } from '@/lib/authApi';
 
-const forgotPasswordSchema = z.object({
+const forgotSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
 });
 
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+type ForgotFormData = z.infer<typeof forgotSchema>;
+type ForgotStep = 'email' | 'otp' | 'set-password';
 
 const ForgotPassword: React.FC = () => {
-  const { forgotPassword } = useAuth();
+  const { loginWithToken } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [step, setStep] = useState<ForgotStep>('email');
+  const [email, setEmail] = useState('');
+  const [tempToken, setTempToken] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordSchema),
+  } = useForm<ForgotFormData>({
+    resolver: zodResolver(forgotSchema),
   });
 
-  const onSubmit = async (data: ForgotPasswordFormData) => {
+  const onSubmit = async (data: ForgotFormData) => {
     setIsLoading(true);
     try {
-      await forgotPassword({ email: data.email });
-      setIsSuccess(true);
+      await authApi.forgotPassword(data.email);
+      setEmail(data.email);
+      setStep('otp');
       toast({
-        title: 'Email sent!',
-        description: 'Check your inbox for password reset instructions.',
+        title: 'OTP sent!',
+        description: 'Check your email for a verification code.',
       });
     } catch (error: any) {
       toast({
@@ -49,118 +60,125 @@ const ForgotPassword: React.FC = () => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-sidebar flex-col justify-between p-12">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <FileText className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-semibold text-sidebar-foreground">ProposalHub</span>
-        </div>
-        
-        <div className="space-y-6">
-          <h1 className="text-4xl font-bold text-sidebar-foreground leading-tight">
-            Reset your password
-          </h1>
-          <p className="text-lg text-sidebar-muted max-w-md">
-            Enter your email address and we'll send you instructions to reset your password.
-          </p>
-        </div>
+  const handleOtpVerify = async (otp: string) => {
+    setIsLoading(true);
+    try {
+      const response = await authApi.verifyOtp(email, otp);
+      if (response.temp_token) {
+        setTempToken(response.temp_token);
+        setStep('set-password');
+      } else if (response.token) {
+        loginWithToken(response.token, response);
+        toast({ title: 'Welcome back!', description: 'You have successfully logged in.' });
+        navigate('/proposals');
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Verification failed',
+        description: error?.message || 'Invalid or expired code. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        <p className="text-sm text-sidebar-muted">
-          © 2025 ProposalHub. All rights reserved.
-        </p>
-      </div>
+  const handleSetPassword = async (password: string) => {
+    if (!tempToken) return;
+    setIsLoading(true);
+    try {
+      const response = await authApi.setPassword(tempToken, password);
+      loginWithToken(response.token, response);
+      toast({ title: 'Password reset!', description: 'Your new password has been set.' });
+      const userStr = localStorage.getItem('user');
+      const userData = userStr ? JSON.parse(userStr) : null;
+      if (userData?.role === 'author') {
+        navigate('/author/proposals');
+      } else {
+        navigate('/proposals');
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to set password',
+        description: error?.message || 'Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      {/* Right side - Form */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md space-y-8 animate-fade-in">
-          {/* Mobile logo */}
-          <div className="flex lg:hidden items-center justify-center gap-3 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-5 w-5 text-primary-foreground" />
+  const renderStep = () => {
+    switch (step) {
+      case 'otp':
+        return <OtpScreen email={email} onVerify={handleOtpVerify} isLoading={isLoading} />;
+      case 'set-password':
+        return <SetPasswordScreen title="Reset your password" onSubmit={handleSetPassword} isLoading={isLoading} />;
+      default:
+        return (
+          <>
+            <div className="flex items-center justify-center">
+              <img src={brandLogo} alt="Ethics Press" className="h-14 w-14 object-contain" />
             </div>
-            <span className="text-xl font-semibold text-foreground">ProposalHub</span>
-          </div>
-
-          {isSuccess ? (
-            <div className="text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-status-approved/10">
-                  <CheckCircle className="h-8 w-8 text-status-approved" />
-                </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-semibold text-foreground">Forgot password?</h2>
+              <p className="text-muted-foreground text-sm">
+                Enter your email and we'll send you a verification code
+              </p>
+            </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground font-medium">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@university.edu"
+                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60"
+                  {...register('email')}
+                />
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">Check your email</h2>
-                <p className="mt-2 text-muted-foreground">
-                  We've sent password reset instructions to your email address.
-                </p>
-              </div>
-              <Link to="/login">
-                <Button variant="outline" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to login
-                </Button>
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-medium bg-[#3d5a47] hover:bg-[#2d4a37] text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send verification code'
+                )}
+              </Button>
+            </form>
+            <div className="text-center">
+              <Link
+                to="/login"
+                className="inline-flex items-center text-sm font-medium text-[#3d5a47] hover:text-[#2d4a37] transition-colors"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to login
               </Link>
             </div>
-          ) : (
-            <>
-              <div className="text-center lg:text-left">
-                <h2 className="text-2xl font-bold text-foreground">Forgot password?</h2>
-                <p className="mt-2 text-muted-foreground">
-                  No worries, we'll send you reset instructions.
-                </p>
-              </div>
+          </>
+        );
+    }
+  };
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@company.com"
-                      className="pl-10"
-                      {...register('email')}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Reset password'
-                  )}
-                </Button>
-              </form>
-
-              <div className="text-center">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to login
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
+  return (
+    <div className="flex min-h-screen">
+      <div
+        className="hidden md:flex md:w-1/2 relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
+      <div className="flex w-full md:w-1/2 flex-col items-center justify-center p-8 bg-[#f2f2ee]">
+        <Card className="w-full max-w-md shadow-lg border-0 bg-white">
+          <CardContent className="p-8 space-y-6">
+            {renderStep()}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
