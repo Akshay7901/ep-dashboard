@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Mail, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail } from 'lucide-react';
 import loginBg from '@/assets/login-bg.jpg';
 import brandLogo from '@/assets/brand-logo.webp';
 import OtpScreen from '@/components/auth/OtpScreen';
@@ -26,24 +26,37 @@ type ForgotStep = 'email' | 'otp' | 'set-password';
 const ForgotPassword: React.FC = () => {
   const { loginWithToken } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<ForgotStep>('email');
   const [email, setEmail] = useState('');
   const [tempToken, setTempToken] = useState<string | null>(null);
 
+  const prefillEmail = (location.state as any)?.prefillEmail;
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<ForgotFormData>({
     resolver: zodResolver(forgotSchema),
   });
 
-  const onSubmit = async (data: ForgotFormData) => {
+  // Auto-trigger OTP send when navigated from profile dropdown
+  useEffect(() => {
+    if (prefillEmail) {
+      setValue('email', prefillEmail);
+      triggerForgotPassword(prefillEmail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillEmail]);
+
+  const triggerForgotPassword = async (targetEmail: string) => {
     setIsLoading(true);
     try {
-      await authApi.forgotPassword(data.email);
-      setEmail(data.email);
+      await authApi.forgotPassword(targetEmail);
+      setEmail(targetEmail);
       setStep('otp');
       toast({
         title: 'OTP sent!',
@@ -58,6 +71,10 @@ const ForgotPassword: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onSubmit = async (data: ForgotFormData) => {
+    await triggerForgotPassword(data.email);
   };
 
   const handleOtpVerify = async (otp: string) => {
