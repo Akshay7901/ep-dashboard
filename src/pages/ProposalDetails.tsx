@@ -467,7 +467,10 @@ const ProposalDetails: React.FC = () => {
             const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
             return <Button
               className="bg-[#3d5a47]"
-               onClick={() => assignReviewers({ reviewerEmail: selectedReviewer })}
+               onClick={() => {
+                 setAssignNote("");
+                 setIsAssignDialogOpen(true);
+               }}
                disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
               title={isSameReviewer ? "Select a different reviewer to reassign" : ""}
             >
