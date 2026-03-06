@@ -169,6 +169,7 @@ const ProposalDetails: React.FC = () => {
   const [resendContractTitle, setResendContractTitle] = useState("");
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
+  const [pendingQueryResponse, setPendingQueryResponse] = useState<{ queryId: number; responseText: string } | null>(null);
 
   /* ---------------- Data ---------------- */
 
@@ -937,8 +938,8 @@ const ProposalDetails: React.FC = () => {
                         viewAs="reviewer"
                         proposalStatus={proposal.status}
                         onSend={async (text, _category, queryId) => {
-                          await respondToQuery.mutateAsync({ queryId: queryId!, responseText: text });
-                          // After successful response, open resend contract dialog
+                          // Store pending response — don't send yet, wait for contract dialog
+                          setPendingQueryResponse({ queryId: queryId!, responseText: text });
                           setResendContractTitle(latestContract?.title || proposal?.name || '');
                           setResendContractSubtitle(latestContract?.subtitle || proposal?.sub_title || '');
                           setResendContractType(latestContract?.contract_type || 'author');
@@ -1521,12 +1522,17 @@ const ProposalDetails: React.FC = () => {
       </AlertDialog>
 
       {/* Resend Contract Dialog (after query response) */}
-      <Dialog open={resendContractOpen} onOpenChange={setResendContractOpen}>
+      <Dialog open={resendContractOpen} onOpenChange={(open) => {
+        if (!open) {
+          setResendContractOpen(false);
+          setPendingQueryResponse(null); // Discard pending response on close
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Resend Contract</DialogTitle>
+            <DialogTitle>Send Response & Contract</DialogTitle>
             <DialogDescription>
-              Confirm the contract details to resend to the author.
+              Your response and a new contract will be sent together to the author. Close to cancel both.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -1564,8 +1570,8 @@ const ProposalDetails: React.FC = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResendContractOpen(false)} disabled={isResendingContract}>
-              Skip
+            <Button variant="outline" onClick={() => { setResendContractOpen(false); setPendingQueryResponse(null); }} disabled={isResendingContract}>
+              Cancel
             </Button>
             <Button
               className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
@@ -1573,24 +1579,31 @@ const ProposalDetails: React.FC = () => {
               onClick={async () => {
                 setIsResendingContract(true);
                 try {
+                  // Send response first
+                  if (pendingQueryResponse) {
+                    await respondToQuery.mutateAsync(pendingQueryResponse);
+                  }
+                  // Then send contract
                   await proposalApi.sendContract(ticketNum, {
                     contract_type: resendContractType,
                     title: resendContractTitle,
                     subtitle: resendContractSubtitle,
                   });
-                  toast({ title: 'Contract Sent', description: 'The contract has been resent to the author.' });
+                  toast({ title: 'Sent Successfully', description: 'Response and contract have been sent to the author.' });
                   queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
                   queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
                   queryClient.invalidateQueries({ queryKey: ['proposals'] });
+                  queryClient.invalidateQueries({ queryKey: ['contract-queries', ticketNum] });
                 } catch (err: any) {
-                  toast({ variant: 'destructive', title: 'Contract Send Failed', description: err?.message || 'Failed to send contract.' });
+                  toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send response and contract.' });
                 } finally {
                   setIsResendingContract(false);
                   setResendContractOpen(false);
+                  setPendingQueryResponse(null);
                 }
               }}
             >
-              {isResendingContract ? 'Sending...' : 'Send Contract'}
+              {isResendingContract ? 'Sending...' : 'Send Response & Contract'}
             </Button>
           </DialogFooter>
         </DialogContent>
