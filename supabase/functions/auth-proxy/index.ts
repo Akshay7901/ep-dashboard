@@ -22,7 +22,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const targetUrl = `${API_BASE_URL}/api/auth${endpoint}`;
+    // Auth endpoints are under /api/proposals/auth/
+    const targetUrl = `${API_BASE_URL}/api/proposals/auth${endpoint}`;
+
+    console.log(`Proxying to: ${targetUrl}`);
+    console.log(`Payload: ${JSON.stringify(payload)}`);
 
     const response = await fetch(targetUrl, {
       method: 'POST',
@@ -30,17 +34,31 @@ Deno.serve(async (req) => {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.text();
+    const responseText = await response.text();
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response body: ${responseText.substring(0, 500)}`);
 
-    return new Response(data, {
-      status: 200, // Always return 200 so supabase.functions.invoke doesn't throw
+    // Try to parse as JSON, if it fails, wrap the error
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      // Not JSON — likely an HTML error page
+      data = { 
+        error: `Backend returned non-JSON response (status ${response.status})`,
+        backend_status: response.status,
+      };
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
-        'X-Backend-Status': response.status.toString(),
       },
     });
   } catch (error) {
+    console.error('Proxy error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
