@@ -11,6 +11,7 @@ export interface PeerReviewer {
 
 export interface AssignmentRequest {
   reviewer_email: string;
+  note?: string;
 }
 
 // Peer Reviewers API

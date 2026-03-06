@@ -399,7 +399,7 @@ const ProposalDetails: React.FC = () => {
             setIsAssignDialogOpen(true);
             return;
           }
-          assignReviewers(selectedReviewer);
+          assignReviewers({ reviewerEmail: selectedReviewer });
         }} disabled={isAssigning}>
                 Submit for review
               </Button>
@@ -416,8 +416,8 @@ const ProposalDetails: React.FC = () => {
             const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
             return <Button
               className="bg-[#3d5a47]"
-              onClick={() => assignReviewers(selectedReviewer)}
-              disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
+               onClick={() => assignReviewers({ reviewerEmail: selectedReviewer })}
+               disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
               title={isSameReviewer ? "Select a different reviewer to reassign" : ""}
             >
               Reassign
@@ -1382,13 +1382,13 @@ const ProposalDetails: React.FC = () => {
       <AssignReviewersDialog open={isAssignDialogOpen} onOpenChange={open => {
       setIsAssignDialogOpen(open);
       if (!open) setPendingAction(null);
-    }} onAssign={reviewerIds => {
-      assignReviewers(reviewerIds[0], {
-        onSuccess: () => {
-          setIsAssignDialogOpen(false);
-          setPendingAction(null);
-        }
-      });
+     }} onAssign={(reviewerIds, note) => {
+       assignReviewers({ reviewerEmail: reviewerIds[0], note }, {
+         onSuccess: () => {
+           setIsAssignDialogOpen(false);
+           setPendingAction(null);
+         }
+       });
     }} isLoading={isAssigning} />
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
