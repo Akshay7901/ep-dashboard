@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2, Check } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Upload, ImageIcon, Loader2, Check, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -176,11 +176,27 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const isAuthorType = category.toLowerCase().includes("author");
 
-  // Cover image (local state only - no API for this yet)
+  // Cover image from API
+  const { data: coverImageData, isLoading: coverImageLoading } = useQuery({
+    queryKey: ["cover-image", ticketNumber],
+    queryFn: () => metadataApi.getCoverImage(ticketNumber),
+    enabled: !!ticketNumber && !!metadataResponse,
+  });
+
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [coverImageSource, setCoverImageSource] = useState("");
   const [coverImagePermission, setCoverImagePermission] = useState(false);
+  const [uploadingCoverImage, setUploadingCoverImage] = useState(false);
+  const [deletingCoverImage, setDeletingCoverImage] = useState(false);
+
+  // Sync API cover image data to local preview
+  useEffect(() => {
+    if (coverImageData?.url && !coverImageFile) {
+      setCoverImagePreview(coverImageData.url);
+      if (coverImageData.source) setCoverImageSource(coverImageData.source);
+    }
+  }, [coverImageData, coverImageFile]);
 
   // Change request
   const [requestingChanges, setRequestingChanges] = useState(false);
@@ -189,13 +205,49 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     { field: "", newValue: "" },
   ]);
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setCoverImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setCoverImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+    setCoverImageFile(file);
+    // Show local preview immediately
+    const reader = new FileReader();
+    reader.onload = () => setCoverImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadCoverImage = async () => {
+    if (!coverImageFile) return;
+    if (!coverImagePermission) {
+      toast({ title: "Permission required", description: "Please confirm you hold the necessary rights for this image.", variant: "destructive" });
+      return;
+    }
+    setUploadingCoverImage(true);
+    try {
+      await metadataApi.uploadCoverImage(ticketNumber, coverImageFile, coverImageSource || undefined);
+      queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+      setCoverImageFile(null);
+      toast({ title: "Cover image uploaded", description: "Your cover image has been saved." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message || "Could not upload cover image.", variant: "destructive" });
+    } finally {
+      setUploadingCoverImage(false);
+    }
+  };
+
+  const handleDeleteCoverImage = async () => {
+    setDeletingCoverImage(true);
+    try {
+      await metadataApi.deleteCoverImage(ticketNumber);
+      queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+      setCoverImageFile(null);
+      setCoverImagePreview(null);
+      setCoverImageSource("");
+      setCoverImagePermission(false);
+      toast({ title: "Cover image removed" });
+    } catch (err: any) {
+      toast({ title: "Failed to remove", description: err?.message || "Could not remove cover image.", variant: "destructive" });
+    } finally {
+      setDeletingCoverImage(false);
     }
   };
 
@@ -213,7 +265,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     setChangeRequests((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const hasCoverImage = !!coverImageFile;
+  const hasCoverImage = !!coverImageFile || !!coverImageData?.url;
 
   const sectionLabel = isAuthorType ? "Primary Author(s)" : "Primary Editor(s)";
 
@@ -262,6 +314,12 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   const handleFinalise = async () => {
     setFinalising(true);
     try {
+      // Upload pending cover image before finalising
+      if (coverImageFile && coverImagePermission) {
+        await metadataApi.uploadCoverImage(ticketNumber, coverImageFile, coverImageSource || undefined);
+        queryClient.invalidateQueries({ queryKey: ["cover-image", ticketNumber] });
+        setCoverImageFile(null);
+      }
       await metadataApi.approve(ticketNumber, {
         notes: hasCoverImage
           ? "Author approved metadata with cover image."
@@ -336,60 +394,90 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             6" × 9" (1800 × 2700 pixels).
           </p>
 
-          <div className="flex items-start gap-4">
-            {coverImagePreview ? (
-              <div className="relative w-32 h-44 rounded-md overflow-hidden border border-border">
-                <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center w-32 h-44 rounded-md border-2 border-dashed border-border bg-muted/20">
-                <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                <span className="text-[10px] text-muted-foreground mt-1">No image</span>
-              </div>
-            )}
-            <div className="flex-1 space-y-3">
-              <div>
-                <Label htmlFor="cover-upload" className="cursor-pointer">
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                    <span>
-                      <Upload className="h-3.5 w-3.5" />
-                      {coverImageFile ? "Replace Image" : "Upload Image"}
-                    </span>
-                  </Button>
-                </Label>
-                <input
-                  id="cover-upload"
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  className="hidden"
-                  onChange={handleCoverImageChange}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
-                  Image Source / Credit
-                </Label>
-                <Input
-                  id="cover-source"
-                  placeholder="e.g. Shutterstock, original artwork, author photo..."
-                  value={coverImageSource}
-                  onChange={(e) => setCoverImageSource(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-start gap-2">
-                <Checkbox
-                  id="cover-permission"
-                  checked={coverImagePermission}
-                  onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
-                />
-                <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
-                  I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
-                </Label>
-              </div>
+          {coverImageLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading cover image...
             </div>
-          </div>
+          ) : (
+            <div className="flex items-start gap-4">
+              {coverImagePreview ? (
+                <div className="relative w-32 h-44 rounded-md overflow-hidden border border-border">
+                  <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
+                  {!isApproved && (
+                    <button
+                      onClick={handleDeleteCoverImage}
+                      disabled={deletingCoverImage}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:opacity-80"
+                      title="Remove cover image"
+                    >
+                      {deletingCoverImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center w-32 h-44 rounded-md border-2 border-dashed border-border bg-muted/20">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                  <span className="text-[10px] text-muted-foreground mt-1">No image</span>
+                </div>
+              )}
+              {!isApproved && (
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <Label htmlFor="cover-upload" className="cursor-pointer">
+                      <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <span>
+                          <Upload className="h-3.5 w-3.5" />
+                          {coverImageFile ? "Replace Image" : coverImageData?.url ? "Change Image" : "Upload Image"}
+                        </span>
+                      </Button>
+                    </Label>
+                    <input
+                      id="cover-upload"
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      className="hidden"
+                      onChange={handleCoverImageChange}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
+                      Image Source / Credit
+                    </Label>
+                    <Input
+                      id="cover-source"
+                      placeholder="e.g. Shutterstock, original artwork, author photo..."
+                      value={coverImageSource}
+                      onChange={(e) => setCoverImageSource(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="cover-permission"
+                      checked={coverImagePermission}
+                      onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
+                    />
+                    <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                      I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
+                    </Label>
+                  </div>
+
+                  {coverImageFile && (
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
+                      onClick={handleUploadCoverImage}
+                      disabled={uploadingCoverImage || !coverImagePermission}
+                    >
+                      {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                      Save Cover Image
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Primary Author(s) — READ ONLY from API */}
