@@ -385,7 +385,7 @@ const ProposalDetails: React.FC = () => {
                 disabled={isLocking}
               >
                 {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                Locked
+                Lock
               </Button>
             )}
             {isReviewer1 && (
