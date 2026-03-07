@@ -153,7 +153,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [contractViewOpen, setContractViewOpen] = useState(false);
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
   const [contractPdfLoading, setContractPdfLoading] = useState(false);
-  
+
   // Contract signing URL state
   const [signingUrl, setSigningUrl] = useState<string | null>(null);
   const [signingLoading, setSigningLoading] = useState(false);
@@ -183,10 +183,10 @@ const AuthorProposalDetails: React.FC = () => {
       }
     } catch (err: any) {
       const status = err?.status || err?.response?.status;
-      if (status === 404) setSigningError('No active contract found for this proposal.');
-      else if (status === 400) setSigningError('No DocuSign envelope is associated with this contract.');
-      else if (status === 403) setSigningError('You do not have permission to sign this contract.');
-      else setSigningError(err?.message || 'Failed to generate signing URL.');
+      if (status === 404) setSigningError('No active contract found for this proposal.');else
+      if (status === 400) setSigningError('No DocuSign envelope is associated with this contract.');else
+      if (status === 403) setSigningError('You do not have permission to sign this contract.');else
+      setSigningError(err?.message || 'Failed to generate signing URL.');
     } finally {
       setSigningLoading(false);
     }
@@ -197,26 +197,26 @@ const AuthorProposalDetails: React.FC = () => {
   const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
   const decisionReview = reviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
 
-  const latestReviewTimestamp = reviews
-    .map((r: any) => r?.updated_at || r?.submitted_at || r?.created_at || "")
-    .filter(Boolean)
-    .sort()
-    .slice(-1)[0] || "";
+  const latestReviewTimestamp = reviews.
+  map((r: any) => r?.updated_at || r?.submitted_at || r?.created_at || "").
+  filter(Boolean).
+  sort().
+  slice(-1)[0] || "";
 
   const latestContractTimestamp =
-    latestContract?.updated_at ||
-    latestContract?.created_at ||
-    latestContract?.docusign_sent_at ||
-    latestContract?.docusign_completed_at ||
-    "";
+  latestContract?.updated_at ||
+  latestContract?.created_at ||
+  latestContract?.docusign_sent_at ||
+  latestContract?.docusign_completed_at ||
+  "";
 
   const reviewNotificationSignature = [
-    normalizeStatus(proposal?.status || ""),
-    reviews.length,
-    latestReviewTimestamp,
-    latestContract?.id || "",
-    latestContractTimestamp,
-  ].join("|");
+  normalizeStatus(proposal?.status || ""),
+  reviews.length,
+  latestReviewTimestamp,
+  latestContract?.id || "",
+  latestContractTimestamp].
+  join("|");
 
   useEffect(() => {
     if (!id) return;
@@ -284,23 +284,23 @@ const AuthorProposalDetails: React.FC = () => {
         </div>
 
         {/* Action Banner */}
-        {actionBanner.show &&
-        <div className={cn("flex items-center justify-between p-4 border rounded-lg", actionBanner.bgColor)}>
-            <div className="flex items-center gap-3">
-              <actionBanner.icon className={cn("h-5 w-5 shrink-0", actionBanner.iconColor)} />
-              <div>
-                <p className="text-sm font-semibold text-foreground">{actionBanner.title}</p>
-                <p className="text-xs text-muted-foreground">{actionBanner.description}</p>
-              </div>
-            </div>
-            <Button
-            size="sm"
-            className="bg-[#3d5a47] hover:opacity-90 text-white shrink-0"
-            onClick={() => handleTabChange("review")}>
+        {actionBanner.show
 
-              {actionBanner.buttonLabel}
-            </Button>
-          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
         {/* Title & Subtitle */}
@@ -332,18 +332,18 @@ const AuthorProposalDetails: React.FC = () => {
               const dateStr = step.completed_at || step.started_at;
               return (
                 <div key={step.stage_name} className="flex flex-col items-center text-center gap-1.5">
-                  {step.stage_name === 'declined' && step.is_completed ? (
-                    <XCircle className="h-6 w-6 text-destructive" />
-                  ) : step.is_completed ? (
-                    <CheckCircle2 className="h-6 w-6 text-[#3d5a47]" />
-                  ) : step.is_current ? (
-                    <div className="relative flex items-center justify-center h-6 w-6">
+                  {step.stage_name === 'declined' && step.is_completed ?
+                  <XCircle className="h-6 w-6 text-destructive" /> :
+                  step.is_completed ?
+                  <CheckCircle2 className="h-6 w-6 text-[#3d5a47]" /> :
+                  step.is_current ?
+                  <div className="relative flex items-center justify-center h-6 w-6">
                       <Circle className="h-6 w-6 text-[#2563eb]" />
                       <div className="absolute h-2.5 w-2.5 rounded-full bg-[#2563eb] animate-pulse" />
-                    </div>
-                  ) : (
-                    <Circle className="h-6 w-6 text-muted-foreground/40" />
-                  )}
+                    </div> :
+
+                  <Circle className="h-6 w-6 text-muted-foreground/40" />
+                  }
                   <span
                     className={cn(
                       "text-[10px] leading-tight",
@@ -381,13 +381,13 @@ const AuthorProposalDetails: React.FC = () => {
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
               }
             </TabsTrigger>
-            {isContractSigned && (
-              <TabsTrigger
-                value="metadata"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+            {isContractSigned &&
+            <TabsTrigger
+              value="metadata"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
                 Metadata
               </TabsTrigger>
-            )}
+            }
           </TabsList>
 
           {/* ---- PROPOSAL INFORMATION TAB ---- */}
@@ -586,11 +586,11 @@ const AuthorProposalDetails: React.FC = () => {
           </TabsContent>
 
           {/* ---- METADATA TAB (only after contract signed) ---- */}
-          {isContractSigned && (
-            <TabsContent value="metadata" className="mt-6 space-y-6">
+          {isContractSigned &&
+          <TabsContent value="metadata" className="mt-6 space-y-6">
               <AuthorPublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
             </TabsContent>
-          )}
+          }
 
           {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
           <TabsContent value="review" className="mt-6 space-y-6">
@@ -609,8 +609,8 @@ const AuthorProposalDetails: React.FC = () => {
                 <Accordion type="single" collapsible value={openAccordion} onValueChange={setOpenAccordion} className="space-y-4">
 
                   {/* Peer Review Feedback Section */}
-                  {(peerReview || decisionReview) && (
-                    <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
+                  {(peerReview || decisionReview) &&
+                <AccordionItem value="peer-review" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground">Peer Review Feedback</h3>
                       </AccordionTrigger>
@@ -619,41 +619,41 @@ const AuthorProposalDetails: React.FC = () => {
                         {decisionReview && <ReviewFeedbackCard review={decisionReview} title="" />}
                       </AccordionContent>
                     </AccordionItem>
-                  )}
+                }
 
                   {/* Contract Details Section */}
                   <AccordionItem value="contract-details" className="border rounded-md overflow-hidden">
                     <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                       <div className="text-left">
                         <h3 className="text-xl font-bold text-foreground">Contract Details</h3>
-                        {latestContract && (
-                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                        {latestContract &&
+                      <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             Status: <span className="capitalize">{(latestContract.status || latestContract.docusign_status || 'pending').replace(/_/g, ' ')}</span>
                           </p>
-                        )}
+                      }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-6 pb-6 pt-0 space-y-6">
-                      {!latestContract ? (
-                        <p className="text-sm text-muted-foreground">No contract has been issued for this proposal yet.</p>
-                      ) : (() => {
-                        const contractStatus = (latestContract.status || latestContract.docusign_status || '').toLowerCase();
-                        const isSent = contractStatus === 'sent';
-                        const isSigned = contractStatus === 'completed' || contractStatus === 'signed';
-                        const isDeclined = contractStatus === 'declined';
-                        const isVoided = contractStatus === 'voided';
-                        const proposalIsQueriesRaised = statusIs(proposal.status, 'queries_raised');
-                        // Also block signing if there are local pending (unanswered) queries
-                        const responseParentIds = new Set(
-                          contractQueries.filter((q) => q.type === 'response' && q.parent_query_id).map((q) => q.parent_query_id)
-                        );
-                        const hasPendingQuery = contractQueries
-                          .filter((q) => q.type === 'query')
-                          .some((q) => !responseParentIds.has(q.id));
-                        const signingBlocked = proposalIsQueriesRaised || hasPendingQuery;
+                      {!latestContract ?
+                    <p className="text-sm text-muted-foreground">No contract has been issued for this proposal yet.</p> :
+                    (() => {
+                      const contractStatus = (latestContract.status || latestContract.docusign_status || '').toLowerCase();
+                      const isSent = contractStatus === 'sent';
+                      const isSigned = contractStatus === 'completed' || contractStatus === 'signed';
+                      const isDeclined = contractStatus === 'declined';
+                      const isVoided = contractStatus === 'voided';
+                      const proposalIsQueriesRaised = statusIs(proposal.status, 'queries_raised');
+                      // Also block signing if there are local pending (unanswered) queries
+                      const responseParentIds = new Set(
+                        contractQueries.filter((q) => q.type === 'response' && q.parent_query_id).map((q) => q.parent_query_id)
+                      );
+                      const hasPendingQuery = contractQueries.
+                      filter((q) => q.type === 'query').
+                      some((q) => !responseParentIds.has(q.id));
+                      const signingBlocked = proposalIsQueriesRaised || hasPendingQuery;
 
-                        return (
-                          <div className="space-y-5">
+                      return (
+                        <div className="space-y-5">
                             {/* Contract info */}
                             <div className="grid grid-cols-2 gap-4">
                               <div>
@@ -664,23 +664,23 @@ const AuthorProposalDetails: React.FC = () => {
                                 <p className="text-xs text-muted-foreground">Status</p>
                                 <p className="text-sm font-medium capitalize">{contractStatus.replace(/_/g, ' ')}</p>
                               </div>
-                              {latestContract.docusign_sent_at && (
-                                <div>
+                              {latestContract.docusign_sent_at &&
+                            <div>
                                   <p className="text-xs text-muted-foreground">Sent</p>
                                   <p className="text-sm font-medium">{format(new Date(latestContract.docusign_sent_at), "MMM d, yyyy")}</p>
                                 </div>
-                              )}
-                              {latestContract.docusign_completed_at && (
-                                <div>
+                            }
+                              {latestContract.docusign_completed_at &&
+                            <div>
                                   <p className="text-xs text-muted-foreground">Signed</p>
                                   <p className="text-sm font-medium">{format(new Date(latestContract.docusign_completed_at), "MMM d, yyyy")}</p>
                                 </div>
-                              )}
+                            }
                             </div>
 
                             {/* Sent → Sign flow */}
-                            {isSent && (
-                              <div className="space-y-4">
+                            {isSent &&
+                          <div className="space-y-4">
                                 <div className="bg-muted/50 border rounded-md p-5 space-y-2">
                                   <p className="text-sm font-bold text-foreground">
                                     Your contract is ready for signing
@@ -690,15 +690,15 @@ const AuthorProposalDetails: React.FC = () => {
                                   </p>
                                 </div>
 
-                                {signingLoading && (
-                                  <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                {signingLoading &&
+                            <div className="flex flex-col items-center justify-center py-8 space-y-3">
                                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                     <p className="text-sm text-muted-foreground">Generating your signing link…</p>
                                   </div>
-                                )}
+                            }
 
-                                {signingError && !signingLoading && (
-                                  <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
+                                {signingError && !signingLoading &&
+                            <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5 space-y-3">
                                     <div className="flex items-center gap-2">
                                       <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                                       <p className="text-sm font-medium text-destructive">{signingError}</p>
@@ -707,42 +707,42 @@ const AuthorProposalDetails: React.FC = () => {
                                       <RefreshCw className="mr-2 h-4 w-4" /> Try Again
                                     </Button>
                                   </div>
-                                )}
+                            }
 
-                                {!signingLoading && !signingError && !signingBlocked && (
-                                  <div className="max-w-sm mx-auto text-center space-y-3">
+                                {!signingLoading && !signingError && !signingBlocked &&
+                            <div className="max-w-sm mx-auto text-center space-y-3">
                                     <Button
-                                      className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
-                                      onClick={handleSignContract}
-                                    >
+                                className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
+                                onClick={handleSignContract}>
+                                
                                       <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
                                     </Button>
                                     <p className="text-xs text-muted-foreground">
                                       A fresh signing link will be generated each time you click.
                                     </p>
                                     <Button
-                                      variant="outline"
-                                      className="w-full gap-2 text-sm"
-                                      onClick={() => setShowQueryThread(true)}
-                                    >
+                                variant="outline"
+                                className="w-full gap-2 text-sm"
+                                onClick={() => setShowQueryThread(true)}>
+                                
                                       <HelpCircle className="h-4 w-4" /> I have a question before signing
                                     </Button>
                                   </div>
-                                )}
+                            }
 
-                                {signingBlocked && !signingLoading && (
-                                  <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
+                                {signingBlocked && !signingLoading &&
+                            <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
                                     <p className="text-sm font-medium text-[#c4940a]">Signing is disabled while your query is being reviewed</p>
                                     <p className="text-xs text-muted-foreground mt-1">The signing button will be re-enabled once the editorial team responds.</p>
                                   </div>
-                                )}
+                            }
 
                               </div>
-                            )}
+                          }
 
                             {/* Signed → View */}
-                            {isSigned && (
-                              <div className="space-y-4">
+                            {isSigned &&
+                          <div className="space-y-4">
                                 <div className="bg-[#f0faf3] border border-[#c6e9ce] rounded-md p-5 flex items-center gap-3">
                                   <CheckCircle2 className="h-6 w-6 text-[#3d5a47] shrink-0" />
                                   <div>
@@ -753,78 +753,78 @@ const AuthorProposalDetails: React.FC = () => {
                                   </div>
                                 </div>
                                 <Button
-                                  variant="outline"
-                                  className="gap-2"
-                                  onClick={async () => {
-                                    setContractViewOpen(true);
-                                    setContractPdfLoading(true);
-                                    try {
-                                      const url = await contractApi.getDocumentBlob(ticketNum);
-                                      setContractPdfUrl(url);
-                                    } catch { setContractPdfUrl(null); }
-                                    finally { setContractPdfLoading(false); }
-                                  }}
-                                >
+                              variant="outline"
+                              className="gap-2"
+                              onClick={async () => {
+                                setContractViewOpen(true);
+                                setContractPdfLoading(true);
+                                try {
+                                  const url = await contractApi.getDocumentBlob(ticketNum);
+                                  setContractPdfUrl(url);
+                                } catch {setContractPdfUrl(null);} finally
+                                {setContractPdfLoading(false);}
+                              }}>
+                              
                                   <Eye className="h-4 w-4" /> View Signed Contract
                                 </Button>
                               </div>
-                            )}
+                          }
 
                             {/* Declined */}
-                            {isDeclined && (
-                              <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5">
+                            {isDeclined &&
+                          <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5">
                                 <p className="text-sm font-bold text-destructive">Contract Declined</p>
-                                {latestContract.docusign_decline_reason && (
-                                  <p className="text-sm text-foreground/80 mt-1">{latestContract.docusign_decline_reason}</p>
-                                )}
+                                {latestContract.docusign_decline_reason &&
+                            <p className="text-sm text-foreground/80 mt-1">{latestContract.docusign_decline_reason}</p>
+                            }
                               </div>
-                            )}
+                          }
 
                             {/* Voided */}
-                            {isVoided && (
-                              <div className="border border-muted bg-muted/30 rounded-md p-5">
+                            {isVoided &&
+                          <div className="border border-muted bg-muted/30 rounded-md p-5">
                                 <p className="text-sm font-bold text-muted-foreground">Contract Voided</p>
                                 <p className="text-sm text-muted-foreground mt-1">This contract has been voided by the publisher.</p>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+                          }
+                          </div>);
+
+                    })()}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
 
                 {/* Contract Query Thread — shown on demand or when queries exist */}
-                {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) && (
-                  <Accordion type="single" collapsible className="space-y-4">
+                {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) &&
+              <Accordion type="single" collapsible className="space-y-4">
                     <AccordionItem value="contract-queries" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                           <HelpCircle className="h-5 w-5 text-muted-foreground" />
                           Queries
-                          {contractQueries.length > 0 && (
-                            <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
-                          )}
+                          {contractQueries.length > 0 &&
+                      <span className="text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                      }
                         </h3>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 pb-6 pt-4">
                         <ContractQueryThread
-                          queries={contractQueries}
-                          isLoading={queriesLoading}
-                          viewAs="author"
-                          proposalStatus={proposal.status}
-                          onSend={async (text, category) => {
-                            await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' });
-                            // Refetch proposal after a short delay to pick up status change to queries_raised
-                            setTimeout(() => { refetch(); refetchContract(); }, 1000);
-                          }}
-                          isSending={raiseQuery.isPending}
-                          hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'}
-                        />
+                      queries={contractQueries}
+                      isLoading={queriesLoading}
+                      viewAs="author"
+                      proposalStatus={proposal.status}
+                      onSend={async (text, category) => {
+                        await raiseQuery.mutateAsync({ queryText: text, category: category || 'contract' });
+                        // Refetch proposal after a short delay to pick up status change to queries_raised
+                        setTimeout(() => {refetch();refetchContract();}, 1000);
+                      }}
+                      isSending={raiseQuery.isPending}
+                      hasActiveContract={!!latestContract && (latestContract.status || '').toLowerCase() === 'sent'} />
+                    
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                )}
+              }
               </div>
             }
 
@@ -855,8 +855,8 @@ const AuthorProposalDetails: React.FC = () => {
         documentDataUrl={contractPdfUrl}
         isLoading={contractPdfLoading}
         downloadUrl={contractPdfUrl || undefined}
-        downloadFileName={`${ticketNum || "contract"}.pdf`}
-      />
+        downloadFileName={`${ticketNum || "contract"}.pdf`} />
+      
     </DashboardLayout>);
 
 };
