@@ -49,10 +49,10 @@ import { useContract } from "@/hooks/useContract";
 const DetailRow = ({
   label,
   value
-}: {
-  label: string;
-  value?: string | null;
-}) => {
+
+
+
+}: {label: string;value?: string | null;}) => {
   if (!value) return null;
   return <div className="flex gap-4 py-2 min-w-0">
       <span className="text-sm text-muted-foreground w-28 shrink-0">{label}:</span>
@@ -62,10 +62,10 @@ const DetailRow = ({
 const ContentBlock = ({
   label,
   value
-}: {
-  label: string;
-  value?: string | null;
-}) => {
+
+
+
+}: {label: string;value?: string | null;}) => {
   if (!value) return null;
   return <div className="space-y-2">
       <p className="text-sm text-muted-foreground italic">{label}:</p>
@@ -148,7 +148,7 @@ const ProposalDetails: React.FC = () => {
   const [contractPdfUrl, setContractPdfUrl] = useState<string | null>(null);
   const [contractPdfLoading, setContractPdfLoading] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  
+
   const [assignNote, setAssignNote] = useState("");
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
@@ -159,7 +159,7 @@ const ProposalDetails: React.FC = () => {
   const [startedFresh, setStartedFresh] = useState(false);
   const [eventsSheetOpen, setEventsSheetOpen] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
-  const [drActiveTab, setDrActiveTab] = useState<string>((false) ? "feedback" : "book");
+  const [drActiveTab, setDrActiveTab] = useState<string>(false ? "feedback" : "book");
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
@@ -172,7 +172,7 @@ const ProposalDetails: React.FC = () => {
   const [resendContractTitle, setResendContractTitle] = useState("");
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
-  const [pendingQueryResponse, setPendingQueryResponse] = useState<{ queryId: number; responseText: string } | null>(null);
+  const [pendingQueryResponse, setPendingQueryResponse] = useState<{queryId: number;responseText: string;} | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
 
   /* ---------------- Data ---------------- */
@@ -188,26 +188,26 @@ const ProposalDetails: React.FC = () => {
   // Set reviewer: prefer already-assigned reviewer, then default, then empty
   // Re-derive whenever proposal assignment data changes
   const assignedEmailsKey = JSON.stringify(
-    (proposal as any)?.assigned_reviewer_emails
-    || proposal?.assigned_reviewers?.map((r: any) => r.email)
-    || []
+    (proposal as any)?.assigned_reviewer_emails ||
+    proposal?.assigned_reviewers?.map((r: any) => r.email) ||
+    []
   );
   React.useEffect(() => {
     if (reviewers.length === 0) return;
-    const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-      || proposal?.assigned_reviewers?.map((r: any) => r.email)
-      || [];
-    const assignedMatch = assignedEmails.length > 0
-      ? reviewers.find(r => assignedEmails.includes(r.email))
-      : null;
+    const assignedEmails = (proposal as any)?.assigned_reviewer_emails ||
+    proposal?.assigned_reviewers?.map((r: any) => r.email) ||
+    [];
+    const assignedMatch = assignedEmails.length > 0 ?
+    reviewers.find((r) => assignedEmails.includes(r.email)) :
+    null;
 
     if (assignedMatch) {
       setSelectedReviewer(assignedMatch.email);
     } else if (!selectedReviewer && defaultEmail) {
-      const found = reviewers.find(r => r.email === defaultEmail);
+      const found = reviewers.find((r) => r.email === defaultEmail);
       if (found) setSelectedReviewer(found.email);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultEmail, reviewers, assignedEmailsKey]);
   // Fetch peer review data from review API
   const ticketNum = proposal?.ticket_number || id || "";
@@ -223,7 +223,7 @@ const ProposalDetails: React.FC = () => {
     queryFn: () => metadataApi.get(ticketNum),
     enabled: !!ticketNum,
     staleTime: 0,
-    refetchInterval: 10000,
+    refetchInterval: 10000
   });
   const proposedTitle = metadataResponse?.metadata?.title;
   const proposedSubtitle = metadataResponse?.metadata?.subtitle;
@@ -231,7 +231,7 @@ const ProposalDetails: React.FC = () => {
     assignReviewers,
     isAssigning,
     unassignReviewers,
-    isUnassigning,
+    isUnassigning
   } = useProposalActions(proposal?.ticket_number || id);
 
   // Extract peer review form data (used for pre-loading peer reviewer's comments)
@@ -269,10 +269,10 @@ const ProposalDetails: React.FC = () => {
   }, [reviewData]);
 
   // Set initial DR tab to "feedback" when review is submitted
-  const drShouldShowFeedback = decisionReviewerSubmitted || (proposal && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked") ||
-    (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted)
-  ));
+  const drShouldShowFeedback = decisionReviewerSubmitted || proposal && (
+  statusIs(proposal.status, "contract_issued", "approved", "locked") ||
+  (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
+
   React.useEffect(() => {
     if (drShouldShowFeedback) setDrActiveTab("feedback");
   }, [drShouldShowFeedback]);
@@ -301,11 +301,11 @@ const ProposalDetails: React.FC = () => {
   const showReviewForm = isReviewer2;
 
   // Check if peer reviewer already submitted their review
-  const reviewStatus = reviewMeta?.is_submitted ? 'submitted' : (reviewMeta?.status || reviewMeta?.review_status || '');
+  const reviewStatus = reviewMeta?.is_submitted ? 'submitted' : reviewMeta?.status || reviewMeta?.review_status || '';
   const peerReviewAlreadySubmitted = isReviewer2 && (
-    reviewMeta?.is_submitted === true
-    || statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked")
-  );
+  reviewMeta?.is_submitted === true ||
+  statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked"));
+
 
   // Check if there's a SUBMITTED peer review available (for decision reviewer split layout)
   // Show split screen ONLY when the peer reviewer has actually submitted (not just saved a draft)
@@ -314,7 +314,7 @@ const ProposalDetails: React.FC = () => {
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
     return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || null;
   })();
-  
+
   const hasSubmittedReview = isReviewer1 && peerReviewEntry != null && peerReviewEntry.is_submitted === true && Object.keys(reviewFormData).length > 0;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
@@ -323,8 +323,8 @@ const ProposalDetails: React.FC = () => {
   const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
   const hasDecisionReviewInApi = allReviews.some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted);
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked") || hasDecisionReviewInApi
-  );
+  statusIs(proposal.status, "contract_issued", "approved", "locked") || hasDecisionReviewInApi);
+
 
 
   const revertToNew = async () => {
@@ -353,48 +353,48 @@ const ProposalDetails: React.FC = () => {
                 {proposal.sub_title}
               </p>}
             {/* Proposed title from metadata (if different from original) */}
-            {proposedTitle && proposedTitle !== proposal.name && (
-              <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+            {proposedTitle && proposedTitle !== proposal.name &&
+          <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
                 <FileCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 <span className="font-medium shrink-0">Proposed Title:</span>
                 <span className="font-semibold text-foreground break-words">
                   {proposedTitle}{proposedSubtitle ? `: ${proposedSubtitle}` : ''}
                 </span>
               </div>
-            )}
+          }
             {/* Submitted date - shown in post-submission state */}
-            {isPostSubmission && proposal.created_at && (
-              <p className="text-sm text-muted-foreground mt-1">
+            {isPostSubmission && proposal.created_at &&
+          <p className="text-sm text-muted-foreground mt-1">
                 Submitted {format(new Date(proposal.created_at), "MMMM d, yyyy")}
               </p>
-            )}
+          }
           </div>
           <div className="flex items-center gap-2 ml-4 shrink-0">
             <ProposalStatusBadge status={proposal.status} showIcon={false} />
-            {isPostSubmission && proposal.contract_sent_at && (
-              <span className="text-sm text-muted-foreground">
+            {isPostSubmission && proposal.contract_sent_at &&
+          <span className="text-sm text-muted-foreground">
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
-            )}
-            {isReviewer1 && (
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
+          }
+            {isReviewer1 &&
+          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
                 <History className="h-4 w-4" />
               </Button>
-            )}
+          }
           </div>
         </div>
         {/* Author & reviewer info */}
-        {isPostSubmission ? (
-          <div className="flex items-center gap-2 mt-3">
+        {isPostSubmission ?
+      <div className="flex items-center gap-2 mt-3">
             <div className="flex items-center gap-2 border rounded-full px-3 py-1.5 text-sm">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
                 {proposal.corresponding_author_name || proposal.author_name}
               </span>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
+          </div> :
+
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
             <span className="font-medium text-foreground">
               {proposal.corresponding_author_name || proposal.author_name}
             </span>
@@ -407,7 +407,7 @@ const ProposalDetails: React.FC = () => {
                 <span>{proposal.word_count} words</span>
               </>}
           </div>
-        )}
+      }
       </div>
 
 
@@ -420,7 +420,7 @@ const ProposalDetails: React.FC = () => {
                   <SelectValue placeholder="Select a reviewer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {reviewers.map(reviewer => <SelectItem key={reviewer.id} value={reviewer.email}>
+                  {reviewers.map((reviewer) => <SelectItem key={reviewer.id} value={reviewer.email}>
                       {reviewer.name || reviewer.email.split("@")[0]}
                       {reviewer.email === defaultEmail && " (Default)"}
                       {" "}({reviewer.assigned_proposals_count ?? 0})
@@ -431,9 +431,9 @@ const ProposalDetails: React.FC = () => {
 
           {statusIs(proposal.status, "new", "submitted") && <>
               <Button className="bg-[#3d5a47]" onClick={() => {
-                setAssignNote("");
-                setIsAssignDialogOpen(true);
-              }} disabled={isAssigning}>
+          setAssignNote("");
+          setIsAssignDialogOpen(true);
+        }} disabled={isAssigning}>
                 Submit for review
               </Button>
               <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
@@ -458,32 +458,32 @@ const ProposalDetails: React.FC = () => {
                   Note for Reviewer <span className="text-muted-foreground font-normal">(optional)</span>
                 </Label>
                 <Textarea
-                  id="assign-note"
-                  placeholder="E.g., Please pay particular attention to the methodology section."
-                  value={assignNote}
-                  onChange={(e) => setAssignNote(e.target.value)}
-                  className="min-h-[80px] resize-none"
-                />
+              id="assign-note"
+              placeholder="E.g., Please pay particular attention to the methodology section."
+              value={assignNote}
+              onChange={(e) => setAssignNote(e.target.value)}
+              className="min-h-[80px] resize-none" />
+            
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button
-                  className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
-                  onClick={() => {
-                    if (!selectedReviewer) {
-                      toast({ title: "No reviewer selected", description: "Please select a reviewer first.", variant: "destructive" });
-                      setIsAssignDialogOpen(false);
-                      return;
-                    }
-                    assignReviewers(
-                      { reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined },
-                      { onSuccess: () => setIsAssignDialogOpen(false) }
-                    );
-                  }}
-                  disabled={isAssigning}
-                >
+              className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+              onClick={() => {
+                if (!selectedReviewer) {
+                  toast({ title: "No reviewer selected", description: "Please select a reviewer first.", variant: "destructive" });
+                  setIsAssignDialogOpen(false);
+                  return;
+                }
+                assignReviewers(
+                  { reviewerEmail: selectedReviewer, note: assignNote.trim() || undefined },
+                  { onSuccess: () => setIsAssignDialogOpen(false) }
+                );
+              }}
+              disabled={isAssigning}>
+              
                   {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Submit for review
                 </Button>
@@ -492,29 +492,29 @@ const ProposalDetails: React.FC = () => {
           </Dialog>
 
           {statusIs(proposal.status, "in_review", "under_review") && (() => {
-            const assignedEmails = (proposal as any)?.assigned_reviewer_emails
-              || proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email)
-              || [];
-            const currentAssigned = assignedEmails.filter(Boolean)[0] || "";
-            const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
-            return <Button
-              className="bg-[#3d5a47]"
-               onClick={() => {
-                 setAssignNote("");
-                 setIsAssignDialogOpen(true);
-               }}
-               disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
-              title={isSameReviewer ? "Select a different reviewer to reassign" : ""}
-            >
+        const assignedEmails = (proposal as any)?.assigned_reviewer_emails ||
+        proposal?.assigned_reviewers?.map((r: any) => r.email || r.reviewer_email) ||
+        [];
+        const currentAssigned = assignedEmails.filter(Boolean)[0] || "";
+        const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
+        return <Button
+          className="bg-[#3d5a47]"
+          onClick={() => {
+            setAssignNote("");
+            setIsAssignDialogOpen(true);
+          }}
+          disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
+          title={isSameReviewer ? "Select a different reviewer to reassign" : ""}>
+          
               Reassign
             </Button>;
-          })()}
+      })()}
         </div>}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
-    <Tabs value={drActiveTab} onValueChange={(v) => { setDrActiveTab(v); setDrFeedbackAccordion(undefined); }}>
-          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + ((decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? 1 : 0)}, minmax(0, 1fr))` }}>
+    <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
+          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted ? 1 : 0)}, minmax(0, 1fr))` }}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -527,18 +527,18 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) && (
-              <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
+            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) &&
+        <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
               </TabsTrigger>
-            )}
-            {isContractSigned && (
-              <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
+        }
+            {isContractSigned &&
+        <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
                 <ClipboardList className="h-4 w-4" />
                 <span className="hidden sm:inline">Metadata</span>
               </TabsTrigger>
-            )}
+        }
           </TabsList>
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
@@ -654,26 +654,26 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
 
           {/* ---- METADATA (Decision Reviewer - only after contract signed) ---- */}
-          {isContractSigned && (
-            <TabsContent value="metadata" className="mt-4 space-y-6">
+          {isContractSigned &&
+      <TabsContent value="metadata" className="mt-4 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Publication Metadata</h2>
-                {isReviewer1 && statusIs(proposal.status, 'author_approved') && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
-                    onClick={() => setLockConfirmOpen(true)}
-                    disabled={isLocking}
-                  >
+                {isReviewer1 && statusIs(proposal.status, 'author_approved') &&
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-gray-600 text-gray-700 hover:bg-gray-100"
+            onClick={() => setLockConfirmOpen(true)}
+            disabled={isLocking}>
+            
                     {isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                     Lock
                   </Button>
-                )}
+          }
               </div>
               <PublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
             </TabsContent>
-          )}
+      }
 
 
           {/* ---- SUPPORTING DOCUMENTS (Decision Reviewer) ---- */}
@@ -720,65 +720,65 @@ const ProposalDetails: React.FC = () => {
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
             {(() => {
-              const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
-              const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
-              const decisionReview = allReviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+          const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
+          const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
+          const decisionReview = allReviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
 
-              const reviewFields = [
-                { label: "Scope", key: "scope" },
-                { label: "Purpose and Value", key: "purposeAndValue" },
-                { label: "Title", key: "title" },
-                { label: "Originality and Points of Difference", key: "originality" },
-                { label: "Credibility", key: "credibility" },
-                { label: "Structure", key: "structure" },
-                { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
-                { label: "Other Comments", key: "otherComments" },
-                { label: "Red Flags", key: "redFlags" },
-              ];
+          const reviewFields = [
+          { label: "Scope", key: "scope" },
+          { label: "Purpose and Value", key: "purposeAndValue" },
+          { label: "Title", key: "title" },
+          { label: "Originality and Points of Difference", key: "originality" },
+          { label: "Credibility", key: "credibility" },
+          { label: "Structure", key: "structure" },
+          { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
+          { label: "Other Comments", key: "otherComments" },
+          { label: "Red Flags", key: "redFlags" }];
 
-              const renderReviewFields = (data: Record<string, any>) => (
-                <div className="space-y-4">
+
+          const renderReviewFields = (data: Record<string, any>) =>
+          <div className="space-y-4">
                   {reviewFields.map(({ label, key }) => {
-                    const value = data[key];
-                    if (!value) return null;
-                    return (
-                      <div key={key} className="space-y-1">
+              const value = data[key];
+              if (!value) return null;
+              return (
+                <div key={key} className="space-y-1">
                         <p className="text-sm font-semibold">{label}</p>
                         <p className="text-sm text-muted-foreground whitespace-pre-line">{value}</p>
                         <Separator />
-                      </div>
-                    );
-                  })}
-                  {data.recommendation && (
-                    <div className="border border-muted rounded-lg p-4 mt-2">
+                      </div>);
+
+            })}
+                  {data.recommendation &&
+            <div className="border border-muted rounded-lg p-4 mt-2">
                       <p className="text-sm font-semibold">Final Recommendation</p>
                       <p className="text-sm font-medium mt-1 capitalize">
                         {data.recommendation.replace(/_/g, " ")}
                       </p>
                     </div>
-                  )}
-                </div>
-              );
+            }
+                </div>;
 
-              return (
-                <Accordion type="single" collapsible value={drFeedbackAccordion} onValueChange={setDrFeedbackAccordion} className="space-y-2">
+
+          return (
+            <Accordion type="single" collapsible value={drFeedbackAccordion} onValueChange={setDrFeedbackAccordion} className="space-y-2">
                   {/* Original Peer Review Feedback */}
                   <AccordionItem value="peer-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
                         <p className="text-base font-semibold">Original Peer Review Feedback</p>
-                        {peerReview && (
-                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                        {peerReview &&
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             {peerReview.reviewer_name || peerReview.reviewer_email || "Peer Reviewer"}
                             {peerReview.review_data?.recommendation && ` • ${peerReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
                           </p>
-                        )}
+                    }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {peerReview?.review_data ? renderReviewFields(peerReview.review_data) : (
-                        <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
-                      )}
+                      {peerReview?.review_data ? renderReviewFields(peerReview.review_data) :
+                  <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
+                  }
                     </AccordionContent>
                   </AccordionItem>
 
@@ -786,21 +786,21 @@ const ProposalDetails: React.FC = () => {
                   <AccordionItem value="final-review" className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
-                        <p className="text-base font-semibold">Final Review Feedback</p>
-                        {decisionReview && (
-                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                        <p className="text-base font-semibold">Final Peer Review Feedback</p>
+                        {decisionReview &&
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             {decisionReview.reviewer_name || decisionReview.reviewer_email || "Decision Reviewer"}
                             {decisionReview.review_data?.recommendation && ` • ${decisionReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
                           </p>
-                        )}
+                    }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {decisionReview?.review_data ? (
-                        <div className="space-y-4">
+                      {decisionReview?.review_data ?
+                  <div className="space-y-4">
                           {renderReviewFields(decisionReview.review_data)}
-                          {decisionReview.review_data.contractType && (
-                            <>
+                          {decisionReview.review_data.contractType &&
+                    <>
                               <Separator />
                               <div className="border border-muted rounded-lg p-4">
                                 <p className="text-sm font-semibold">Contract Type Issued</p>
@@ -809,11 +809,11 @@ const ProposalDetails: React.FC = () => {
                                 </p>
                               </div>
                             </>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No final review feedback available yet.</p>
-                      )}
+                    }
+                        </div> :
+
+                  <p className="text-sm text-muted-foreground">No final review feedback available yet.</p>
+                  }
                     </AccordionContent>
                   </AccordionItem>
 
@@ -823,24 +823,24 @@ const ProposalDetails: React.FC = () => {
                       <div className="text-left">
                         <p className="text-base font-semibold">Publishing Contract</p>
                         {contractLoading && <p className="text-sm text-muted-foreground font-normal mt-0.5">Loading…</p>}
-                        {latestContract && (
-                          <p className="text-sm text-muted-foreground font-normal mt-0.5">
+                        {latestContract &&
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             Status: <span className="capitalize">{(latestContract.status || latestContract.docusign_status || 'unknown').replace(/_/g, ' ')}</span>
                             {latestContract.contract_type && ` • ${latestContract.contract_type === 'editor' ? 'Editor' : 'Author'} Contract`}
                           </p>
-                        )}
+                    }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {contractLoading ? (
-                        <div className="flex items-center gap-2 py-4">
+                      {contractLoading ?
+                  <div className="flex items-center gap-2 py-4">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span className="text-sm text-muted-foreground">Loading contract details…</span>
-                        </div>
-                      ) : !latestContract ? (
-                        <p className="text-sm text-muted-foreground">No contract found for this proposal.</p>
-                      ) : (
-                        <div className="space-y-4">
+                        </div> :
+                  !latestContract ?
+                  <p className="text-sm text-muted-foreground">No contract found for this proposal.</p> :
+
+                  <div className="space-y-4">
                           {/* Contract info grid */}
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             <div>
@@ -855,63 +855,63 @@ const ProposalDetails: React.FC = () => {
                               <p className="text-xs text-muted-foreground">Version</p>
                               <p className="text-sm font-medium">{latestContract.contract_version || 1}</p>
                             </div>
-                            {latestContract.recipient_name && (
-                              <div>
+                            {latestContract.recipient_name &&
+                      <div>
                                 <p className="text-xs text-muted-foreground">Recipient</p>
                                 <p className="text-sm font-medium">{latestContract.recipient_name}</p>
                               </div>
-                            )}
-                            {latestContract.recipient_email && (
-                              <div>
+                      }
+                            {latestContract.recipient_email &&
+                      <div>
                                 <p className="text-xs text-muted-foreground">Recipient Email</p>
                                 <p className="text-sm font-medium">{latestContract.recipient_email}</p>
                               </div>
-                            )}
-                            {latestContract.docusign_sent_at && (
-                              <div>
+                      }
+                            {latestContract.docusign_sent_at &&
+                      <div>
                                 <p className="text-xs text-muted-foreground">Sent</p>
                                 <p className="text-sm font-medium">{format(new Date(latestContract.docusign_sent_at), "MMM d, yyyy 'at' h:mm a")}</p>
                               </div>
-                            )}
-                            {latestContract.docusign_completed_at && (
-                              <div>
+                      }
+                            {latestContract.docusign_completed_at &&
+                      <div>
                                 <p className="text-xs text-muted-foreground">Completed</p>
                                 <p className="text-sm font-medium">{format(new Date(latestContract.docusign_completed_at), "MMM d, yyyy 'at' h:mm a")}</p>
                               </div>
-                            )}
-                            {latestContract.docusign_declined_at && (
-                              <div>
+                      }
+                            {latestContract.docusign_declined_at &&
+                      <div>
                                 <p className="text-xs text-muted-foreground">Declined</p>
                                 <p className="text-sm font-medium">{format(new Date(latestContract.docusign_declined_at), "MMM d, yyyy 'at' h:mm a")}</p>
                               </div>
-                            )}
+                      }
                           </div>
 
-                          {latestContract.docusign_decline_reason && (
-                            <div className="border border-destructive/30 bg-destructive/5 rounded-md p-4">
+                          {latestContract.docusign_decline_reason &&
+                    <div className="border border-destructive/30 bg-destructive/5 rounded-md p-4">
                               <p className="text-sm font-semibold text-destructive">Decline Reason</p>
                               <p className="text-sm text-foreground/80 mt-1">{latestContract.docusign_decline_reason}</p>
                             </div>
-                          )}
+                    }
 
                           {/* View document button */}
                           <Button
-                            variant="outline"
-                            className="gap-2"
-                            onClick={async () => {
-                              setContractViewOpen(true);
-                              setContractPdfLoading(true);
-                              try {
-                                const url = await contractApi.getDocumentBlob(proposal.ticket_number || id || '');
-                                setContractPdfUrl(url);
-                              } catch { setContractPdfUrl(null); }
-                              finally { setContractPdfLoading(false); }
-                            }}
-                          >
+                      variant="outline"
+                      className="gap-2"
+                      onClick={async () => {
+                        setContractViewOpen(true);
+                        setContractPdfLoading(true);
+                        try {
+                          const url = await contractApi.getDocumentBlob(proposal.ticket_number || id || '');
+                          setContractPdfUrl(url);
+                        } catch {setContractPdfUrl(null);} finally
+                        {setContractPdfLoading(false);}
+                      }}>
+                      
                             <Eye className="h-4 w-4" /> View Contract Document
                           </Button>
                         </div>
-                      )}
+                  }
                     </AccordionContent>
                   </AccordionItem>
 
@@ -921,33 +921,33 @@ const ProposalDetails: React.FC = () => {
                       <div className="text-left">
                         <p className="text-base font-semibold">
                           Queries
-                          {contractQueries.length > 0 && (
-                            <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
-                          )}
+                          {contractQueries.length > 0 &&
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">({contractQueries.length})</span>
+                      }
                         </p>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
                       <ContractQueryThread
-                        queries={contractQueries}
-                        isLoading={queriesLoading}
-                        viewAs="reviewer"
-                        proposalStatus={proposal.status}
-                        onSend={async (text, _category, queryId) => {
-                          // Store pending response — don't send yet, wait for contract dialog
-                          setPendingQueryResponse({ queryId: queryId!, responseText: text });
-                          setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
-                          setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
-                          setResendContractType(latestContract?.contract_type || 'author');
-                          setResendContractOpen(true);
-                        }}
-                        isSending={respondToQuery.isPending}
-                      />
+                    queries={contractQueries}
+                    isLoading={queriesLoading}
+                    viewAs="reviewer"
+                    proposalStatus={proposal.status}
+                    onSend={async (text, _category, queryId) => {
+                      // Store pending response — don't send yet, wait for contract dialog
+                      setPendingQueryResponse({ queryId: queryId!, responseText: text });
+                      setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
+                      setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
+                      setResendContractType(latestContract?.contract_type || 'author');
+                      setResendContractOpen(true);
+                    }}
+                    isSending={respondToQuery.isPending} />
+                  
                     </AccordionContent>
                   </AccordionItem>
-                </Accordion>
-              );
-            })()}
+                </Accordion>);
+
+        })()}
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
@@ -1099,8 +1099,8 @@ const ProposalDetails: React.FC = () => {
 
         </Tabs>)}
       {/* Events Audit Trail Sheet */}
-      {isReviewer1 && (
-        <Sheet open={eventsSheetOpen} onOpenChange={setEventsSheetOpen}>
+      {isReviewer1 &&
+    <Sheet open={eventsSheetOpen} onOpenChange={setEventsSheetOpen}>
           <SheetContent className="w-[400px] sm:w-[480px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
@@ -1109,65 +1109,65 @@ const ProposalDetails: React.FC = () => {
               </SheetTitle>
             </SheetHeader>
             <div className="mt-6">
-              {eventsLoading ? (
-                <div className="flex items-center gap-2 py-4">
+              {eventsLoading ?
+          <div className="flex items-center gap-2 py-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-muted-foreground">Loading events…</span>
-                </div>
-              ) : proposalEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No events recorded yet.</p>
-              ) : (
-                <div className="space-y-5">
-                  {proposalEvents.map((evt, index) => (
-                    <div key={evt.id} className="relative flex items-start gap-3">
+                </div> :
+          proposalEvents.length === 0 ?
+          <p className="text-sm text-muted-foreground">No events recorded yet.</p> :
+
+          <div className="space-y-5">
+                  {proposalEvents.map((evt, index) =>
+            <div key={evt.id} className="relative flex items-start gap-3">
                       {/* Timeline line */}
-                      {index < proposalEvents.length - 1 && (
-                        <div className="absolute left-[5px] top-5 bottom-0 w-px bg-border" style={{ height: 'calc(100% + 12px)' }} />
-                      )}
+                      {index < proposalEvents.length - 1 &&
+              <div className="absolute left-[5px] top-5 bottom-0 w-px bg-border" style={{ height: 'calc(100% + 12px)' }} />
+              }
                       <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${
-                        evt.event_type === 'status_change' ? 'bg-[#2563eb]' :
-                        evt.event_type === 'assignment' ? 'bg-[#3d5a47]' :
-                        'bg-muted-foreground'
-                      }`} />
+              evt.event_type === 'status_change' ? 'bg-[#2563eb]' :
+              evt.event_type === 'assignment' ? 'bg-[#3d5a47]' :
+              'bg-muted-foreground'}`
+              } />
                       <div className="flex-1 min-w-0 pb-1">
                         <p className="text-sm font-medium">{evt.description}</p>
                         <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground mt-0.5">
                           <span>{format(new Date(evt.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
-                          {evt.changed_by && (
-                            <>
+                          {evt.changed_by &&
+                  <>
                               <span>•</span>
                               <span>{evt.changed_by}</span>
                             </>
-                          )}
-                          {evt.changed_by_role && (
-                            <>
+                  }
+                          {evt.changed_by_role &&
+                  <>
                               <span>•</span>
                               <span className="capitalize">{evt.changed_by_role.replace(/_/g, ' ')}</span>
                             </>
-                          )}
+                  }
                         </div>
-                        {(evt.old_status || evt.new_status) && (
-                          <div className="flex items-center gap-2 mt-1.5">
-                            {evt.old_status && (
-                              <Badge variant="outline" className="text-xs capitalize">{evt.old_status.replace(/_/g, ' ')}</Badge>
-                            )}
-                            {evt.old_status && evt.new_status && (
-                              <span className="text-xs text-muted-foreground">→</span>
-                            )}
-                            {evt.new_status && (
-                              <Badge className="text-xs capitalize bg-[#3d5a47] hover:bg-[#3d5a47]">{evt.new_status.replace(/_/g, ' ')}</Badge>
-                            )}
+                        {(evt.old_status || evt.new_status) &&
+                <div className="flex items-center gap-2 mt-1.5">
+                            {evt.old_status &&
+                  <Badge variant="outline" className="text-xs capitalize">{evt.old_status.replace(/_/g, ' ')}</Badge>
+                  }
+                            {evt.old_status && evt.new_status &&
+                  <span className="text-xs text-muted-foreground">→</span>
+                  }
+                            {evt.new_status &&
+                  <Badge className="text-xs capitalize bg-[#3d5a47] hover:bg-[#3d5a47]">{evt.new_status.replace(/_/g, ' ')}</Badge>
+                  }
                           </div>
-                        )}
+                }
                       </div>
                     </div>
-                  ))}
+            )}
                 </div>
-              )}
+          }
             </div>
           </SheetContent>
         </Sheet>
-      )}
+    }
     </div>;
 
   /* ======================== RENDER ======================== */
@@ -1184,34 +1184,34 @@ const ProposalDetails: React.FC = () => {
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
-            {showReviewForm ? (
-              <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
-                const ref = reviewFormRef.current;
-                if (ref) {
-                  setSummaryFormData({ ...ref.formData });
-                  setShowingSummary(true);
-                }
-              }} disabled={reviewFormRef.current?.isSaving}>
+            {showReviewForm ?
+        <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
+          const ref = reviewFormRef.current;
+          if (ref) {
+            setSummaryFormData({ ...ref.formData });
+            setShowingSummary(true);
+          }
+        }} disabled={reviewFormRef.current?.isSaving}>
+                Submit Review
+              </Button> :
+
+        <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
+          const ref = reviewFormRef.current;
+          if (ref) {
+            setSummaryFormData({ ...ref.formData });
+            setShowingSummary(true);
+          }
+        }} disabled={reviewFormRef.current?.isSaving}>
                 Submit Review
               </Button>
-            ) : (
-              <Button className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white" onClick={() => {
-                const ref = reviewFormRef.current;
-                if (ref) {
-                  setSummaryFormData({ ...ref.formData });
-                  setShowingSummary(true);
-                }
-              }} disabled={reviewFormRef.current?.isSaving}>
-                Submit Review
-              </Button>
-            )}
+        }
           </div>}
       </div>
 
       {/* Two-Panel, Summary, or Single-Panel Layout */}
-      {showReviewForm ? (
-        peerReviewAlreadySubmitted ? (
-          <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+      {showReviewForm ?
+    peerReviewAlreadySubmitted ?
+    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
@@ -1224,171 +1224,171 @@ const ProposalDetails: React.FC = () => {
                 <Separator />
                 {/* Read-only review fields */}
                 {(() => {
-                  const reviewFields = [
-                    { label: "Scope", key: "scope" },
-                    { label: "Purpose and Value", key: "purposeAndValue" },
-                    { label: "Title", key: "title" },
-                    { label: "Originality and Points of Difference", key: "originality" },
-                    { label: "Credibility", key: "credibility" },
-                    { label: "Structure", key: "structure" },
-                    { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
-                    { label: "Other Comments", key: "otherComments" },
-                    { label: "Red Flags", key: "redFlags" },
-                  ];
-                  return (
-                    <div className="space-y-5">
+            const reviewFields = [
+            { label: "Scope", key: "scope" },
+            { label: "Purpose and Value", key: "purposeAndValue" },
+            { label: "Title", key: "title" },
+            { label: "Originality and Points of Difference", key: "originality" },
+            { label: "Credibility", key: "credibility" },
+            { label: "Structure", key: "structure" },
+            { label: "Clarity, Structure and Quality of Writing", key: "clarity" },
+            { label: "Other Comments", key: "otherComments" },
+            { label: "Red Flags", key: "redFlags" }];
+
+            return (
+              <div className="space-y-5">
                       {reviewFields.map(({ label, key }) => {
-                        const value = reviewFormData[key];
-                        if (!value) return null;
-                        return (
-                          <div key={key} className="space-y-1.5">
+                  const value = reviewFormData[key];
+                  if (!value) return null;
+                  return (
+                    <div key={key} className="space-y-1.5">
                             <p className="text-sm font-semibold">{label}</p>
                             <div className="bg-muted/30 p-3 text-sm leading-relaxed whitespace-pre-line rounded-md border">
                               {value}
                             </div>
-                          </div>
-                        );
-                      })}
-                      {reviewFormData.recommendation && (
-                        <div className="space-y-1.5">
+                          </div>);
+
+                })}
+                      {reviewFormData.recommendation &&
+                <div className="space-y-1.5">
                           <p className="text-sm font-semibold">Final Recommendation</p>
                           <Badge className={`rounded-full px-4 py-1 text-sm ${
-                            reviewFormData.recommendation === 'proceed' ? 'bg-[#3d5a47] text-white hover:bg-[#3d5a47]' :
-                            reviewFormData.recommendation === 'reject' ? 'bg-foreground text-background hover:bg-foreground' :
-                            reviewFormData.recommendation === 'minor_revision' ? 'bg-[#c4940a] text-white hover:bg-[#c4940a]' :
-                            'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c]'
-                          }`}>
+                  reviewFormData.recommendation === 'proceed' ? 'bg-[#3d5a47] text-white hover:bg-[#3d5a47]' :
+                  reviewFormData.recommendation === 'reject' ? 'bg-foreground text-background hover:bg-foreground' :
+                  reviewFormData.recommendation === 'minor_revision' ? 'bg-[#c4940a] text-white hover:bg-[#c4940a]' :
+                  'bg-[#9b2c2c] text-white hover:bg-[#9b2c2c]'}`
+                  }>
                             {reviewFormData.recommendation.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                           </Badge>
                         </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                }
+                    </div>);
+
+          })()}
               </div>
             </div>
             <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
               <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
               {rightPanel}
             </div>
-          </div>
-        ) : showingSummary ? (
-          <PeerReviewSummary
-            proposal={proposal}
-            formData={summaryFormData}
-            onGoBack={() => setShowingSummary(false)}
-            onConfirmSubmit={async () => {
-              if (!summaryFormData.recommendation) {
-                toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
-                return;
-              }
-              setIsConfirming(true);
-              try {
-                await submitReviewApi({
-                  ...summaryFormData,
-                });
+          </div> :
+    showingSummary ?
+    <PeerReviewSummary
+      proposal={proposal}
+      formData={summaryFormData}
+      onGoBack={() => setShowingSummary(false)}
+      onConfirmSubmit={async () => {
+        if (!summaryFormData.recommendation) {
+          toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
+          return;
+        }
+        setIsConfirming(true);
+        try {
+          await submitReviewApi({
+            ...summaryFormData
+          });
 
-                queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
-                navigate('/proposals');
-              } catch (err) {
-                console.error('Submit failed:', err);
-              } finally {
-                setIsConfirming(false);
-              }
-            }}
-            isSubmitting={isConfirming}
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+          queryClient.invalidateQueries({ queryKey: ["proposals"] });
+          queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
+          navigate('/proposals');
+        } catch (err) {
+          console.error('Submit failed:', err);
+        } finally {
+          setIsConfirming(false);
+        }
+      }}
+      isSubmitting={isConfirming} /> :
+
+
+    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
             <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
-            <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }} onDraftSaved={() => {
-                if (statusIs(proposal.status, "pending", "new", "submitted")) {
-                  // Status transitions managed by backend
-                }
-              }} />
+            <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}} onDraftSaved={() => {
+          if (statusIs(proposal.status, "pending", "new", "submitted")) {
+
+
+
+            // Status transitions managed by backend
+          }}} />
             </div>
             <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
               <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
               {rightPanel}
             </div>
-          </div>
-        )
-      ) : hasSubmittedReview ? (
-        (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) ? (
-          <div>{rightPanel}</div>
-        ) : showingSummary ? (
-          <PeerReviewSummary
-            proposal={proposal}
-            formData={summaryFormData}
-            onGoBack={() => setShowingSummary(false)}
-            showContractSection
-            onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle) => {
-              if (!summaryFormData.recommendation) {
-                toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
-                return;
-              }
-              setIsConfirming(true);
-              try {
-                const formToApiMap: Record<string, string> = {
-                  scope: 'scope',
-                  purposeAndValue: 'purpose_value',
-                  title: 'title',
-                  originality: 'originality',
-                  credibility: 'credibility',
-                  structure: 'structure',
-                  clarity: 'clarity_quality',
-                  otherComments: 'other_comments',
-                  redFlags: 'red_flags',
-                  recommendation: 'recommendation',
-                };
-                const apiPayload: Record<string, any> = {};
-                for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
-                  if (summaryFormData[formKey] !== undefined && summaryFormData[formKey] !== '') {
-                    apiPayload[apiKey] = summaryFormData[formKey];
-                  }
-                }
-                // Step 1: Submit the review (without contract fields)
-                await submitReviewApi(apiPayload);
+          </div> : hasSubmittedReview ?
+    decisionReviewerSubmitted || decisionReviewerAlreadySubmitted ?
+    <div>{rightPanel}</div> :
+    showingSummary ?
+    <PeerReviewSummary
+      proposal={proposal}
+      formData={summaryFormData}
+      onGoBack={() => setShowingSummary(false)}
+      showContractSection
+      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle) => {
+        if (!summaryFormData.recommendation) {
+          toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
+          return;
+        }
+        setIsConfirming(true);
+        try {
+          const formToApiMap: Record<string, string> = {
+            scope: 'scope',
+            purposeAndValue: 'purpose_value',
+            title: 'title',
+            originality: 'originality',
+            credibility: 'credibility',
+            structure: 'structure',
+            clarity: 'clarity_quality',
+            otherComments: 'other_comments',
+            redFlags: 'red_flags',
+            recommendation: 'recommendation'
+          };
+          const apiPayload: Record<string, any> = {};
+          for (const [formKey, apiKey] of Object.entries(formToApiMap)) {
+            if (summaryFormData[formKey] !== undefined && summaryFormData[formKey] !== '') {
+              apiPayload[apiKey] = summaryFormData[formKey];
+            }
+          }
+          // Step 1: Submit the review (without contract fields)
+          await submitReviewApi(apiPayload);
 
-                // Step 2: If contract should be sent, call separate contract/send API
-                if (sendContract) {
-                  try {
-                    await proposalApi.sendContract(ticketNum, {
-                      contract_type: contractType || 'author',
-                      title: contractTitle || proposal?.name || '',
-                      subtitle: contractSubtitle || proposal?.sub_title || '',
-                    });
-                    toast({
-                      title: 'Contract Sent',
-                      description: 'The contract has been sent to the author.',
-                    });
-                  } catch (contractErr: any) {
-                    console.error('Contract send failed:', contractErr);
-                    toast({
-                      variant: 'destructive',
-                      title: 'Contract Send Failed',
-                      description: contractErr?.response?.data?.error || contractErr.message || 'Failed to send contract. Please try again.',
-                    });
-                  }
-                }
+          // Step 2: If contract should be sent, call separate contract/send API
+          if (sendContract) {
+            try {
+              await proposalApi.sendContract(ticketNum, {
+                contract_type: contractType || 'author',
+                title: contractTitle || proposal?.name || '',
+                subtitle: contractSubtitle || proposal?.sub_title || ''
+              });
+              toast({
+                title: 'Contract Sent',
+                description: 'The contract has been sent to the author.'
+              });
+            } catch (contractErr: any) {
+              console.error('Contract send failed:', contractErr);
+              toast({
+                variant: 'destructive',
+                title: 'Contract Send Failed',
+                description: contractErr?.response?.data?.error || contractErr.message || 'Failed to send contract. Please try again.'
+              });
+            }
+          }
 
-                queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
-                queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
-                queryClient.invalidateQueries({ queryKey: ["contract", ticketNum] });
-                setDecisionReviewerSubmitted(true);
-                setShowingSummary(false);
-              } catch (err) {
-                console.error('Submit failed:', err);
-              } finally {
-                setIsConfirming(false);
-              }
-            }}
-            isSubmitting={isConfirming}
-          />
-        ) : (
-        <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
+          queryClient.invalidateQueries({ queryKey: ["proposals"] });
+          queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
+          queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
+          queryClient.invalidateQueries({ queryKey: ["contract", ticketNum] });
+          setDecisionReviewerSubmitted(true);
+          setShowingSummary(false);
+        } catch (err) {
+          console.error('Submit failed:', err);
+        } finally {
+          setIsConfirming(false);
+        }
+      }}
+      isSubmitting={isConfirming} /> :
+
+
+    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
             {/* Start Fresh button + info banner for decision reviewer */}
             <div className="space-y-4 mb-6">
@@ -1400,14 +1400,14 @@ const ProposalDetails: React.FC = () => {
 
               <div className="flex justify-end gap-2">
                 <Button
-                  variant="outline"
-                  className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
-                  onClick={() => {
-                    // Snapshot saved form data when opening diff checker
-                    setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
-                    setDiffCheckerOpen(true);
-                  }}
-                >
+              variant="outline"
+              className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
+              onClick={() => {
+                // Snapshot saved form data when opening diff checker
+                setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
+                setDiffCheckerOpen(true);
+              }}>
+              
                   <GitCompareArrows className="h-4 w-4 mr-2" />
                   Diff Checker
                 </Button>
@@ -1429,39 +1429,39 @@ const ProposalDetails: React.FC = () => {
             </div>
 
             <PeerReviewCommentsForm
-              ref={reviewFormRef}
-              proposal={proposal}
-              existingAssessment={decisionReviewerDraft || reviewFormData || {}}
-              forceEditable
-              hideHeader
-              preloadedStyle={!decisionReviewerDraft}
-              onSave={() => refetch()}
-              onSubmitReview={(data) => { setSummaryFormData(data); setShowingSummary(true); }}
-              onDraftSaved={() => {}}
-            />
+          ref={reviewFormRef}
+          proposal={proposal}
+          existingAssessment={decisionReviewerDraft || reviewFormData || {}}
+          forceEditable
+          hideHeader
+          preloadedStyle={!decisionReviewerDraft}
+          onSave={() => refetch()}
+          onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
+          onDraftSaved={() => {}} />
+        
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
             <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
-        </div>
-        )
-      ) : <div>{rightPanel}</div>}
+        </div> :
+
+    <div>{rightPanel}</div>}
 
       {/* Dialogs */}
-      <DocumentPreviewDialog open={!!documentPreview} onOpenChange={o => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
+      <DocumentPreviewDialog open={!!documentPreview} onOpenChange={(o) => !o && setDocumentPreview(null)} documentUrl={documentPreview?.url || ""} fileName={documentPreview?.name || ""} fileType={documentPreview?.type || "pdf"} />
 
       <ContractPdfViewerDialog
-        open={contractViewOpen}
-        onOpenChange={(open) => {
-          setContractViewOpen(open);
-          if (!open) setContractPdfUrl(null);
-        }}
-        documentDataUrl={contractPdfUrl}
-        isLoading={contractPdfLoading}
-        downloadUrl={contractPdfUrl || undefined}
-        downloadFileName={`${ticketNum || "contract"}.pdf`}
-      />
+      open={contractViewOpen}
+      onOpenChange={(open) => {
+        setContractViewOpen(open);
+        if (!open) setContractPdfUrl(null);
+      }}
+      documentDataUrl={contractPdfUrl}
+      isLoading={contractPdfLoading}
+      downloadUrl={contractPdfUrl || undefined}
+      downloadFileName={`${ticketNum || "contract"}.pdf`} />
+    
 
 
       <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
@@ -1492,24 +1492,24 @@ const ProposalDetails: React.FC = () => {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLocking}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              disabled={isLocking}
-              onClick={async (e) => {
-                e.preventDefault();
-                setIsLocking(true);
-                try {
-                  const ticketNum = proposal.ticket_number || id;
-                  await lockProposalApi.lock(ticketNum!);
-                  queryClient.invalidateQueries({ queryKey: ["proposals"] });
-                  queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
-                  toast({ title: "Proposal Locked", description: "Production files have been generated and the proposal is now locked." });
-                  setLockConfirmOpen(false);
-                } catch (error: any) {
-                  toast({ variant: "destructive", title: "Failed to Lock", description: error?.message || "An error occurred while locking the proposal." });
-                } finally {
-                  setIsLocking(false);
-                }
-              }}
-            >
+            disabled={isLocking}
+            onClick={async (e) => {
+              e.preventDefault();
+              setIsLocking(true);
+              try {
+                const ticketNum = proposal.ticket_number || id;
+                await lockProposalApi.lock(ticketNum!);
+                queryClient.invalidateQueries({ queryKey: ["proposals"] });
+                queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
+                toast({ title: "Proposal Locked", description: "Production files have been generated and the proposal is now locked." });
+                setLockConfirmOpen(false);
+              } catch (error: any) {
+                toast({ variant: "destructive", title: "Failed to Lock", description: error?.message || "An error occurred while locking the proposal." });
+              } finally {
+                setIsLocking(false);
+              }
+            }}>
+            
               {isLocking && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Lock Proposal
             </AlertDialogAction>
@@ -1518,26 +1518,26 @@ const ProposalDetails: React.FC = () => {
       </AlertDialog>
 
       <DiffCheckerDialog
-        open={diffCheckerOpen}
-        onOpenChange={setDiffCheckerOpen}
-        peerReviewData={reviewFormData || {}}
-        decisionReviewData={diffCheckerDrData}
-        peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
-        onDecisionFieldChange={(field, value) => {
+      open={diffCheckerOpen}
+      onOpenChange={setDiffCheckerOpen}
+      peerReviewData={reviewFormData || {}}
+      decisionReviewData={diffCheckerDrData}
+      peerReviewerName={reviewMeta?.reviewer_name || "Peer Reviewer"}
+      onDecisionFieldChange={(field, value) => {
+        reviewFormRef.current?.setFieldValue(field, value);
+      }}
+      onSaveDraft={async (localData) => {
+        // Push all local edits to form first
+        Object.entries(localData).forEach(([field, value]) => {
           reviewFormRef.current?.setFieldValue(field, value);
-        }}
-        onSaveDraft={async (localData) => {
-          // Push all local edits to form first
-          Object.entries(localData).forEach(([field, value]) => {
-            reviewFormRef.current?.setFieldValue(field, value);
-          });
-          // Wait for React state to flush before saving
-          await new Promise(resolve => setTimeout(resolve, 50));
-          await reviewFormRef.current?.saveDraft();
-          // Update snapshot so diff checker reflects saved state
-          setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
-        }}
-      />
+        });
+        // Wait for React state to flush before saving
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        await reviewFormRef.current?.saveDraft();
+        // Update snapshot so diff checker reflects saved state
+        setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
+      }} />
+    
 
       <AlertDialog open={isRevertDialogOpen} onOpenChange={setIsRevertDialogOpen}>
         <AlertDialogContent>
@@ -1559,11 +1559,11 @@ const ProposalDetails: React.FC = () => {
 
       {/* Resend Contract Dialog (after query response) */}
       <Dialog open={resendContractOpen} onOpenChange={(open) => {
-        if (!open) {
-          setResendContractOpen(false);
-          setPendingQueryResponse(null); // Discard pending response on close
-        }
-      }}>
+      if (!open) {
+        setResendContractOpen(false);
+        setPendingQueryResponse(null); // Discard pending response on close
+      }
+    }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Send Response</DialogTitle>
@@ -1574,14 +1574,14 @@ const ProposalDetails: React.FC = () => {
           <div className="space-y-4 py-2">
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="include-contract"
-                checked={includeContract}
-                onCheckedChange={(checked) => setIncludeContract(!!checked)}
-              />
+              id="include-contract"
+              checked={includeContract}
+              onCheckedChange={(checked) => setIncludeContract(!!checked)} />
+            
               <Label htmlFor="include-contract" className="cursor-pointer">Include new contract</Label>
             </div>
-            {includeContract && (
-              <>
+            {includeContract &&
+          <>
                 <div className="space-y-2">
                   <Label>Contract Type</Label>
                   <Select value={resendContractType} onValueChange={setResendContractType}>
@@ -1597,64 +1597,64 @@ const ProposalDetails: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="resend-contract-title">Title</Label>
                   <input
-                    id="resend-contract-title"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    value={resendContractTitle}
-                    onChange={(e) => setResendContractTitle(e.target.value)}
-                    placeholder="Enter title"
-                  />
+                id="resend-contract-title"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={resendContractTitle}
+                onChange={(e) => setResendContractTitle(e.target.value)}
+                placeholder="Enter title" />
+              
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
                   <input
-                    id="resend-contract-subtitle"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    value={resendContractSubtitle}
-                    onChange={(e) => setResendContractSubtitle(e.target.value)}
-                    placeholder="Enter subtitle (optional)"
-                  />
+                id="resend-contract-subtitle"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={resendContractSubtitle}
+                onChange={(e) => setResendContractSubtitle(e.target.value)}
+                placeholder="Enter subtitle (optional)" />
+              
                 </div>
               </>
-            )}
+          }
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setResendContractOpen(false); setPendingQueryResponse(null); }} disabled={isResendingContract}>
+            <Button variant="outline" onClick={() => {setResendContractOpen(false);setPendingQueryResponse(null);}} disabled={isResendingContract}>
               Cancel
             </Button>
             <Button
-              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-              disabled={isResendingContract || (includeContract && !resendContractTitle.trim())}
-              onClick={async () => {
-                setIsResendingContract(true);
-                try {
-                  // Send response first
-                  if (pendingQueryResponse) {
-                    await respondToQuery.mutateAsync(pendingQueryResponse);
-                  }
-                  // Then send contract if included
-                  if (includeContract) {
-                    await proposalApi.sendContract(ticketNum, {
-                      contract_type: resendContractType,
-                      title: resendContractTitle,
-                      subtitle: resendContractSubtitle,
-                    });
-                  }
-                  toast({ title: 'Sent Successfully', description: includeContract ? 'Response and contract have been sent to the author.' : 'Response has been sent to the author.' });
-                  queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
-                  queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
-                  queryClient.invalidateQueries({ queryKey: ['proposals'] });
-                  queryClient.invalidateQueries({ queryKey: ['contract-queries', ticketNum] });
-                  queryClient.invalidateQueries({ queryKey: ['metadata', ticketNum] });
-                } catch (err: any) {
-                  toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send.' });
-                } finally {
-                  setIsResendingContract(false);
-                  setResendContractOpen(false);
-                  setPendingQueryResponse(null);
-                  setIncludeContract(false);
+            className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+            disabled={isResendingContract || includeContract && !resendContractTitle.trim()}
+            onClick={async () => {
+              setIsResendingContract(true);
+              try {
+                // Send response first
+                if (pendingQueryResponse) {
+                  await respondToQuery.mutateAsync(pendingQueryResponse);
                 }
-              }}
-            >
+                // Then send contract if included
+                if (includeContract) {
+                  await proposalApi.sendContract(ticketNum, {
+                    contract_type: resendContractType,
+                    title: resendContractTitle,
+                    subtitle: resendContractSubtitle
+                  });
+                }
+                toast({ title: 'Sent Successfully', description: includeContract ? 'Response and contract have been sent to the author.' : 'Response has been sent to the author.' });
+                queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
+                queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
+                queryClient.invalidateQueries({ queryKey: ['proposals'] });
+                queryClient.invalidateQueries({ queryKey: ['contract-queries', ticketNum] });
+                queryClient.invalidateQueries({ queryKey: ['metadata', ticketNum] });
+              } catch (err: any) {
+                toast({ variant: 'destructive', title: 'Failed', description: err?.message || 'Failed to send.' });
+              } finally {
+                setIsResendingContract(false);
+                setResendContractOpen(false);
+                setPendingQueryResponse(null);
+                setIncludeContract(false);
+              }
+            }}>
+            
               {isResendingContract ? 'Sending...' : includeContract ? 'Send Response & Contract' : 'Send Response Only'}
             </Button>
           </DialogFooter>
