@@ -277,6 +277,12 @@ const ProposalDetails: React.FC = () => {
     if (drShouldShowFeedback) setDrActiveTab("feedback");
   }, [drShouldShowFeedback]);
 
+  // Default to metadata tab when metadata is available (contract signed)
+  const isContractSignedEarly = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
+  React.useEffect(() => {
+    if (isContractSignedEarly) setDrActiveTab("metadata");
+  }, [isContractSignedEarly]);
+
   /* ---------------- Loading / Error ---------------- */
 
   if (isLoading) {
