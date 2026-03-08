@@ -165,6 +165,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    // During HMR, context may temporarily be undefined — redirect to login
+    if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
