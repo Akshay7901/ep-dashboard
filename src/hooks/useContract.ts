@@ -55,7 +55,7 @@ export const useContract = (ticketNumber: string | undefined) => {
       contracts = [rawData as ContractDetails];
     }
   }
-  console.log('[useContract] raw:', rawData, '→ contracts:', contracts);
+  
   const latestContract = contracts[0] || null;
 
   return {
