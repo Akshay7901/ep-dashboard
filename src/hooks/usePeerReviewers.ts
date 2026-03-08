@@ -13,7 +13,6 @@ export const usePeerReviewers = () => {
     queryFn: async () => {
       const result = await peerReviewersApi.list();
       if (result && typeof result === 'object' && 'error' in result) {
-        console.warn('Peer reviewers API returned error:', result);
         return [];
       }
       return result;
