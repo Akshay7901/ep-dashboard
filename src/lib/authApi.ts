@@ -111,4 +111,25 @@ export const authApi = {
     }
     return data;
   },
+
+  /** Re-validate session by calling login with stored token. Returns fresh user data. */
+  validateSession: async (): Promise<{ user?: { id?: string; email?: string; name?: string; role?: string } } | null> => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return null;
+    try {
+      const { data } = await axios.get<{ user?: { id?: string; email?: string; name?: string; role?: string } }>(
+        `${API_BASE_URL}/api/proposals/auth/me`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 15000,
+        }
+      );
+      return data;
+    } catch {
+      return null;
+    }
+  },
 };
