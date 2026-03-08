@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading: true,
   });
 
-  // Initialize auth state from localStorage, then re-validate via API
+  // Initialize auth state from localStorage
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     const userStr = localStorage.getItem('user');
@@ -60,37 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: mapApiRole(parsedUser?.role),
         };
 
-        // Set initial state from localStorage for fast load
+        // Keep localStorage in sync with normalized role values
         localStorage.setItem('user', JSON.stringify(normalizedUser));
+
         setState({
           user: normalizedUser,
           profile: null,
           isAuthenticated: true,
           isLoading: false,
-        });
-
-        // Re-validate role from API to prevent localStorage tampering
-        authApi.validateSession().then((result) => {
-          if (!result) {
-            // Token is invalid — force logout
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
-            setState({ user: null, profile: null, isAuthenticated: false, isLoading: false });
-            return;
-          }
-          const apiUser = result.user || result;
-          const freshRole = mapApiRole((apiUser as any)?.role);
-          if (freshRole !== normalizedUser.role) {
-            // Role was tampered with in localStorage — correct it
-            const correctedUser: User = { ...normalizedUser, role: freshRole };
-            localStorage.setItem('user', JSON.stringify(correctedUser));
-            setState({
-              user: correctedUser,
-              profile: null,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          }
         });
       } catch {
         localStorage.removeItem('auth_token');

@@ -8,7 +8,9 @@ export const useReview = (ticketNumber: string | undefined) => {
   const reviewQuery = useQuery({
     queryKey: ['review', ticketNumber],
     queryFn: async () => {
+      console.log('[useReview] Fetching review for:', ticketNumber);
       const result = await reviewsApi.get(ticketNumber!);
+      console.log('[useReview] Response:', JSON.stringify(result)?.substring(0, 300));
       return result;
     },
     enabled: !!ticketNumber,

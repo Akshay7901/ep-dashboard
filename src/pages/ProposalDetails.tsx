@@ -337,7 +337,7 @@ const ProposalDetails: React.FC = () => {
     try {
       await unassignReviewers();
     } catch {
-      // Unassign not supported, relying on status change
+      console.log("DELETE unassign not supported, relying on status change");
     }
     setIsRevertDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ["reviewer-assignments"] });
