@@ -246,7 +246,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           }
         }
 
-        console.log('[PeerReviewForm] Sending payload:', JSON.stringify(reviewPayload));
+        
 
         if (submitForAuthorization) {
           // Use review/submit endpoint
