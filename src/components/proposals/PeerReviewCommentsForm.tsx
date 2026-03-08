@@ -151,7 +151,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
         credibility: "", structure: "", clarity: "", otherComments: "",
         redFlags: "", recommendation: "",
       };
-      console.log('[PeerReviewForm] existingAssessment changed:', JSON.stringify(existingAssessment)?.substring(0, 200));
+      
       if (existingAssessment && Object.keys(existingAssessment).length > 0) {
         // Map API field names to form field names (handle snake_case from API)
         const mapped: Record<string, string> = { ...defaultData };
@@ -246,7 +246,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           }
         }
 
-        console.log('[PeerReviewForm] Sending payload:', JSON.stringify(reviewPayload));
+        
 
         if (submitForAuthorization) {
           // Use review/submit endpoint
