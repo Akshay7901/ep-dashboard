@@ -255,7 +255,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
               className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
               onClick={() => {
                 if (pendingContractType) {
-                  setSelectedContract(pendingContractType);
+                  setSelectedContract(pendingContractType as "author" | "editor");
                 }
                 setPendingContractType(null);
                 setShowMismatchWarning(false);
