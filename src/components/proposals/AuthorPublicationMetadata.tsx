@@ -381,6 +381,10 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const handleUploadCoverImage = async () => {
     if (!coverImageFile) return;
+    if (!coverImageSource.trim()) {
+      toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information.", variant: "destructive" });
+      return;
+    }
     if (!coverImagePermission) {
       toast({ title: "Permission required", description: "Please confirm you hold the necessary rights for this image.", variant: "destructive" });
       return;
@@ -671,7 +675,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
                   <div className="space-y-1.5">
                     <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
-                      Image Source / Credit
+                      Image Source / Credit <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="cover-source"
@@ -698,7 +702,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                         size="sm"
                         className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
                         onClick={handleUploadCoverImage}
-                        disabled={uploadingCoverImage || !coverImagePermission}
+                        disabled={uploadingCoverImage || !coverImagePermission || !coverImageSource.trim()}
                       >
                         {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                         Save Cover Image
