@@ -73,7 +73,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
       isActive && "ring-2 ring-offset-2 ring-primary",
     )}
   >
-    {count} {label}
+    {label} [{count}]
   </button>
 );
 
