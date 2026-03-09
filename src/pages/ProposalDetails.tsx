@@ -174,6 +174,8 @@ const ProposalDetails: React.FC = () => {
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{queryId: number;responseText: string;} | null>(null);
+  const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
+  const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
 
   /* ---------------- Data ---------------- */
