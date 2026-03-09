@@ -702,7 +702,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                         size="sm"
                         className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
                         onClick={handleUploadCoverImage}
-                        disabled={uploadingCoverImage || !coverImagePermission}
+                        disabled={uploadingCoverImage || !coverImagePermission || !coverImageSource.trim()}
                       >
                         {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                         Save Cover Image
