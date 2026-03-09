@@ -823,11 +823,18 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
           {/* Finalise */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-            <Button
-              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-              onClick={() => setShowFinaliseConfirm(true)}
-              disabled={hasPendingQuery || finalising}
-            >
+             <Button
+               className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+               onClick={() => {
+                 // If there's a pending cover image file, require source/credit
+                 if (coverImageFile && !coverImageSource.trim()) {
+                   toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information before finalising.", variant: "destructive" });
+                   return;
+                 }
+                 setShowFinaliseConfirm(true);
+               }}
+               disabled={hasPendingQuery || finalising}
+             >
               Finalise &amp; Lock Metadata
             </Button>
             {hasPendingQuery && (
