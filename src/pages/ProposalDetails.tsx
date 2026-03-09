@@ -1307,7 +1307,7 @@ const ProposalDetails: React.FC = () => {
 
 
     <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+            <div className="pl-6 pr-6 overflow-y-auto h-full scrollbar-thin">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}} onDraftSaved={() => {
           if (statusIs(proposal.status, "pending", "new", "submitted")) {
 
