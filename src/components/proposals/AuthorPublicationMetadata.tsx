@@ -856,7 +856,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   disabled={finalising}
                 >
                   {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Finalise Proposal
+                  Finalise Metadata
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
