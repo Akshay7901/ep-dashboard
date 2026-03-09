@@ -947,7 +947,7 @@ const ProposalDetails: React.FC = () => {
                       setPendingQueryResponse({ queryId: queryId!, responseText: text });
                       setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
                       setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
-                      setResendContractType(latestContract?.contract_type || 'author');
+                      setResendContractType(latestContract?.contract_type || getDefaultContractType(proposal?.book_type));
                       setResendContractOpen(true);
                     }}
                     isSending={respondToQuery.isPending} />
