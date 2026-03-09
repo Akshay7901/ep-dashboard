@@ -381,6 +381,10 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const handleUploadCoverImage = async () => {
     if (!coverImageFile) return;
+    if (!coverImageSource.trim()) {
+      toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information.", variant: "destructive" });
+      return;
+    }
     if (!coverImagePermission) {
       toast({ title: "Permission required", description: "Please confirm you hold the necessary rights for this image.", variant: "destructive" });
       return;
