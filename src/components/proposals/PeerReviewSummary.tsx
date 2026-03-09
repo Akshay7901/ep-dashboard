@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Proposal } from "@/types";
+import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 
 const REVIEW_FIELDS = [
   { key: "scope", label: "Scope" },
@@ -45,12 +47,30 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
 }) => {
   const recommendation = formData.recommendation;
   const isReject = recommendation === "reject";
-  // For proceed/minor/major revision, contract is mandatory; for reject, no contract
   const contractRequired = showContractSection && !isReject;
-  const [selectedContract, setSelectedContract] = useState("author");
+
+  const defaultContract = getDefaultContractType(proposal.book_type);
+  const [selectedContract, setSelectedContract] = useState(defaultContract);
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [contractTitle, setContractTitle] = useState(proposal?.name || "");
   const [contractSubtitle, setContractSubtitle] = useState(proposal?.sub_title || "");
+  const [showMismatchWarning, setShowMismatchWarning] = useState(false);
+  const [pendingContractType, setPendingContractType] = useState<string | null>(null);
+
+  // Reset default when proposal changes
+  useEffect(() => {
+    setSelectedContract(getDefaultContractType(proposal.book_type));
+  }, [proposal.book_type]);
+
+  const handleContractTypeChange = (value: string) => {
+    const warning = getContractMismatchWarning(proposal.book_type, value);
+    if (warning) {
+      setPendingContractType(value);
+      setShowMismatchWarning(true);
+    } else {
+      setSelectedContract(value as "author" | "editor");
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
@@ -121,8 +141,13 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium mb-2">Select Contract Type</p>
-                <Select value={selectedContract} onValueChange={setSelectedContract}>
+                <p className="text-sm font-medium mb-1">Select Contract Type</p>
+                {proposal.book_type && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Auto-selected based on book type: <span className="font-medium">{proposal.book_type}</span>
+                  </p>
+                )}
+                <Select value={selectedContract} onValueChange={handleContractTypeChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a contract" />
                   </SelectTrigger>
@@ -146,7 +171,6 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
             if (contractRequired) {
-              // Open dialog to confirm title/subtitle before sending contract
               setContractTitle(proposal?.name || "");
               setContractSubtitle(proposal?.sub_title || "");
               setShowContractDialog(true);
@@ -210,6 +234,38 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mismatch Warning Dialog */}
+      <AlertDialog open={showMismatchWarning} onOpenChange={setShowMismatchWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract Type Mismatch</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getContractMismatchWarning(proposal.book_type, pendingContractType || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setPendingContractType(null);
+              setShowMismatchWarning(false);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              onClick={() => {
+                if (pendingContractType) {
+                  setSelectedContract(pendingContractType as "author" | "editor");
+                }
+                setPendingContractType(null);
+                setShowMismatchWarning(false);
+              }}
+            >
+              Proceed Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

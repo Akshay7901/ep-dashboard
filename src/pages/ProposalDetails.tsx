@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
 import { proposalApi, contractApi, metadataApi, lockProposalApi } from "@/lib/proposalsApi";
+import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
 import { Separator } from "@/components/ui/separator";
@@ -173,6 +174,8 @@ const ProposalDetails: React.FC = () => {
   const [resendContractSubtitle, setResendContractSubtitle] = useState("");
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{queryId: number;responseText: string;} | null>(null);
+  const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
+  const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
 
   /* ---------------- Data ---------------- */
@@ -944,7 +947,7 @@ const ProposalDetails: React.FC = () => {
                       setPendingQueryResponse({ queryId: queryId!, responseText: text });
                       setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
                       setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
-                      setResendContractType(latestContract?.contract_type || 'author');
+                      setResendContractType(latestContract?.contract_type || getDefaultContractType(proposal?.book_type));
                       setResendContractOpen(true);
                     }}
                     isSending={respondToQuery.isPending} />
@@ -1590,7 +1593,15 @@ const ProposalDetails: React.FC = () => {
           <>
                 <div className="space-y-2">
                   <Label>Contract Type</Label>
-                  <Select value={resendContractType} onValueChange={setResendContractType}>
+                  <Select value={resendContractType} onValueChange={(value) => {
+                    const warning = getContractMismatchWarning(proposal?.book_type, value);
+                    if (warning) {
+                      setPendingResendContractType(value);
+                      setShowResendMismatchWarning(true);
+                    } else {
+                      setResendContractType(value);
+                    }
+                  }}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select contract type" />
                     </SelectTrigger>
@@ -1599,6 +1610,11 @@ const ProposalDetails: React.FC = () => {
                       <SelectItem value="editor">Editor Contract</SelectItem>
                     </SelectContent>
                   </Select>
+                  {proposal?.book_type && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Auto-selected based on book type: <span className="font-medium">{proposal.book_type}</span>
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="resend-contract-title">Title</Label>
@@ -1666,6 +1682,38 @@ const ProposalDetails: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Resend Contract Mismatch Warning */}
+      <AlertDialog open={showResendMismatchWarning} onOpenChange={setShowResendMismatchWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract Type Mismatch</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getContractMismatchWarning(proposal?.book_type, pendingResendContractType || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setPendingResendContractType(null);
+              setShowResendMismatchWarning(false);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              onClick={() => {
+                if (pendingResendContractType) {
+                  setResendContractType(pendingResendContractType);
+                }
+                setPendingResendContractType(null);
+                setShowResendMismatchWarning(false);
+              }}
+            >
+              Proceed Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>;
 };
 export default ProposalDetails;
