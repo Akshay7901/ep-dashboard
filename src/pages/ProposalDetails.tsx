@@ -1593,7 +1593,15 @@ const ProposalDetails: React.FC = () => {
           <>
                 <div className="space-y-2">
                   <Label>Contract Type</Label>
-                  <Select value={resendContractType} onValueChange={setResendContractType}>
+                  <Select value={resendContractType} onValueChange={(value) => {
+                    const warning = getContractMismatchWarning(proposal?.book_type, value);
+                    if (warning) {
+                      setPendingResendContractType(value);
+                      setShowResendMismatchWarning(true);
+                    } else {
+                      setResendContractType(value);
+                    }
+                  }}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select contract type" />
                     </SelectTrigger>
@@ -1602,6 +1610,11 @@ const ProposalDetails: React.FC = () => {
                       <SelectItem value="editor">Editor Contract</SelectItem>
                     </SelectContent>
                   </Select>
+                  {proposal?.book_type && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Auto-selected based on book type: <span className="font-medium">{proposal.book_type}</span>
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="resend-contract-title">Title</Label>
