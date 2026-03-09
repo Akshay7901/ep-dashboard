@@ -504,6 +504,9 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
                 <p><span className="font-medium text-foreground">DPI:</span> {metadataResponse.cover_image.dpi}</p>
                 <p><span className="font-medium text-foreground">Size:</span> {(metadataResponse.cover_image.file_size_bytes / (1024 * 1024)).toFixed(2)} MB</p>
                 <p><span className="font-medium text-foreground">Uploaded:</span> {new Date(metadataResponse.cover_image.uploaded_at).toLocaleDateString()}</p>
+                {metadataResponse.cover_image.source && (
+                  <p><span className="font-medium text-foreground">Image Source / Credit:</span> {metadataResponse.cover_image.source}</p>
+                )}
               </div>
             </div>
           ) : (
