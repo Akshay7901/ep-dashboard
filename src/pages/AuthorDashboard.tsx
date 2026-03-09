@@ -104,13 +104,15 @@ const AuthorDashboard: React.FC = () => {
             {Object.entries(statusSummary).map(([key, count]) => {
               if (key === "total") return null;
               const chipColorMap: Record<string, string> = {
-                submitted: "bg-[#6b7280] text-white border-[#6b7280]",
-                editorial_review: "bg-[#3d5a47] text-white border-[#3d5a47]",
-                peer_review: "bg-[#3d5a47] text-white border-[#3d5a47]",
-                feedback_and_agreement_pending: "bg-[#c05621] text-white border-[#c05621]",
-                final_review_and_confirmation: "bg-[#45556c] text-white border-[#45556c]",
-                confirmed_and_finalised: "bg-[#276749] text-white border-[#276749]",
-                declined: "bg-[#1d293d] text-white border-[#1d293d]",
+                submitted: "bg-[#3B82F6] text-white border-[#3B82F6]",
+                editorial_review: "bg-[#7C3AED] text-white border-[#7C3AED]",
+                peer_review: "bg-[#7C3AED] text-white border-[#7C3AED]",
+                in_review: "bg-[#7C3AED] text-white border-[#7C3AED]",
+                feedback_and_agreement_pending: "bg-[#0D9488] text-white border-[#0D9488]",
+                feedback_and_contract_issued: "bg-[#0D9488] text-white border-[#0D9488]",
+                final_review_and_confirmation: "bg-[#F59E0B] text-white border-[#F59E0B]",
+                confirmed_and_finalised: "bg-[#16A34A] text-white border-[#16A34A]",
+                declined: "bg-[#DC2626] text-white border-[#DC2626]",
               };
               const colorClass = chipColorMap[key] || "bg-gray-500 text-white border-gray-500";
               const label = key.replace(/_/g, ' ').replace(/\band\b/g, '&').replace(/\b\w/g, (c) => c.toUpperCase());
