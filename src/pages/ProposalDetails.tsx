@@ -1682,6 +1682,38 @@ const ProposalDetails: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Resend Contract Mismatch Warning */}
+      <AlertDialog open={showResendMismatchWarning} onOpenChange={setShowResendMismatchWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contract Type Mismatch</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getContractMismatchWarning(proposal?.book_type, pendingResendContractType || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setPendingResendContractType(null);
+              setShowResendMismatchWarning(false);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              onClick={() => {
+                if (pendingResendContractType) {
+                  setResendContractType(pendingResendContractType);
+                }
+                setPendingResendContractType(null);
+                setShowResendMismatchWarning(false);
+              }}
+            >
+              Proceed Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>;
 };
 export default ProposalDetails;
