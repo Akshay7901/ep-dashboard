@@ -31,19 +31,19 @@ const ITEMS_PER_PAGE = 10;
 
 const statusChipColorMap: Record<string, { colorClass: string }> = {
   total: { colorClass: "bg-[#2d3748] text-white border-[#2d3748]" },
-  new: { colorClass: "bg-[#3d5a47] text-white border-[#3d5a47]" },
-  in_review: { colorClass: "bg-[#45556c] text-white border-[#45556c]" },
-  review_returned: { colorClass: "bg-[#c05621] text-white border-[#c05621]" },
-  contract_issued: { colorClass: "bg-[#1d293d] text-white border-[#1d293d]" },
-  queries_raised: { colorClass: "bg-[#6b7280] text-white border-[#6b7280]" },
-  awaiting_author_approval: { colorClass: "bg-[#45556c] text-white border-[#45556c]" },
-  author_approved: { colorClass: "bg-[#276749] text-white border-[#276749]" },
-  locked: { colorClass: "bg-gray-600 text-white border-gray-600" },
-  declined: { colorClass: "bg-[#9b2c2c] text-white border-[#9b2c2c]" },
+  new: { colorClass: "bg-[#3B82F6] text-white border-[#3B82F6]" },
+  in_review: { colorClass: "bg-[#7C3AED] text-white border-[#7C3AED]" },
+  review_returned: { colorClass: "bg-[#F59E0B] text-white border-[#F59E0B]" },
+  contract_issued: { colorClass: "bg-[#0D9488] text-white border-[#0D9488]" },
+  queries_raised: { colorClass: "bg-[#EA580C] text-white border-[#EA580C]" },
+  awaiting_author_approval: { colorClass: "bg-[#BE185D] text-white border-[#BE185D]" },
+  author_approved: { colorClass: "bg-[#16A34A] text-white border-[#16A34A]" },
+  locked: { colorClass: "bg-[#94A3B8] text-white border-[#94A3B8]" },
+  declined: { colorClass: "bg-[#DC2626] text-white border-[#DC2626]" },
   assigned: { colorClass: "bg-[#e5e7eb] text-gray-800 border-[#e5e7eb]" },
-  in_progress: { colorClass: "bg-[#f2a627] text-white border-[#f2a627]" },
-  completed: { colorClass: "bg-[#93a316] text-white border-[#93a316]" },
-  pending: { colorClass: "bg-[#7a2626] text-white border-[#7a2626]" },
+  in_progress: { colorClass: "bg-[#F59E0B] text-white border-[#F59E0B]" },
+  completed: { colorClass: "bg-[#16A34A] text-white border-[#16A34A]" },
+  pending: { colorClass: "bg-[#EA580C] text-white border-[#EA580C]" },
 };
 
 // Convert API key to display label: replace underscores with spaces, capitalise each word
