@@ -187,6 +187,7 @@ export interface CoverImageData {
   dpi: number;
   version: number;
   uploaded_at: string;
+  source?: string;
 }
 
 export interface MetadataResponse {
