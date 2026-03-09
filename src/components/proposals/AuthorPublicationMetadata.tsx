@@ -675,7 +675,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
                   <div className="space-y-1.5">
                     <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
-                      Image Source / Credit
+                      Image Source / Credit <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="cover-source"
