@@ -68,7 +68,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
       setPendingContractType(value);
       setShowMismatchWarning(true);
     } else {
-      setSelectedContract(value);
+      setSelectedContract(value as "author" | "editor");
     }
   };
 
