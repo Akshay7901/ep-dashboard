@@ -312,8 +312,7 @@ const AuthorProposalDetails: React.FC = () => {
               reviews={reviews}
               latestContract={latestContract}
               queries={contractQueries}
-              timeline={apiTimeline}
-              proposalStatus={proposal.status}
+              metadataQueries={metadataQueries}
             />
             <div className="text-right text-sm text-muted-foreground">
               {proposal.ticket_number &&
