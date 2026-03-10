@@ -1,17 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
-import { Bell, FileText, MessageSquare, ClipboardCheck, Send, CheckCircle2, AlertCircle, FileSignature } from "lucide-react";
+import { Bell, FileText, MessageSquare, ClipboardCheck, Send, AlertCircle, FileSignature, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { normalizeStatus } from "@/lib/statusUtils";
-
-interface TimelineStage {
-  stage_name: string;
-  display_name: string;
-  completed_at?: string | null;
-  started_at?: string | null;
-  is_current: boolean;
-  is_completed: boolean;
-}
 
 interface NotificationItem {
   id: string;
@@ -19,64 +9,39 @@ interface NotificationItem {
   title: string;
   description: string;
   timestamp: string;
-  category: "review" | "contract" | "query" | "status";
+  category: "review" | "contract" | "query" | "metadata";
 }
 
 interface AuthorNotificationsPanelProps {
   reviews: any[];
   latestContract: any;
   queries: any[];
-  timeline: TimelineStage[];
-  proposalStatus: string;
+  metadataQueries?: any[];
 }
 
 const categoryColors: Record<string, string> = {
   review: "bg-blue-500/10 text-blue-600",
   contract: "bg-emerald-500/10 text-emerald-600",
   query: "bg-amber-500/10 text-amber-600",
-  status: "bg-purple-500/10 text-purple-600",
+  metadata: "bg-violet-500/10 text-violet-600",
 };
 
 const categoryLabels: Record<string, string> = {
   review: "Review",
   contract: "Contract",
   query: "Query",
-  status: "Status",
+  metadata: "Metadata",
 };
 
 function buildNotifications({
   reviews,
   latestContract,
   queries,
-  timeline,
-  proposalStatus,
+  metadataQueries = [],
 }: AuthorNotificationsPanelProps): NotificationItem[] {
   const items: NotificationItem[] = [];
 
-  // 1. Timeline / status stage completions
-  timeline.forEach((stage) => {
-    if (stage.is_completed && (stage.completed_at || stage.started_at)) {
-      items.push({
-        id: `stage-${stage.stage_name}`,
-        icon: <CheckCircle2 className="h-4 w-4" />,
-        title: stage.display_name,
-        description: `This stage has been completed.`,
-        timestamp: stage.completed_at || stage.started_at || "",
-        category: "status",
-      });
-    } else if (stage.is_current && stage.started_at) {
-      items.push({
-        id: `stage-current-${stage.stage_name}`,
-        icon: <AlertCircle className="h-4 w-4" />,
-        title: stage.display_name,
-        description: `This stage is currently in progress.`,
-        timestamp: stage.started_at,
-        category: "status",
-      });
-    }
-  });
-
-  // 2. Review submissions
+  // 1. Review submissions
   reviews.forEach((r: any, idx: number) => {
     if (r.status === "submitted" || r.is_submitted) {
       const role = r.reviewer_role === "peer_reviewer" ? "Peer Reviewer" : "Decision Reviewer";
@@ -91,7 +56,7 @@ function buildNotifications({
     }
   });
 
-  // 3. Contract events
+  // 2. Contract events
   if (latestContract) {
     if (latestContract.docusign_sent_at) {
       items.push({
@@ -135,7 +100,7 @@ function buildNotifications({
     }
   }
 
-  // 4. Query responses (only responses from editors)
+  // 3. Contract query responses
   queries.forEach((q: any) => {
     if (q.responses && q.responses.length > 0) {
       q.responses.forEach((resp: any, rIdx: number) => {
@@ -149,7 +114,6 @@ function buildNotifications({
         });
       });
     }
-    // Also show the query itself
     if (q.query_text) {
       items.push({
         id: `query-${q.id}`,
@@ -162,7 +126,30 @@ function buildNotifications({
     }
   });
 
-  // Sort by timestamp descending (newest first)
+  // 4. Metadata queries & responses
+  metadataQueries.forEach((mq: any) => {
+    if (mq.type === "response") {
+      items.push({
+        id: `meta-resp-${mq.id}`,
+        icon: <BookOpen className="h-4 w-4" />,
+        title: "Metadata Response Received",
+        description: mq.query_text?.slice(0, 100) || "The reviewer has responded to your metadata request.",
+        timestamp: mq.created_at || "",
+        category: "metadata",
+      });
+    } else if (mq.type === "query") {
+      items.push({
+        id: `meta-query-${mq.id}`,
+        icon: <BookOpen className="h-4 w-4" />,
+        title: "Metadata Change Requested",
+        description: mq.query_text?.slice(0, 100) || "A metadata change request has been submitted.",
+        timestamp: mq.created_at || "",
+        category: "metadata",
+      });
+    }
+  });
+
+  // Sort newest first
   items.sort((a, b) => {
     if (!a.timestamp) return 1;
     if (!b.timestamp) return -1;
@@ -208,15 +195,15 @@ const AuthorNotificationsPanel: React.FC<AuthorNotificationsPanelProps> = (props
       {open && (
         <div className="absolute right-0 top-full mt-2 w-[380px] max-h-[460px] overflow-y-auto rounded-lg border bg-background shadow-lg z-50">
           <div className="px-4 py-3 border-b">
-            <h3 className="text-sm font-semibold text-foreground">Activity & Notifications</h3>
+            <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              All updates for this proposal
+              Review, contract & metadata updates
             </p>
           </div>
 
           {notifications.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              No activity yet
+              No notifications yet
             </div>
           ) : (
             <div className="divide-y">
