@@ -160,7 +160,7 @@ const ProposalDetails: React.FC = () => {
   const [startedFresh, setStartedFresh] = useState(false);
   const [eventsSheetOpen, setEventsSheetOpen] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
-  const [drActiveTab, setDrActiveTab] = useState<string>(false ? "feedback" : "book");
+  const [drActiveTab, setDrActiveTab] = useState<string>("book");
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
