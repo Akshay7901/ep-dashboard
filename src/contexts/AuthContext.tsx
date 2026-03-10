@@ -119,6 +119,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [loginWithToken]);
 
   const logout = useCallback(async () => {
+    // Call API to clear server-side session marker
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://api.ethicspress.com'}/api/proposals/auth/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        });
+      }
+    } catch {
+      // Proceed with local cleanup even if API call fails
+    }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     setState({
