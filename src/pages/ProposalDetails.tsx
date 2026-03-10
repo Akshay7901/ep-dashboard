@@ -160,7 +160,7 @@ const ProposalDetails: React.FC = () => {
   const [startedFresh, setStartedFresh] = useState(false);
   const [eventsSheetOpen, setEventsSheetOpen] = useState(false);
   const [decisionReviewerSubmitted, setDecisionReviewerSubmitted] = useState(false);
-  const [drActiveTab, setDrActiveTab] = useState<string>(false ? "feedback" : "book");
+  const [drActiveTab, setDrActiveTab] = useState<string>("book");
   const [drFeedbackAccordion, setDrFeedbackAccordion] = useState<string | undefined>(undefined);
   const [diffCheckerOpen, setDiffCheckerOpen] = useState(false);
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
@@ -276,15 +276,17 @@ const ProposalDetails: React.FC = () => {
   statusIs(proposal.status, "contract_issued", "approved", "locked") ||
   (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
 
-  React.useEffect(() => {
-    if (drShouldShowFeedback) setDrActiveTab("feedback");
-  }, [drShouldShowFeedback]);
-
   // Default to metadata tab when metadata is available (contract signed)
   const isContractSignedEarly = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
+
+  // Priority: metadata (if contract signed) > feedback (if available) > book
   React.useEffect(() => {
-    if (isContractSignedEarly) setDrActiveTab("metadata");
-  }, [isContractSignedEarly]);
+    if (isContractSignedEarly) {
+      setDrActiveTab("metadata");
+    } else if (drShouldShowFeedback) {
+      setDrActiveTab("feedback");
+    }
+  }, [isContractSignedEarly, drShouldShowFeedback]);
 
   /* ---------------- Loading / Error ---------------- */
 
