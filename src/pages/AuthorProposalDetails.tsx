@@ -239,6 +239,11 @@ const AuthorProposalDetails: React.FC = () => {
   useEffect(() => {
     if (isContractSigned) {
       setActiveTab("metadata");
+      // Contract is signed — review content is past stage, dismiss notification
+      if (id) {
+        seenReviewSignatures.set(id, reviewNotificationSignature);
+        setHasSeenReview(true);
+      }
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
