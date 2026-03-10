@@ -232,6 +232,19 @@ const AuthorProposalDetails: React.FC = () => {
     }
   };
 
+  const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
+  const hasReviewContent = reviews.some((r: any) => r.status === 'submitted') || (latestContract && latestContract.docusign_status);
+
+  // Default tab priority: metadata (if contract signed) > review (if available) > proposal
+  useEffect(() => {
+    if (isContractSigned) {
+      setActiveTab("metadata");
+    } else if (hasReviewContent) {
+      setActiveTab("review");
+      setOpenAccordion("contract-details");
+    }
+  }, [isContractSigned, hasReviewContent]);
+
   if (isLoading) {
     return (
       <DashboardLayout title="Proposal Review">
@@ -255,8 +268,6 @@ const AuthorProposalDetails: React.FC = () => {
   const actionBanner = getActionBanner(proposal.status);
   const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
-  const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
-
 
   return (
     <DashboardLayout title="Proposal Review">
