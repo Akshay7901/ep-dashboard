@@ -232,14 +232,15 @@ const AuthorProposalDetails: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    setHasSeenReview(seenReviewSignatures.get(id) === reviewNotificationSignature);
+    const seen = getSeenSignatures();
+    setHasSeenReview(seen[id] === reviewNotificationSignature);
   }, [id, reviewNotificationSignature]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
     if (value === "review" && id) {
-      seenReviewSignatures.set(id, reviewNotificationSignature);
+      setSeenSignature(id, reviewNotificationSignature);
       setHasSeenReview(true);
     }
   };
@@ -251,19 +252,15 @@ const AuthorProposalDetails: React.FC = () => {
   useEffect(() => {
     if (isContractSigned) {
       setActiveTab("metadata");
-      // Contract is signed — review content is past stage, dismiss notification
+      // Contract is signed — dismiss notification
       if (id) {
-        seenReviewSignatures.set(id, reviewNotificationSignature);
+        setSeenSignature(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
-      // Mark notification as seen when auto-switching to review tab
-      if (id) {
-        seenReviewSignatures.set(id, reviewNotificationSignature);
-        setHasSeenReview(true);
-      }
+      // Do NOT auto-dismiss — let the dot show if signature changed
     }
   }, [isContractSigned, hasReviewContent]);
 
