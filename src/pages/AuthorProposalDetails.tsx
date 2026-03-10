@@ -220,13 +220,12 @@ const AuthorProposalDetails: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    const seen = getSeenSignatures();
-    const alreadySeen = seen[id] === reviewNotificationSignature;
+    const alreadySeen = seenReviewSignatures.get(id) === reviewNotificationSignature;
     setHasSeenReview(alreadySeen);
     // If user is currently viewing the review tab, mark as seen after a moment
     if (!alreadySeen && activeTab === "review") {
       const timer = setTimeout(() => {
-        setSeenSignature(id, reviewNotificationSignature);
+        seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }, 1500);
       return () => clearTimeout(timer);
@@ -237,7 +236,7 @@ const AuthorProposalDetails: React.FC = () => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
     if (value === "review" && id) {
-      setSeenSignature(id, reviewNotificationSignature);
+      seenReviewSignatures.set(id, reviewNotificationSignature);
       setHasSeenReview(true);
     }
   };
@@ -251,13 +250,12 @@ const AuthorProposalDetails: React.FC = () => {
       setActiveTab("metadata");
       // Contract is signed — dismiss notification
       if (id) {
-        setSeenSignature(id, reviewNotificationSignature);
+        seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
-      // Do NOT auto-dismiss — let the dot show if signature changed
     }
   }, [isContractSigned, hasReviewContent]);
 
