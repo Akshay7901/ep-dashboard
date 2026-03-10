@@ -242,6 +242,11 @@ const AuthorProposalDetails: React.FC = () => {
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
+      // Mark notification as seen when auto-switching to review tab
+      if (id) {
+        seenReviewSignatures.set(id, reviewNotificationSignature);
+        setHasSeenReview(true);
+      }
     }
   }, [isContractSigned, hasReviewContent]);
 
