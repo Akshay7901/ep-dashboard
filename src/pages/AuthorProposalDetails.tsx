@@ -136,7 +136,19 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
 
 /* ---- Main ---- */
 
-const seenReviewSignatures = new Map<string, string>();
+const SEEN_REVIEW_KEY = 'author_seen_review_signatures';
+
+const getSeenSignatures = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_REVIEW_KEY) || '{}');
+  } catch { return {}; }
+};
+
+const setSeenSignature = (proposalId: string, signature: string) => {
+  const current = getSeenSignatures();
+  current[proposalId] = signature;
+  localStorage.setItem(SEEN_REVIEW_KEY, JSON.stringify(current));
+};
 
 const AuthorProposalDetails: React.FC = () => {
   const { id } = useParams<{id: string;}>();
