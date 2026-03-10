@@ -17,15 +17,13 @@ import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
-import { proposalApi, contractApi, metadataQueriesApi } from "@/lib/proposalsApi";
-import { useQuery } from "@tanstack/react-query";
+import { proposalApi, contractApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
 import { useContractQueries } from "@/hooks/useContractQueries";
 import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
-import AuthorNotificationsPanel from "@/components/proposals/AuthorNotificationsPanel";
 import AuthorPublicationMetadata from "@/components/proposals/AuthorPublicationMetadata";
 
 /* ---- Timeline helpers ---- */
@@ -168,13 +166,6 @@ const AuthorProposalDetails: React.FC = () => {
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
-  const { data: metadataQueries = [] } = useQuery({
-    queryKey: ["metadata-queries", ticketNum],
-    queryFn: () => metadataQueriesApi.list(ticketNum),
-    enabled: !!ticketNum,
-    staleTime: 0,
-    refetchInterval: 10000,
-  });
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
@@ -307,21 +298,13 @@ const AuthorProposalDetails: React.FC = () => {
             <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
             <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <AuthorNotificationsPanel
-              reviews={reviews}
-              latestContract={latestContract}
-              queries={contractQueries}
-              metadataQueries={metadataQueries}
-            />
-            <div className="text-right text-sm text-muted-foreground">
-              {proposal.ticket_number &&
-              <p>
-                  Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
-                </p>
-              }
-              <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
-            </div>
+          <div className="text-right text-sm text-muted-foreground">
+            {proposal.ticket_number &&
+            <p>
+                Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
+              </p>
+            }
+            <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
           </div>
         </div>
 
