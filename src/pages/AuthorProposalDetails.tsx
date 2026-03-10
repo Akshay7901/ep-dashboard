@@ -233,8 +233,17 @@ const AuthorProposalDetails: React.FC = () => {
   useEffect(() => {
     if (!id) return;
     const seen = getSeenSignatures();
-    setHasSeenReview(seen[id] === reviewNotificationSignature);
-  }, [id, reviewNotificationSignature]);
+    const alreadySeen = seen[id] === reviewNotificationSignature;
+    setHasSeenReview(alreadySeen);
+    // If user is currently viewing the review tab, mark as seen after a moment
+    if (!alreadySeen && activeTab === "review") {
+      const timer = setTimeout(() => {
+        setSeenSignature(id, reviewNotificationSignature);
+        setHasSeenReview(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [id, reviewNotificationSignature, activeTab]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
