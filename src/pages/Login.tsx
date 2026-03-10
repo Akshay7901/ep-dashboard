@@ -36,6 +36,7 @@ const Login: React.FC = () => {
   const [step, setStep] = useState<LoginStep>('email');
   const [email, setEmail] = useState('');
   const [tempToken, setTempToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const emailForm = useForm<EmailFormData>({
     resolver: zodResolver(emailSchema),
