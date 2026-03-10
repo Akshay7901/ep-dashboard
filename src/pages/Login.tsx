@@ -203,16 +203,26 @@ const Login: React.FC = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Input
-                  id="login-password"
-                  name="login-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  autoComplete="off"
-                  defaultValue=""
-                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
-                  {...passwordForm.register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    name="login-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    autoComplete="off"
+                    defaultValue=""
+                    className="h-12 text-base bg-[#f0f4f8] border-0 pr-10 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
+                    {...passwordForm.register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {passwordForm.formState.errors.password && (
                   <p className="text-sm text-destructive">{passwordForm.formState.errors.password.message}</p>
                 )}
