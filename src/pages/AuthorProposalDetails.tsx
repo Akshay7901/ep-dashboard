@@ -257,6 +257,16 @@ const AuthorProposalDetails: React.FC = () => {
   const progress = getTimelineProgressFromApi(apiTimeline);
   const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
 
+  // Default tab priority: metadata (if contract signed) > review (if available) > proposal
+  const hasReviewContent = reviews.some((r: any) => r.status === 'submitted') || (latestContract && latestContract.docusign_status);
+  useEffect(() => {
+    if (isContractSigned) {
+      setActiveTab("metadata");
+    } else if (hasReviewContent) {
+      setActiveTab("review");
+      setOpenAccordion("contract-details");
+    }
+  }, [isContractSigned, hasReviewContent]);
 
   return (
     <DashboardLayout title="Proposal Review">
