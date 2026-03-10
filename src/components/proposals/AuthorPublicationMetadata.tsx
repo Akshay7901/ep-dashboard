@@ -557,161 +557,182 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <SectionHeader title="Cover Image" />
 
         <div className="p-4 space-y-4 border-b border-border">
-          {/* Requirements list */}
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-              {[
-                { label: "Format", value: "JPEG or TIFF" },
-                { label: "Min. dimensions", value: `${MIN_DIMENSION}×${MIN_DIMENSION}px` },
-                { label: "Min. DPI", value: `${MIN_DPI} DPI` },
-                { label: "Max. file size", value: `${MAX_FILE_SIZE_MB}MB` },
-              ].map((req) => (
-                <div key={req.label} className="flex items-center gap-1.5 rounded-md bg-muted/30 px-3 py-2 border border-border">
-                  <FileImage className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="text-xs text-muted-foreground">
-                    <span className="font-medium">{req.label}:</span> {req.value}
-                  </span>
+          {/* If cover image is already saved to API, show read-only view */}
+          {coverImageData?.s3_url && !coverImageFile ? (
+            <div className="space-y-3">
+              <div className="flex items-start gap-4">
+                <div className="relative w-32 h-44 rounded-md overflow-hidden border-2 border-border">
+                  <img src={coverImageData.s3_url} alt="Cover preview" className="w-full h-full object-cover" />
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {metadataLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading cover image...
+                <div className="flex-1 space-y-2">
+                  {coverImageData.source && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Image Source / Credit</p>
+                      <p className="text-sm text-foreground">{coverImageData.source}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 text-sm text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Cover image submitted</span>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="flex items-start gap-4">
-              {coverImagePreview ? (
-                <div className={`relative w-32 h-44 rounded-md overflow-hidden border-2 ${coverImageValidation && !coverImageValidation.isValid ? 'border-destructive' : 'border-border'}`}>
-                  <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
-                  {!isApproved && (
-                    <button
-                      onClick={() => {
-                        if (coverImageData?.s3_url) {
-                          handleDeleteCoverImage();
-                        } else {
-                          setCoverImageFile(null);
-                          setCoverImagePreview(null);
-                          setCoverImageValidation(null);
-                        }
-                      }}
-                      disabled={deletingCoverImage}
-                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:opacity-80"
-                      title="Remove cover image"
-                    >
-                      {deletingCoverImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-                    </button>
-                  )}
+            <>
+              {/* Requirements list */}
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: "Format", value: "JPEG or TIFF" },
+                    { label: "Min. dimensions", value: `${MIN_DIMENSION}×${MIN_DIMENSION}px` },
+                    { label: "Min. DPI", value: `${MIN_DPI} DPI` },
+                    { label: "Max. file size", value: `${MAX_FILE_SIZE_MB}MB` },
+                  ].map((req) => (
+                    <div key={req.label} className="flex items-center gap-1.5 rounded-md bg-muted/30 px-3 py-2 border border-border">
+                      <FileImage className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground">
+                        <span className="font-medium">{req.label}:</span> {req.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {metadataLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading cover image...
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center w-32 h-44 rounded-md border-2 border-dashed border-border bg-muted/20">
-                  <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                  <span className="text-[10px] text-muted-foreground mt-1">No image</span>
-                </div>
-              )}
-              {!isApproved && (
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <Label htmlFor="cover-upload" className="cursor-pointer">
-                      <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                        <span>
-                          <Upload className="h-3.5 w-3.5" />
-                          {coverImageFile ? "Replace Image" : coverImageData?.s3_url ? "Change Image" : "Upload Image"}
-                        </span>
-                      </Button>
-                    </Label>
-                    <input
-                      id="cover-upload"
-                      type="file"
-                      accept="image/jpeg,image/tiff,.tif,.tiff"
-                      className="hidden"
-                      onChange={handleCoverImageChange}
-                    />
-                  </div>
+                <div className="flex items-start gap-4">
+                  {coverImagePreview ? (
+                    <div className={`relative w-32 h-44 rounded-md overflow-hidden border-2 ${coverImageValidation && !coverImageValidation.isValid ? 'border-destructive' : 'border-border'}`}>
+                      <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
+                      {!isApproved && (
+                        <button
+                          onClick={() => {
+                            setCoverImageFile(null);
+                            setCoverImagePreview(null);
+                            setCoverImageValidation(null);
+                          }}
+                          disabled={deletingCoverImage}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:opacity-80"
+                          title="Remove cover image"
+                        >
+                          {deletingCoverImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-32 h-44 rounded-md border-2 border-dashed border-border bg-muted/20">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                      <span className="text-[10px] text-muted-foreground mt-1">No image</span>
+                    </div>
+                  )}
+                  {!isApproved && (
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <Label htmlFor="cover-upload" className="cursor-pointer">
+                          <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                            <span>
+                              <Upload className="h-3.5 w-3.5" />
+                              {coverImageFile ? "Replace Image" : "Upload Image"}
+                            </span>
+                          </Button>
+                        </Label>
+                        <input
+                          id="cover-upload"
+                          type="file"
+                          accept="image/jpeg,image/tiff,.tif,.tiff"
+                          className="hidden"
+                          onChange={handleCoverImageChange}
+                        />
+                      </div>
 
-                  {/* Inline validation feedback */}
-                  {coverImageValidation && (
-                    <div className={`rounded-md p-3 text-xs space-y-1.5 border ${coverImageValidation.isValid ? 'bg-emerald-50 border-emerald-200' : 'bg-destructive/5 border-destructive/30'}`}>
-                      <div className="flex items-center gap-2 font-medium">
-                        {coverImageValidation.isValid ? (
-                          <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> <span className="text-emerald-800">Image meets all requirements</span></>
-                        ) : (
-                          <><AlertCircle className="h-3.5 w-3.5 text-destructive" /> <span className="text-destructive">Image does not meet requirements</span></>
-                        )}
+                      {/* Inline validation feedback */}
+                      {coverImageValidation && (
+                        <div className={`rounded-md p-3 text-xs space-y-1.5 border ${coverImageValidation.isValid ? 'bg-emerald-50 border-emerald-200' : 'bg-destructive/5 border-destructive/30'}`}>
+                          <div className="flex items-center gap-2 font-medium">
+                            {coverImageValidation.isValid ? (
+                              <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> <span className="text-emerald-800">Image meets all requirements</span></>
+                            ) : (
+                              <><AlertCircle className="h-3.5 w-3.5 text-destructive" /> <span className="text-destructive">Image does not meet requirements</span></>
+                            )}
+                          </div>
+                          <div className="space-y-0.5 text-muted-foreground">
+                            {coverImageValidation.fileName && (
+                              <p>File: <span className="font-medium text-foreground">{coverImageValidation.fileName}</span></p>
+                            )}
+                            {coverImageValidation.fileSize != null && (
+                              <p>Size: <span className={`font-medium ${coverImageValidation.fileSize > MAX_FILE_SIZE_MB * 1024 * 1024 ? 'text-destructive' : 'text-foreground'}`}>
+                                {(coverImageValidation.fileSize / (1024 * 1024)).toFixed(2)}MB
+                              </span> <span className="text-muted-foreground/60">(max {MAX_FILE_SIZE_MB}MB)</span></p>
+                            )}
+                            {(coverImageValidation.width > 0 || coverImageValidation.height > 0) && (
+                              <p>Dimensions: <span className={`font-medium ${(coverImageValidation.width < MIN_DIMENSION || coverImageValidation.height < MIN_DIMENSION) ? 'text-destructive' : 'text-foreground'}`}>
+                                {coverImageValidation.width}×{coverImageValidation.height}px
+                              </span> <span className="text-muted-foreground/60">(min {MIN_DIMENSION}×{MIN_DIMENSION}px)</span></p>
+                            )}
+                            {coverImageValidation.dpi !== undefined && (
+                              <p>DPI: <span className={`font-medium ${coverImageValidation.dpi === null || coverImageValidation.dpi < MIN_DPI ? 'text-destructive' : 'text-foreground'}`}>
+                                {coverImageValidation.dpi === null ? 'Not found' : coverImageValidation.dpi}
+                              </span> <span className="text-muted-foreground/60">(min {MIN_DPI} DPI)</span></p>
+                            )}
+                          </div>
+                          {coverImageValidation.errors.length > 0 && (
+                            <ul className="list-disc list-inside text-destructive space-y-0.5 pt-1">
+                              {coverImageValidation.errors.map((err, i) => (
+                                <li key={i}>{err}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
+                          Image Source / Credit <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="cover-source"
+                          placeholder="e.g. Shutterstock, original artwork, author photo..."
+                          value={coverImageSource}
+                          onChange={(e) => setCoverImageSource(e.target.value)}
+                        />
                       </div>
-                      <div className="space-y-0.5 text-muted-foreground">
-                        {coverImageValidation.fileName && (
-                          <p>File: <span className="font-medium text-foreground">{coverImageValidation.fileName}</span></p>
-                        )}
-                        {coverImageValidation.fileSize != null && (
-                          <p>Size: <span className={`font-medium ${coverImageValidation.fileSize > MAX_FILE_SIZE_MB * 1024 * 1024 ? 'text-destructive' : 'text-foreground'}`}>
-                            {(coverImageValidation.fileSize / (1024 * 1024)).toFixed(2)}MB
-                          </span> <span className="text-muted-foreground/60">(max {MAX_FILE_SIZE_MB}MB)</span></p>
-                        )}
-                        {(coverImageValidation.width > 0 || coverImageValidation.height > 0) && (
-                          <p>Dimensions: <span className={`font-medium ${(coverImageValidation.width < MIN_DIMENSION || coverImageValidation.height < MIN_DIMENSION) ? 'text-destructive' : 'text-foreground'}`}>
-                            {coverImageValidation.width}×{coverImageValidation.height}px
-                          </span> <span className="text-muted-foreground/60">(min {MIN_DIMENSION}×{MIN_DIMENSION}px)</span></p>
-                        )}
-                        {coverImageValidation.dpi !== undefined && (
-                          <p>DPI: <span className={`font-medium ${coverImageValidation.dpi === null || coverImageValidation.dpi < MIN_DPI ? 'text-destructive' : 'text-foreground'}`}>
-                            {coverImageValidation.dpi === null ? 'Not found' : coverImageValidation.dpi}
-                          </span> <span className="text-muted-foreground/60">(min {MIN_DPI} DPI)</span></p>
-                        )}
-                      </div>
-                      {coverImageValidation.errors.length > 0 && (
-                        <ul className="list-disc list-inside text-destructive space-y-0.5 pt-1">
-                          {coverImageValidation.errors.map((err, i) => (
-                            <li key={i}>{err}</li>
-                          ))}
-                        </ul>
+
+                      {coverImageFile && (
+                        <>
+                          <div className="flex items-start gap-2">
+                            <Checkbox
+                              id="cover-permission"
+                              checked={coverImagePermission}
+                              onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
+                            />
+                            <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                              I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
+                            </Label>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
+                            onClick={handleUploadCoverImage}
+                            disabled={uploadingCoverImage || !coverImagePermission || !coverImageSource.trim()}
+                          >
+                            {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                            Save Cover Image
+                          </Button>
+                        </>
                       )}
                     </div>
                   )}
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="cover-source" className="text-xs text-muted-foreground">
-                      Image Source / Credit <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="cover-source"
-                      placeholder="e.g. Shutterstock, original artwork, author photo..."
-                      value={coverImageSource}
-                      onChange={(e) => setCoverImageSource(e.target.value)}
-                    />
-                  </div>
-
-                  {coverImageFile && (
-                    <>
-                      <div className="flex items-start gap-2">
-                        <Checkbox
-                          id="cover-permission"
-                          checked={coverImagePermission}
-                          onCheckedChange={(checked) => setCoverImagePermission(checked === true)}
-                        />
-                        <Label htmlFor="cover-permission" className="text-xs text-muted-foreground leading-tight cursor-pointer">
-                          I confirm that I hold the necessary rights and permissions to use this image for publication purposes.
-                        </Label>
-                      </div>
-
-                      <Button
-                        size="sm"
-                        className="gap-1.5 bg-[#2f4b40] hover:opacity-90 text-white"
-                        onClick={handleUploadCoverImage}
-                        disabled={uploadingCoverImage || !coverImagePermission || !coverImageSource.trim()}
-                      >
-                        {uploadingCoverImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                        Save Cover Image
-                      </Button>
-                    </>
-                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
 
