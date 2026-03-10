@@ -564,17 +564,25 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                 <div className="relative w-32 h-44 rounded-md overflow-hidden border-2 border-border">
                   <img src={coverImageData.s3_url} alt="Cover preview" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex-1 space-y-2">
-                  {coverImageData.source && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">Image Source / Credit</p>
-                      <p className="text-sm text-foreground">{coverImageData.source}</p>
-                    </div>
+                <div className="flex-1 space-y-1.5 text-sm">
+                  {coverImageData.filename && (
+                    <p><span className="font-semibold text-foreground">File:</span> <span className="text-foreground">{coverImageData.filename}</span></p>
                   )}
-                  <div className="flex items-center gap-1.5 text-sm text-emerald-700">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Cover image submitted</span>
-                  </div>
+                  {(coverImageData.width_px > 0 || coverImageData.height_px > 0) && (
+                    <p><span className="font-semibold text-foreground">Dimensions:</span> <span className="text-foreground">{coverImageData.width_px} × {coverImageData.height_px}px</span></p>
+                  )}
+                  {coverImageData.dpi > 0 && (
+                    <p><span className="font-semibold text-foreground">DPI:</span> <span className="text-foreground">{coverImageData.dpi}</span></p>
+                  )}
+                  {coverImageData.file_size_bytes > 0 && (
+                    <p><span className="font-semibold text-foreground">Size:</span> <span className="text-foreground">{(coverImageData.file_size_bytes / (1024 * 1024)).toFixed(2)} MB</span></p>
+                  )}
+                  {coverImageData.uploaded_at && (
+                    <p><span className="font-semibold text-foreground">Uploaded:</span> <span className="text-foreground">{new Date(coverImageData.uploaded_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span></p>
+                  )}
+                  {coverImageData.source && (
+                    <p><span className="font-semibold text-foreground">Source:</span> <span className="text-foreground">{coverImageData.source}</span></p>
+                  )}
                 </div>
               </div>
             </div>
