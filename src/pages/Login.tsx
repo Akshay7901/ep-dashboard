@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
 import OtpScreen from "@/components/auth/OtpScreen";
