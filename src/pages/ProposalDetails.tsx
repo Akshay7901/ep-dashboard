@@ -276,15 +276,17 @@ const ProposalDetails: React.FC = () => {
   statusIs(proposal.status, "contract_issued", "approved", "locked") ||
   (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
 
-  React.useEffect(() => {
-    if (drShouldShowFeedback) setDrActiveTab("feedback");
-  }, [drShouldShowFeedback]);
-
   // Default to metadata tab when metadata is available (contract signed)
   const isContractSignedEarly = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
+
+  // Priority: metadata (if contract signed) > feedback (if available) > book
   React.useEffect(() => {
-    if (isContractSignedEarly) setDrActiveTab("metadata");
-  }, [isContractSignedEarly]);
+    if (isContractSignedEarly) {
+      setDrActiveTab("metadata");
+    } else if (drShouldShowFeedback) {
+      setDrActiveTab("feedback");
+    }
+  }, [isContractSignedEarly, drShouldShowFeedback]);
 
   /* ---------------- Loading / Error ---------------- */
 
