@@ -168,6 +168,13 @@ const AuthorProposalDetails: React.FC = () => {
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNum],
+    queryFn: () => metadataQueriesApi.list(ticketNum),
+    enabled: !!ticketNum,
+    staleTime: 0,
+    refetchInterval: 10000,
+  });
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
