@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import brandLogo from "@/assets/brand-logo.webp";
 import OtpScreen from "@/components/auth/OtpScreen";
@@ -36,6 +36,7 @@ const Login: React.FC = () => {
   const [step, setStep] = useState<LoginStep>('email');
   const [email, setEmail] = useState('');
   const [tempToken, setTempToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const emailForm = useForm<EmailFormData>({
     resolver: zodResolver(emailSchema),
@@ -202,16 +203,26 @@ const Login: React.FC = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Input
-                  id="login-password"
-                  name="login-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  autoComplete="off"
-                  defaultValue=""
-                  className="h-12 text-base bg-[#f0f4f8] border-0 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
-                  {...passwordForm.register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    name="login-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    autoComplete="off"
+                    defaultValue=""
+                    className="h-12 text-base bg-[#f0f4f8] border-0 pr-10 placeholder:text-muted-foreground/60 focus-visible:ring-[#3d5a47]"
+                    {...passwordForm.register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {passwordForm.formState.errors.password && (
                   <p className="text-sm text-destructive">{passwordForm.formState.errors.password.message}</p>
                 )}
