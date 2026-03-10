@@ -581,7 +581,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                     <p><span className="font-semibold text-foreground">Uploaded:</span> <span className="text-foreground">{new Date(coverImageData.uploaded_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span></p>
                   )}
                   {coverImageData.source && (
-                    <p><span className="font-semibold text-foreground">Source:</span> <span className="text-foreground">{coverImageData.source}</span></p>
+                    <p><span className="font-semibold text-foreground">Image Source / Credit:</span> <span className="text-foreground">{coverImageData.source}</span></p>
                   )}
                 </div>
               </div>
