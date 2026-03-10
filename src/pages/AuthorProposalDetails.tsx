@@ -233,7 +233,7 @@ const AuthorProposalDetails: React.FC = () => {
   };
 
   const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
-  const hasReviewContent = reviews.some((r: any) => r.status === 'submitted') || (latestContract && latestContract.docusign_status);
+  const hasReviewContent = reviews.length > 0 || !!(latestContract);
 
   // Default tab priority: metadata (if contract signed) > review (if available) > proposal
   useEffect(() => {
