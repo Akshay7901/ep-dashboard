@@ -136,7 +136,19 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
 
 /* ---- Main ---- */
 
-const seenReviewSignatures = new Map<string, string>();
+const SEEN_REVIEW_KEY = 'author_seen_review_signatures';
+
+const getSeenSignatures = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_REVIEW_KEY) || '{}');
+  } catch { return {}; }
+};
+
+const setSeenSignature = (proposalId: string, signature: string) => {
+  const current = getSeenSignatures();
+  current[proposalId] = signature;
+  localStorage.setItem(SEEN_REVIEW_KEY, JSON.stringify(current));
+};
 
 const AuthorProposalDetails: React.FC = () => {
   const { id } = useParams<{id: string;}>();
@@ -220,14 +232,24 @@ const AuthorProposalDetails: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    setHasSeenReview(seenReviewSignatures.get(id) === reviewNotificationSignature);
-  }, [id, reviewNotificationSignature]);
+    const seen = getSeenSignatures();
+    const alreadySeen = seen[id] === reviewNotificationSignature;
+    setHasSeenReview(alreadySeen);
+    // If user is currently viewing the review tab, mark as seen after a moment
+    if (!alreadySeen && activeTab === "review") {
+      const timer = setTimeout(() => {
+        setSeenSignature(id, reviewNotificationSignature);
+        setHasSeenReview(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [id, reviewNotificationSignature, activeTab]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
     if (value === "review" && id) {
-      seenReviewSignatures.set(id, reviewNotificationSignature);
+      setSeenSignature(id, reviewNotificationSignature);
       setHasSeenReview(true);
     }
   };
@@ -239,19 +261,15 @@ const AuthorProposalDetails: React.FC = () => {
   useEffect(() => {
     if (isContractSigned) {
       setActiveTab("metadata");
-      // Contract is signed — review content is past stage, dismiss notification
+      // Contract is signed — dismiss notification
       if (id) {
-        seenReviewSignatures.set(id, reviewNotificationSignature);
+        setSeenSignature(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
-      // Mark notification as seen when auto-switching to review tab
-      if (id) {
-        seenReviewSignatures.set(id, reviewNotificationSignature);
-        setHasSeenReview(true);
-      }
+      // Do NOT auto-dismiss — let the dot show if signature changed
     }
   }, [isContractSigned, hasReviewContent]);
 
