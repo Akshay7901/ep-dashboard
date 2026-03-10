@@ -299,13 +299,22 @@ const AuthorProposalDetails: React.FC = () => {
             <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
             <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
-          <div className="text-right text-sm text-muted-foreground">
-            {proposal.ticket_number &&
-            <p>
-                Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
-              </p>
-            }
-            <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
+          <div className="flex items-center gap-3">
+            <AuthorNotificationsPanel
+              reviews={reviews}
+              latestContract={latestContract}
+              queries={contractQueries}
+              timeline={apiTimeline}
+              proposalStatus={proposal.status}
+            />
+            <div className="text-right text-sm text-muted-foreground">
+              {proposal.ticket_number &&
+              <p>
+                  Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
+                </p>
+              }
+              <p>Submitted: {proposal.created_at ? format(new Date(proposal.created_at), "MMM d, yyyy") : "—"}</p>
+            </div>
           </div>
         </div>
 
