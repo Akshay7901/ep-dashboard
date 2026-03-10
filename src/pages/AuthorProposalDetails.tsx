@@ -101,7 +101,13 @@ const REVIEW_FEEDBACK_FIELDS = [
 { key: "clarity", label: "Clarity, Structure and Quality of Writing" },
 { key: "otherComments", label: "Other Comments" },
 { key: "recommendation", label: "Recommendations" }];
-
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNum],
+    queryFn: () => metadataQueriesApi.list(ticketNum),
+    enabled: !!ticketNum,
+    staleTime: 0,
+    refetchInterval: 10000,
+  });
 
 const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, title }) => {
   const formData = review?.review_data;
