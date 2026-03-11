@@ -315,7 +315,7 @@ const ProposalDetails: React.FC = () => {
   const reviewStatus = reviewMeta?.is_submitted ? 'submitted' : reviewMeta?.status || reviewMeta?.review_status || '';
   const peerReviewAlreadySubmitted = isReviewer2 && (
   reviewMeta?.is_submitted === true ||
-  statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked", "queries_raised", "awaiting_author_approval", "author_approved", "contract_sent"));
+  statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked"));
 
 
   // Check if there's a SUBMITTED peer review available (for decision reviewer split layout)
