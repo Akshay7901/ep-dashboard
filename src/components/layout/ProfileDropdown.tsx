@@ -65,7 +65,7 @@ const ProfileDropdown: React.FC = () => {
       {open && (
         <div className="absolute right-0 mt-1.5 w-64 rounded-md border border-border bg-card shadow-lg z-50">
           <div className="px-3 py-2 border-b border-border">
-            <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
+            <p className="text-sm font-medium text-foreground truncate">{user?.name ? user.name.replace(/^(Professor|Prof\.?|Dr\.?|Mr\.?|Mrs\.?|Ms\.?|Miss)\s+/i, '') : 'User'}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
 
