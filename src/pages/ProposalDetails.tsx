@@ -557,7 +557,7 @@ const ProposalDetails: React.FC = () => {
             {/* Overview Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Overview</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Book Type</p>
                   <p className="text-sm font-medium">{proposal.book_type || "—"}</p>
@@ -578,6 +578,10 @@ const ProposalDetails: React.FC = () => {
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
                   <ProposalStatusBadge status={proposal.status} showIcon={false} />
                 </div>
+                {proposal.keywords && <div className="col-span-2 sm:col-span-3">
+                  <p className="text-xs text-muted-foreground mb-1">Keywords</p>
+                  <p className="text-sm font-medium">{proposal.keywords}</p>
+                </div>}
               </div>
             </div>
 
