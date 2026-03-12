@@ -1108,6 +1108,7 @@ const ProposalDetails: React.FC = () => {
                 <DetailRow label="Job Title" value={proposal.job_title} />
                 <DetailRow label="Country" value={extractCountry(proposal.address)} />
                 {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <DetailRow label="Secondary Email" value={proposal.secondary_email} />}
+                <DetailRow label="Address" value={proposal.address} />
               </div>
             </div>
             {proposal.biography && <div className="space-y-3">
