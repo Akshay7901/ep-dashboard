@@ -557,7 +557,7 @@ const ProposalDetails: React.FC = () => {
             {/* Overview Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Overview</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Book Type</p>
                   <p className="text-sm font-medium">{proposal.book_type || "—"}</p>
@@ -578,6 +578,10 @@ const ProposalDetails: React.FC = () => {
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
                   <ProposalStatusBadge status={proposal.status} showIcon={false} />
                 </div>
+                {proposal.keywords && <div className="col-span-2 sm:col-span-3">
+                  <p className="text-xs text-muted-foreground mb-1">Keywords</p>
+                  <p className="text-sm font-medium">{proposal.keywords}</p>
+                </div>}
               </div>
             </div>
 
@@ -591,6 +595,15 @@ const ProposalDetails: React.FC = () => {
                   </p>
                 </AccordionContent>
               </AccordionItem>
+
+              {proposal.detailed_description && <AccordionItem value="detailed-desc" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Detailed Description</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.detailed_description}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
 
               <AccordionItem value="toc" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">TOC</AccordionTrigger>
@@ -607,7 +620,7 @@ const ProposalDetails: React.FC = () => {
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <p className="text-sm leading-relaxed whitespace-pre-line">
-                    {proposal.figures_tables_count || proposal.detailed_description || "No details available"}
+                    {proposal.figures_tables_count || "No details available"}
                   </p>
                 </AccordionContent>
               </AccordionItem>
@@ -622,6 +635,42 @@ const ProposalDetails: React.FC = () => {
                   </p>
                 </AccordionContent>
               </AccordionItem>
+
+              {proposal.co_authors_editors && <AccordionItem value="coauthors" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Co-Authors / Editors</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.co_authors_editors}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.marketing_info && <AccordionItem value="marketing" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Marketing Information</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.marketing_info}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.referees_reviewers && <AccordionItem value="referees" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Suggested Referees / Reviewers</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.referees_reviewers}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.under_review_elsewhere && <AccordionItem value="under-review" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Under Review Elsewhere</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.under_review_elsewhere}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
 
               {proposal.additional_info && <AccordionItem value="additional" className="border rounded-lg px-4">
                   <AccordionTrigger className="text-base font-semibold">
@@ -654,6 +703,7 @@ const ProposalDetails: React.FC = () => {
                 <DetailRow label="Job Title" value={proposal.job_title} />
                 <DetailRow label="Country" value={extractCountry(proposal.address)} />
                 {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <DetailRow label="Secondary Email" value={proposal.secondary_email} />}
+                <DetailRow label="Address" value={proposal.address} />
               </div>
             </div>
             {proposal.biography && <div className="space-y-3">
@@ -1058,6 +1108,7 @@ const ProposalDetails: React.FC = () => {
                 <DetailRow label="Job Title" value={proposal.job_title} />
                 <DetailRow label="Country" value={extractCountry(proposal.address)} />
                 {proposal.secondary_email && proposal.secondary_email !== proposal.author_email && <DetailRow label="Secondary Email" value={proposal.secondary_email} />}
+                <DetailRow label="Address" value={proposal.address} />
               </div>
             </div>
             {proposal.biography && <div className="space-y-3">

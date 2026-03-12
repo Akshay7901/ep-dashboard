@@ -118,6 +118,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
     assigned_reviewers: normalizeAssignments((apiProposal as any).assigned_reviewers || (apiProposal as any).assignments),
     assignments: (apiProposal as any).assignments || null,
     timeline: (apiProposal as any).timeline || null,
+    internal_status: (apiProposal as any).internal_status || null,
   };
 };
 
