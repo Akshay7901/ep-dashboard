@@ -1045,6 +1045,15 @@ const ProposalDetails: React.FC = () => {
                 </AccordionContent>
               </AccordionItem>
 
+              {proposal.detailed_description && <AccordionItem value="detailed-desc" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Detailed Description</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.detailed_description}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
               <AccordionItem value="toc" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
                   Table of Contents
@@ -1056,37 +1065,74 @@ const ProposalDetails: React.FC = () => {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="market" className="border rounded-lg px-4">
+              <AccordionItem value="detail" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
-                  Market Position
+                  Detail: Figures, Tables, Photos
                 </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-4">
-                  <ContentBlock label="Similar Works" value={(proposal as any).similar_works || (proposal as any).competing_books} />
-                  <ContentBlock label="Previous Reviews" value={(proposal as any).previous_reviews || proposal.marketing_info} />
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.figures_tables_count || "No details available"}
+                  </p>
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="manuscript" className="border rounded-lg px-4">
+              <AccordionItem value="permissions" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
-                  Manuscript Details
+                  Permissions Required
                 </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-4">
-                  <DetailRow label="Co-Authors/Editors" value={proposal.co_authors_editors || "None"} />
-                  <ContentBlock label="Figures & Tables" value={proposal.figures_tables_count || proposal.detailed_description} />
-                  <ContentBlock label="Permissions" value={proposal.permissions_required} />
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.permissions_required || "No permissions required"}
+                  </p>
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="additional" className="border rounded-lg px-4">
+              {proposal.co_authors_editors && <AccordionItem value="coauthors" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Co-Authors / Editors</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.co_authors_editors}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.marketing_info && <AccordionItem value="marketing" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Marketing Information</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.marketing_info}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.referees_reviewers && <AccordionItem value="referees" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Suggested Referees / Reviewers</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.referees_reviewers}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.under_review_elsewhere && <AccordionItem value="under-review" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-base font-semibold">Under Review Elsewhere</AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.under_review_elsewhere}
+                  </p>
+                </AccordionContent>
+              </AccordionItem>}
+
+              {proposal.additional_info && <AccordionItem value="additional" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
                   Additional Information
                 </AccordionTrigger>
-                <AccordionContent className="space-y-4 pb-4">
-                  <ContentBlock label="Societies & Bodies" value={(proposal as any).societies_research_bodies || (proposal as any).professional_societies} />
-                  <ContentBlock label="Suggested Referees" value={proposal.referees_reviewers} />
-                  <ContentBlock label="Additional Notes" value={proposal.additional_info} />
+                <AccordionContent className="pb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {proposal.additional_info}
+                  </p>
                 </AccordionContent>
-              </AccordionItem>
+              </AccordionItem>}
             </Accordion>
           </TabsContent>
 
