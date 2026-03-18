@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Save, MessageSquare } from "lucide-react";
+import { CheckCircle, Save, MessageSquare, StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { useReview } from "@/hooks/useReview";
 
