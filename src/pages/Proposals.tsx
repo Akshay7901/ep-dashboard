@@ -149,7 +149,7 @@ const Proposals: React.FC = () => {
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
+    setStatusFilter(prev => prev === value ? "all" : value);
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
