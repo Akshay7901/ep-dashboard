@@ -302,6 +302,17 @@ const Proposals: React.FC = () => {
               Action Required
             </button>
           )}
+
+          <button
+            onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setDisplayCount(ITEMS_PER_PAGE); }}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+              "bg-background text-foreground border-border hover:bg-muted"
+            )}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+          </button>
         </div>
 
         {/* Section label */}
