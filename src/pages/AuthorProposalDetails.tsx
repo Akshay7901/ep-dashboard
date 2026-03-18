@@ -822,7 +822,7 @@ const AuthorProposalDetails: React.FC = () => {
 
                 {/* Contract Query Thread — shown on demand or when queries exist */}
                 {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) &&
-              <Accordion type="single" collapsible className="space-y-4">
+              <Accordion type="single" collapsible value={queryAccordionValue} onValueChange={setQueryAccordionValue} className="space-y-4">
                     <AccordionItem value="contract-queries" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
