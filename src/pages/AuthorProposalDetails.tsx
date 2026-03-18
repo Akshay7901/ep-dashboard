@@ -749,7 +749,7 @@ const AuthorProposalDetails: React.FC = () => {
                                     <Button
                                 variant="outline"
                                 className="w-full gap-2 text-sm"
-                                onClick={() => { setShowQueryThread(true); setQueryAccordionValue("contract-queries"); }}>
+                                onClick={() => { setShowQueryThread(true); setQueryAccordionValue("contract-queries"); setTimeout(() => { document.getElementById('queries-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); }}>
                                 
                                       <HelpCircle className="h-4 w-4" /> I have a question before signing
                                     </Button>
@@ -822,6 +822,7 @@ const AuthorProposalDetails: React.FC = () => {
 
                 {/* Contract Query Thread — shown on demand or when queries exist */}
                 {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) &&
+              <div id="queries-section">
               <Accordion type="single" collapsible value={queryAccordionValue} onValueChange={setQueryAccordionValue} className="space-y-4">
                     <AccordionItem value="contract-queries" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
@@ -850,7 +851,7 @@ const AuthorProposalDetails: React.FC = () => {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-              }
+              </div>}
               </div>
             }
 
