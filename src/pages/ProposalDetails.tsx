@@ -31,7 +31,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock, StickyNote, Save } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -166,6 +166,9 @@ const ProposalDetails: React.FC = () => {
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
   const [isLocking, setIsLocking] = useState(false);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+  const [peerReviewerNote, setPeerReviewerNote] = useState("");
+  const [isSavingPrNote, setIsSavingPrNote] = useState(false);
+  const [prNoteSaved, setPrNoteSaved] = useState(false);
 
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
@@ -270,8 +273,23 @@ const ProposalDetails: React.FC = () => {
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
     return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || reviewData.review || reviewData || {};
   }, [reviewData]);
+  // Extract peer reviewer note from review data (for decision reviewer display)
+  const peerReviewerNoteFromApi = React.useMemo(() => {
+    if (!reviewData) return "";
+    const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
+    const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
+    return peerReview?.reviewer_note || peerReview?.review_data?.reviewer_note || "";
+  }, [reviewData]);
 
-  // Set initial DR tab to "feedback" when review is submitted
+  // Initialize peer reviewer note from API data
+  React.useEffect(() => {
+    if (peerReviewerNoteFromApi) {
+      setPeerReviewerNote(peerReviewerNoteFromApi);
+      setPrNoteSaved(true);
+    }
+  }, [peerReviewerNoteFromApi]);
+
+
   const drShouldShowFeedback = decisionReviewerSubmitted || proposal && (
   statusIs(proposal.status, "contract_issued", "approved", "locked") ||
   (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
@@ -585,7 +603,24 @@ const ProposalDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Collapsible sections */}
+            {/* Peer Reviewer Note (shown to Decision Reviewer) */}
+            {peerReviewerNoteFromApi && (
+              <Card className="bg-accent/30 border-accent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <StickyNote className="h-4 w-4 text-muted-foreground" />
+                    Note from Peer Reviewer
+                    <span className="text-muted-foreground font-normal text-xs">
+                      ({reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"})
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNoteFromApi}</p>
+                </CardContent>
+              </Card>
+            )}
+
             <Accordion type="multiple" defaultValue={["blurb"]} className="space-y-1">
               <AccordionItem value="blurb" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">Blurb</AccordionTrigger>
@@ -1134,6 +1169,55 @@ const ProposalDetails: React.FC = () => {
                 </AccordionContent>
               </AccordionItem>}
             </Accordion>
+
+            {/* Note for Decision Reviewer */}
+            {!peerReviewAlreadySubmitted && (
+              <Card className="border-dashed">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <StickyNote className="h-4 w-4" />
+                    Note for Decision Reviewer
+                    <span className="text-muted-foreground font-normal text-sm">(optional)</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Textarea
+                    placeholder="Add any notes or observations you'd like to share with the decision reviewer..."
+                    value={peerReviewerNote}
+                    onChange={(e) => {
+                      setPeerReviewerNote(e.target.value);
+                      setPrNoteSaved(false);
+                    }}
+                    className="min-h-[100px] resize-none"
+                  />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      This note will be visible to the decision reviewer alongside your review.
+                    </p>
+                    {prNoteSaved && (
+                      <span className="text-xs text-[#3d5a47] flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Saved
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Show saved note read-only after submission */}
+            {peerReviewAlreadySubmitted && peerReviewerNote && (
+              <Card className="bg-muted/30">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <StickyNote className="h-4 w-4" />
+                    Your Note for Decision Reviewer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNote}</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* ---- AUTHOR INFO (Peer Reviewer) ---- */}
