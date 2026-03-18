@@ -145,6 +145,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("proposal");
   const [hasSeenReview, setHasSeenReview] = useState(false);
   const [showQueryThread, setShowQueryThread] = useState(false);
+  const [queryAccordionValue, setQueryAccordionValue] = useState<string | undefined>(undefined);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>("contract-details");
   const [isAccepting, setIsAccepting] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
@@ -748,7 +749,7 @@ const AuthorProposalDetails: React.FC = () => {
                                     <Button
                                 variant="outline"
                                 className="w-full gap-2 text-sm"
-                                onClick={() => setShowQueryThread(true)}>
+                                onClick={() => { setShowQueryThread(true); setQueryAccordionValue("contract-queries"); }}>
                                 
                                       <HelpCircle className="h-4 w-4" /> I have a question before signing
                                     </Button>
@@ -821,7 +822,7 @@ const AuthorProposalDetails: React.FC = () => {
 
                 {/* Contract Query Thread — shown on demand or when queries exist */}
                 {(showQueryThread || contractQueries.length > 0 || statusIs(proposal.status, 'queries_raised')) &&
-              <Accordion type="single" collapsible className="space-y-4">
+              <Accordion type="single" collapsible value={queryAccordionValue} onValueChange={setQueryAccordionValue} className="space-y-4">
                     <AccordionItem value="contract-queries" className="border rounded-md overflow-hidden">
                       <AccordionTrigger className="px-6 py-4 hover:no-underline bg-background">
                         <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
