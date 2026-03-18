@@ -1595,6 +1595,24 @@ const ProposalDetails: React.FC = () => {
           onSave={() => refetch()}
           onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
           onDraftSaved={() => {}} />
+
+            {/* Peer Reviewer Note (shown after review form for Decision Reviewer) */}
+            {peerReviewerNoteFromApi && (
+              <Card className="bg-accent/30 border-accent mt-4 mb-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <StickyNote className="h-4 w-4 text-muted-foreground" />
+                    Note from Peer Reviewer
+                    <span className="text-muted-foreground font-normal text-xs">
+                      ({reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"})
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNoteFromApi}</p>
+                </CardContent>
+              </Card>
+            )}
         
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
