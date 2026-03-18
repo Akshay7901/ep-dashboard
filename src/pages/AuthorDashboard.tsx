@@ -82,7 +82,9 @@ const AuthorDashboard: React.FC = () => {
   const hasMore = displayCount < filteredProposals.length;
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
+    setStatusFilter(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
     setDisplayCount(ITEMS_PER_PAGE);
   };
 
