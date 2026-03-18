@@ -11,6 +11,7 @@ interface UseProposalsOptions {
   searchCategory?: string;
   status?: string | string[] | 'all';
   actionRequired?: boolean;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // No status mapping needed — the API returns role-appropriate display text directly
