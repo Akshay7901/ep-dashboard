@@ -231,7 +231,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
-            if (contractRequired) {
+            if (contractWillBeSent) {
               setContractTitle(proposal?.name || "");
               setContractSubtitle(proposal?.sub_title || "");
               setShowContractDialog(true);
