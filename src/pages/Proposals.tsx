@@ -266,12 +266,13 @@ const Proposals: React.FC = () => {
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
+          <Select value={statusFilter.length === 1 ? statusFilter[0] : "all"} onValueChange={(v) => handleStatusChange(v === "all" ? "" : v)}>
             <SelectTrigger className="w-36 h-9 bg-background">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={statusFilter.length > 1 ? `${statusFilter.length} selected` : "All Statuses"} />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map((option) => (
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statusOptions.filter(o => o.value !== "all").map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
