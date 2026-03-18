@@ -127,7 +127,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle, peerReviewerNote, peerReviewerName }, ref) => {
     const { saveDraft, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
