@@ -124,8 +124,8 @@ const AuthorDashboard: React.FC = () => {
                   count={count}
                   label={label}
                   colorClass={colorClass}
-                  isActive={statusFilter === key}
-                  onClick={() => handleStatusChange(statusFilter === key ? "all" : key)}
+                  isActive={statusFilter.includes(key)}
+                  onClick={() => handleStatusChange(key)}
                 />
               );
             })}
