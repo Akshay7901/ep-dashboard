@@ -9,7 +9,8 @@ interface UseProposalsOptions {
   limit?: number;
   search?: string;
   searchCategory?: string;
-  status?: string | 'all';
+  status?: string | string[] | 'all';
+  actionRequired?: boolean;
 }
 
 // No status mapping needed — the API returns role-appropriate display text directly
@@ -123,11 +124,28 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
 };
 
 // Helper function to fetch proposals list directly from API
-const fetchProposalsList = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
+const fetchProposalsList = async (
+  limit: number,
+  offset: number,
+  options?: { status?: string | string[]; actionRequired?: boolean }
+): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   if (!token) throw new Error('Not authenticated');
 
-  const { data } = await api.get(`/api/proposals?limit=${limit}&offset=${offset}`);
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
+
+  if (options?.status && options.status !== 'all') {
+    const statuses = Array.isArray(options.status) ? options.status : [options.status];
+    statuses.forEach(s => params.append('status', s));
+  }
+
+  if (options?.actionRequired) {
+    params.set('action_required', 'true');
+  }
+
+  const { data } = await api.get(`/api/proposals?${params.toString()}`);
 
   if (data?.upstream?.status === 401) {
     localStorage.removeItem('auth_token');
@@ -157,20 +175,23 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
-  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all' } = options;
+  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false } = options;
 
   return useQuery({
-    queryKey: ['proposals', page, limit, search, searchCategory, status],
+    queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired],
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch proposals directly from external API
-      const apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+      // Fetch proposals with server-side filters
+      const apiData = await fetchProposalsList(limit, offset, {
+        status: status !== 'all' ? status : undefined,
+        actionRequired,
+      }).catch(() => ({ proposals: [], total: 0 }));
 
       // Map API proposals directly (no local overrides)
       let proposals = (apiData.proposals || []).map((apiProposal: any) => mapApiProposal(apiProposal));
 
-      // Client-side filtering for search
+      // Client-side filtering for search (search is not supported server-side)
       if (search) {
         const searchLower = search.toLowerCase();
         proposals = proposals.filter(p => {
@@ -188,11 +209,6 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
               return p.author_name?.toLowerCase().includes(searchLower);
           }
         });
-      }
-
-      // Client-side filtering for status
-      if (status !== 'all') {
-        proposals = proposals.filter(p => p.status === status);
       }
 
       return {
