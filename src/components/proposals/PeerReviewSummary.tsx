@@ -37,6 +37,9 @@ interface PeerReviewSummaryProps {
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
+  /** Note for decision reviewer (peer reviewer only) */
+  reviewerNote?: string;
+  onReviewerNoteChange?: (note: string) => void;
 }
 
 const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
@@ -46,6 +49,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   onConfirmSubmit,
   isSubmitting,
   showContractSection = false,
+  reviewerNote = "",
+  onReviewerNoteChange,
 }) => {
   const recommendation = formData.recommendation;
   const isReject = recommendation === "reject";
