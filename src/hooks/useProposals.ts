@@ -146,6 +146,10 @@ const fetchProposalsList = async (
     params.set('action_required', 'true');
   }
 
+  if (options?.sortOrder) {
+    params.set('sort_order', options.sortOrder);
+  }
+
   const { data } = await api.get(`/api/proposals?${params.toString()}`);
 
   if (data?.upstream?.status === 401) {
