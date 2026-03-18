@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 
@@ -35,6 +37,9 @@ interface PeerReviewSummaryProps {
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
+  /** Note for decision reviewer (peer reviewer only) */
+  reviewerNote?: string;
+  onReviewerNoteChange?: (note: string) => void;
 }
 
 const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
@@ -44,6 +49,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   onConfirmSubmit,
   isSubmitting,
   showContractSection = false,
+  reviewerNote = "",
+  onReviewerNoteChange,
 }) => {
   const recommendation = formData.recommendation;
   const isReject = recommendation === "reject";
@@ -123,6 +130,26 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
           <p className="text-sm text-destructive mt-1">Not selected</p>
         )}
       </div>
+
+      {/* Note for Decision Reviewer (peer reviewer only) */}
+      {onReviewerNoteChange && (
+        <div className="mt-6 border rounded-md p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-semibold">Note for Decision Reviewer</p>
+            <span className="text-xs text-muted-foreground">(optional)</span>
+          </div>
+          <Textarea
+            placeholder="Add any notes or observations you'd like to share with the decision reviewer..."
+            value={reviewerNote}
+            onChange={(e) => onReviewerNoteChange(e.target.value)}
+            className="min-h-[80px] resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            This note will be visible to the decision reviewer alongside your review.
+          </p>
+        </div>
+      )}
 
       {/* Contract option - only for decision reviewer */}
       {showContractSection && (

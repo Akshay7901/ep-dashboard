@@ -1170,47 +1170,6 @@ const ProposalDetails: React.FC = () => {
               </AccordionItem>}
             </Accordion>
 
-            {/* Note for Decision Reviewer */}
-            {!peerReviewAlreadySubmitted && (
-              <Card className="border-dashed">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <StickyNote className="h-4 w-4" />
-                    Note for Decision Reviewer
-                    <span className="text-muted-foreground font-normal text-sm">(optional)</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Textarea
-                    placeholder="Add any notes or observations you'd like to share with the decision reviewer..."
-                    value={peerReviewerNote}
-                    onChange={(e) => {
-                      setPeerReviewerNote(e.target.value);
-                      setPrNoteSaved(false);
-                    }}
-                    className="min-h-[80px] resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This note will be visible to the decision reviewer alongside your review.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Read-only note after submission */}
-            {peerReviewAlreadySubmitted && peerReviewerNote && (
-              <Card className="bg-muted/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <StickyNote className="h-4 w-4" />
-                    Your Note for Decision Reviewer
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNote}</p>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           {/* ---- AUTHOR INFO (Peer Reviewer) ---- */}
@@ -1495,6 +1454,8 @@ const ProposalDetails: React.FC = () => {
           setIsConfirming(false);
         }
       }}
+      reviewerNote={peerReviewerNote}
+      onReviewerNoteChange={setPeerReviewerNote}
       isSubmitting={isConfirming} /> :
 
 
