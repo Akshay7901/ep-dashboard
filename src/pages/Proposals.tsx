@@ -224,15 +224,22 @@ const Proposals: React.FC = () => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
               const colorClass = config?.colorClass || "bg-gray-500 text-white border-gray-500";
-              const filterValue = key === "total" ? "all" : key;
+              const isTotal = key === "total";
               return (
                 <StatusChip
                   key={key}
                   count={count}
                   label={formatStatusLabel(key)}
                   colorClass={colorClass}
-                  isActive={statusFilter.includes(filterValue)}
-                  onClick={() => handleStatusChange(filterValue)}
+                  isActive={isTotal ? statusFilter.length === 0 : statusFilter.includes(key)}
+                  onClick={() => {
+                    if (isTotal) {
+                      setStatusFilter([]);
+                    } else {
+                      handleStatusChange(key);
+                    }
+                    setDisplayCount(ITEMS_PER_PAGE);
+                  }}
                 />
               );
             })}
