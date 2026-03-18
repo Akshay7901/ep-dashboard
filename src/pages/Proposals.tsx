@@ -94,7 +94,7 @@ const Proposals: React.FC = () => {
     limit: 100,
     search: searchQuery,
     searchCategory,
-    status: statusFilter,
+    status: statusFilter.length === 0 ? "all" : statusFilter,
     actionRequired: actionRequiredFilter,
   });
 
