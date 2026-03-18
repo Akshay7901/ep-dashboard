@@ -181,15 +181,40 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
     queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired],
     queryFn: async () => {
       const offset = (page - 1) * limit;
-      
-      // Fetch proposals with server-side filters
-      const apiData = await fetchProposalsList(limit, offset, {
-        status: status !== 'all' ? status : undefined,
-        actionRequired,
-      }).catch(() => ({ proposals: [], total: 0 }));
+      const hasServerFilters = (status !== 'all') || actionRequired;
+
+      // Try server-side filters first; fall back to unfiltered + client-side
+      let apiData: any;
+      let usedServerFilters = false;
+
+      if (hasServerFilters) {
+        try {
+          apiData = await fetchProposalsList(limit, offset, {
+            status: status !== 'all' ? status : undefined,
+            actionRequired,
+          });
+          usedServerFilters = true;
+        } catch {
+          // Server-side filter failed (e.g. 500) — fall back to unfiltered
+          apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+        }
+      } else {
+        apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+      }
 
       // Map API proposals directly (no local overrides)
       let proposals = (apiData.proposals || []).map((apiProposal: any) => mapApiProposal(apiProposal));
+
+      // Client-side fallback filtering when server-side failed
+      if (!usedServerFilters && hasServerFilters) {
+        const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
+        if (status !== 'all') {
+          proposals = proposals.filter(p => normalizeStatus(p.status) === status);
+        }
+        if (actionRequired) {
+          proposals = proposals.filter(p => p.action_required === true);
+        }
+      }
 
       // Client-side filtering for search (search is not supported server-side)
       if (search) {
