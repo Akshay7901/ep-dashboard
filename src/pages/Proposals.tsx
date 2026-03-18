@@ -231,7 +231,7 @@ const Proposals: React.FC = () => {
                   count={count}
                   label={formatStatusLabel(key)}
                   colorClass={colorClass}
-                  isActive={statusFilter === filterValue}
+                  isActive={statusFilter.includes(filterValue)}
                   onClick={() => handleStatusChange(filterValue)}
                 />
               );
