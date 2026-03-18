@@ -202,7 +202,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
           usedServerFilters = true;
         } catch {
           // Server-side filter failed (e.g. 500) — fall back to unfiltered
-          apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+          apiData = await fetchProposalsList(limit, offset, { sortOrder }).catch(() => ({ proposals: [], total: 0 }));
         }
       } else {
         apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
