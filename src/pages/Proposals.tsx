@@ -97,6 +97,7 @@ const Proposals: React.FC = () => {
     searchCategory,
     status: statusFilter.length === 0 ? "all" : statusFilter,
     actionRequired: actionRequiredFilter,
+    sortOrder,
   });
 
   /* ---------- Derived data ---------- */
