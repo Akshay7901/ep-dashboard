@@ -90,12 +90,14 @@ const Proposals: React.FC = () => {
   const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  // For peer reviewers, always fetch all proposals (API doesn't support status filtering)
+  // and filter client-side instead
   const { data, isLoading, error } = useProposals({
     page: 1,
     limit: 100,
     search: searchQuery,
     searchCategory,
-    status: statusFilter.length === 0 ? "all" : statusFilter,
+    status: isReviewer2 ? "all" : (statusFilter.length === 0 ? "all" : statusFilter),
     actionRequired: actionRequiredFilter,
     sortOrder,
   });
