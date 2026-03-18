@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import TruncatedCell from "@/components/ui/truncated-cell";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpDown } from "lucide-react";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
@@ -49,6 +49,7 @@ const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
@@ -57,6 +58,7 @@ const AuthorDashboard: React.FC = () => {
     search: "",
     searchCategory: "author",
     status: "all",
+    sortOrder,
   });
 
   // Filter proposals to only those matching the author's email
@@ -131,6 +133,20 @@ const AuthorDashboard: React.FC = () => {
             })}
           </div>
         )}
+
+        {/* Sort Control */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setDisplayCount(ITEMS_PER_PAGE); }}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+              "bg-background text-foreground border-border hover:bg-muted"
+            )}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+          </button>
+        </div>
 
         {/* Proposals Table */}
         <div className="space-y-4">

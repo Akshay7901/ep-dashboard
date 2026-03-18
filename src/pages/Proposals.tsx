@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, Users } from "lucide-react";
+import { Search, Loader2, Users, ArrowUpDown } from "lucide-react";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
 import TruncatedCell from "@/components/ui/truncated-cell";
 import { format } from "date-fns";
@@ -88,6 +88,7 @@ const Proposals: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
     page: 1,
@@ -96,6 +97,7 @@ const Proposals: React.FC = () => {
     searchCategory,
     status: statusFilter.length === 0 ? "all" : statusFilter,
     actionRequired: actionRequiredFilter,
+    sortOrder,
   });
 
   /* ---------- Derived data ---------- */
@@ -300,6 +302,17 @@ const Proposals: React.FC = () => {
               Action Required
             </button>
           )}
+
+          <button
+            onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setDisplayCount(ITEMS_PER_PAGE); }}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+              "bg-background text-foreground border-border hover:bg-muted"
+            )}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+          </button>
         </div>
 
         {/* Section label */}

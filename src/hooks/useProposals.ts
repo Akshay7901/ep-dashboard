@@ -11,6 +11,7 @@ interface UseProposalsOptions {
   searchCategory?: string;
   status?: string | string[] | 'all';
   actionRequired?: boolean;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // No status mapping needed — the API returns role-appropriate display text directly
@@ -127,7 +128,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
 const fetchProposalsList = async (
   limit: number,
   offset: number,
-  options?: { status?: string | string[]; actionRequired?: boolean }
+  options?: { status?: string | string[]; actionRequired?: boolean; sortOrder?: 'asc' | 'desc' }
 ): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   if (!token) throw new Error('Not authenticated');
@@ -143,6 +144,10 @@ const fetchProposalsList = async (
 
   if (options?.actionRequired) {
     params.set('action_required', 'true');
+  }
+
+  if (options?.sortOrder) {
+    params.set('sort_order', options.sortOrder);
   }
 
   const { data } = await api.get(`/api/proposals?${params.toString()}`);
@@ -175,10 +180,10 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
-  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false } = options;
+  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false, sortOrder = 'desc' } = options;
 
   return useQuery({
-    queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired],
+    queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired, sortOrder],
     queryFn: async () => {
       const offset = (page - 1) * limit;
       const hasServerFilters = (status !== 'all') || actionRequired;
@@ -192,14 +197,15 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
           apiData = await fetchProposalsList(limit, offset, {
             status: status !== 'all' ? status : undefined,
             actionRequired,
+            sortOrder,
           });
           usedServerFilters = true;
         } catch {
           // Server-side filter failed (e.g. 500) — fall back to unfiltered
-          apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+          apiData = await fetchProposalsList(limit, offset, { sortOrder }).catch(() => ({ proposals: [], total: 0 }));
         }
       } else {
-        apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+        apiData = await fetchProposalsList(limit, offset, { sortOrder }).catch(() => ({ proposals: [], total: 0 }));
       }
 
       // Map API proposals directly (no local overrides)
