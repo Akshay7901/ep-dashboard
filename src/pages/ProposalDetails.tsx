@@ -1530,6 +1530,16 @@ const ProposalDetails: React.FC = () => {
 
     <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
            <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+            {/* Peer Reviewer Note (shown at top for Decision Reviewer) */}
+            {peerReviewerNoteFromApi && (
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50 mb-4">
+                <StickyNote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Peer Reviewer ({reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"})</p>
+                  <p className="text-sm text-foreground">{peerReviewerNoteFromApi}</p>
+                </div>
+              </div>
+            )}
             {/* Start Fresh button + info banner for decision reviewer */}
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
@@ -1579,23 +1589,6 @@ const ProposalDetails: React.FC = () => {
           onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
           onDraftSaved={() => {}} />
 
-            {/* Peer Reviewer Note (shown after review form for Decision Reviewer) */}
-            {peerReviewerNoteFromApi && (
-              <Card className="bg-accent/30 border-accent mt-4 mb-4">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <StickyNote className="h-4 w-4 text-muted-foreground" />
-                    Note from Peer Reviewer
-                    <span className="text-muted-foreground font-normal text-xs">
-                      ({reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"})
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNoteFromApi}</p>
-                </CardContent>
-              </Card>
-            )}
         
           </div>
           <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
