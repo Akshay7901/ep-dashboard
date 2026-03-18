@@ -58,6 +58,7 @@ const AuthorDashboard: React.FC = () => {
     search: "",
     searchCategory: "author",
     status: "all",
+    sortOrder,
   });
 
   // Filter proposals to only those matching the author's email
