@@ -749,7 +749,7 @@ const AuthorProposalDetails: React.FC = () => {
                                     <Button
                                 variant="outline"
                                 className="w-full gap-2 text-sm"
-                                onClick={() => setShowQueryThread(true)}>
+                                onClick={() => { setShowQueryThread(true); setQueryAccordionValue("contract-queries"); }}>
                                 
                                       <HelpCircle className="h-4 w-4" /> I have a question before signing
                                     </Button>
