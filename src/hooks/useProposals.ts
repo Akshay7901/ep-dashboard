@@ -124,11 +124,28 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
 };
 
 // Helper function to fetch proposals list directly from API
-const fetchProposalsList = async (limit: number, offset: number): Promise<ApiProposalsResponse> => {
+const fetchProposalsList = async (
+  limit: number,
+  offset: number,
+  options?: { status?: string | string[]; actionRequired?: boolean }
+): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   if (!token) throw new Error('Not authenticated');
 
-  const { data } = await api.get(`/api/proposals?limit=${limit}&offset=${offset}`);
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
+
+  if (options?.status && options.status !== 'all') {
+    const statuses = Array.isArray(options.status) ? options.status : [options.status];
+    statuses.forEach(s => params.append('status', s));
+  }
+
+  if (options?.actionRequired) {
+    params.set('action_required', 'true');
+  }
+
+  const { data } = await api.get(`/api/proposals?${params.toString()}`);
 
   if (data?.upstream?.status === 401) {
     localStorage.removeItem('auth_token');
