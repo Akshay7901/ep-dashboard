@@ -332,7 +332,17 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           );
         })()}
 
-        {/* Form Fields */}
+        {/* Note from peer reviewer (shown to decision reviewer) */}
+        {peerReviewerNote && (
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
+            <StickyNote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Peer Reviewer{peerReviewerName ? ` (${peerReviewerName})` : ""}</p>
+              <p className="text-sm text-foreground">{peerReviewerNote}</p>
+            </div>
+          </div>
+        )}
+
         {REVIEW_FIELDS.map((field) => (
           <div key={field.key} className="space-y-2">
             <Label className="text-base font-semibold">{field.label}</Label>
