@@ -88,6 +88,7 @@ const Proposals: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
     page: 1,
