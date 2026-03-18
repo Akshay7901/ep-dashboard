@@ -48,7 +48,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
