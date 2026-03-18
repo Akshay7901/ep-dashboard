@@ -273,8 +273,23 @@ const ProposalDetails: React.FC = () => {
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
     return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || reviewData.review || reviewData || {};
   }, [reviewData]);
+  // Extract peer reviewer note from review data (for decision reviewer display)
+  const peerReviewerNoteFromApi = React.useMemo(() => {
+    if (!reviewData) return "";
+    const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
+    const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
+    return peerReview?.reviewer_note || peerReview?.review_data?.reviewer_note || "";
+  }, [reviewData]);
 
-  // Set initial DR tab to "feedback" when review is submitted
+  // Initialize peer reviewer note from API data
+  React.useEffect(() => {
+    if (peerReviewerNoteFromApi) {
+      setPeerReviewerNote(peerReviewerNoteFromApi);
+      setPrNoteSaved(true);
+    }
+  }, [peerReviewerNoteFromApi]);
+
+
   const drShouldShowFeedback = decisionReviewerSubmitted || proposal && (
   statusIs(proposal.status, "contract_issued", "approved", "locked") ||
   (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
