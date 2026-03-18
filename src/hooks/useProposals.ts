@@ -197,6 +197,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
           apiData = await fetchProposalsList(limit, offset, {
             status: status !== 'all' ? status : undefined,
             actionRequired,
+            sortOrder,
           });
           usedServerFilters = true;
         } catch {
