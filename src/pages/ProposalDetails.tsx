@@ -1458,31 +1458,7 @@ const ProposalDetails: React.FC = () => {
 
 
     <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="pl-6 pr-6 overflow-y-auto h-full scrollbar-thin space-y-4">
-            {/* Note for Decision Reviewer */}
-            <Card className="border-dashed">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <StickyNote className="h-4 w-4" />
-                  Note for Decision Reviewer
-                  <span className="text-muted-foreground font-normal text-sm">(optional)</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Textarea
-                  placeholder="Add any notes or observations you'd like to share with the decision reviewer..."
-                  value={peerReviewerNote}
-                  onChange={(e) => {
-                    setPeerReviewerNote(e.target.value);
-                    setPrNoteSaved(false);
-                  }}
-                  className="min-h-[80px] resize-none"
-                />
-                <p className="text-xs text-muted-foreground">
-                  This note will be visible to the decision reviewer alongside your review.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="pl-6 pr-6 overflow-y-auto h-full scrollbar-thin">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}} onDraftSaved={() => {
           if (statusIs(proposal.status, "pending", "new", "submitted")) {
             // Status transitions managed by backend
