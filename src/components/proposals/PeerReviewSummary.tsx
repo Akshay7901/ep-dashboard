@@ -54,7 +54,10 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
 }) => {
   const recommendation = formData.recommendation;
   const isReject = recommendation === "reject";
-  const contractRequired = showContractSection && !isReject;
+  const isMajorRevision = recommendation === "major_revision";
+  const contractRequired = showContractSection && !isReject && !isMajorRevision;
+  const [includeContractForMajor, setIncludeContractForMajor] = useState(false);
+  const contractWillBeSent = contractRequired || (showContractSection && isMajorRevision && includeContractForMajor);
 
   const defaultContract = getDefaultContractType(proposal.book_type);
   const [selectedContract, setSelectedContract] = useState(defaultContract);
