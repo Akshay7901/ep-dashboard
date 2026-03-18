@@ -138,16 +138,8 @@ const Proposals: React.FC = () => {
   const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
 
   const filteredProposals = React.useMemo(() => {
-    if (!roleFilteredProposals.length) return [];
-    let result = roleFilteredProposals;
-    if (statusFilter !== "all") {
-      result = result.filter((p) => normalizeStatus(p.status) === statusFilter);
-    }
-    if (actionRequiredFilter) {
-      result = result.filter((p) => p.action_required === true);
-    }
-    return result;
-  }, [roleFilteredProposals, statusFilter, actionRequiredFilter]);
+    return roleFilteredProposals;
+  }, [roleFilteredProposals]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
