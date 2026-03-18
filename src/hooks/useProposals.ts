@@ -205,7 +205,7 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
           apiData = await fetchProposalsList(limit, offset, { sortOrder }).catch(() => ({ proposals: [], total: 0 }));
         }
       } else {
-        apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+        apiData = await fetchProposalsList(limit, offset, { sortOrder }).catch(() => ({ proposals: [], total: 0 }));
       }
 
       // Map API proposals directly (no local overrides)
