@@ -209,7 +209,8 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
       if (!usedServerFilters && hasServerFilters) {
         const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
         if (status !== 'all') {
-          proposals = proposals.filter(p => normalizeStatus(p.status) === status);
+          const statusArr = Array.isArray(status) ? status : [status];
+          proposals = proposals.filter(p => statusArr.includes(normalizeStatus(p.status)));
         }
         if (actionRequired) {
           proposals = proposals.filter(p => p.action_required === true);
