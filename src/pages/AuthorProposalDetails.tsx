@@ -851,7 +851,7 @@ const AuthorProposalDetails: React.FC = () => {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-              }
+              </div>}
               </div>
             }
 
