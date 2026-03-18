@@ -74,8 +74,8 @@ const AuthorDashboard: React.FC = () => {
   const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
 
   const filteredProposals = React.useMemo(() => {
-    if (statusFilter === "all") return authorProposals;
-    return authorProposals.filter((p) => normalizeStatus(p.status) === statusFilter);
+    if (statusFilter.length === 0) return authorProposals;
+    return authorProposals.filter((p) => statusFilter.includes(normalizeStatus(p.status)));
   }, [authorProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
