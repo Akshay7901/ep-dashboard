@@ -1575,6 +1575,8 @@ const ProposalDetails: React.FC = () => {
           forceEditable
           hideHeader
           preloadedStyle={!decisionReviewerDraft}
+          peerReviewerNote={peerReviewerNoteFromApi}
+          peerReviewerName={reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"}
           onSave={() => refetch()}
           onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
           onDraftSaved={() => {}} />
