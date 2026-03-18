@@ -1454,6 +1454,8 @@ const ProposalDetails: React.FC = () => {
           setIsConfirming(false);
         }
       }}
+      reviewerNote={peerReviewerNote}
+      onReviewerNoteChange={setPeerReviewerNote}
       isSubmitting={isConfirming} /> :
 
 
