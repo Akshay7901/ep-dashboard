@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import TruncatedCell from "@/components/ui/truncated-cell";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpDown } from "lucide-react";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
 import { format } from "date-fns";
 import { useProposals } from "@/hooks/useProposals";
