@@ -145,6 +145,7 @@ const AuthorProposalDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("proposal");
   const [hasSeenReview, setHasSeenReview] = useState(false);
   const [showQueryThread, setShowQueryThread] = useState(false);
+  const [queryAccordionValue, setQueryAccordionValue] = useState<string | undefined>(undefined);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>("contract-details");
   const [isAccepting, setIsAccepting] = useState(false);
   const [documentPreview, setDocumentPreview] = useState<{url: string;name: string;type: "pdf" | "word";} | null>(
