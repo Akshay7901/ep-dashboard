@@ -94,7 +94,8 @@ const Proposals: React.FC = () => {
     limit: 100,
     search: searchQuery,
     searchCategory,
-    status: "all",
+    status: statusFilter,
+    actionRequired: actionRequiredFilter,
   });
 
   /* ---------- Derived data ---------- */
