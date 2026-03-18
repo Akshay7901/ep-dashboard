@@ -1409,6 +1409,19 @@ const ProposalDetails: React.FC = () => {
                     </div>);
 
           })()}
+              {peerReviewerNote && (
+                <Card className="bg-muted/30 mt-4">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <StickyNote className="h-4 w-4" />
+                      Your Note for Decision Reviewer
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{peerReviewerNote}</p>
+                  </CardContent>
+                </Card>
+              )}
               </div>
             </div>
             <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
