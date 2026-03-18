@@ -86,7 +86,7 @@ const Proposals: React.FC = () => {
   const { isAnyReviewer, isReviewer1, isReviewer2, isAuthor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("author");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const { data, isLoading, error } = useProposals({
@@ -94,7 +94,7 @@ const Proposals: React.FC = () => {
     limit: 100,
     search: searchQuery,
     searchCategory,
-    status: statusFilter,
+    status: statusFilter.length === 0 ? "all" : statusFilter,
     actionRequired: actionRequiredFilter,
   });
 
@@ -149,7 +149,9 @@ const Proposals: React.FC = () => {
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleStatusChange = (value: string) => {
-    setStatusFilter(prev => prev === value ? "all" : value);
+    setStatusFilter(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
     setDisplayCount(ITEMS_PER_PAGE);
   };
   const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
@@ -222,15 +224,22 @@ const Proposals: React.FC = () => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
               const colorClass = config?.colorClass || "bg-gray-500 text-white border-gray-500";
-              const filterValue = key === "total" ? "all" : key;
+              const isTotal = key === "total";
               return (
                 <StatusChip
                   key={key}
                   count={count}
                   label={formatStatusLabel(key)}
                   colorClass={colorClass}
-                  isActive={statusFilter === filterValue}
-                  onClick={() => handleStatusChange(filterValue)}
+                  isActive={isTotal ? statusFilter.length === 0 : statusFilter.includes(key)}
+                  onClick={() => {
+                    if (isTotal) {
+                      setStatusFilter([]);
+                    } else {
+                      handleStatusChange(key);
+                    }
+                    setDisplayCount(ITEMS_PER_PAGE);
+                  }}
                 />
               );
             })}
@@ -264,12 +273,13 @@ const Proposals: React.FC = () => {
             />
           </div>
 
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
+          <Select value={statusFilter.length === 1 ? statusFilter[0] : "all"} onValueChange={(v) => handleStatusChange(v === "all" ? "" : v)}>
             <SelectTrigger className="w-36 h-9 bg-background">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={statusFilter.length > 1 ? `${statusFilter.length} selected` : "All Statuses"} />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map((option) => (
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statusOptions.filter(o => o.value !== "all").map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
