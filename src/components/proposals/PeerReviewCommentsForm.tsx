@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Save, MessageSquare } from "lucide-react";
+import { CheckCircle, Save, MessageSquare, StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { useReview } from "@/hooks/useReview";
 
@@ -20,6 +20,10 @@ interface PeerReviewCommentsFormProps {
   hideHeader?: boolean;
   /** When true, show pre-loaded text in red/destructive color */
   preloadedStyle?: boolean;
+  /** Note from peer reviewer (shown to decision reviewer before Scope) */
+  peerReviewerNote?: string;
+  /** Name of the peer reviewer for display */
+  peerReviewerName?: string;
 }
 
 export interface PeerReviewCommentsFormHandle {
@@ -123,7 +127,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle, peerReviewerNote, peerReviewerName }, ref) => {
     const { saveDraft, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
@@ -328,7 +332,17 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           );
         })()}
 
-        {/* Form Fields */}
+        {/* Note from peer reviewer (shown to decision reviewer) */}
+        {peerReviewerNote && (
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-border bg-muted/50">
+            <StickyNote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-0.5">Note from Peer Reviewer{peerReviewerName ? ` (${peerReviewerName})` : ""}</p>
+              <p className="text-sm text-foreground">{peerReviewerNote}</p>
+            </div>
+          </div>
+        )}
+
         {REVIEW_FIELDS.map((field) => (
           <div key={field.key} className="space-y-2">
             <Label className="text-base font-semibold">{field.label}</Label>
