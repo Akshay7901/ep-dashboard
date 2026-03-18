@@ -20,6 +20,10 @@ interface PeerReviewCommentsFormProps {
   hideHeader?: boolean;
   /** When true, show pre-loaded text in red/destructive color */
   preloadedStyle?: boolean;
+  /** Note from peer reviewer (shown to decision reviewer before Scope) */
+  peerReviewerNote?: string;
+  /** Name of the peer reviewer for display */
+  peerReviewerName?: string;
 }
 
 export interface PeerReviewCommentsFormHandle {
