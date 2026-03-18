@@ -86,13 +86,6 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         Please review your comments before submitting
       </p>
 
-      {/* Proposal title */}
-      <div className="bg-muted/40 rounded-md p-4 mb-8">
-        <p className="font-semibold text-sm">{proposal.name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          by {proposal.corresponding_author_name || proposal.author_name}
-        </p>
-      </div>
 
       {/* Fields summary */}
       <div className="divide-y">
