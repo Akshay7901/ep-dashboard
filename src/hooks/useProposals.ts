@@ -128,7 +128,7 @@ const mapApiProposalDetail = (apiProposal: ApiProposalDetail): Proposal => {
 const fetchProposalsList = async (
   limit: number,
   offset: number,
-  options?: { status?: string | string[]; actionRequired?: boolean }
+  options?: { status?: string | string[]; actionRequired?: boolean; sortOrder?: 'asc' | 'desc' }
 ): Promise<ApiProposalsResponse> => {
   const token = localStorage.getItem('auth_token');
   if (!token) throw new Error('Not authenticated');
