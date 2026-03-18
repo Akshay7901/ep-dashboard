@@ -131,6 +131,26 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         )}
       </div>
 
+      {/* Note for Decision Reviewer (peer reviewer only) */}
+      {onReviewerNoteChange && (
+        <div className="mt-6 border rounded-md p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-semibold">Note for Decision Reviewer</p>
+            <span className="text-xs text-muted-foreground">(optional)</span>
+          </div>
+          <Textarea
+            placeholder="Add any notes or observations you'd like to share with the decision reviewer..."
+            value={reviewerNote}
+            onChange={(e) => onReviewerNoteChange(e.target.value)}
+            className="min-h-[80px] resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            This note will be visible to the decision reviewer alongside your review.
+          </p>
+        </div>
+      )}
+
       {/* Contract option - only for decision reviewer */}
       {showContractSection && (
         <div className="mt-8 space-y-4">
