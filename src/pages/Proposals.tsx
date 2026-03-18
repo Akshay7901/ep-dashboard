@@ -134,9 +134,6 @@ const Proposals: React.FC = () => {
     return options;
   }, [statusSummary]);
 
-  // Normalize status for comparison: "In Review" -> "in_review"
-  const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
-
   const filteredProposals = React.useMemo(() => {
     return roleFilteredProposals;
   }, [roleFilteredProposals]);
