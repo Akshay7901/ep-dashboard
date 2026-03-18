@@ -48,7 +48,7 @@ const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isAct
 const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
@@ -74,15 +74,17 @@ const AuthorDashboard: React.FC = () => {
   const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
 
   const filteredProposals = React.useMemo(() => {
-    if (statusFilter === "all") return authorProposals;
-    return authorProposals.filter((p) => normalizeStatus(p.status) === statusFilter);
+    if (statusFilter.length === 0) return authorProposals;
+    return authorProposals.filter((p) => statusFilter.includes(normalizeStatus(p.status)));
   }, [authorProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
+    setStatusFilter(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
     setDisplayCount(ITEMS_PER_PAGE);
   };
 
@@ -122,8 +124,8 @@ const AuthorDashboard: React.FC = () => {
                   count={count}
                   label={label}
                   colorClass={colorClass}
-                  isActive={statusFilter === key}
-                  onClick={() => handleStatusChange(statusFilter === key ? "all" : key)}
+                  isActive={statusFilter.includes(key)}
+                  onClick={() => handleStatusChange(key)}
                 />
               );
             })}
