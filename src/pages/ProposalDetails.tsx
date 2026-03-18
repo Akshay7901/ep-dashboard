@@ -1442,7 +1442,8 @@ const ProposalDetails: React.FC = () => {
         setIsConfirming(true);
         try {
           await submitReviewApi({
-            ...summaryFormData
+            ...summaryFormData,
+            ...(peerReviewerNote ? { note_to_dr: peerReviewerNote } : {}),
           });
 
           queryClient.invalidateQueries({ queryKey: ["proposals"] });
