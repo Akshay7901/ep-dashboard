@@ -166,6 +166,9 @@ const ProposalDetails: React.FC = () => {
   const [diffCheckerDrData, setDiffCheckerDrData] = useState<Record<string, string>>({});
   const [isLocking, setIsLocking] = useState(false);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
+  const [peerReviewerNote, setPeerReviewerNote] = useState("");
+  const [isSavingPrNote, setIsSavingPrNote] = useState(false);
+  const [prNoteSaved, setPrNoteSaved] = useState(false);
 
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
