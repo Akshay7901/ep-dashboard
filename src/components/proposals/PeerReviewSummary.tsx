@@ -156,6 +156,44 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                 No contract will be sent as the recommendation is "Reject".
               </p>
             </div>
+          ) : isMajorRevision ? (
+            <div className="space-y-4">
+              <div className="bg-[#9b2c2c]/10 border border-[#9b2c2c]/20 rounded-md p-4 space-y-3">
+                <p className="text-sm font-medium text-[#9b2c2c]">
+                  Major Revision — Would you like to send a contract with this submission?
+                </p>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeContractForMajor}
+                      onChange={(e) => setIncludeContractForMajor(e.target.checked)}
+                      className="h-4 w-4 rounded border-border accent-[#2f4b40]"
+                    />
+                    <span className="text-sm font-medium">Include contract</span>
+                  </label>
+                </div>
+              </div>
+              {includeContractForMajor && (
+                <div>
+                  <p className="text-sm font-medium mb-1">Select Contract Type</p>
+                  {proposal.book_type && (
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Auto-selected based on book type: <span className="font-medium">{proposal.book_type}</span>
+                    </p>
+                  )}
+                  <Select value={selectedContract} onValueChange={handleContractTypeChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a contract" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="author">Author Contract</SelectItem>
+                      <SelectItem value="editor">Editor Contract</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <div className="bg-primary/10 border border-primary/20 rounded-md p-4">
