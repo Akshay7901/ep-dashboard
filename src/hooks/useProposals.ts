@@ -180,7 +180,7 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
-  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false } = options;
+  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false, sortOrder = 'desc' } = options;
 
   return useQuery({
     queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired],
