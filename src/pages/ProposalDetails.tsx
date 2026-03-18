@@ -278,7 +278,7 @@ const ProposalDetails: React.FC = () => {
     if (!reviewData) return "";
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
     const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
-    return peerReview?.reviewer_note || peerReview?.review_data?.reviewer_note || "";
+    return peerReview?.note_to_dr || peerReview?.review_data?.note_to_dr || peerReview?.reviewer_note || peerReview?.review_data?.reviewer_note || "";
   }, [reviewData]);
 
   // Initialize peer reviewer note from API data
