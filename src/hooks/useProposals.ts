@@ -175,20 +175,23 @@ const fetchProposalByTicket = async (ticketNumber: string): Promise<ApiProposalD
 };
 
 export const useProposals = (options: UseProposalsOptions = {}) => {
-  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all' } = options;
+  const { page = 1, limit = 10, search = '', searchCategory = 'author', status = 'all', actionRequired = false } = options;
 
   return useQuery({
-    queryKey: ['proposals', page, limit, search, searchCategory, status],
+    queryKey: ['proposals', page, limit, search, searchCategory, status, actionRequired],
     queryFn: async () => {
       const offset = (page - 1) * limit;
       
-      // Fetch proposals directly from external API
-      const apiData = await fetchProposalsList(limit, offset).catch(() => ({ proposals: [], total: 0 }));
+      // Fetch proposals with server-side filters
+      const apiData = await fetchProposalsList(limit, offset, {
+        status: status !== 'all' ? status : undefined,
+        actionRequired,
+      }).catch(() => ({ proposals: [], total: 0 }));
 
       // Map API proposals directly (no local overrides)
       let proposals = (apiData.proposals || []).map((apiProposal: any) => mapApiProposal(apiProposal));
 
-      // Client-side filtering for search
+      // Client-side filtering for search (search is not supported server-side)
       if (search) {
         const searchLower = search.toLowerCase();
         proposals = proposals.filter(p => {
@@ -206,11 +209,6 @@ export const useProposals = (options: UseProposalsOptions = {}) => {
               return p.author_name?.toLowerCase().includes(searchLower);
           }
         });
-      }
-
-      // Client-side filtering for status
-      if (status !== 'all') {
-        proposals = proposals.filter(p => p.status === status);
       }
 
       return {
