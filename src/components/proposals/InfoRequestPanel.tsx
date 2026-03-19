@@ -136,12 +136,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
     };
   }, []);
 
-  // Reset when pending request changes
+  // Reset when pending request ID changes (but skip initial mount)
+  const prevRequestId = useRef<number | undefined>(undefined);
   React.useEffect(() => {
-    setInitialized(false);
-    setResponseNote("");
-    setUpdatedFields({});
-    setUploadedFiles({});
+    if (prevRequestId.current !== undefined && prevRequestId.current !== pendingRequest?.id) {
+      setInitialized(false);
+      setResponseNote("");
+      setUpdatedFields({});
+      setUploadedFiles({});
+    }
+    prevRequestId.current = pendingRequest?.id;
   }, [pendingRequest?.id]);
 
   const handleSubmitResponse = () => {
