@@ -220,9 +220,11 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                         <Textarea
                           placeholder="Provide the requested information here..."
                           value={updatedFields[item.key] || ""}
-                          onChange={(e) =>
-                            setUpdatedFields((prev) => ({ ...prev, [item.key]: e.target.value }))
-                          }
+                          onChange={(e) => {
+                            const newFields = { ...updatedFields, [item.key]: e.target.value };
+                            setUpdatedFields(newFields);
+                            triggerAutoSave(newFields);
+                          }}
                           className="min-h-[100px] resize-none"
                         />
                       </div>
