@@ -812,6 +812,69 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
+            {/* Info Request History & Author Response Actions */}
+            {isReviewer1 && infoRequests.length > 0 && (
+              <div className="space-y-4">
+                {/* Author Has Responded card */}
+                {infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && (
+                  <Card className="border-[#3d5a47]/30 bg-[#3d5a47]/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <CheckCircle2 className="h-5 w-5 text-[#3d5a47]" />
+                        Author Has Responded
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        The author has provided the requested information. You can review the updated details and choose to send a contract or request further information.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        {!latestContract && (
+                          <Button
+                            className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+                            onClick={() => {
+                              setResendContractTitle(proposedTitle || proposal?.name || '');
+                              setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
+                              setResendContractType(getDefaultContractType(proposal?.book_type));
+                              setIncludeContract(true);
+                              setPendingQueryResponse(null);
+                              setResendContractOpen(true);
+                            }}
+                          >
+                            <FileCheck className="h-4 w-4 mr-2" />
+                            Send Contract
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}
+                        >
+                          <Info className="h-4 w-4" />
+                          Request More Info
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Pending info request (awaiting author) */}
+                {pendingInfoRequest && (
+                  <InfoRequestPanel
+                    infoRequests={infoRequests.filter((r) => r.status === 'pending' || r.status === 'open')}
+                    isLoading={false}
+                    viewAs="reviewer"
+                  />
+                )}
+
+                {/* Previous Rounds history */}
+                <InfoRequestPanel
+                  infoRequests={infoRequests.filter((r) => r.status !== 'pending' && r.status !== 'open')}
+                  isLoading={false}
+                  viewAs="reviewer"
+                />
+              </div>
+            )}
             {(() => {
           const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
           const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
