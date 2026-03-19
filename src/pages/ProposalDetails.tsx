@@ -550,9 +550,10 @@ const ProposalDetails: React.FC = () => {
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
           <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted ? 1 : 0)}, minmax(0, 1fr))` }}>
-            <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
+              {pendingInfoRequest && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />}
             </TabsTrigger>
             <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
               <User className="h-4 w-4" />
@@ -563,15 +564,21 @@ const ProposalDetails: React.FC = () => {
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
             {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) &&
-        <TabsTrigger value="feedback" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="feedback" className="relative gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
+                {(infoRequests.some((r) => r.status === 'responded') && !latestContract || contractQueries.some((q) => q.type === 'query' && q.raised_by_role === 'author' && !contractQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))) &&
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
+                }
               </TabsTrigger>
         }
             {isContractSigned &&
-        <TabsTrigger value="metadata" className="gap-1.5 text-xs sm:text-sm">
+        <TabsTrigger value="metadata" className="relative gap-1.5 text-xs sm:text-sm">
                 <ClipboardList className="h-4 w-4" />
                 <span className="hidden sm:inline">Metadata</span>
+                {statusIs(proposal.status, 'queries_raised') &&
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
+                }
               </TabsTrigger>
         }
           </TabsList>
