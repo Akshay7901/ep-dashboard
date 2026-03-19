@@ -68,6 +68,9 @@ export const useRequestInfo = (ticketNumber: string) => {
     mutationFn: (payload: { request_id: number; updated_fields: Record<string, string> }) =>
       requestInfoApi.save(ticketNumber, payload),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['info-requests', ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
       toast({ title: 'Draft Saved', description: 'Your progress has been saved.' });
     },
     onError: (error: any) => {
