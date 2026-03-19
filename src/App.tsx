@@ -57,6 +57,7 @@ const App = () => (
                   <RequestMoreInfo />
                 </ProtectedRoute>
               }
+            />
             <Route
               path="/peer-reviewers"
               element={
