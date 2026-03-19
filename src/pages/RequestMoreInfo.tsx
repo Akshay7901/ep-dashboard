@@ -11,78 +11,9 @@ import { useProposal } from "@/hooks/useProposals";
 import { useRequestInfo } from "@/hooks/useRequestInfo";
 import { format } from "date-fns";
 import type { InfoRequestItem } from "@/lib/proposalsApi";
+import { CATEGORIES, getFieldsForCategory, type RevisionRow } from "@/lib/fieldRevisionCategories";
 
-/* ---- Category → Field mapping ---- */
-
-interface FieldOption {
-  key: string;
-  label: string;
-}
-
-interface Category {
-  key: string;
-  label: string;
-  fields: FieldOption[];
-}
-
-const CATEGORIES: Category[] = [
-  {
-    key: "author_information",
-    label: "Author information",
-    fields: [
-      { key: "biography", label: "Biography" },
-    ],
-  },
-  {
-    key: "book_details",
-    label: "Book details",
-    fields: [
-      { key: "word_count", label: "Word Count" },
-      { key: "short_description", label: "Short Description" },
-      { key: "detailed_description", label: "Detailed Description" },
-      { key: "keywords", label: "Keywords" },
-      { key: "table_of_contents", label: "Table of Contents" },
-    ],
-  },
-  {
-    key: "collaboration",
-    label: "Collaboration",
-    fields: [
-      { key: "co_authors_editors", label: "Co-authors / Editors" },
-      { key: "referees_reviewers", label: "Referees / Reviewers" },
-    ],
-  },
-  {
-    key: "additional_information",
-    label: "Additional information",
-    fields: [
-      { key: "under_review_elsewhere", label: "Under Review Elsewhere" },
-      { key: "permissions_required", label: "Permissions Required" },
-      { key: "marketing_info", label: "Marketing Information" },
-    ],
-  },
-  {
-    key: "supporting_documents",
-    label: "Supporting documents",
-    fields: [
-      { key: "cv", label: "CV" },
-      { key: "sample_chapter", label: "Sample Chapter" },
-      { key: "toc_doc", label: "Table of Contents Document" },
-      { key: "permissions_docs", label: "Permission Documents" },
-    ],
-  },
-];
-
-/* ---- Single request row ---- */
-
-interface RequestRow {
-  id: string;
-  category: string;
-  field: string;
-  reason: string;
-}
-
-const emptyRow = (): RequestRow => ({
+const emptyRow = (): RevisionRow => ({
   id: crypto.randomUUID(),
   category: "",
   field: "",
@@ -97,13 +28,12 @@ const RequestMoreInfo: React.FC = () => {
   const { data: proposal, isLoading: proposalLoading } = useProposal(ticketNumber || "");
   const { sendRequest } = useRequestInfo(ticketNumber || "");
 
-  const [rows, setRows] = useState<RequestRow[]>([emptyRow()]);
+  const [rows, setRows] = useState<RevisionRow[]>([emptyRow()]);
 
-  const updateRow = (id: string, patch: Partial<RequestRow>) => {
+  const updateRow = (id: string, patch: Partial<RevisionRow>) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
-        // Reset field when category changes
         if (patch.category && patch.category !== r.category) {
           return { ...r, ...patch, field: "" };
         }
@@ -118,8 +48,8 @@ const RequestMoreInfo: React.FC = () => {
 
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
 
-  const getFieldsForCategory = (categoryKey: string): FieldOption[] => {
-    return CATEGORIES.find((c) => c.key === categoryKey)?.fields || [];
+  const fieldsForCategory = (categoryKey: string) => {
+    return getFieldsForCategory(categoryKey);
   };
 
   const canSubmit = rows.some((r) => r.category && r.field);
@@ -244,7 +174,7 @@ const RequestMoreInfo: React.FC = () => {
                         <SelectValue placeholder={row.category ? "Select field" : "Select a category first"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {getFieldsForCategory(row.category).map((f) => (
+                        {fieldsForCategory(row.category).map((f) => (
                           <SelectItem key={f.key} value={f.key}>
                             {f.label}
                           </SelectItem>

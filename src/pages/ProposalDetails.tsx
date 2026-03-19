@@ -10,7 +10,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi, metadataApi, lockProposalApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
@@ -1477,7 +1477,7 @@ const ProposalDetails: React.FC = () => {
       formData={summaryFormData}
       onGoBack={() => setShowingSummary(false)}
       showContractSection
-      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle) => {
+      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems) => {
         if (!summaryFormData.recommendation) {
           toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
           return;
@@ -1523,6 +1523,20 @@ const ProposalDetails: React.FC = () => {
                 variant: 'destructive',
                 title: 'Contract Send Failed',
                 description: contractErr?.response?.data?.error || contractErr.message || 'Failed to send contract. Please try again.'
+              });
+            }
+          }
+
+          // Step 3: If revision items provided (major revision without contract), send request-info
+          if (revisionItems && revisionItems.length > 0) {
+            try {
+              await requestInfoApi.request(ticketNum, { items: revisionItems });
+            } catch (revErr: any) {
+              console.error('Request info failed:', revErr);
+              toast({
+                variant: 'destructive',
+                title: 'Field Revision Request Failed',
+                description: revErr?.message || 'Failed to send field revision request.',
               });
             }
           }

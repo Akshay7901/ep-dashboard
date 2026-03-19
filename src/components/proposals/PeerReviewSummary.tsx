@@ -9,6 +9,9 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
+import FieldRevisionForm from "@/components/proposals/FieldRevisionForm";
+import { emptyRevisionRow, CATEGORIES, type RevisionRow } from "@/lib/fieldRevisionCategories";
+import type { InfoRequestItem } from "@/lib/proposalsApi";
 
 const REVIEW_FIELDS = [
   { key: "scope", label: "Scope" },
@@ -33,7 +36,7 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string) => void;
+  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string, revisionItems?: InfoRequestItem[]) => void;
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
@@ -57,6 +60,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   const isMajorRevision = recommendation === "major_revision";
   const contractRequired = showContractSection && !isReject && !isMajorRevision;
   const [includeContractForMajor, setIncludeContractForMajor] = useState(false);
+  const [revisionRows, setRevisionRows] = useState<RevisionRow[]>([emptyRevisionRow()]);
   const contractWillBeSent = contractRequired || (showContractSection && isMajorRevision && includeContractForMajor);
 
   const defaultContract = getDefaultContractType(proposal.book_type);
@@ -174,7 +178,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                   </label>
                 </div>
               </div>
-              {includeContractForMajor && (
+              {includeContractForMajor ? (
                 <div>
                   <p className="text-sm font-medium mb-1">Select Contract Type</p>
                   {proposal.book_type && (
@@ -192,6 +196,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+              ) : (
+                <FieldRevisionForm rows={revisionRows} onChange={setRevisionRows} />
               )}
             </div>
           ) : (
@@ -231,12 +237,28 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
+            // Build revision items from rows (for major revision without contract)
+            const buildRevisionItems = (): InfoRequestItem[] => {
+              if (!showContractSection || !isMajorRevision || includeContractForMajor) return [];
+              return revisionRows
+                .filter((r) => r.category && r.field)
+                .map((r) => {
+                  const cat = CATEGORIES.find((c) => c.key === r.category);
+                  const field = cat?.fields.find((f) => f.key === r.field);
+                  return {
+                    key: r.field,
+                    label: field?.label || r.field,
+                    ...(r.reason.trim() ? { note: r.reason.trim() } : {}),
+                  };
+                });
+            };
+
             if (contractWillBeSent) {
               setContractTitle(proposal?.name || "");
               setContractSubtitle(proposal?.sub_title || "");
               setShowContractDialog(true);
             } else {
-              onConfirmSubmit(false);
+              onConfirmSubmit(false, undefined, undefined, undefined, buildRevisionItems());
             }
           }}
           disabled={isSubmitting}
