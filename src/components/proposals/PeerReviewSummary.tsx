@@ -36,7 +36,7 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string) => void;
+  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string, revisionItems?: InfoRequestItem[]) => void;
   isSubmitting: boolean;
   /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
