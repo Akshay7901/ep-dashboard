@@ -3,59 +3,27 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, X, Info } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Info } from "lucide-react";
 import type { InfoRequestItem } from "@/lib/proposalsApi";
 
-// Predefined categories and their fields
-const CATEGORIES: Record<string, { label: string; fields: { key: string; label: string }[] }> = {
-  author_details: {
-    label: "Author Details",
-    fields: [
-      { key: "biography", label: "Biography" },
-      { key: "institution", label: "Institution" },
-      { key: "job_title", label: "Job Title" },
-      { key: "address", label: "Address" },
-      { key: "secondary_email", label: "Secondary Email" },
-    ],
-  },
-  book_details: {
-    label: "Book Details",
-    fields: [
-      { key: "short_description", label: "Blurb / Short Description" },
-      { key: "detailed_description", label: "Detailed Description" },
-      { key: "table_of_contents", label: "Table of Contents" },
-      { key: "word_count", label: "Word Count" },
-      { key: "expected_completion_date", label: "Expected Completion Date" },
-      { key: "figures_tables_count", label: "Figures / Tables Count" },
-    ],
-  },
-  supporting_documents: {
-    label: "Supporting Documents",
-    fields: [
-      { key: "cv", label: "CV" },
-      { key: "sample_chapter", label: "Sample Chapter" },
-      { key: "toc_document", label: "Table of Contents Document" },
-      { key: "permissions_docs", label: "Permissions Documents" },
-    ],
-  },
-  market_info: {
-    label: "Market & Keywords",
-    fields: [
-      { key: "keywords", label: "Keywords" },
-      { key: "marketing_info", label: "Marketing Information" },
-      { key: "co_authors_editors", label: "Co-Authors / Editors" },
-      { key: "referees_reviewers", label: "Referees / Reviewers" },
-    ],
-  },
-  other: {
-    label: "Other",
-    fields: [
-      { key: "other", label: "Other Information" },
-    ],
-  },
-};
+const REQUESTABLE_ITEMS: InfoRequestItem[] = [
+  { key: "biography", label: "Biography" },
+  { key: "word_count", label: "Word Count" },
+  { key: "short_description", label: "Short Description" },
+  { key: "detailed_description", label: "Detailed Description" },
+  { key: "keywords", label: "Keywords" },
+  { key: "table_of_contents", label: "Table of Contents" },
+  { key: "co_authors_editors", label: "Co-authors / Editors" },
+  { key: "referees_reviewers", label: "Referees / Reviewers" },
+  { key: "under_review_elsewhere", label: "Under Review Elsewhere" },
+  { key: "permissions_required", label: "Permissions Required" },
+  { key: "marketing_info", label: "Marketing Information" },
+  { key: "cv", label: "CV (document)" },
+  { key: "sample_chapter", label: "Sample Chapter (document)" },
+  { key: "toc_doc", label: "Table of Contents Document" },
+  { key: "permissions_docs", label: "Permission Documents" },
+];
 
 interface Props {
   open: boolean;
@@ -65,45 +33,35 @@ interface Props {
 }
 
 const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, isSubmitting }) => {
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedField, setSelectedField] = useState("");
-  const [items, setItems] = useState<InfoRequestItem[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
 
-  const categoryFields = selectedCategory ? CATEGORIES[selectedCategory]?.fields || [] : [];
-
-  const addItem = () => {
-    if (!selectedCategory || !selectedField) return;
-    const field = categoryFields.find((f) => f.key === selectedField);
-    if (!field) return;
-    const key = `${selectedCategory}.${field.key}`;
-    if (items.some((i) => i.key === key)) return; // prevent duplicates
-    setItems([...items, { key, label: `${CATEGORIES[selectedCategory].label} › ${field.label}` }]);
-    setSelectedField("");
-  };
-
-  const removeItem = (key: string) => {
-    setItems(items.filter((i) => i.key !== key));
+  const toggleItem = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   const handleSubmit = () => {
-    if (items.length === 0) return;
+    if (selectedKeys.size === 0) return;
+    const items = REQUESTABLE_ITEMS.filter((i) => selectedKeys.has(i.key));
     onSubmit(items, note.trim());
   };
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
-      setItems([]);
+      setSelectedKeys(new Set());
       setNote("");
-      setSelectedCategory("");
-      setSelectedField("");
     }
     onOpenChange(isOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Info className="h-5 w-5" />
@@ -114,68 +72,38 @@ const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, 
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Category + Field selectors */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-sm">Category</Label>
-              <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setSelectedField(""); }}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(CATEGORIES).map(([key, cat]) => (
-                    <SelectItem key={key} value={key}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+          {/* Checklist */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Select items to request</Label>
+            <div className="border rounded-md divide-y max-h-[280px] overflow-y-auto">
+              {REQUESTABLE_ITEMS.map((item) => (
+                <label
+                  key={item.key}
+                  className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <Checkbox
+                    checked={selectedKeys.has(item.key)}
+                    onCheckedChange={() => toggleItem(item.key)}
+                  />
+                  <span className="text-sm">{item.label}</span>
+                </label>
+              ))}
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">Field</Label>
-              <Select value={selectedField} onValueChange={setSelectedField} disabled={!selectedCategory}>
-                <SelectTrigger><SelectValue placeholder="Select field" /></SelectTrigger>
-                <SelectContent>
-                  {categoryFields.map((f) => (
-                    <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {selectedKeys.size > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedKeys.size} item{selectedKeys.size !== 1 ? "s" : ""} selected
+              </p>
+            )}
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={addItem}
-            disabled={!selectedField}
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Item
-          </Button>
-
-          {/* Selected items */}
-          {items.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Requested Items</Label>
-              <div className="flex flex-wrap gap-2">
-                {items.map((item) => (
-                  <Badge key={item.key} variant="secondary" className="gap-1.5 py-1.5 px-3 text-xs">
-                    {item.label}
-                    <button onClick={() => removeItem(item.key)} className="ml-1 hover:text-destructive">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Note */}
           <div className="space-y-1.5">
             <Label className="text-sm">
-              Reason for Request <span className="text-muted-foreground font-normal">(optional)</span>
+              Note to author <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Textarea
-              placeholder="E.g., We need an updated CV to proceed with the review."
+              placeholder="E.g., Please update your biography and upload a new CV."
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="min-h-[80px] resize-none"
@@ -188,7 +116,7 @@ const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, 
           <Button
             className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
             onClick={handleSubmit}
-            disabled={items.length === 0 || isSubmitting}
+            disabled={selectedKeys.size === 0 || isSubmitting}
           >
             {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Send Request
