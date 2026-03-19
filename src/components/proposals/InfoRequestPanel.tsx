@@ -69,8 +69,8 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
   const [initialized, setInitialized] = useState(false);
 
-  const pendingRequest = infoRequests.find((r) => r.status === "pending");
-  const pastRequests = infoRequests.filter((r) => r.status !== "pending");
+  const pendingRequest = infoRequests.find((r) => r.status === "pending" || r.status === "open");
+  const pastRequests = infoRequests.filter((r) => r.status !== "pending" && r.status !== "open");
 
   // Pre-fill fields from proposal data on first render
   React.useEffect(() => {

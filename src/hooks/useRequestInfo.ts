@@ -14,7 +14,7 @@ export const useRequestInfo = (ticketNumber: string) => {
     refetchInterval: 15000,
   });
 
-  const pendingRequest = infoRequests.find((r) => r.status === 'pending');
+  const pendingRequest = infoRequests.find((r) => r.status === 'pending' || r.status === 'open');
 
   const sendRequest = useMutation({
     mutationFn: (payload: { items: InfoRequestItem[]; note?: string }) =>
