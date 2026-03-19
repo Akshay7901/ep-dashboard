@@ -53,7 +53,7 @@ interface InfoRequestPanelProps {
   isLoading: boolean;
   viewAs: "author" | "reviewer";
   proposal?: Proposal;
-  onRespond?: (requestId: number, responseNote: string, updatedFields: Record<string, string>) => void;
+  onRespond?: (requestId: number, responseNote: string, updatedFields: Record<string, string>, files?: Record<string, File>) => void;
   isResponding?: boolean;
 }
 
