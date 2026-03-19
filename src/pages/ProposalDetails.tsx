@@ -45,7 +45,6 @@ import DiffCheckerDialog from "@/components/proposals/DiffCheckerDialog";
 import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
 import { useRequestInfo } from "@/hooks/useRequestInfo";
-import RequestMoreInfoDialog from "@/components/proposals/RequestMoreInfoDialog";
 import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
 
 /* ---------------- Helpers ---------------- */
@@ -183,7 +182,6 @@ const ProposalDetails: React.FC = () => {
   const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
   const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
-  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
 
   /* ---------------- Data ---------------- */
 
@@ -470,7 +468,7 @@ const ProposalDetails: React.FC = () => {
         }} disabled={isAssigning}>
                 Submit for review
               </Button>}
-              <Button variant="outline" className="gap-1.5" onClick={() => setRequestInfoOpen(true)}>
+              <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
               {statusIs(proposal.status, "new", "submitted") && <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
@@ -1864,17 +1862,6 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* Request More Info Dialog */}
-      <RequestMoreInfoDialog
-        open={requestInfoOpen}
-        onOpenChange={setRequestInfoOpen}
-        onSubmit={(items, note) => {
-          sendInfoRequest.mutate({ items, note: note || undefined }, {
-            onSuccess: () => setRequestInfoOpen(false),
-          });
-        }}
-        isSubmitting={sendInfoRequest.isPending}
-      />
     </DashboardLayout>;
 };
 export default ProposalDetails;
