@@ -141,10 +141,10 @@ const Proposals: React.FC = () => {
 
   // For peer reviewers, apply status filtering client-side since API doesn't support it
   const filteredProposals = React.useMemo(() => {
-    if (!isReviewer2 || statusFilter.length === 0) return roleFilteredProposals;
+    if (statusFilter.length === 0) return roleFilteredProposals;
     const normalizeStatus = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '_');
     return roleFilteredProposals.filter(p => statusFilter.includes(normalizeStatus(p.status)));
-  }, [roleFilteredProposals, isReviewer2, statusFilter]);
+  }, [roleFilteredProposals, statusFilter]);
 
   const displayedProposals = filteredProposals.slice(0, displayCount);
   const hasMore = displayCount < filteredProposals.length;
