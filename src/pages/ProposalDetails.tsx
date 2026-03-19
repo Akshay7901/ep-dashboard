@@ -45,7 +45,6 @@ import DiffCheckerDialog from "@/components/proposals/DiffCheckerDialog";
 import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
 import { useRequestInfo } from "@/hooks/useRequestInfo";
-import RequestMoreInfoDialog from "@/components/proposals/RequestMoreInfoDialog";
 import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
 
 /* ---------------- Helpers ---------------- */
