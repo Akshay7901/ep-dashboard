@@ -60,6 +60,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   const isMajorRevision = recommendation === "major_revision";
   const contractRequired = showContractSection && !isReject && !isMajorRevision;
   const [includeContractForMajor, setIncludeContractForMajor] = useState(false);
+  const [revisionRows, setRevisionRows] = useState<RevisionRow[]>([emptyRevisionRow()]);
   const contractWillBeSent = contractRequired || (showContractSection && isMajorRevision && includeContractForMajor);
 
   const defaultContract = getDefaultContractType(proposal.book_type);
