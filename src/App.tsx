@@ -51,6 +51,13 @@ const App = () => (
               }
             />
             <Route
+              path="/proposals/:ticketNumber/request-info"
+              element={
+                <ProtectedRoute>
+                  <RequestMoreInfo />
+                </ProtectedRoute>
+              }
+            <Route
               path="/peer-reviewers"
               element={
                 <ProtectedRoute>
