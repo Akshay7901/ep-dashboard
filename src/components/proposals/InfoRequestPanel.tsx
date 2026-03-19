@@ -95,6 +95,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
     setInitialized(false);
     setResponseNote("");
     setUpdatedFields({});
+    setUploadedFiles({});
   }, [pendingRequest?.id]);
 
   const handleSubmitResponse = () => {
