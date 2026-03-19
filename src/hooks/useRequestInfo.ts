@@ -35,8 +35,8 @@ export const useRequestInfo = (ticketNumber: string) => {
   });
 
   const respondToRequest = useMutation({
-    mutationFn: (payload: { request_id: number; response_note: string; updated_fields: Record<string, string> }) =>
-      requestInfoApi.respond(ticketNumber, payload),
+    mutationFn: (payload: { request_id: number; response_note: string; updated_fields: Record<string, string>; files?: Record<string, File> }) =>
+      requestInfoApi.respond(ticketNumber, { request_id: payload.request_id, response_note: payload.response_note, updated_fields: payload.updated_fields }, payload.files),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['info-requests', ticketNumber] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });

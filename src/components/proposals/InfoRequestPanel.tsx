@@ -53,7 +53,7 @@ interface InfoRequestPanelProps {
   isLoading: boolean;
   viewAs: "author" | "reviewer";
   proposal?: Proposal;
-  onRespond?: (requestId: number, responseNote: string, updatedFields: Record<string, string>) => void;
+  onRespond?: (requestId: number, responseNote: string, updatedFields: Record<string, string>, files?: Record<string, File>) => void;
   isResponding?: boolean;
 }
 
@@ -67,6 +67,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const [initialized, setInitialized] = useState(false);
 
   const pendingRequest = infoRequests.find((r) => r.status === "pending" || r.status === "open");
@@ -94,11 +95,23 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
     setInitialized(false);
     setResponseNote("");
     setUpdatedFields({});
+    setUploadedFiles({});
   }, [pendingRequest?.id]);
 
   const handleSubmitResponse = () => {
     if (!pendingRequest || !onRespond) return;
-    onRespond(pendingRequest.id, responseNote.trim(), updatedFields);
+    onRespond(pendingRequest.id, responseNote.trim(), updatedFields, Object.keys(uploadedFiles).length > 0 ? uploadedFiles : undefined);
+  };
+
+  const handleFileSelect = (key: string, file: File | null) => {
+    setUploadedFiles((prev) => {
+      if (!file) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: file };
+    });
   };
 
   if (isLoading) {
@@ -179,11 +192,49 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                     {isDocument && (
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground">Or upload a file:</Label>
-                        <div className="border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer">
-                          <Upload className="h-5 w-5 mx-auto mb-2" />
-                          <p className="text-sm">Click to upload or drag and drop</p>
-                          <p className="text-xs mt-1">PDF, DOC, DOCX (max. 10MB)</p>
-                        </div>
+                        {uploadedFiles[item.key] ? (
+                          <div className="flex items-center gap-3 border rounded-lg p-3 bg-muted/30">
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{uploadedFiles[item.key].name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(uploadedFiles[item.key].size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive shrink-0"
+                              onClick={() => handleFileSelect(item.key, null)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <label className="block border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 10 * 1024 * 1024) {
+                                    import("@/hooks/use-toast").then(({ toast }) => {
+                                      toast({ variant: "destructive", title: "File too large", description: "Maximum file size is 10MB." });
+                                    });
+                                    return;
+                                  }
+                                  handleFileSelect(item.key, file);
+                                }
+                                e.target.value = "";
+                              }}
+                            />
+                            <Upload className="h-5 w-5 mx-auto mb-2" />
+                            <p className="text-sm">Click to upload or drag and drop</p>
+                            <p className="text-xs mt-1">PDF, DOC, DOCX (max. 10MB)</p>
+                          </label>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -206,7 +257,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
               onClick={handleSubmitResponse}
               disabled={
                 isResponding ||
-                Object.values(updatedFields).every((v) => !v.trim())
+                (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)
               }
             >
               {isResponding ? (
