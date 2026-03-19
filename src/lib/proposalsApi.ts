@@ -322,26 +322,29 @@ export const requestInfoApi = {
     }
   },
 
+  /** Upload a single file for a specific field_key via the dedicated upload endpoint */
+  uploadFile: async (
+    ticketNumber: string,
+    file: File,
+    fieldKey: string,
+    requestId: number
+  ): Promise<{ status: string; field_key: string; s3_url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('field_key', fieldKey);
+    formData.append('request_id', String(requestId));
+    const { data } = await api.post(
+      `/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/upload`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return data;
+  },
+
   respond: async (
     ticketNumber: string,
-    payload: { request_id: number; response_note: string; updated_fields: Record<string, string> },
-    files?: Record<string, File>
+    payload: { request_id: number; response_note: string; updated_fields: Record<string, string> }
   ): Promise<any> => {
-    if (files && Object.keys(files).length > 0) {
-      const formData = new FormData();
-      formData.append('request_id', String(payload.request_id));
-      formData.append('response_note', payload.response_note);
-      formData.append('updated_fields', JSON.stringify(payload.updated_fields));
-      for (const [key, file] of Object.entries(files)) {
-        formData.append(key, file);
-      }
-      const { data } = await api.post(
-        `/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-      return data;
-    }
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`, payload);
     return data;
   },
