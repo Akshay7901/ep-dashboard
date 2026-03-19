@@ -55,6 +55,8 @@ interface InfoRequestPanelProps {
   proposal?: Proposal;
   onRespond?: (requestId: number, responseNote: string, updatedFields: Record<string, string>, files?: Record<string, File>) => void;
   isResponding?: boolean;
+  onSaveDraft?: (requestId: number, updatedFields: Record<string, string>) => void;
+  isSavingDraft?: boolean;
 }
 
 const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
@@ -64,6 +66,8 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   proposal,
   onRespond,
   isResponding,
+  onSaveDraft,
+  isSavingDraft,
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
@@ -250,8 +254,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
             <Button
               variant="outline"
               className="px-6"
-              disabled={isResponding}
+              disabled={isSavingDraft || isResponding || Object.values(updatedFields).every((v) => !v.trim())}
+              onClick={() => {
+                if (pendingRequest && onSaveDraft) {
+                  onSaveDraft(pendingRequest.id, updatedFields);
+                }
+              }}
             >
+              {isSavingDraft ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
               Save as Draft
             </Button>
             <Button
@@ -259,6 +271,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
               onClick={handleSubmitResponse}
               disabled={
                 isResponding ||
+                isSavingDraft ||
                 (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)
               }
             >

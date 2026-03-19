@@ -348,6 +348,15 @@ export const requestInfoApi = {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`, payload);
     return data;
   },
+
+  /** Save partial progress without submitting */
+  save: async (
+    ticketNumber: string,
+    payload: { request_id: number; updated_fields: Record<string, string> }
+  ): Promise<{ status: string; saved_fields: string[] }> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/save`, payload);
+    return data;
+  },
 };
 
 // Contract Queries API

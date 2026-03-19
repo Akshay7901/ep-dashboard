@@ -169,7 +169,7 @@ const AuthorProposalDetails: React.FC = () => {
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
-  const { infoRequests, pendingRequest: pendingInfoRequest, respondToRequest: respondToInfoRequest } = useRequestInfo(ticketNum);
+  const { infoRequests, pendingRequest: pendingInfoRequest, respondToRequest: respondToInfoRequest, saveDraft: saveDraftInfoRequest } = useRequestInfo(ticketNum);
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
@@ -657,6 +657,10 @@ const AuthorProposalDetails: React.FC = () => {
                   );
                 }}
                 isResponding={respondToInfoRequest.isPending}
+                onSaveDraft={(requestId, updatedFields) => {
+                  saveDraftInfoRequest.mutate({ request_id: requestId, updated_fields: updatedFields });
+                }}
+                isSavingDraft={saveDraftInfoRequest.isPending}
               />
             </TabsContent>
           }
