@@ -816,7 +816,7 @@ const ProposalDetails: React.FC = () => {
             {isReviewer1 && infoRequests.length > 0 && (
               <div className="space-y-4">
                 {/* Author Has Responded card */}
-                {infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && (
+                {infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && !latestContract && (
                   <Card className="border-[#3d5a47]/30 bg-[#3d5a47]/5">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
@@ -829,22 +829,20 @@ const ProposalDetails: React.FC = () => {
                         The author has provided the requested information. You can review the updated details and choose to send a contract or request further information.
                       </p>
                       <div className="flex items-center gap-3">
-                        {!latestContract && (
-                          <Button
-                            className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
-                            onClick={() => {
-                              setResendContractTitle(proposedTitle || proposal?.name || '');
-                              setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
-                              setResendContractType(getDefaultContractType(proposal?.book_type));
-                              setIncludeContract(true);
-                              setPendingQueryResponse(null);
-                              setResendContractOpen(true);
-                            }}
-                          >
-                            <FileCheck className="h-4 w-4 mr-2" />
-                            Send Contract
-                          </Button>
-                        )}
+                        <Button
+                          className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+                          onClick={() => {
+                            setResendContractTitle(proposedTitle || proposal?.name || '');
+                            setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
+                            setResendContractType(getDefaultContractType(proposal?.book_type));
+                            setIncludeContract(true);
+                            setPendingQueryResponse(null);
+                            setResendContractOpen(true);
+                          }}
+                        >
+                          <FileCheck className="h-4 w-4 mr-2" />
+                          Send Contract
+                        </Button>
                         <Button
                           variant="outline"
                           className="gap-1.5"
