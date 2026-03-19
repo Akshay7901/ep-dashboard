@@ -100,7 +100,18 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
   const handleSubmitResponse = () => {
     if (!pendingRequest || !onRespond) return;
-    onRespond(pendingRequest.id, responseNote.trim(), updatedFields);
+    onRespond(pendingRequest.id, responseNote.trim(), updatedFields, Object.keys(uploadedFiles).length > 0 ? uploadedFiles : undefined);
+  };
+
+  const handleFileSelect = (key: string, file: File | null) => {
+    setUploadedFiles((prev) => {
+      if (!file) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: file };
+    });
   };
 
   if (isLoading) {
