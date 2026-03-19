@@ -1527,6 +1527,20 @@ const ProposalDetails: React.FC = () => {
             }
           }
 
+          // Step 3: If revision items provided (major revision without contract), send request-info
+          if (revisionItems && revisionItems.length > 0) {
+            try {
+              await requestInfoApi.request(ticketNum, { items: revisionItems });
+            } catch (revErr: any) {
+              console.error('Request info failed:', revErr);
+              toast({
+                variant: 'destructive',
+                title: 'Field Revision Request Failed',
+                description: revErr?.message || 'Failed to send field revision request.',
+              });
+            }
+          }
+
           queryClient.invalidateQueries({ queryKey: ["proposals"] });
           queryClient.invalidateQueries({ queryKey: ["review", ticketNum] });
           queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
