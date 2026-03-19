@@ -28,13 +28,12 @@ const RequestMoreInfo: React.FC = () => {
   const { data: proposal, isLoading: proposalLoading } = useProposal(ticketNumber || "");
   const { sendRequest } = useRequestInfo(ticketNumber || "");
 
-  const [rows, setRows] = useState<RequestRow[]>([emptyRow()]);
+  const [rows, setRows] = useState<RevisionRow[]>([emptyRow()]);
 
-  const updateRow = (id: string, patch: Partial<RequestRow>) => {
+  const updateRow = (id: string, patch: Partial<RevisionRow>) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
-        // Reset field when category changes
         if (patch.category && patch.category !== r.category) {
           return { ...r, ...patch, field: "" };
         }
@@ -49,8 +48,8 @@ const RequestMoreInfo: React.FC = () => {
 
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
 
-  const getFieldsForCategory = (categoryKey: string): FieldOption[] => {
-    return CATEGORIES.find((c) => c.key === categoryKey)?.fields || [];
+  const fieldsForCategory = (categoryKey: string) => {
+    return getFieldsForCategory(categoryKey);
   };
 
   const canSubmit = rows.some((r) => r.category && r.field);
