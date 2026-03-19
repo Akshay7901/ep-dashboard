@@ -124,9 +124,12 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                 return (
                   <div key={item.key} className="border rounded-md p-4 bg-background space-y-2">
                     <Label className="text-sm font-medium flex items-center gap-2">
-                      {isDocument ? <Upload className="h-3.5 w-3.5 text-muted-foreground" /> : <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {item.label}
+                       {isDocument ? <Upload className="h-3.5 w-3.5 text-muted-foreground" /> : <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
+                       {item.label}
                     </Label>
+                    {item.note && (
+                      <p className="text-xs text-muted-foreground italic">{item.note}</p>
+                    )}
                     {isDocument ? (
                       <div className="space-y-2">
                         <div className="border-2 border-dashed rounded-md p-4 text-center text-sm text-muted-foreground">
@@ -200,11 +203,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {pendingRequest.items.map((item) => (
-                <Badge key={item.key} variant="secondary" className="text-xs py-1">
-                  {item.label}
-                </Badge>
+                <div key={item.key} className="flex flex-col gap-0.5">
+                  <Badge variant="secondary" className="text-xs py-1 w-fit">
+                    {item.label}
+                  </Badge>
+                  {item.note && (
+                    <p className="text-xs text-muted-foreground italic ml-1">{item.note}</p>
+                  )}
+                </div>
               ))}
             </div>
             {pendingRequest.note && (
@@ -251,13 +259,18 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {req.items.map((item) => (
-                      <Badge key={item.key} variant="outline" className="text-xs">
-                        {item.label}
-                      </Badge>
-                    ))}
-                  </div>
+                  <div className="space-y-1.5">
+                     {req.items.map((item) => (
+                       <div key={item.key} className="flex flex-col gap-0.5">
+                         <Badge variant="outline" className="text-xs w-fit">
+                           {item.label}
+                         </Badge>
+                         {item.note && (
+                           <p className="text-xs text-muted-foreground italic ml-1">{item.note}</p>
+                         )}
+                       </div>
+                     ))}
+                   </div>
 
                   {req.note && (
                     <div>

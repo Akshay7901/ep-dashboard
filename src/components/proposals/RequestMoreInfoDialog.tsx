@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, ChevronDown, ChevronUp } from "lucide-react";
 import type { InfoRequestItem } from "@/lib/proposalsApi";
 
-const REQUESTABLE_ITEMS: InfoRequestItem[] = [
+const REQUESTABLE_ITEMS: { key: string; label: string }[] = [
   { key: "biography", label: "Biography" },
   { key: "word_count", label: "Word Count" },
   { key: "short_description", label: "Short Description" },
@@ -34,26 +34,43 @@ interface Props {
 
 const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, isSubmitting }) => {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [note, setNote] = useState("");
 
   const toggleItem = (key: string) => {
     setSelectedKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (next.has(key)) {
+        next.delete(key);
+        // Clear item note when deselected
+        setItemNotes((prev) => {
+          const updated = { ...prev };
+          delete updated[key];
+          return updated;
+        });
+      } else {
+        next.add(key);
+      }
       return next;
     });
   };
 
   const handleSubmit = () => {
     if (selectedKeys.size === 0) return;
-    const items = REQUESTABLE_ITEMS.filter((i) => selectedKeys.has(i.key));
+    const items: InfoRequestItem[] = REQUESTABLE_ITEMS
+      .filter((i) => selectedKeys.has(i.key))
+      .map((i) => ({
+        key: i.key,
+        label: i.label,
+        ...(itemNotes[i.key]?.trim() ? { note: itemNotes[i.key].trim() } : {}),
+      }));
     onSubmit(items, note.trim());
   };
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       setSelectedKeys(new Set());
+      setItemNotes({});
       setNote("");
     }
     onOpenChange(isOpen);
@@ -76,19 +93,33 @@ const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, 
           {/* Checklist */}
           <div className="space-y-1">
             <Label className="text-sm font-medium">Select items to request</Label>
-            <div className="border rounded-md divide-y max-h-[280px] overflow-y-auto">
-              {REQUESTABLE_ITEMS.map((item) => (
-                <label
-                  key={item.key}
-                  className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  <Checkbox
-                    checked={selectedKeys.has(item.key)}
-                    onCheckedChange={() => toggleItem(item.key)}
-                  />
-                  <span className="text-sm">{item.label}</span>
-                </label>
-              ))}
+            <div className="border rounded-md divide-y max-h-[320px] overflow-y-auto">
+              {REQUESTABLE_ITEMS.map((item) => {
+                const isSelected = selectedKeys.has(item.key);
+                return (
+                  <div key={item.key}>
+                    <label className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleItem(item.key)}
+                      />
+                      <span className="text-sm flex-1">{item.label}</span>
+                    </label>
+                    {isSelected && (
+                      <div className="px-4 pb-3 pl-11">
+                        <Textarea
+                          placeholder={`Reason for requesting ${item.label.toLowerCase()}... (optional)`}
+                          value={itemNotes[item.key] || ""}
+                          onChange={(e) =>
+                            setItemNotes((prev) => ({ ...prev, [item.key]: e.target.value }))
+                          }
+                          className="min-h-[50px] resize-none text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             {selectedKeys.size > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -97,7 +128,7 @@ const RequestMoreInfoDialog: React.FC<Props> = ({ open, onOpenChange, onSubmit, 
             )}
           </div>
 
-          {/* Note */}
+          {/* Overall Note */}
           <div className="space-y-1.5">
             <Label className="text-sm">
               Note to author <span className="text-muted-foreground font-normal">(optional)</span>
