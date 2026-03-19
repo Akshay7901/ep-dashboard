@@ -10,7 +10,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi, metadataApi, lockProposalApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
