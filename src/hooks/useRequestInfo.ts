@@ -35,8 +35,20 @@ export const useRequestInfo = (ticketNumber: string) => {
   });
 
   const respondToRequest = useMutation({
-    mutationFn: (payload: { request_id: number; response_note: string; updated_fields: Record<string, string>; files?: Record<string, File> }) =>
-      requestInfoApi.respond(ticketNumber, { request_id: payload.request_id, response_note: payload.response_note, updated_fields: payload.updated_fields }, payload.files),
+    mutationFn: async (payload: { request_id: number; response_note: string; updated_fields: Record<string, string>; files?: Record<string, File> }) => {
+      // Step 1: Upload files individually via the dedicated upload endpoint
+      if (payload.files && Object.keys(payload.files).length > 0) {
+        for (const [fieldKey, file] of Object.entries(payload.files)) {
+          await requestInfoApi.uploadFile(ticketNumber, file, fieldKey, payload.request_id);
+        }
+      }
+      // Step 2: Submit the text response
+      return requestInfoApi.respond(ticketNumber, {
+        request_id: payload.request_id,
+        response_note: payload.response_note,
+        updated_fields: payload.updated_fields,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['info-requests', ticketNumber] });
       queryClient.invalidateQueries({ queryKey: ['proposal', ticketNumber] });
