@@ -157,7 +157,7 @@ const RequestMoreInfo: React.FC = () => {
 
   return (
     <DashboardLayout title="Request More Info">
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Back */}
         <Button
           variant="ghost"
