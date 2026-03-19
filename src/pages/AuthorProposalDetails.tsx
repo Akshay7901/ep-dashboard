@@ -334,17 +334,15 @@ const AuthorProposalDetails: React.FC = () => {
 
         }
 
-        {/* Info Request Panel (Author view) */}
-        {(infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
-          <InfoRequestPanel
-            infoRequests={infoRequests}
-            isLoading={false}
-            viewAs="author"
-            onRespond={(requestId, responseNote, updatedFields) => {
-              respondToInfoRequest.mutate({ request_id: requestId, response_note: responseNote, updated_fields: updatedFields });
-            }}
-            isResponding={respondToInfoRequest.isPending}
-          />
+        {/* Info Request Banner - only show action-required badge, not the full panel (that's in the tab) */}
+        {pendingInfoRequest && !statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") && infoRequests.length > 0 && (
+          <div className="bg-[#D97706]/5 border border-[#D97706]/30 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-[#D97706] shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Additional information has been requested</p>
+              <p className="text-xs text-muted-foreground">Please check the Additional Information tab to respond.</p>
+            </div>
+          </div>
         )}
 
         {/* Title & Subtitle */}
