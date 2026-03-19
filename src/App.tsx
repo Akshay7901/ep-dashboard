@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Proposals from "./pages/Proposals";
 import ProposalDetails from "./pages/ProposalDetails";
+import RequestMoreInfo from "./pages/RequestMoreInfo";
 import PeerReviewers from "./pages/PeerReviewers";
 import AuthorDashboard from "./pages/AuthorDashboard";
 import AuthorProposalDetails from "./pages/AuthorProposalDetails";
