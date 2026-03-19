@@ -257,11 +257,13 @@ const AuthorProposalDetails: React.FC = () => {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
+    } else if (proposal && statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required")) {
+      setActiveTab("additional-info");
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
     }
-  }, [isContractSigned, hasReviewContent]);
+  }, [isContractSigned, hasReviewContent, proposal?.status]);
 
   if (isLoading) {
     return (
