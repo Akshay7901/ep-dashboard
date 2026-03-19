@@ -124,9 +124,12 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                 return (
                   <div key={item.key} className="border rounded-md p-4 bg-background space-y-2">
                     <Label className="text-sm font-medium flex items-center gap-2">
-                      {isDocument ? <Upload className="h-3.5 w-3.5 text-muted-foreground" /> : <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {item.label}
+                       {isDocument ? <Upload className="h-3.5 w-3.5 text-muted-foreground" /> : <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
+                       {item.label}
                     </Label>
+                    {item.note && (
+                      <p className="text-xs text-muted-foreground italic">{item.note}</p>
+                    )}
                     {isDocument ? (
                       <div className="space-y-2">
                         <div className="border-2 border-dashed rounded-md p-4 text-center text-sm text-muted-foreground">
