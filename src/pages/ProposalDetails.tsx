@@ -1864,17 +1864,6 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* Request More Info Dialog */}
-      <RequestMoreInfoDialog
-        open={requestInfoOpen}
-        onOpenChange={setRequestInfoOpen}
-        onSubmit={(items, note) => {
-          sendInfoRequest.mutate({ items, note: note || undefined }, {
-            onSuccess: () => setRequestInfoOpen(false),
-          });
-        }}
-        isSubmitting={sendInfoRequest.isPending}
-      />
     </DashboardLayout>;
 };
 export default ProposalDetails;
