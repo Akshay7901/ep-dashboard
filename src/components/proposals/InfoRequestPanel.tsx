@@ -95,6 +95,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
         }
       });
       setUpdatedFields(prefilled);
+      lastSavedRef.current = JSON.stringify(prefilled);
       setInitialized(true);
     }
   }, [pendingRequest, proposal, initialized]);
