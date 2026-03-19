@@ -174,7 +174,7 @@ const RequestMoreInfo: React.FC = () => {
                         <SelectValue placeholder={row.category ? "Select field" : "Select a category first"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {getFieldsForCategory(row.category).map((f) => (
+                        {fieldsForCategory(row.category).map((f) => (
                           <SelectItem key={f.key} value={f.key}>
                             {f.label}
                           </SelectItem>
