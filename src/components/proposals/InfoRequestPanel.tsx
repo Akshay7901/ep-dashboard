@@ -257,7 +257,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
               onClick={handleSubmitResponse}
               disabled={
                 isResponding ||
-                Object.values(updatedFields).every((v) => !v.trim())
+                (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)
               }
             >
               {isResponding ? (
