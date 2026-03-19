@@ -160,9 +160,11 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
           </div>
 
           {/* Message body */}
-          <p className="text-sm leading-relaxed whitespace-pre-line text-foreground/90">
-            {messageText}
-          </p>
+          <p className="text-sm leading-relaxed whitespace-pre-line text-foreground/90"
+            dangerouslySetInnerHTML={{
+              __html: messageText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            }}
+          />
 
           {/* Timestamp footer */}
           <div className="flex items-center gap-1.5 pt-0.5">
