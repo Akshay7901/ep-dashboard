@@ -224,6 +224,7 @@ const ProposalDetails: React.FC = () => {
   const { review: reviewData, refetchReview, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
+  const { infoRequests, pendingRequest: pendingInfoRequest, sendRequest: sendInfoRequest } = useRequestInfo(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
