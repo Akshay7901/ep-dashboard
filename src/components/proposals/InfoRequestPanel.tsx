@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload, ClipboardList } from "lucide-react";
 import type { InfoRequest } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
@@ -28,6 +27,25 @@ const PROPOSAL_FIELD_MAP: Record<string, keyof Proposal> = {
   under_review_elsewhere: "under_review_elsewhere",
   permissions_required: "permissions_required",
   marketing_info: "marketing_info",
+};
+
+// Reverse mapping: item key → category label
+const CATEGORY_MAP: Record<string, string> = {
+  biography: "AUTHOR INFO",
+  word_count: "BOOK INFO",
+  short_description: "BOOK INFO",
+  detailed_description: "BOOK INFO",
+  keywords: "BOOK INFO",
+  table_of_contents: "BOOK INFO",
+  co_authors_editors: "COLLABORATION",
+  referees_reviewers: "COLLABORATION",
+  under_review_elsewhere: "ADDITIONAL INFO",
+  permissions_required: "ADDITIONAL INFO",
+  marketing_info: "ADDITIONAL INFO",
+  cv: "SUPPORTING DOCUMENTS",
+  sample_chapter: "SUPPORTING DOCUMENTS",
+  toc_doc: "SUPPORTING DOCUMENTS",
+  permissions_docs: "SUPPORTING DOCUMENTS",
 };
 
 interface InfoRequestPanelProps {
@@ -92,90 +110,99 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Pending request - Author action form */}
       {pendingRequest && viewAs === "author" && (
-        <Card className="border-[#D97706]/30 bg-[#D97706]/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertCircle className="h-5 w-5 text-[#D97706]" />
-              The editorial team has requested additional information
-            </CardTitle>
-            {pendingRequest.requested_at && (
-              <p className="text-xs text-muted-foreground">
-                Requested on {format(new Date(pendingRequest.requested_at), "MMM d, yyyy 'at' h:mm a")}
-              </p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* DR note callout */}
-            {pendingRequest.note && (
-              <div className="bg-[#D97706]/10 border border-[#D97706]/30 rounded-md p-4">
-                <p className="text-xs font-medium text-[#D97706] mb-1">Editor's Note</p>
-                <p className="text-sm">{pendingRequest.note}</p>
+        <>
+          {/* Yellow banner */}
+          <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-5">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[#D97706] mt-0.5 shrink-0" />
+              <div>
+                <h3 className="font-semibold text-sm text-foreground">Additional Information Requested</h3>
+                {pendingRequest.requested_at && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Requested on {format(new Date(pendingRequest.requested_at), "MMMM d, yyyy")}
+                  </p>
+                )}
+                {pendingRequest.note && (
+                  <p className="text-sm text-muted-foreground mt-2">{pendingRequest.note}</p>
+                )}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Editable fields for each requested item */}
-            <div className="space-y-4">
-              <Label className="text-sm font-semibold">Requested Items</Label>
-              {pendingRequest.items.map((item) => {
-                const isDocument = DOCUMENT_KEYS.has(item.key);
-                return (
-                  <div key={item.key} className="border rounded-md p-4 bg-background space-y-2">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                       {isDocument ? <Upload className="h-3.5 w-3.5 text-muted-foreground" /> : <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
-                       {item.label}
-                    </Label>
+          {/* Item cards */}
+          <div className="space-y-5">
+            {pendingRequest.items.map((item) => {
+              const isDocument = DOCUMENT_KEYS.has(item.key);
+              const categoryLabel = CATEGORY_MAP[item.key] || "OTHER";
+
+              return (
+                <Card key={item.key} className="border rounded-lg shadow-none">
+                  {/* Card header with category badge + field name */}
+                  <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b">
+                    <Badge className="bg-[#3d5a47] text-white hover:bg-[#3d5a47] text-[10px] font-semibold tracking-wider px-2.5 py-0.5 rounded">
+                      {categoryLabel}
+                    </Badge>
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                  </div>
+
+                  <CardContent className="p-5 space-y-4">
+                    {/* Why this is needed */}
                     {item.note && (
-                      <p className="text-xs text-muted-foreground italic">{item.note}</p>
-                    )}
-                    {isDocument ? (
                       <div className="space-y-2">
-                        <div className="border-2 border-dashed rounded-md p-4 text-center text-sm text-muted-foreground">
-                          <Upload className="h-5 w-5 mx-auto mb-1" />
-                          <p>File upload for documents will be available soon.</p>
-                          <p className="text-xs mt-1">In the meantime, please provide a link or description below.</p>
+                        <div className="flex items-center gap-1.5">
+                          <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs font-semibold text-foreground">Why this is needed:</span>
                         </div>
-                        <Textarea
-                          placeholder={`Provide a link or description for ${item.label.toLowerCase()}...`}
-                          value={updatedFields[item.key] || ""}
-                          onChange={(e) =>
-                            setUpdatedFields((prev) => ({ ...prev, [item.key]: e.target.value }))
-                          }
-                          className="min-h-[50px] resize-none"
-                        />
+                        <div className="bg-muted/50 border rounded-md p-3">
+                          <p className="text-sm text-muted-foreground leading-relaxed">{item.note}</p>
+                        </div>
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Your Response */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-foreground">Your Response:</Label>
                       <Textarea
-                        placeholder={`Provide updated ${item.label.toLowerCase()}...`}
+                        placeholder="Provide the requested information here..."
                         value={updatedFields[item.key] || ""}
                         onChange={(e) =>
                           setUpdatedFields((prev) => ({ ...prev, [item.key]: e.target.value }))
                         }
-                        className="min-h-[80px] resize-none"
+                        className="min-h-[100px] resize-none"
                       />
+                    </div>
+
+                    {/* File upload for document items */}
+                    {isDocument && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Or upload a file:</Label>
+                        <div className="border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer">
+                          <Upload className="h-5 w-5 mx-auto mb-2" />
+                          <p className="text-sm">Click to upload or drag and drop</p>
+                          <p className="text-xs mt-1">PDF, DOC, DOCX (max. 10MB)</p>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                );
-              })}
-            </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-            {/* Response note */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">
-                Describe what you've updated <span className="text-muted-foreground font-normal">(optional)</span>
-              </Label>
-              <Textarea
-                placeholder="E.g., I've updated my biography and provided a new sample chapter link."
-                value={responseNote}
-                onChange={(e) => setResponseNote(e.target.value)}
-                className="min-h-[60px] resize-none"
-              />
-            </div>
-
+          {/* Action buttons */}
+          <div className="flex items-center justify-center gap-4 pt-2">
             <Button
-              className="bg-[#3d5a47] hover:bg-[#3d5a47]/90 gap-2"
+              variant="outline"
+              className="px-6"
+              disabled={isResponding}
+            >
+              Save as Draft
+            </Button>
+            <Button
+              className="bg-[#3d5a47] hover:bg-[#3d5a47]/90 px-6"
               onClick={handleSubmitResponse}
               disabled={
                 isResponding ||
@@ -183,14 +210,12 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
               }
             >
               {isResponding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
               Submit Response
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </>
       )}
 
       {/* Pending request - DR view (read-only) */}
