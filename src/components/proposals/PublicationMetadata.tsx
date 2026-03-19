@@ -603,7 +603,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
                   <p className="text-xs font-medium text-amber-800">
                     Query from {q.raised_by_name || q.raised_by}
                   </p>
-                  <p className="text-sm mt-1 whitespace-pre-line">{q.text}</p>
+                  <p className="text-sm mt-1 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: (q.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
                   {q.fields && q.fields.length > 0 && (
                     <div className="flex gap-1 mt-1.5 flex-wrap">
                       {q.fields.map((f: string) => (
