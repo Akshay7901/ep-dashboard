@@ -178,7 +178,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                   </label>
                 </div>
               </div>
-              {includeContractForMajor && (
+              {includeContractForMajor ? (
                 <div>
                   <p className="text-sm font-medium mb-1">Select Contract Type</p>
                   {proposal.book_type && (
@@ -196,6 +196,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+              ) : (
+                <FieldRevisionForm rows={revisionRows} onChange={setRevisionRows} />
               )}
             </div>
           ) : (
