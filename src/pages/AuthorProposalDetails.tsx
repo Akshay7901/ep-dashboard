@@ -642,7 +642,25 @@ const AuthorProposalDetails: React.FC = () => {
             </TabsContent>
           }
 
-          {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
+          {/* ---- ADDITIONAL INFORMATION TAB ---- */}
+          {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+          <TabsContent value="additional-info" className="mt-6 space-y-6">
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="author"
+                proposal={proposal}
+                onRespond={(requestId, responseNote, updatedFields) => {
+                  respondToInfoRequest.mutate(
+                    { request_id: requestId, response_note: responseNote, updated_fields: updatedFields },
+                    { onSuccess: () => refetch() }
+                  );
+                }}
+                isResponding={respondToInfoRequest.isPending}
+              />
+            </TabsContent>
+          }
+
           <TabsContent value="review" className="mt-6 space-y-6">
             {isReviewLoading || contractLoading ?
             <div className="py-10 text-center text-muted-foreground">Loading...</div> :
