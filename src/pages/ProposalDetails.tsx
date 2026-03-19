@@ -182,7 +182,6 @@ const ProposalDetails: React.FC = () => {
   const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
   const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
-  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
 
   /* ---------------- Data ---------------- */
 
