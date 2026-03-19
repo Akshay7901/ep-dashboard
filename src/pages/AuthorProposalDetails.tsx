@@ -643,7 +643,7 @@ const AuthorProposalDetails: React.FC = () => {
           }
 
           {/* ---- ADDITIONAL INFORMATION TAB ---- */}
-          {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+          {(statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") || infoRequests.length > 0) &&
           <TabsContent value="additional-info" className="mt-6 space-y-6">
               <InfoRequestPanel
                 infoRequests={infoRequests}
