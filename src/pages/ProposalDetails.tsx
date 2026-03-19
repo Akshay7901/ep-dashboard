@@ -580,6 +580,14 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
           <TabsContent value="book" className="space-y-4 mt-4">
+            {/* Info Request Panel (DR view) */}
+            {isReviewer1 && (infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="reviewer"
+              />
+            )}
             {/* Overview Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Overview</h3>
