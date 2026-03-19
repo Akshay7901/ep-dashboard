@@ -9,6 +9,9 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
+import FieldRevisionForm from "@/components/proposals/FieldRevisionForm";
+import { emptyRevisionRow, CATEGORIES, type RevisionRow } from "@/lib/fieldRevisionCategories";
+import type { InfoRequestItem } from "@/lib/proposalsApi";
 
 const REVIEW_FIELDS = [
   { key: "scope", label: "Scope" },
