@@ -297,7 +297,7 @@ export interface InfoRequest {
   ticket_number: string;
   items: InfoRequestItem[];
   note?: string;
-  status: 'pending' | 'responded' | 'superseded';
+  status: 'pending' | 'open' | 'responded' | 'superseded';
   requested_by?: string;
   requested_at: string;
   response_note?: string;
