@@ -1477,7 +1477,7 @@ const ProposalDetails: React.FC = () => {
       formData={summaryFormData}
       onGoBack={() => setShowingSummary(false)}
       showContractSection
-      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle) => {
+      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems) => {
         if (!summaryFormData.recommendation) {
           toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
           return;
