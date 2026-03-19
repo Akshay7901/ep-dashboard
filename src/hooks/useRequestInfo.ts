@@ -64,6 +64,21 @@ export const useRequestInfo = (ticketNumber: string) => {
     },
   });
 
+  const saveDraft = useMutation({
+    mutationFn: (payload: { request_id: number; updated_fields: Record<string, string> }) =>
+      requestInfoApi.save(ticketNumber, payload),
+    onSuccess: () => {
+      toast({ title: 'Draft Saved', description: 'Your progress has been saved.' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || error?.message || 'Failed to save draft',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     infoRequests,
     pendingRequest,
@@ -71,5 +86,6 @@ export const useRequestInfo = (ticketNumber: string) => {
     refetch,
     sendRequest,
     respondToRequest,
+    saveDraft,
   };
 };
