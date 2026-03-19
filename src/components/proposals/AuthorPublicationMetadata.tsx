@@ -795,7 +795,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                     {new Date(q.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="whitespace-pre-line">{q.text}</p>
+                <p className="whitespace-pre-line" dangerouslySetInnerHTML={{ __html: (q.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
                 {q.fields && q.fields.length > 0 && (
                   <div className="flex gap-1 mt-1.5 flex-wrap">
                     {q.fields.map((f) => (
