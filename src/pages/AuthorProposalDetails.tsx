@@ -25,6 +25,8 @@ import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import AuthorPublicationMetadata from "@/components/proposals/AuthorPublicationMetadata";
+import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
+import { useRequestInfo } from "@/hooks/useRequestInfo";
 
 /* ---- Timeline helpers ---- */
 
