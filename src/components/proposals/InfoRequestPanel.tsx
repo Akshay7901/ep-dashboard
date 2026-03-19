@@ -82,7 +82,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
     if (pendingRequest && proposal && !initialized) {
       const prefilled: Record<string, string> = {};
       const draft = pendingRequest.draft_data;
-      console.log('[InfoRequestPanel] Initializing fields. draft_data:', JSON.stringify(draft), 'updated_fields:', JSON.stringify(pendingRequest.updated_fields));
+      
       pendingRequest.items.forEach((item) => {
         if (!DOCUMENT_KEYS.has(item.key)) {
           // 1st priority: draft_data from the /save endpoint
@@ -100,7 +100,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
           }
         }
       });
-      console.log('[InfoRequestPanel] Prefilled result:', JSON.stringify(prefilled));
+      
       setUpdatedFields(prefilled);
       lastSavedRef.current = JSON.stringify(prefilled);
       setInitialized(true);

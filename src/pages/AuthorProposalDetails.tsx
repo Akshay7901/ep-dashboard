@@ -239,10 +239,6 @@ const AuthorProposalDetails: React.FC = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
-    if (value === "review" && id) {
-      seenReviewSignatures.set(id, reviewNotificationSignature);
-      setHasSeenReview(true);
-    }
   };
 
   const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
@@ -419,8 +415,8 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
               Peer Review & Contract
-              {!isContractSigned && !hasSeenReview && (reviews.some((r: any) => r.status === 'submitted' || r.is_submitted) || (latestContract && latestContract.docusign_status)) &&
-              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
+              {!isContractSigned && (reviews.some((r: any) => r.status === 'submitted' || r.is_submitted) || (latestContract && latestContract.docusign_status)) &&
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
               }
             </TabsTrigger>
             {(statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") || infoRequests.length > 0) &&
@@ -434,8 +430,11 @@ const AuthorProposalDetails: React.FC = () => {
             {isContractSigned &&
             <TabsTrigger
               value="metadata"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+              className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
                 Metadata
+                {statusIs(proposal.status, "awaiting_author_approval") &&
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
+                }
               </TabsTrigger>
             }
           </TabsList>
