@@ -190,55 +190,55 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                       </div>
                     )}
 
-                    {/* File upload - available for ALL items */}
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">
-                        {isDocument ? "Upload document:" : "Or attach a supporting file:"}
-                      </Label>
-                      {uploadedFiles[item.key] ? (
-                        <div className="flex items-center gap-3 border rounded-lg p-3 bg-muted/30">
-                          <FileText className="h-5 w-5 text-primary shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{uploadedFiles[item.key].name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(uploadedFiles[item.key].size / 1024 / 1024).toFixed(2)} MB
-                            </p>
+                    {/* File upload - only for document-type items */}
+                    {isDocument && (
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Upload document:</Label>
+                        {uploadedFiles[item.key] ? (
+                          <div className="flex items-center gap-3 border rounded-lg p-3 bg-muted/30">
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{uploadedFiles[item.key].name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(uploadedFiles[item.key].size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive shrink-0"
+                              onClick={() => handleFileSelect(item.key, null)}
+                            >
+                              Remove
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive shrink-0"
-                            onClick={() => handleFileSelect(item.key, null)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <label className="block border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer">
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.doc,.docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                if (file.size > 10 * 1024 * 1024) {
-                                  import("@/hooks/use-toast").then(({ toast }) => {
-                                    toast({ variant: "destructive", title: "File too large", description: "Maximum file size is 10MB." });
-                                  });
-                                  return;
+                        ) : (
+                          <label className="block border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground hover:border-muted-foreground/40 transition-colors cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 10 * 1024 * 1024) {
+                                    import("@/hooks/use-toast").then(({ toast }) => {
+                                      toast({ variant: "destructive", title: "File too large", description: "Maximum file size is 10MB." });
+                                    });
+                                    return;
+                                  }
+                                  handleFileSelect(item.key, file);
                                 }
-                                handleFileSelect(item.key, file);
-                              }
-                              e.target.value = "";
-                            }}
-                          />
-                          <Upload className="h-5 w-5 mx-auto mb-2" />
-                          <p className="text-sm">Click to upload or drag and drop</p>
-                          <p className="text-xs mt-1">PDF, DOC, DOCX (max. 10MB)</p>
-                        </label>
-                      )}
-                    </div>
+                                e.target.value = "";
+                              }}
+                            />
+                            <Upload className="h-5 w-5 mx-auto mb-2" />
+                            <p className="text-sm">Click to upload or drag and drop</p>
+                            <p className="text-xs mt-1">PDF, DOC, DOCX (max. 10MB)</p>
+                          </label>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
