@@ -77,19 +77,25 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   const pendingRequest = infoRequests.find((r) => r.status === "pending" || r.status === "open");
   const pastRequests = infoRequests.filter((r) => r.status !== "pending" && r.status !== "open");
 
-  // Pre-fill fields: use the latest proposal data first, then fall back to request draft data
+  // Pre-fill fields: prioritize draft_data (saved via /save), then proposal data, then updated_fields
   React.useEffect(() => {
     if (pendingRequest && proposal && !initialized) {
       const prefilled: Record<string, string> = {};
+      const draft = pendingRequest.draft_data;
       pendingRequest.items.forEach((item) => {
         if (!DOCUMENT_KEYS.has(item.key)) {
-          const proposalKey = PROPOSAL_FIELD_MAP[item.key];
-          const proposalValue = proposalKey ? proposal[proposalKey] : undefined;
-
-          if (proposalValue !== undefined && proposalValue !== null) {
-            prefilled[item.key] = String(proposalValue);
-          } else if (pendingRequest.updated_fields && pendingRequest.updated_fields[item.key] !== undefined) {
-            prefilled[item.key] = pendingRequest.updated_fields[item.key];
+          // 1st priority: draft_data from the /save endpoint
+          if (draft && draft[item.key] !== undefined && draft[item.key] !== null) {
+            prefilled[item.key] = draft[item.key];
+          } else {
+            // 2nd priority: current proposal field value
+            const proposalKey = PROPOSAL_FIELD_MAP[item.key];
+            const proposalValue = proposalKey ? proposal[proposalKey] : undefined;
+            if (proposalValue !== undefined && proposalValue !== null) {
+              prefilled[item.key] = String(proposalValue);
+            } else if (pendingRequest.updated_fields && pendingRequest.updated_fields[item.key] !== undefined) {
+              prefilled[item.key] = pendingRequest.updated_fields[item.key];
+            }
           }
         }
       });
