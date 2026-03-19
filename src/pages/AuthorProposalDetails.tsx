@@ -257,7 +257,7 @@ const AuthorProposalDetails: React.FC = () => {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
-    } else if (proposal && statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required")) {
+    } else if ((proposal && statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required")) || infoRequests.length > 0) {
       setActiveTab("additional-info");
     } else if (hasReviewContent) {
       setActiveTab("review");
@@ -423,7 +423,7 @@ const AuthorProposalDetails: React.FC = () => {
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
               }
             </TabsTrigger>
-            {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+            {(statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") || infoRequests.length > 0) &&
             <TabsTrigger
               value="additional-info"
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
@@ -643,7 +643,7 @@ const AuthorProposalDetails: React.FC = () => {
           }
 
           {/* ---- ADDITIONAL INFORMATION TAB ---- */}
-          {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+          {(statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") || infoRequests.length > 0) &&
           <TabsContent value="additional-info" className="mt-6 space-y-6">
               <InfoRequestPanel
                 infoRequests={infoRequests}
