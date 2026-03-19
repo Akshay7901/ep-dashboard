@@ -9,9 +9,9 @@ import { ContractQuery } from "@/lib/proposalsApi";
 import { cn } from "@/lib/utils";
 
 const QUERY_CATEGORIES = [
-  { value: "contract", label: "Contract" },
-  { value: "feedback", label: "Peer Review Feedback" },
-];
+{ value: "contract", label: "Contract" },
+{ value: "feedback", label: "Peer Review Feedback" }];
+
 
 interface ContractQueryThreadProps {
   queries: ContractQuery[];
@@ -30,7 +30,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   proposalStatus,
   onSend,
   isSending,
-  hasActiveContract = false,
+  hasActiveContract = false
 }) => {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("contract");
@@ -42,17 +42,17 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   const isContractIssued = normalizedStatus === "contract_issued";
 
   const canSend =
-    viewAs === "author"
-      ? (isContractIssued || isQueriesRaised || hasActiveContract)
-      : isQueriesRaised;
+  viewAs === "author" ?
+  isContractIssued || isQueriesRaised || hasActiveContract :
+  isQueriesRaised;
 
   // Check if author has a pending query (no response yet)
   const responseParentIds = new Set(
     queries.filter((q) => q.type === "response" && q.parent_query_id).map((q) => q.parent_query_id)
   );
-  const hasPendingAuthorQuery = queries
-    .filter((q) => q.type === "query")
-    .some((q) => !responseParentIds.has(q.id));
+  const hasPendingAuthorQuery = queries.
+  filter((q) => q.type === "query").
+  some((q) => !responseParentIds.has(q.id));
   const authorCanRaise = viewAs === "author" ? !hasPendingAuthorQuery : true;
 
   const authorQueries = queries.filter((q) => q.type === "query");
@@ -93,21 +93,21 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       <div className="flex items-center gap-2 py-8 justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Loading conversation…</span>
-      </div>
-    );
+      </div>);
+
   }
 
   const getInitials = (name: string) => {
-    return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+    return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
   const renderMessage = (q: ContractQuery) => {
     const isQuery = q.type === "query";
-    const alignRight = (viewAs === "author" && !isQuery) || (viewAs === "reviewer" && isQuery);
+    const alignRight = viewAs === "author" && !isQuery || viewAs === "reviewer" && isQuery;
     const messageText = q.text || q.query_text || q.response_text || "";
     const senderName = q.raised_by_name || q.created_by || (isQuery ? "Author" : "Reviewer");
     const categoryLabelMap: Record<string, string> = { feedback: "Peer Review Feedback" };
-    const categoryLabel = q.category ? (categoryLabelMap[q.category] || q.category.charAt(0).toUpperCase() + q.category.slice(1)) : null;
+    const categoryLabel = q.category ? categoryLabelMap[q.category] || q.category.charAt(0).toUpperCase() + q.category.slice(1) : null;
     const initials = getInitials(senderName);
 
     return (
@@ -116,17 +116,17 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
         className={cn(
           "flex gap-2.5 group",
           alignRight ? "flex-row-reverse" : "flex-row"
-        )}
-      >
+        )}>
+        
         {/* Avatar */}
         <div
           className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5",
-            isQuery
-              ? "bg-blue-100 text-blue-700"
-              : "bg-emerald-100 text-emerald-700"
-          )}
-        >
+            isQuery ?
+            "bg-blue-100 text-blue-700" :
+            "bg-emerald-100 text-emerald-700"
+          )}>
+          
           {initials}
         </div>
 
@@ -134,29 +134,29 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
         <div
           className={cn(
             "max-w-[80%] rounded-2xl px-4 py-3 space-y-1.5 shadow-sm",
-            isQuery
-              ? "bg-slate-50 border border-slate-200"
-              : "bg-emerald-50 border border-emerald-200",
+            isQuery ?
+            "bg-slate-50 border border-slate-200" :
+            "bg-emerald-50 border border-emerald-200",
             alignRight ? "rounded-tr-md" : "rounded-tl-md"
-          )}
-        >
+          )}>
+          
           {/* Header row */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-foreground">
               {senderName}
             </span>
-            {categoryLabel && (
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "text-[10px] px-1.5 py-0 gap-0.5 font-medium",
-                  isQuery ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"
-                )}
-              >
+            {categoryLabel &&
+            <Badge
+              variant="secondary"
+              className={cn(
+                "text-[10px] px-1.5 py-0 gap-0.5 font-medium",
+                isQuery ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"
+              )}>
+              
                 <Tag className="h-2.5 w-2.5" />
                 {categoryLabel}
               </Badge>
-            )}
+            }
           </div>
 
           {/* Message body */}
@@ -172,15 +172,15 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
             </span>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   };
 
   return (
     <div className="space-y-5">
       {/* Status banner for DR */}
-      {viewAs === "reviewer" && isQueriesRaised && (
-        <div className="flex items-center gap-3 p-3.5 border border-amber-300/50 bg-amber-50 rounded-xl">
+      {viewAs === "reviewer" && isQueriesRaised &&
+      <div className="flex items-center gap-3 p-3.5 border border-amber-300/50 bg-amber-50 rounded-xl">
           <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-4.5 w-4.5 text-amber-600" />
           </div>
@@ -191,11 +191,11 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
             </p>
           </div>
         </div>
-      )}
+      }
 
       {/* Status banner for Author */}
-      {viewAs === "author" && isQueriesRaised && (
-        <div className="flex items-center gap-3 p-3.5 border border-blue-300/50 bg-blue-50 rounded-xl">
+      {viewAs === "author" && isQueriesRaised &&
+      <div className="flex items-center gap-3 p-3.5 border border-blue-300/50 bg-blue-50 rounded-xl">
           <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
             <Clock className="h-4.5 w-4.5 text-blue-600" />
           </div>
@@ -206,79 +206,79 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
             </p>
           </div>
         </div>
-      )}
+      }
 
       {/* Thread */}
-      {queries.length === 0 ? (
-        <div className="py-10 text-center flex flex-col items-center gap-3">
+      {queries.length === 0 ?
+      <div className="py-10 text-center flex flex-col items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
             <MessageSquare className="h-6 w-6 text-muted-foreground/50" />
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">No queries yet</p>
             <p className="text-xs text-muted-foreground/70 mt-0.5">
-              {viewAs === "author"
-                ? "Have a question about the contract? Ask below."
-                : "No queries from the author yet."}
+              {viewAs === "author" ?
+            "Have a question about the contract? Ask below." :
+            "No queries from the author yet."}
             </p>
           </div>
-        </div>
-      ) : (
-        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1 scroll-smooth">
+        </div> :
+
+      <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1 scroll-smooth">
           {queries.map(renderMessage)}
           <div ref={threadEndRef} />
         </div>
-      )}
+      }
 
       {/* Input area */}
-      {canSend && (
-        <div className="bg-muted/30 rounded-xl border p-4 space-y-3">
+      {canSend &&
+      <div className="bg-muted/30 rounded-xl border p-4 space-y-3">
           {viewAs === "author" && !authorCanRaise ? (
-            /* Author has a pending query — must wait for DR response */
-            <div className="flex items-center gap-3 p-3 border border-amber-300/50 bg-amber-50 rounded-lg">
+        /* Author has a pending query — must wait for DR response */
+        <div className="flex items-center gap-3 p-3 border border-amber-300/50 bg-amber-50 rounded-lg">
               <Clock className="h-4.5 w-4.5 text-amber-600 shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-amber-900">Awaiting response</p>
                 <p className="text-xs text-amber-700/80">
-                  You can raise another query once the editorial team responds to your current one.
+                  Please wait until the editor responds before raising another query
                 </p>
               </div>
-            </div>
-          ) : (
-            <>
+            </div>) :
+
+        <>
               <div className="flex items-center gap-2 mb-1">
-                {viewAs === "author" ? (
-                  <MessageCircleQuestion className="h-4 w-4 text-blue-600" />
-                ) : (
-                  <Reply className="h-4 w-4 text-emerald-600" />
-                )}
+                {viewAs === "author" ?
+            <MessageCircleQuestion className="h-4 w-4 text-blue-600" /> :
+
+            <Reply className="h-4 w-4 text-emerald-600" />
+            }
                 <span className="text-sm font-semibold">
                   {viewAs === "author" ? "Raise a Query" : "Respond to Query"}
                 </span>
               </div>
 
               {/* Author category selector */}
-              {viewAs === "author" && (
-                <div className="space-y-1.5">
+              {viewAs === "author" &&
+          <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Category</label>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="w-full bg-background">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {QUERY_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
+                      {QUERY_CATEGORIES.map((cat) =>
+                <SelectItem key={cat.value} value={cat.value}>
                           {cat.label}
                         </SelectItem>
-                      ))}
+                )}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
+          }
 
               {/* DR: show which query is being responded to (auto-selected) */}
-              {viewAs === "reviewer" && unansweredQueries.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background rounded-md px-3 py-2 border">
+              {viewAs === "reviewer" && unansweredQueries.length > 0 &&
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background rounded-md px-3 py-2 border">
                   <Reply className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   <span>
                     Responding to: <span className="font-medium text-foreground">
@@ -287,7 +287,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
                     </span>
                   </span>
                 </div>
-              )}
+          }
 
               {/* Text input */}
               <div className="space-y-1.5">
@@ -295,18 +295,18 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
                   {viewAs === "author" ? "Your question" : "Your response"}
                 </label>
                 <Textarea
-                  className="bg-background resize-none"
-                  placeholder={
-                    viewAs === "author"
-                      ? "Describe your question about the contract…"
-                      : "Type your response to the author's query…"
-                  }
-                  value={text}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 1000) setText(e.target.value);
-                  }}
-                  rows={3}
-                />
+              className="bg-background resize-none"
+              placeholder={
+              viewAs === "author" ?
+              "Describe your question about the contract…" :
+              "Type your response to the author's query…"
+              }
+              value={text}
+              onChange={(e) => {
+                if (e.target.value.length <= 1000) setText(e.target.value);
+              }}
+              rows={3} />
+            
               </div>
 
               {/* Actions row */}
@@ -315,30 +315,30 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
                   {text.length}/1,000
                 </span>
                 <Button
-                  size="sm"
-                  className={cn(
-                    "gap-2 shadow-sm",
-                    viewAs === "author"
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  )}
-                  onClick={handleSubmit}
-                  disabled={isSending || !text.trim() || (viewAs === "reviewer" && !selectedQueryId)}
-                >
-                  {isSending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+              size="sm"
+              className={cn(
+                "gap-2 shadow-sm",
+                viewAs === "author" ?
+                "bg-blue-600 hover:bg-blue-700 text-white" :
+                "bg-emerald-600 hover:bg-emerald-700 text-white"
+              )}
+              onClick={handleSubmit}
+              disabled={isSending || !text.trim() || viewAs === "reviewer" && !selectedQueryId}>
+              
+                  {isSending ?
+              <Loader2 className="h-4 w-4 animate-spin" /> :
+
+              <Send className="h-4 w-4" />
+              }
                   {viewAs === "author" ? "Submit Query" : "Send Response"}
                 </Button>
               </div>
             </>
-          )}
+        }
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 };
 
 export default ContractQueryThread;
