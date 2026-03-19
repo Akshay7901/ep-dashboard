@@ -237,12 +237,28 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
+            // Build revision items from rows (for major revision without contract)
+            const buildRevisionItems = (): InfoRequestItem[] => {
+              if (!showContractSection || !isMajorRevision || includeContractForMajor) return [];
+              return revisionRows
+                .filter((r) => r.category && r.field)
+                .map((r) => {
+                  const cat = CATEGORIES.find((c) => c.key === r.category);
+                  const field = cat?.fields.find((f) => f.key === r.field);
+                  return {
+                    key: r.field,
+                    label: field?.label || r.field,
+                    ...(r.reason.trim() ? { note: r.reason.trim() } : {}),
+                  };
+                });
+            };
+
             if (contractWillBeSent) {
               setContractTitle(proposal?.name || "");
               setContractSubtitle(proposal?.sub_title || "");
               setShowContractDialog(true);
             } else {
-              onConfirmSubmit(false);
+              onConfirmSubmit(false, undefined, undefined, undefined, buildRevisionItems());
             }
           }}
           disabled={isSubmitting}
