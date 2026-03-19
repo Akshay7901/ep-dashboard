@@ -191,7 +191,7 @@ const MetadataQueryDiffPanel: React.FC<MetadataQueryDiffPanelProps> = ({
         </div>
       ) : (
         <div className="px-4 py-3">
-          <p className="text-sm whitespace-pre-line">{query.text}</p>
+          <p className="text-sm whitespace-pre-line" dangerouslySetInnerHTML={{ __html: (query.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
           {query.fields && query.fields.length > 0 && (
             <div className="flex gap-1 mt-1.5 flex-wrap">
               {query.fields.map((f) => (
