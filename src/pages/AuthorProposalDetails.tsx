@@ -257,11 +257,13 @@ const AuthorProposalDetails: React.FC = () => {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
+    } else if (proposal && statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required")) {
+      setActiveTab("additional-info");
     } else if (hasReviewContent) {
       setActiveTab("review");
       setOpenAccordion("contract-details");
     }
-  }, [isContractSigned, hasReviewContent]);
+  }, [isContractSigned, hasReviewContent, proposal?.status]);
 
   if (isLoading) {
     return (
@@ -332,17 +334,15 @@ const AuthorProposalDetails: React.FC = () => {
 
         }
 
-        {/* Info Request Panel (Author view) */}
-        {(infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
-          <InfoRequestPanel
-            infoRequests={infoRequests}
-            isLoading={false}
-            viewAs="author"
-            onRespond={(requestId, responseNote, updatedFields) => {
-              respondToInfoRequest.mutate({ request_id: requestId, response_note: responseNote, updated_fields: updatedFields });
-            }}
-            isResponding={respondToInfoRequest.isPending}
-          />
+        {/* Info Request Banner - only show action-required badge, not the full panel (that's in the tab) */}
+        {pendingInfoRequest && !statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") && infoRequests.length > 0 && (
+          <div className="bg-[#D97706]/5 border border-[#D97706]/30 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-[#D97706] shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Additional information has been requested</p>
+              <p className="text-xs text-muted-foreground">Please check the Additional Information tab to respond.</p>
+            </div>
+          </div>
         )}
 
         {/* Title & Subtitle */}
@@ -423,6 +423,14 @@ const AuthorProposalDetails: React.FC = () => {
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#c05621]" />
               }
             </TabsTrigger>
+            {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+            <TabsTrigger
+              value="additional-info"
+              className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
+                Additional Information
+                {pendingInfoRequest && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />}
+              </TabsTrigger>
+            }
             {isContractSigned &&
             <TabsTrigger
               value="metadata"
@@ -634,7 +642,25 @@ const AuthorProposalDetails: React.FC = () => {
             </TabsContent>
           }
 
-          {/* ---- PEER REVIEW & CONTRACT TAB ---- */}
+          {/* ---- ADDITIONAL INFORMATION TAB ---- */}
+          {statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required") &&
+          <TabsContent value="additional-info" className="mt-6 space-y-6">
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="author"
+                proposal={proposal}
+                onRespond={(requestId, responseNote, updatedFields) => {
+                  respondToInfoRequest.mutate(
+                    { request_id: requestId, response_note: responseNote, updated_fields: updatedFields },
+                    { onSuccess: () => refetch() }
+                  );
+                }}
+                isResponding={respondToInfoRequest.isPending}
+              />
+            </TabsContent>
+          }
+
           <TabsContent value="review" className="mt-6 space-y-6">
             {isReviewLoading || contractLoading ?
             <div className="py-10 text-center text-muted-foreground">Loading...</div> :
