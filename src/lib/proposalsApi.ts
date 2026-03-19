@@ -285,6 +285,48 @@ export const metadataQueriesApi = {
   },
 };
 
+// Request Info API
+export interface InfoRequestItem {
+  key: string;
+  label: string;
+}
+
+export interface InfoRequest {
+  id: number;
+  ticket_number: string;
+  items: InfoRequestItem[];
+  note?: string;
+  status: 'pending' | 'responded' | 'superseded';
+  requested_by?: string;
+  requested_at: string;
+  response_note?: string;
+  responded_at?: string;
+  updated_fields?: Record<string, string>;
+  previous_status?: string;
+}
+
+export const requestInfoApi = {
+  request: async (ticketNumber: string, payload: { items: InfoRequestItem[]; note?: string }): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info`, payload);
+    return data;
+  },
+
+  getHistory: async (ticketNumber: string): Promise<InfoRequest[]> => {
+    try {
+      const { data } = await api.get(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info`);
+      return data?.requests || data || [];
+    } catch (error: any) {
+      if (error?.status === 404 || error?.response?.status === 404) return [];
+      throw error;
+    }
+  },
+
+  respond: async (ticketNumber: string, payload: { request_id: number; response_note: string; updated_fields: Record<string, string> }): Promise<any> => {
+    const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`, payload);
+    return data;
+  },
+};
+
 // Contract Queries API
 export interface ContractQuery {
   id: number;
