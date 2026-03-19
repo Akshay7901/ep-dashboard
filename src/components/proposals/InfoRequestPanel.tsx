@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -95,9 +95,39 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
         }
       });
       setUpdatedFields(prefilled);
+      lastSavedRef.current = JSON.stringify(prefilled);
       setInitialized(true);
     }
   }, [pendingRequest, proposal, initialized]);
+
+  // Auto-save draft when fields change (debounced 2s)
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>("");
+
+  const triggerAutoSave = useCallback(
+    (fields: Record<string, string>) => {
+      if (!pendingRequest || !onSaveDraft) return;
+      // Skip if nothing meaningful to save
+      if (Object.values(fields).every((v) => !v.trim())) return;
+      // Skip if unchanged from last save
+      const snapshot = JSON.stringify(fields);
+      if (snapshot === lastSavedRef.current) return;
+
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = setTimeout(() => {
+        lastSavedRef.current = snapshot;
+        onSaveDraft(pendingRequest.id, fields);
+      }, 2000);
+    },
+    [pendingRequest, onSaveDraft]
+  );
+
+  // Cleanup timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, []);
 
   // Reset when pending request changes
   React.useEffect(() => {
@@ -191,9 +221,11 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                         <Textarea
                           placeholder="Provide the requested information here..."
                           value={updatedFields[item.key] || ""}
-                          onChange={(e) =>
-                            setUpdatedFields((prev) => ({ ...prev, [item.key]: e.target.value }))
-                          }
+                          onChange={(e) => {
+                            const newFields = { ...updatedFields, [item.key]: e.target.value };
+                            setUpdatedFields(newFields);
+                            triggerAutoSave(newFields);
+                          }}
                           className="min-h-[100px] resize-none"
                         />
                       </div>
