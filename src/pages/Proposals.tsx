@@ -98,7 +98,7 @@ const Proposals: React.FC = () => {
     limit: 100,
     search: searchQuery,
     searchCategory,
-    status: isReviewer2 ? "all" : (statusFilter.length === 0 ? "all" : statusFilter),
+    status: "all",
     actionRequired: actionRequiredFilter,
     sortOrder,
   });
