@@ -31,7 +31,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock, StickyNote, Save } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock, StickyNote, Save, Info } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -44,6 +44,9 @@ import PeerReviewReadOnly from "@/components/proposals/PeerReviewReadOnly";
 import DiffCheckerDialog from "@/components/proposals/DiffCheckerDialog";
 import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
+import { useRequestInfo } from "@/hooks/useRequestInfo";
+import RequestMoreInfoDialog from "@/components/proposals/RequestMoreInfoDialog";
+import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
 
 /* ---------------- Helpers ---------------- */
 
@@ -180,6 +183,7 @@ const ProposalDetails: React.FC = () => {
   const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
   const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
+  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
 
   /* ---------------- Data ---------------- */
 
@@ -220,6 +224,7 @@ const ProposalDetails: React.FC = () => {
   const { review: reviewData, refetchReview, saveDraft: saveReviewDraft, submitReview: submitReviewApi, isSubmitting: isReviewSubmitting } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
+  const { infoRequests, pendingRequest: pendingInfoRequest, sendRequest: sendInfoRequest } = useRequestInfo(ticketNum);
   const {
     data: logs = []
   } = useWorkflowLogs(localId);
@@ -458,16 +463,19 @@ const ProposalDetails: React.FC = () => {
               </Select>
             </>}
 
-          {statusIs(proposal.status, "new", "submitted") && <>
-              <Button className="bg-[#3d5a47]" onClick={() => {
+          {statusIs(proposal.status, "new", "submitted", "review_returned") && <>
+              {statusIs(proposal.status, "new", "submitted") && <Button className="bg-[#3d5a47]" onClick={() => {
           setAssignNote("");
           setIsAssignDialogOpen(true);
         }} disabled={isAssigning}>
                 Submit for review
+              </Button>}
+              <Button variant="outline" className="gap-1.5" onClick={() => setRequestInfoOpen(true)}>
+                <Info className="h-4 w-4" /> Request Info
               </Button>
-              <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              {statusIs(proposal.status, "new", "submitted") && <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
-              </Button>
+              </Button>}
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
@@ -572,6 +580,14 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
           <TabsContent value="book" className="space-y-4 mt-4">
+            {/* Info Request Panel (DR view) */}
+            {isReviewer1 && (infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="reviewer"
+              />
+            )}
             {/* Overview Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Overview</h3>
@@ -1848,6 +1864,17 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Request More Info Dialog */}
+      <RequestMoreInfoDialog
+        open={requestInfoOpen}
+        onOpenChange={setRequestInfoOpen}
+        onSubmit={(items, note) => {
+          sendInfoRequest.mutate({ items, note: note || undefined }, {
+            onSuccess: () => setRequestInfoOpen(false),
+          });
+        }}
+        isSubmitting={sendInfoRequest.isPending}
+      />
     </DashboardLayout>;
 };
 export default ProposalDetails;

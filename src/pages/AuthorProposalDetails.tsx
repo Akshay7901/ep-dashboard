@@ -25,6 +25,8 @@ import { toast } from "@/hooks/use-toast";
 import brandLogo from "@/assets/brand-logo.webp";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import AuthorPublicationMetadata from "@/components/proposals/AuthorPublicationMetadata";
+import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
+import { useRequestInfo } from "@/hooks/useRequestInfo";
 
 /* ---- Timeline helpers ---- */
 
@@ -167,6 +169,7 @@ const AuthorProposalDetails: React.FC = () => {
   const { review: reviewData, isLoading: isReviewLoading } = useReview(ticketNum);
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
+  const { infoRequests, pendingRequest: pendingInfoRequest, respondToRequest: respondToInfoRequest } = useRequestInfo(ticketNum);
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
@@ -328,6 +331,19 @@ const AuthorProposalDetails: React.FC = () => {
 
 
         }
+
+        {/* Info Request Panel (Author view) */}
+        {(infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
+          <InfoRequestPanel
+            infoRequests={infoRequests}
+            isLoading={false}
+            viewAs="author"
+            onRespond={(requestId, responseNote, updatedFields) => {
+              respondToInfoRequest.mutate({ request_id: requestId, response_note: responseNote, updated_fields: updatedFields });
+            }}
+            isResponding={respondToInfoRequest.isPending}
+          />
+        )}
 
         {/* Title & Subtitle */}
         <div>
