@@ -77,15 +77,20 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   const pendingRequest = infoRequests.find((r) => r.status === "pending" || r.status === "open");
   const pastRequests = infoRequests.filter((r) => r.status !== "pending" && r.status !== "open");
 
-  // Pre-fill fields from proposal data on first render
+  // Pre-fill fields: prioritize saved draft (updated_fields on the request) over original proposal data
   React.useEffect(() => {
     if (pendingRequest && proposal && !initialized) {
       const prefilled: Record<string, string> = {};
       pendingRequest.items.forEach((item) => {
         if (!DOCUMENT_KEYS.has(item.key)) {
-          const proposalKey = PROPOSAL_FIELD_MAP[item.key];
-          if (proposalKey && proposal[proposalKey]) {
-            prefilled[item.key] = String(proposal[proposalKey]);
+          // Use saved draft value first, then fall back to original proposal value
+          if (pendingRequest.updated_fields && pendingRequest.updated_fields[item.key]) {
+            prefilled[item.key] = pendingRequest.updated_fields[item.key];
+          } else {
+            const proposalKey = PROPOSAL_FIELD_MAP[item.key];
+            if (proposalKey && proposal[proposalKey]) {
+              prefilled[item.key] = String(proposal[proposalKey]);
+            }
           }
         }
       });
