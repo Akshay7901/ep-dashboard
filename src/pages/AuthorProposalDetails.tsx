@@ -332,6 +332,19 @@ const AuthorProposalDetails: React.FC = () => {
 
         }
 
+        {/* Info Request Panel (Author view) */}
+        {(infoRequests.length > 0 || statusIs(proposal.status, "awaiting_more_info")) && (
+          <InfoRequestPanel
+            infoRequests={infoRequests}
+            isLoading={false}
+            viewAs="author"
+            onRespond={(requestId, responseNote, updatedFields) => {
+              respondToInfoRequest.mutate({ request_id: requestId, response_note: responseNote, updated_fields: updatedFields });
+            }}
+            isResponding={respondToInfoRequest.isPending}
+          />
+        )}
+
         {/* Title & Subtitle */}
         <div>
           <h2 className="text-xl font-bold text-foreground">{proposal.name}</h2>
