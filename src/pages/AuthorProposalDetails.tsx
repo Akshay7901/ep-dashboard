@@ -657,6 +657,10 @@ const AuthorProposalDetails: React.FC = () => {
                   );
                 }}
                 isResponding={respondToInfoRequest.isPending}
+                onSaveDraft={(requestId, updatedFields) => {
+                  saveDraftInfoRequest.mutate({ request_id: requestId, updated_fields: updatedFields });
+                }}
+                isSavingDraft={saveDraftInfoRequest.isPending}
               />
             </TabsContent>
           }
