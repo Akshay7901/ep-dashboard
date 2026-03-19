@@ -548,7 +548,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
                     </span>
                     <Badge variant="secondary" className="text-[10px]">Responded</Badge>
                   </div>
-                  <div className="px-4 py-2 text-sm whitespace-pre-line border-b border-border">{q.text}</div>
+                  <div className="px-4 py-2 text-sm whitespace-pre-line border-b border-border" dangerouslySetInnerHTML={{ __html: (q.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
                   {response && (
                     <div className="px-4 py-2 text-sm bg-emerald-50/50 whitespace-pre-line">
                       <span className="text-xs font-medium text-emerald-700">Your response: </span>
