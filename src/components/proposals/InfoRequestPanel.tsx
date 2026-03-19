@@ -203,11 +203,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {pendingRequest.items.map((item) => (
-                <Badge key={item.key} variant="secondary" className="text-xs py-1">
-                  {item.label}
-                </Badge>
+                <div key={item.key} className="flex flex-col gap-0.5">
+                  <Badge variant="secondary" className="text-xs py-1 w-fit">
+                    {item.label}
+                  </Badge>
+                  {item.note && (
+                    <p className="text-xs text-muted-foreground italic ml-1">{item.note}</p>
+                  )}
+                </div>
               ))}
             </div>
             {pendingRequest.note && (
