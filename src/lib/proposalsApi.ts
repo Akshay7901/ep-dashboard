@@ -322,7 +322,26 @@ export const requestInfoApi = {
     }
   },
 
-  respond: async (ticketNumber: string, payload: { request_id: number; response_note: string; updated_fields: Record<string, string> }): Promise<any> => {
+  respond: async (
+    ticketNumber: string,
+    payload: { request_id: number; response_note: string; updated_fields: Record<string, string> },
+    files?: Record<string, File>
+  ): Promise<any> => {
+    if (files && Object.keys(files).length > 0) {
+      const formData = new FormData();
+      formData.append('request_id', String(payload.request_id));
+      formData.append('response_note', payload.response_note);
+      formData.append('updated_fields', JSON.stringify(payload.updated_fields));
+      for (const [key, file] of Object.entries(files)) {
+        formData.append(key, file);
+      }
+      const { data } = await api.post(
+        `/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      return data;
+    }
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/request-info/respond`, payload);
     return data;
   },
