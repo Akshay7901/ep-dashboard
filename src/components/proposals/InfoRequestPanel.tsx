@@ -67,6 +67,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const [initialized, setInitialized] = useState(false);
 
   const pendingRequest = infoRequests.find((r) => r.status === "pending" || r.status === "open");
