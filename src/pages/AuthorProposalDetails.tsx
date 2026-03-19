@@ -650,9 +650,9 @@ const AuthorProposalDetails: React.FC = () => {
                 isLoading={false}
                 viewAs="author"
                 proposal={proposal}
-                onRespond={(requestId, responseNote, updatedFields) => {
+                onRespond={(requestId, responseNote, updatedFields, files) => {
                   respondToInfoRequest.mutate(
-                    { request_id: requestId, response_note: responseNote, updated_fields: updatedFields },
+                    { request_id: requestId, response_note: responseNote, updated_fields: updatedFields, files },
                     { onSuccess: () => refetch() }
                   );
                 }}
