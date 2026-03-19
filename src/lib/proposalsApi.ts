@@ -289,6 +289,7 @@ export const metadataQueriesApi = {
 export interface InfoRequestItem {
   key: string;
   label: string;
+  note?: string;
 }
 
 export interface InfoRequest {
