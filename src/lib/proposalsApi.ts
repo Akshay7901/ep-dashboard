@@ -303,6 +303,7 @@ export interface InfoRequest {
   response_note?: string;
   responded_at?: string;
   updated_fields?: Record<string, string>;
+  draft_data?: Record<string, string>;
   previous_status?: string;
 }
 
