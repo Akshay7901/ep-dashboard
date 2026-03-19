@@ -463,16 +463,19 @@ const ProposalDetails: React.FC = () => {
               </Select>
             </>}
 
-          {statusIs(proposal.status, "new", "submitted") && <>
-              <Button className="bg-[#3d5a47]" onClick={() => {
+          {statusIs(proposal.status, "new", "submitted", "review_returned") && <>
+              {statusIs(proposal.status, "new", "submitted") && <Button className="bg-[#3d5a47]" onClick={() => {
           setAssignNote("");
           setIsAssignDialogOpen(true);
         }} disabled={isAssigning}>
                 Submit for review
+              </Button>}
+              <Button variant="outline" className="gap-1.5" onClick={() => setRequestInfoOpen(true)}>
+                <Info className="h-4 w-4" /> Request Info
               </Button>
-              <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              {statusIs(proposal.status, "new", "submitted") && <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
                 Decline
-              </Button>
+              </Button>}
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
