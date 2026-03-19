@@ -586,6 +586,37 @@ const ProposalDetails: React.FC = () => {
                 viewAs="reviewer"
               />
             )}
+
+            {/* Send Contract card — shown when DR has submitted review and author has responded to info request */}
+            {isReviewer1 && isPostSubmission && !latestContract && infoRequests.some((r) => r.status === 'responded') && (
+              <Card className="border-[#3d5a47]/30 bg-[#3d5a47]/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Send className="h-5 w-5 text-[#3d5a47]" />
+                    Author Has Responded — Send Contract
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    The author has provided the requested information. You can now review the updated details and send a contract.
+                  </p>
+                  <Button
+                    className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+                    onClick={() => {
+                      setResendContractTitle(proposedTitle || proposal?.name || '');
+                      setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
+                      setResendContractType(getDefaultContractType(proposal?.book_type));
+                      setIncludeContract(true);
+                      setPendingQueryResponse(null);
+                      setResendContractOpen(true);
+                    }}
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Send Contract
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
             {/* Overview Grid */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Overview</h3>
