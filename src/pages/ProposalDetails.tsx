@@ -463,7 +463,7 @@ const ProposalDetails: React.FC = () => {
               </Select>
             </>}
 
-          {statusIs(proposal.status, "new", "submitted", "review_returned") && <>
+          {statusIs(proposal.status, "new", "submitted", "review_returned", "awaiting_more_info") && <>
               {statusIs(proposal.status, "new", "submitted") && <Button className="bg-[#3d5a47]" onClick={() => {
           setAssignNote("");
           setIsAssignDialogOpen(true);
