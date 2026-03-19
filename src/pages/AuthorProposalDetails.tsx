@@ -239,10 +239,6 @@ const AuthorProposalDetails: React.FC = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setOpenAccordion(value === "review" ? "contract-details" : undefined);
-    if (value === "review" && id) {
-      seenReviewSignatures.set(id, reviewNotificationSignature);
-      setHasSeenReview(true);
-    }
   };
 
   const isContractSigned = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;

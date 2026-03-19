@@ -100,7 +100,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
           }
         }
       });
-      console.log('[InfoRequestPanel] Prefilled result:', JSON.stringify(prefilled));
+      
       setUpdatedFields(prefilled);
       lastSavedRef.current = JSON.stringify(prefilled);
       setInitialized(true);
