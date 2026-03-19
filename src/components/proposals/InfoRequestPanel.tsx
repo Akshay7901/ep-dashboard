@@ -259,13 +259,18 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {req.items.map((item) => (
-                      <Badge key={item.key} variant="outline" className="text-xs">
-                        {item.label}
-                      </Badge>
-                    ))}
-                  </div>
+                  <div className="space-y-1.5">
+                     {req.items.map((item) => (
+                       <div key={item.key} className="flex flex-col gap-0.5">
+                         <Badge variant="outline" className="text-xs w-fit">
+                           {item.label}
+                         </Badge>
+                         {item.note && (
+                           <p className="text-xs text-muted-foreground italic ml-1">{item.note}</p>
+                         )}
+                       </div>
+                     ))}
+                   </div>
 
                   {req.note && (
                     <div>
