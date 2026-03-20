@@ -200,26 +200,25 @@ const Proposals: React.FC = () => {
 
   return (
     <DashboardLayout title={isReviewer1 ? "Proposal Intake" : "Peer Review Dashboard"}>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <img
               src={isReviewer1 ? brandLogo : logo}
               alt="Logo"
-              className="h-8 sm:h-10 w-auto shrink-0"
+              className="h-10 w-auto"
             />
-            <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">
+            <h1 className="text-2xl font-bold text-foreground">
               {isReviewer1 ? "Proposal Intake" : "Peer Review Dashboard"}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             {isReviewer1 && (
-              <Button variant="outline" className="gap-2 text-xs sm:text-sm" size="sm" onClick={() => navigate("/peer-reviewers")}>
+              <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Peer Reviewers</span>
-                <span className="sm:hidden">Reviewers</span>
+                Peer Reviewers
               </Button>
             )}
             <ProfileDropdown />
@@ -228,7 +227,7 @@ const Proposals: React.FC = () => {
 
         {/* Status Summary Chips — dynamically rendered from API status_summary */}
         {statusSummary && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+          <div className="grid grid-cols-5 gap-3">
             {Object.entries(statusSummary).map(([key, count]) => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
@@ -256,74 +255,70 @@ const Proposals: React.FC = () => {
         )}
 
         {/* Filters Row */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="whitespace-nowrap">Search by:</span>
-              <Select value={searchCategory} onValueChange={(v) => { setSearchCategory(v); setDisplayCount(ITEMS_PER_PAGE); }}>
-                <SelectTrigger className="w-28 h-9 bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="author">Author</SelectItem>
-                  <SelectItem value="title">Title</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="country">Country</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Type here"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-10 bg-background"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 items-center">
-            <Select value={statusFilter.length === 1 ? statusFilter[0] : "all"} onValueChange={(v) => handleStatusChange(v === "all" ? "" : v)}>
-              <SelectTrigger className="w-full sm:w-36 h-9 bg-background">
-                <SelectValue placeholder={statusFilter.length > 1 ? `${statusFilter.length} selected` : "All Statuses"} />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Search by:</span>
+            <Select value={searchCategory} onValueChange={(v) => { setSearchCategory(v); setDisplayCount(ITEMS_PER_PAGE); }}>
+              <SelectTrigger className="w-28 h-9 bg-background">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {statusOptions.filter(o => o.value !== "all").map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="author">Author</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="country">Country</SelectItem>
               </SelectContent>
             </Select>
+          </div>
 
-            {isReviewer1 && (
-              <button
-                onClick={() => { setActionRequiredFilter((prev) => !prev); setDisplayCount(ITEMS_PER_PAGE); }}
-                className={cn(
-                  "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
-                  actionRequiredFilter
-                    ? "bg-[#c05621] text-white border-[#c05621] ring-2 ring-offset-2 ring-[#c05621]"
-                    : "bg-background text-[#c05621] border-[#c05621] hover:bg-[#c05621]/10"
-                )}
-              >
-                Action Required
-              </button>
-            )}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Type here"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-10 bg-background"
+            />
+          </div>
 
+          <Select value={statusFilter.length === 1 ? statusFilter[0] : "all"} onValueChange={(v) => handleStatusChange(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-36 h-9 bg-background">
+              <SelectValue placeholder={statusFilter.length > 1 ? `${statusFilter.length} selected` : "All Statuses"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {statusOptions.filter(o => o.value !== "all").map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {isReviewer1 && (
             <button
-              onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setDisplayCount(ITEMS_PER_PAGE); }}
+              onClick={() => { setActionRequiredFilter((prev) => !prev); setDisplayCount(ITEMS_PER_PAGE); }}
               className={cn(
                 "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
-                "bg-background text-foreground border-border hover:bg-muted"
+                actionRequiredFilter
+                  ? "bg-[#c05621] text-white border-[#c05621] ring-2 ring-offset-2 ring-[#c05621]"
+                  : "bg-background text-[#c05621] border-[#c05621] hover:bg-[#c05621]/10"
               )}
             >
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+              Action Required
             </button>
-          </div>
+          )}
+
+          <button
+            onClick={() => { setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc'); setDisplayCount(ITEMS_PER_PAGE); }}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 h-9 text-sm font-medium border rounded-full transition-all whitespace-nowrap",
+              "bg-background text-foreground border-border hover:bg-muted"
+            )}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+          </button>
         </div>
 
         {/* Section label */}
@@ -358,8 +353,7 @@ const Proposals: React.FC = () => {
           {!isLoading && !error && displayedProposals.length > 0 && (
             <>
               <Card className="overflow-hidden">
-                <div className="overflow-x-auto">
-                <Table className="table-fixed w-full min-w-[700px]">
+                <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[30%]">
@@ -441,7 +435,6 @@ const Proposals: React.FC = () => {
                     ))}
                   </TableBody>
                 </Table>
-                </div>
               </Card>
 
               {hasMore && (
