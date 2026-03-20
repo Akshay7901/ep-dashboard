@@ -256,9 +256,9 @@ const Proposals: React.FC = () => {
         )}
 
         {/* Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex flex-wrap gap-3 items-center">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Search by:</span>
+            <span className="whitespace-nowrap">Search by:</span>
             <Select value={searchCategory} onValueChange={(v) => { setSearchCategory(v); setDisplayCount(ITEMS_PER_PAGE); }}>
               <SelectTrigger className="w-28 h-9 bg-background">
                 <SelectValue />
@@ -272,7 +272,7 @@ const Proposals: React.FC = () => {
             </Select>
           </div>
 
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 min-w-[150px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Type here"
