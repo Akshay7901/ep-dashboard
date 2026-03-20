@@ -784,34 +784,66 @@ const ProposalDetails: React.FC = () => {
                 <CardTitle>Supporting Documents</CardTitle>
               </CardHeader>
               <CardContent>
-                {files.length === 0 && <p className="text-sm text-muted-foreground">No files uploaded</p>}
-                <div className="space-y-3">
-                  {files.map((url: string, i: number) => {
-                const name = url.split("/").pop() || "File";
-                const isPdf = url.endsWith(".pdf");
-                const isWord = url.endsWith(".doc") || url.endsWith(".docx");
-                return <div key={i} className="flex justify-between items-center border rounded-md px-3 py-2">
-                        <div className="flex gap-2 items-center">
-                          <FileText className="h-4 w-4" />
-                          {name}
-                        </div>
-                        <div className="flex gap-2">
-                          {(isPdf || isWord) && <Button size="icon" variant="ghost" onClick={() => setDocumentPreview({
-                      url,
-                      name,
-                      type: isPdf ? "pdf" : "word"
-                    })}>
-                              <Eye className="h-4 w-4" />
-                            </Button>}
-                          <Button size="icon" variant="ghost" asChild>
-                            <a href={url} target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        </div>
-                      </div>;
-              })}
-                </div>
+                {(() => {
+                  // Collect document files from info request responses
+                  const DOCUMENT_KEYS = new Set(["cv", "sample_chapter", "toc_doc", "permissions_docs"]);
+                  const infoDocFiles: { url: string; label: string }[] = [];
+                  infoRequests
+                    .filter((r) => r.status === "responded" && r.draft_data)
+                    .forEach((r) => {
+                      Object.entries(r.draft_data || {}).forEach(([key, value]) => {
+                        if (DOCUMENT_KEYS.has(key) && typeof value === "string" && value.startsWith("http")) {
+                          infoDocFiles.push({ url: value, label: key.replace(/_/g, " ") });
+                        }
+                      });
+                    });
+
+                  const allFiles = [
+                    ...files.map((url: string) => ({ url, label: "" })),
+                    ...infoDocFiles,
+                  ];
+
+                  if (allFiles.length === 0) return <p className="text-sm text-muted-foreground">No files uploaded</p>;
+
+                  return (
+                    <div className="space-y-3">
+                      {allFiles.map((file, i) => {
+                        const name = decodeURIComponent(file.url.split("/").pop() || "File").replace(/^[a-z_]+_\d{14}_/, "");
+                        const isPdf = file.url.endsWith(".pdf");
+                        const isWord = file.url.endsWith(".doc") || file.url.endsWith(".docx");
+                        return (
+                          <div key={i} className="flex justify-between items-center border rounded-md px-3 py-2">
+                            <div className="flex gap-2 items-center min-w-0">
+                              <FileText className="h-4 w-4 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-sm truncate">{name}</p>
+                                {file.label && (
+                                  <p className="text-xs text-muted-foreground capitalize">{file.label} — via info request</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              {(isPdf || isWord) && (
+                                <Button size="icon" variant="ghost" onClick={() => setDocumentPreview({
+                                  url: file.url,
+                                  name,
+                                  type: isPdf ? "pdf" : "word"
+                                })}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button size="icon" variant="ghost" asChild>
+                                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
