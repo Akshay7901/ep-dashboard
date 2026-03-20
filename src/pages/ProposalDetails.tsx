@@ -1526,15 +1526,15 @@ const ProposalDetails: React.FC = () => {
       isSubmitting={isConfirming} /> :
 
 
-    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="pl-6 pr-6 overflow-y-auto h-full scrollbar-thin">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-0 items-start" style={{ minHeight: 'calc(100vh - 140px)' }}>
+            <div className="px-2 sm:px-6 overflow-y-auto w-full scrollbar-thin">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}} onDraftSaved={() => {
           if (statusIs(proposal.status, "pending", "new", "submitted")) {
             // Status transitions managed by backend
           }}} />
             </div>
-            <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+            <div className="px-2 sm:px-6 overflow-y-auto w-full scrollbar-thin">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
               {rightPanel}
             </div>
           </div> : hasSubmittedReview ?
@@ -1628,13 +1628,13 @@ const ProposalDetails: React.FC = () => {
       isSubmitting={isConfirming} /> :
 
 
-    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-0 items-start" style={{ minHeight: 'calc(100vh - 140px)' }}>
+           <div className="px-2 sm:px-6 overflow-y-auto w-full lg:h-full scrollbar-thin" style={{ maxHeight: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'calc(100vh - 140px)' : undefined }}>
             {/* Start Fresh button + info banner for decision reviewer */}
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Peer review comments</h2>
                 </div>
               </div>
 
@@ -1643,7 +1643,6 @@ const ProposalDetails: React.FC = () => {
               variant="outline"
               className="text-[#2563eb] border-[#2563eb] hover:bg-[#2563eb]/10"
               onClick={() => {
-                // Snapshot saved form data when opening diff checker
                 setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
                 setDiffCheckerOpen(true);
               }}>
@@ -1652,7 +1651,7 @@ const ProposalDetails: React.FC = () => {
                   Diff Checker
                 </Button>
               </div>
-              <div className="border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg p-4 flex gap-3">
+              <div className="border border-[#c4940a]/40 bg-[#c4940a]/5 rounded-lg p-3 sm:p-4 flex gap-3">
                 <div className="shrink-0 mt-0.5">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#c4940a]" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1683,8 +1682,8 @@ const ProposalDetails: React.FC = () => {
 
         
           </div>
-          <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+          <div className="px-2 sm:px-6 overflow-y-auto w-full lg:h-full scrollbar-thin" style={{ maxHeight: typeof window !== 'undefined' && window.innerWidth >= 1024 ? 'calc(100vh - 140px)' : undefined }}>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
         </div> :
