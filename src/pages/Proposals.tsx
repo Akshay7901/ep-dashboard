@@ -439,10 +439,8 @@ const Proposals: React.FC = () => {
               </Card>
 
               {hasMore && (
-                <div className="flex justify-center pt-4">
-                  <Button variant="outline" onClick={handleViewMore} className="px-8">
-                    View More
-                  </Button>
+                <div ref={loadMoreRef} className="flex justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               )}
             </>
