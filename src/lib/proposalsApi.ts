@@ -133,8 +133,8 @@ export interface SendContractPayload {
   author_copies?: string;
   if_two_author_copies?: string;
   if_three_or_four_author_copies?: string;
-  copies_sold_revenue?: number;
-  secondary_rights_revenue?: number;
+  copies_sold_revenue?: string | number;
+  secondary_rights_revenue?: string | number;
   publishing_agreement?: string;
 }
 
