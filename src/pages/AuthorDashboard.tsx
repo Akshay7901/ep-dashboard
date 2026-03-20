@@ -223,6 +223,7 @@ const AuthorDashboard: React.FC = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </Card>
 
               {hasMore && (
