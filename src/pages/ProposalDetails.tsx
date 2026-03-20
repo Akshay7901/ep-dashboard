@@ -238,7 +238,7 @@ const ProposalDetails: React.FC = () => {
   const { data: metadataQueries = [] } = useQuery({
     queryKey: ["metadata-queries", ticketNum],
     queryFn: () => metadataQueriesApi.list(ticketNum),
-    enabled: !!ticketNum && isContractSignedEarly,
+    enabled: !!ticketNum,
     staleTime: 0,
     refetchInterval: 10000
   });
