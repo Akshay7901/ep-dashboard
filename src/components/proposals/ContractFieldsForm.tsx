@@ -102,10 +102,10 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-copies`} className="text-xs">
-            Complimentary Copies
+            Complimentary Copies on Publication
           </Label>
           <Input
             id={`${idPrefix}-copies`}
@@ -119,7 +119,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-two-copies`} className="text-xs">
-            If 2 Authors (each)
+            Complimentary Copies Each - 2 Authors
           </Label>
           <Input
             id={`${idPrefix}-two-copies`}
@@ -133,7 +133,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-three-copies`} className="text-xs">
-            If 3–4 Authors (each)
+            Complimentary Copies Each - 3 or 4 Authors
           </Label>
           <Input
             id={`${idPrefix}-three-copies`}
@@ -151,7 +151,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-book-royalty`} className="text-xs">
-            Royalty – Book Sales (%)
+            Author Royalty - Book Sales (%)
           </Label>
           <Input
             id={`${idPrefix}-book-royalty`}
@@ -169,7 +169,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-other-royalty`} className="text-xs">
-            Royalty – Other Rights (%)
+            Author Royalty - Other Rights (%)
           </Label>
           <Input
             id={`${idPrefix}-other-royalty`}
