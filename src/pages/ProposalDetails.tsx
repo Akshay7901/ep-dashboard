@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
 import { proposalApi, contractApi, metadataApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
-import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
+import { buildContractSendPayload, getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
 import { Separator } from "@/components/ui/separator";
@@ -1576,11 +1576,14 @@ const ProposalDetails: React.FC = () => {
           // Step 2: If contract should be sent, call separate contract/send API
           if (sendContract) {
             try {
-              await proposalApi.sendContract(ticketNum, {
-                contract_type: contractType || 'author',
-                title: contractTitle || proposal?.name || '',
-                subtitle: contractSubtitle || proposal?.sub_title || ''
-              });
+              await proposalApi.sendContract(
+                ticketNum,
+                buildContractSendPayload({
+                  contractType: contractType || 'author',
+                  title: contractTitle || proposal?.name || '',
+                  subtitle: contractSubtitle || proposal?.sub_title || '',
+                })
+              );
               toast({
                 title: 'Contract Sent',
                 description: 'The contract has been sent to the author.'
@@ -1885,11 +1888,14 @@ const ProposalDetails: React.FC = () => {
                 }
                 // Then send contract if included
                 if (includeContract) {
-                  await proposalApi.sendContract(ticketNum, {
-                    contract_type: resendContractType,
-                    title: resendContractTitle,
-                    subtitle: resendContractSubtitle
-                  });
+                  await proposalApi.sendContract(
+                    ticketNum,
+                    buildContractSendPayload({
+                      contractType: resendContractType,
+                      title: resendContractTitle,
+                      subtitle: resendContractSubtitle,
+                    })
+                  );
                 }
                 toast({ title: 'Sent Successfully', description: includeContract ? 'Response and contract have been sent to the author.' : 'Response has been sent to the author.' });
                 queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
