@@ -1,6 +1,8 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
+import { getDefaultContractFields, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
+import ContractFieldsForm from "@/components/proposals/ContractFieldsForm";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -175,8 +177,7 @@ const ProposalDetails: React.FC = () => {
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
   const [resendContractType, setResendContractType] = useState("author");
-  const [resendContractTitle, setResendContractTitle] = useState("");
-  const [resendContractSubtitle, setResendContractSubtitle] = useState("");
+  const [resendContractFields, setResendContractFields] = useState<import("@/components/proposals/ContractFieldsForm").ContractFieldValues | null>(null);
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{queryId: number;responseText: string;} | null>(null);
   const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
@@ -839,8 +840,8 @@ const ProposalDetails: React.FC = () => {
                         <Button
                           className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
                           onClick={() => {
-                            setResendContractTitle(proposedTitle || proposal?.name || '');
-                            setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
+                            const ct = getDefaultContractType(proposal?.book_type);
+                            setResendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
                             setResendContractType(getDefaultContractType(proposal?.book_type));
                             setIncludeContract(true);
                             setPendingQueryResponse(null);
@@ -1097,9 +1098,9 @@ const ProposalDetails: React.FC = () => {
                     onSend={async (text, _category, queryId) => {
                       // Store pending response — don't send yet, wait for contract dialog
                       setPendingQueryResponse({ queryId: queryId!, responseText: text });
-                      setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
-                      setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
-                      setResendContractType(latestContract?.contract_type || getDefaultContractType(proposal?.book_type));
+                      const ct = latestContract?.contract_type || getDefaultContractType(proposal?.book_type);
+                      setResendContractFields(getDefaultContractFields(ct, proposedTitle || latestContract?.title || proposal?.name || '', proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || ''));
+                      setResendContractType(ct);
                       setResendContractOpen(true);
                     }}
                     isSending={respondToQuery.isPending} />
@@ -1545,7 +1546,7 @@ const ProposalDetails: React.FC = () => {
       formData={summaryFormData}
       onGoBack={() => setShowingSummary(false)}
       showContractSection
-      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems) => {
+      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems, contractFields) => {
         if (!summaryFormData.recommendation) {
           toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
           return;
@@ -1578,7 +1579,7 @@ const ProposalDetails: React.FC = () => {
             try {
               await proposalApi.sendContract(
                 ticketNum,
-                buildContractSendPayload({
+                buildContractSendPayload(contractFields || {
                   contractType: contractType || 'author',
                   title: contractTitle || proposal?.name || '',
                   subtitle: contractSubtitle || proposal?.sub_title || '',
@@ -1806,7 +1807,7 @@ const ProposalDetails: React.FC = () => {
         setPendingQueryResponse(null); // Discard pending response on close
       }
     }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Send Response</DialogTitle>
             <DialogDescription>
@@ -1822,7 +1823,7 @@ const ProposalDetails: React.FC = () => {
             
               <Label htmlFor="include-contract" className="cursor-pointer">Include new contract</Label>
             </div>
-            {includeContract &&
+            {includeContract && resendContractFields &&
           <>
                 <div className="space-y-2">
                   <Label>Contract Type</Label>
@@ -1849,26 +1850,12 @@ const ProposalDetails: React.FC = () => {
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="resend-contract-title">Title</Label>
-                  <input
-                id="resend-contract-title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractTitle}
-                onChange={(e) => setResendContractTitle(e.target.value)}
-                placeholder="Enter title" />
-              
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
-                  <input
-                id="resend-contract-subtitle"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractSubtitle}
-                onChange={(e) => setResendContractSubtitle(e.target.value)}
-                placeholder="Enter subtitle (optional)" />
-              
-                </div>
+                <ContractFieldsForm
+                  values={resendContractFields}
+                  onChange={setResendContractFields}
+                  contractType={resendContractType}
+                  idPrefix="resend-cf"
+                />
               </>
           }
           </div>
@@ -1878,7 +1865,7 @@ const ProposalDetails: React.FC = () => {
             </Button>
             <Button
             className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-            disabled={isResendingContract || includeContract && !resendContractTitle.trim()}
+            disabled={isResendingContract || (includeContract && (!resendContractFields || !resendContractFields.title.trim()))}
             onClick={async () => {
               setIsResendingContract(true);
               try {
@@ -1887,13 +1874,20 @@ const ProposalDetails: React.FC = () => {
                   await respondToQuery.mutateAsync(pendingQueryResponse);
                 }
                 // Then send contract if included
-                if (includeContract) {
+                if (includeContract && resendContractFields) {
                   await proposalApi.sendContract(
                     ticketNum,
                     buildContractSendPayload({
                       contractType: resendContractType,
-                      title: resendContractTitle,
-                      subtitle: resendContractSubtitle,
+                      title: resendContractFields.title,
+                      subtitle: resendContractFields.subtitle,
+                      language: resendContractFields.language,
+                      authorCopies: resendContractFields.authorCopies,
+                      ifTwoAuthorCopies: resendContractFields.ifTwoAuthorCopies,
+                      ifThreeOrFourAuthorCopies: resendContractFields.ifThreeOrFourAuthorCopies,
+                      copiesSoldRevenue: resendContractFields.copiesSoldRevenue,
+                      secondaryRightsRevenue: resendContractFields.secondaryRightsRevenue,
+                      publishingAgreement: resendContractFields.publishingAgreement,
                     })
                   );
                 }
