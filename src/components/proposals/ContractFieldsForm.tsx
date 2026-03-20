@@ -109,12 +109,11 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-copies`}
-            type="number"
-            min={0}
             value={values.authorCopies}
             onChange={(e) =>
-              update({ authorCopies: parseInt(e.target.value) || 0 })
+              update({ authorCopies: e.target.value })
             }
+            placeholder="e.g. two copies"
           />
         </div>
 
@@ -124,12 +123,11 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-two-copies`}
-            type="number"
-            min={0}
             value={values.ifTwoAuthorCopies}
             onChange={(e) =>
-              update({ ifTwoAuthorCopies: parseInt(e.target.value) || 0 })
+              update({ ifTwoAuthorCopies: e.target.value })
             }
+            placeholder="e.g. two copies"
           />
         </div>
 
@@ -139,14 +137,13 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-three-copies`}
-            type="number"
-            min={0}
             value={values.ifThreeOrFourAuthorCopies}
             onChange={(e) =>
               update({
-                ifThreeOrFourAuthorCopies: parseInt(e.target.value) || 0,
+                ifThreeOrFourAuthorCopies: e.target.value,
               })
             }
+            placeholder="e.g. one copy"
           />
         </div>
       </div>
