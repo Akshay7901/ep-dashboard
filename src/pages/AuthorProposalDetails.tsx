@@ -295,12 +295,12 @@ const AuthorProposalDetails: React.FC = () => {
         </Button>
 
         {/* Page Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
+            <img src={brandLogo} alt="Logo" className="h-8 sm:h-10 w-auto" />
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
-          <div className="text-right text-sm text-muted-foreground">
+          <div className="text-left sm:text-right text-sm text-muted-foreground">
             {proposal.ticket_number &&
             <p>
                 Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
@@ -365,7 +365,7 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
 
           {/* Timeline steps */}
-          <div className={cn("grid gap-2", `grid-cols-${apiTimeline.length || 6}`)} style={{ gridTemplateColumns: `repeat(${apiTimeline.length || 6}, minmax(0, 1fr))` }}>
+          <div className={cn("grid gap-2 overflow-x-auto")} style={{ gridTemplateColumns: `repeat(${apiTimeline.length || 6}, minmax(60px, 1fr))` }}>
             {apiTimeline.map((step) => {
               const dateStr = step.completed_at || step.started_at;
               return (
@@ -403,7 +403,7 @@ const AuthorProposalDetails: React.FC = () => {
 
         {/* Tabs: Proposal Information / Peer Review & Contract */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto">
+          <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto flex-wrap">
             <TabsTrigger
               value="proposal"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">

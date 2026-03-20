@@ -202,7 +202,7 @@ const PeerReviewers: React.FC = () => {
               return (
                 <Card key={reviewer.id} className="border">
                   <CardContent className="py-4 px-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {hasAssignments && (
                           <button onClick={() => toggleExpanded(reviewer.id)} className="p-1 hover:bg-muted rounded">
@@ -213,8 +213,8 @@ const PeerReviewers: React.FC = () => {
                             )}
                           </button>
                         )}
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-foreground">
                               {reviewer.name || reviewer.email.split("@")[0]}
                             </p>
@@ -224,10 +224,10 @@ const PeerReviewers: React.FC = () => {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{reviewer.email}</p>
+                          <p className="text-sm text-muted-foreground break-all">{reviewer.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {isDefault(reviewer.email) ? (
                           <Button variant="default" size="sm" className="bg-[#45556c] text-primary-foreground">
                             Default
@@ -255,7 +255,7 @@ const PeerReviewers: React.FC = () => {
                         {assignments.map((assignment) => (
                           <div
                             key={assignment.ticket_number}
-                            className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2"
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />

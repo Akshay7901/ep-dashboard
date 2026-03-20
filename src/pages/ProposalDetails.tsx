@@ -379,10 +379,10 @@ const ProposalDetails: React.FC = () => {
   const rightPanel = <div className="space-y-6">
       {/* Proposal Header */}
       <div>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
-            {proposal.sub_title && <p className="text-base text-muted-foreground mt-1 italic">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">{proposal.name}</h2>
+            {proposal.sub_title && <p className="text-sm sm:text-base text-muted-foreground mt-1 italic">
                 {proposal.sub_title}
               </p>}
             {/* Proposed title from metadata (if different from original) */}
@@ -402,7 +402,7 @@ const ProposalDetails: React.FC = () => {
               </p>
           }
           </div>
-          <div className="flex items-center gap-2 ml-4 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <ProposalStatusBadge status={proposal.status} showIcon={false} />
             {isPostSubmission && proposal.contract_sent_at &&
           <span className="text-sm text-muted-foreground">
@@ -1628,13 +1628,13 @@ const ProposalDetails: React.FC = () => {
       isSubmitting={isConfirming} /> :
 
 
-    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-start lg:h-[calc(100vh-140px)]">
+           <div className="pr-0 lg:pr-6 overflow-y-auto lg:h-full scrollbar-thin">
             {/* Start Fresh button + info banner for decision reviewer */}
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Peer review comments</h2>
                 </div>
               </div>
 
@@ -1683,8 +1683,8 @@ const ProposalDetails: React.FC = () => {
 
         
           </div>
-          <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+          <div className="pl-0 lg:pl-6 overflow-y-auto lg:h-full scrollbar-thin mt-6 lg:mt-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
         </div> :
