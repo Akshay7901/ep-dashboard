@@ -40,8 +40,8 @@ export interface ContractSendFields {
   authorCopies?: string;
   ifTwoAuthorCopies?: string;
   ifThreeOrFourAuthorCopies?: string;
-  copiesSoldRevenue?: number;
-  secondaryRightsRevenue?: number;
+  copiesSoldRevenue?: string | number;
+  secondaryRightsRevenue?: string | number;
   publishingAgreement?: string;
 }
 

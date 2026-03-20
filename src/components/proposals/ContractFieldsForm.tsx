@@ -11,8 +11,8 @@ export interface ContractFieldValues {
   authorCopies: string;
   ifTwoAuthorCopies: string;
   ifThreeOrFourAuthorCopies: string;
-  copiesSoldRevenue: number;
-  secondaryRightsRevenue: number;
+  copiesSoldRevenue: string;
+  secondaryRightsRevenue: string;
   publishingAgreement: string;
 }
 
@@ -29,8 +29,8 @@ export function getDefaultContractFields(
     authorCopies: "two copies",
     ifTwoAuthorCopies: "two copies",
     ifThreeOrFourAuthorCopies: "one copy",
-    copiesSoldRevenue: 10,
-    secondaryRightsRevenue: 20,
+    copiesSoldRevenue: "10",
+    secondaryRightsRevenue: "20",
     publishingAgreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${partyLabel}.`,
   };
 }
@@ -155,15 +155,13 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-book-royalty`}
-            type="number"
-            min={0}
-            max={100}
             value={values.copiesSoldRevenue}
             onChange={(e) =>
               update({
-                copiesSoldRevenue: parseFloat(e.target.value) || 0,
+                copiesSoldRevenue: e.target.value,
               })
             }
+            placeholder="e.g. 10%"
           />
         </div>
 
@@ -173,15 +171,13 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-other-royalty`}
-            type="number"
-            min={0}
-            max={100}
             value={values.secondaryRightsRevenue}
             onChange={(e) =>
               update({
-                secondaryRightsRevenue: parseFloat(e.target.value) || 0,
+                secondaryRightsRevenue: e.target.value,
               })
             }
+            placeholder="e.g. 20%"
           />
         </div>
       </div>
