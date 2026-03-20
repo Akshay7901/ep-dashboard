@@ -175,8 +175,7 @@ const ProposalDetails: React.FC = () => {
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
   const [resendContractType, setResendContractType] = useState("author");
-  const [resendContractTitle, setResendContractTitle] = useState("");
-  const [resendContractSubtitle, setResendContractSubtitle] = useState("");
+  const [resendContractFields, setResendContractFields] = useState<import("@/components/proposals/ContractFieldsForm").ContractFieldValues | null>(null);
   const [isResendingContract, setIsResendingContract] = useState(false);
   const [pendingQueryResponse, setPendingQueryResponse] = useState<{queryId: number;responseText: string;} | null>(null);
   const [showResendMismatchWarning, setShowResendMismatchWarning] = useState(false);
