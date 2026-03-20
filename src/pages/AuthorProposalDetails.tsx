@@ -245,10 +245,16 @@ const AuthorProposalDetails: React.FC = () => {
   const hasReviewContent = reviews.length > 0 || !!(latestContract);
 
   // Default tab priority: metadata (if contract signed) > review (if available) > proposal
+  // Determine if queries section should be auto-opened
+  const hasEditorQueryResponse = React.useMemo(() => {
+    if (!contractQueries.length) return false;
+    // Check if there's a response from the editor (i.e. queries with responses)
+    return contractQueries.some((q: any) => q.type === 'response');
+  }, [contractQueries]);
+
   useEffect(() => {
     if (isContractSigned) {
       setActiveTab("metadata");
-      // Contract is signed — dismiss notification
       if (id) {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
@@ -257,9 +263,16 @@ const AuthorProposalDetails: React.FC = () => {
       setActiveTab("additional-info");
     } else if (hasReviewContent) {
       setActiveTab("review");
-      setOpenAccordion("contract-details");
+      // If there are query responses or queries_raised status, open queries section; otherwise contract
+      if (hasEditorQueryResponse || statusIs(proposal?.status || '', 'queries_raised')) {
+        setShowQueryThread(true);
+        setQueryAccordionValue("contract-queries");
+        setOpenAccordion(undefined);
+      } else {
+        setOpenAccordion("contract-details");
+      }
     }
-  }, [isContractSigned, hasReviewContent, proposal?.status]);
+  }, [isContractSigned, hasReviewContent, proposal?.status, hasEditorQueryResponse]);
 
   if (isLoading) {
     return (
