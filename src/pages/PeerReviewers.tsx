@@ -255,7 +255,7 @@ const PeerReviewers: React.FC = () => {
                         {assignments.map((assignment) => (
                           <div
                             key={assignment.ticket_number}
-                            className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between bg-muted/50 rounded-lg px-3 py-2 gap-2"
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
