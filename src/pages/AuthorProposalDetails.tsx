@@ -245,10 +245,16 @@ const AuthorProposalDetails: React.FC = () => {
   const hasReviewContent = reviews.length > 0 || !!(latestContract);
 
   // Default tab priority: metadata (if contract signed) > review (if available) > proposal
+  // Determine if queries section should be auto-opened
+  const hasEditorQueryResponse = React.useMemo(() => {
+    if (!contractQueries.length) return false;
+    // Check if there's a response from the editor (i.e. queries with responses)
+    return contractQueries.some((q: any) => q.type === 'response');
+  }, [contractQueries]);
+
   useEffect(() => {
     if (isContractSigned) {
       setActiveTab("metadata");
-      // Contract is signed — dismiss notification
       if (id) {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
@@ -257,9 +263,16 @@ const AuthorProposalDetails: React.FC = () => {
       setActiveTab("additional-info");
     } else if (hasReviewContent) {
       setActiveTab("review");
-      setOpenAccordion("contract-details");
+      // If there are query responses or queries_raised status, open queries section; otherwise contract
+      if (hasEditorQueryResponse || statusIs(proposal?.status || '', 'queries_raised')) {
+        setShowQueryThread(true);
+        setQueryAccordionValue("contract-queries");
+        setOpenAccordion(undefined);
+      } else {
+        setOpenAccordion("contract-details");
+      }
     }
-  }, [isContractSigned, hasReviewContent, proposal?.status]);
+  }, [isContractSigned, hasReviewContent, proposal?.status, hasEditorQueryResponse]);
 
   if (isLoading) {
     return (
@@ -415,7 +428,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
               Peer Review & Contract
-              {!isContractSigned && (reviews.some((r: any) => r.status === 'submitted' || r.is_submitted) || (latestContract && latestContract.docusign_status)) &&
+              {!isContractSigned && !statusIs(proposal.status, 'queries_raised') && (reviews.some((r: any) => r.status === 'submitted' || r.is_submitted) || (latestContract && latestContract.docusign_status)) && !hasSeenReview &&
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
               }
             </TabsTrigger>
@@ -432,7 +445,7 @@ const AuthorProposalDetails: React.FC = () => {
               value="metadata"
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
                 Metadata
-                {statusIs(proposal.status, "awaiting_author_approval") &&
+                {(statusIs(proposal.status, "awaiting_author_approval") || (proposal as any).metadata_status === "sent_to_author") &&
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 }
               </TabsTrigger>

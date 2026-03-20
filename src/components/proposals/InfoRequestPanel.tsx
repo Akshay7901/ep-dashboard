@@ -302,7 +302,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
             <Button
               variant="outline"
               className="px-6"
-              disabled={isSavingDraft || isResponding || Object.values(updatedFields).every((v) => !v.trim())}
+              disabled={isSavingDraft || isResponding || (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)}
               onClick={() => {
                 if (pendingRequest && onSaveDraft) {
                   onSaveDraft(pendingRequest.id, updatedFields);
@@ -320,7 +320,12 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
               disabled={
                 isResponding ||
                 isSavingDraft ||
-                (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)
+                !pendingRequest?.items.every((item) => {
+                  if (DOCUMENT_KEYS.has(item.key)) {
+                    return !!uploadedFiles[item.key];
+                  }
+                  return !!(updatedFields[item.key]?.trim());
+                })
               }
             >
               {isResponding ? (
