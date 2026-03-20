@@ -403,7 +403,7 @@ const AuthorProposalDetails: React.FC = () => {
 
         {/* Tabs: Proposal Information / Peer Review & Contract */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto">
+          <TabsList className="w-auto bg-transparent border-b rounded-none p-0 h-auto flex-wrap">
             <TabsTrigger
               value="proposal"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
