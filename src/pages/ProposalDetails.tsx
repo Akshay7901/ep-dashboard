@@ -1888,11 +1888,14 @@ const ProposalDetails: React.FC = () => {
                 }
                 // Then send contract if included
                 if (includeContract) {
-                  await proposalApi.sendContract(ticketNum, {
-                    contract_type: resendContractType,
-                    title: resendContractTitle,
-                    subtitle: resendContractSubtitle
-                  });
+                  await proposalApi.sendContract(
+                    ticketNum,
+                    buildContractSendPayload({
+                      contractType: resendContractType,
+                      title: resendContractTitle,
+                      subtitle: resendContractSubtitle,
+                    })
+                  );
                 }
                 toast({ title: 'Sent Successfully', description: includeContract ? 'Response and contract have been sent to the author.' : 'Response has been sent to the author.' });
                 queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
