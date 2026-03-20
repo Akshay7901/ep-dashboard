@@ -11,8 +11,8 @@ export interface ContractFieldValues {
   authorCopies: string;
   ifTwoAuthorCopies: string;
   ifThreeOrFourAuthorCopies: string;
-  copiesSoldRevenue: number;
-  secondaryRightsRevenue: number;
+  copiesSoldRevenue: string;
+  secondaryRightsRevenue: string;
   publishingAgreement: string;
 }
 
