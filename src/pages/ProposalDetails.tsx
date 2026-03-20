@@ -1545,7 +1545,7 @@ const ProposalDetails: React.FC = () => {
       formData={summaryFormData}
       onGoBack={() => setShowingSummary(false)}
       showContractSection
-      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems) => {
+      onConfirmSubmit={async (sendContract, contractType, contractTitle, contractSubtitle, revisionItems, contractFields) => {
         if (!summaryFormData.recommendation) {
           toast({ variant: 'destructive', title: 'Recommendation Required', description: 'Please select a Final Recommendation before submitting.' });
           return;
@@ -1578,7 +1578,7 @@ const ProposalDetails: React.FC = () => {
             try {
               await proposalApi.sendContract(
                 ticketNum,
-                buildContractSendPayload({
+                buildContractSendPayload(contractFields || {
                   contractType: contractType || 'author',
                   title: contractTitle || proposal?.name || '',
                   subtitle: contractSubtitle || proposal?.sub_title || '',
