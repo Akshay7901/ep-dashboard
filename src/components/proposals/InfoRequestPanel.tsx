@@ -69,6 +69,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   isResponding,
   onSaveDraft,
   isSavingDraft,
+  onAutoSave,
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
