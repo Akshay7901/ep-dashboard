@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload, ClipboardList } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload, ClipboardList, Download } from "lucide-react";
 import type { InfoRequest } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
@@ -442,6 +442,42 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                                 <p className="text-sm">{value}</p>
                               </div>
                             ))}
+                          </div>
+                        )}
+                        {/* Show uploaded documents from draft_data */}
+                        {req.draft_data && Object.keys(req.draft_data).length > 0 && (
+                          <div className="space-y-2">
+                            {Object.entries(req.draft_data)
+                              .filter(([key, value]) => DOCUMENT_KEYS.has(key) && typeof value === "string" && value.startsWith("http"))
+                              .map(([key, value]) => {
+                                const url = value as string;
+                                const decodedName = decodeURIComponent(url.split("/").pop() || key);
+                                const cleanName = decodedName.replace(/^[a-z_]+_\d{14}_/, "");
+                                return (
+                                  <div key={key} className="flex items-center gap-3 bg-muted/30 rounded p-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, " ")}</p>
+                                      <p className="text-sm font-medium truncate">{cleanName}</p>
+                                    </div>
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-primary hover:underline shrink-0"
+                                    >
+                                      View
+                                    </a>
+                                    <a
+                                      href={url}
+                                      download={cleanName}
+                                      className="text-xs text-primary hover:underline shrink-0"
+                                    >
+                                      <Download className="h-3.5 w-3.5" />
+                                    </a>
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
                       </div>
