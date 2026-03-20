@@ -123,6 +123,21 @@ export const contractApi = {
 };
 
 // Delete Proposal API
+export interface SendContractPayload {
+  contract_type: string;
+  title?: string;
+  subtitle?: string;
+  expiry_days?: number;
+  notes?: string;
+  language?: string;
+  author_copies?: number;
+  if_two_author_copies?: number;
+  if_three_or_four_author_copies?: number;
+  copies_sold_revenue?: number;
+  secondary_rights_revenue?: number;
+  publishing_agreement?: string;
+}
+
 export const proposalApi = {
   delete: async (ticketNumber: string): Promise<void> => {
     await api.delete(`/api/proposals/${encodeURIComponent(ticketNumber)}`);
@@ -138,7 +153,7 @@ export const proposalApi = {
     return data;
   },
 
-  sendContract: async (ticketNumber: string, payload: { contract_type: string; title?: string; subtitle?: string; expiry_days?: number; notes?: string }): Promise<any> => {
+  sendContract: async (ticketNumber: string, payload: SendContractPayload): Promise<any> => {
     const { data } = await api.post(`/api/proposals/${encodeURIComponent(ticketNumber)}/contract/send`, payload);
     return data;
   },

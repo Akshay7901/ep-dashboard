@@ -1,10 +1,12 @@
+export type ContractType = "author" | "editor";
+
 /**
  * Determines the default contract type based on the book type.
  * - Monograph / Authored, Adapted PhD Thesis → "author"
  * - Edited Collection, Adapted Conference Collection → "editor"
  * - Fallback → "author"
  */
-export function getDefaultContractType(bookType?: string | null): "author" | "editor" {
+export function getDefaultContractType(bookType?: string | null): ContractType {
   if (!bookType) return "author";
   const normalized = bookType.trim().toLowerCase();
 
@@ -18,6 +20,45 @@ export function getDefaultContractType(bookType?: string | null): "author" | "ed
   }
 
   return "author";
+}
+
+export function normalizeContractType(contractType?: string | null): ContractType {
+  return contractType === "editor" ? "editor" : "author";
+}
+
+export function getContractPartyLabel(contractType?: string | null): "Author" | "Editor" {
+  return normalizeContractType(contractType) === "editor" ? "Editor" : "Author";
+}
+
+export function buildContractSendPayload({
+  contractType,
+  title,
+  subtitle,
+  expiryDays,
+  notes,
+}: {
+  contractType?: string | null;
+  title?: string;
+  subtitle?: string;
+  expiryDays?: number;
+  notes?: string;
+}) {
+  const normalizedContractType = normalizeContractType(contractType);
+
+  return {
+    contract_type: normalizedContractType,
+    ...(title !== undefined ? { title } : {}),
+    ...(subtitle !== undefined ? { subtitle } : {}),
+    language: "in all languages",
+    author_copies: 2,
+    if_two_author_copies: 2,
+    if_three_or_four_author_copies: 1,
+    copies_sold_revenue: 10,
+    secondary_rights_revenue: 20,
+    publishing_agreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${getContractPartyLabel(normalizedContractType)}.`,
+    ...(typeof expiryDays === "number" ? { expiry_days: expiryDays } : {}),
+    ...(notes?.trim() ? { notes: notes.trim() } : {}),
+  };
 }
 
 /**
