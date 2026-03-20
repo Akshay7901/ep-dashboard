@@ -266,8 +266,14 @@ const AuthorProposalDetails: React.FC = () => {
   // Determine if queries section should be auto-opened
   const hasEditorQueryResponse = React.useMemo(() => {
     if (!contractQueries.length) return false;
-    // Check if there's a response from the editor (i.e. queries with responses)
     return contractQueries.some((q: any) => q.type === 'response');
+  }, [contractQueries]);
+  const hasPendingContractQuery = React.useMemo(() => {
+    if (!contractQueries.length) return false;
+    const responseParentIds = new Set(
+      contractQueries.filter((q: any) => q.type === 'response' && q.parent_query_id).map((q: any) => q.parent_query_id)
+    );
+    return contractQueries.some((q: any) => q.type === 'query' && !responseParentIds.has(q.id));
   }, [contractQueries]);
 
   useEffect(() => {
@@ -455,7 +461,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
               Peer Review & Contract
-              {!isContractSigned && !statusIs(proposal.status, 'queries_raised') && latestContract &&
+              {!isContractSigned && !statusIs(proposal.status, 'queries_raised') && !hasPendingContractQuery && latestContract &&
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
               }
             </TabsTrigger>
