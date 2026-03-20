@@ -1526,15 +1526,15 @@ const ProposalDetails: React.FC = () => {
       isSubmitting={isConfirming} /> :
 
 
-    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="pl-6 pr-6 overflow-y-auto h-full scrollbar-thin">
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 lg:gap-0 items-start" style={{ minHeight: 'calc(100vh - 140px)' }}>
+            <div className="px-2 sm:px-6 overflow-y-auto w-full scrollbar-thin">
             <PeerReviewCommentsForm ref={reviewFormRef} proposal={proposal} existingAssessment={reviewFormData as Record<string, any> | undefined} onSave={() => refetch()} onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}} onDraftSaved={() => {
           if (statusIs(proposal.status, "pending", "new", "submitted")) {
             // Status transitions managed by backend
           }}} />
             </div>
-            <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+            <div className="px-2 sm:px-6 overflow-y-auto w-full scrollbar-thin">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
               {rightPanel}
             </div>
           </div> : hasSubmittedReview ?
