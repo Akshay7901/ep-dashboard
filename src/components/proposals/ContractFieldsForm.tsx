@@ -175,18 +175,22 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           <Label htmlFor={`${idPrefix}-other-royalty`} className="text-xs">
             Author Royalty - Other Rights (%)
           </Label>
-          <Input
-            id={`${idPrefix}-other-royalty`}
-            type="number"
-            min={0}
-            max={100}
-            value={values.secondaryRightsRevenue}
-            onChange={(e) =>
-              update({
-                secondaryRightsRevenue: parseFloat(e.target.value) || 0,
-              })
-            }
-          />
+          <div className="relative">
+            <Input
+              id={`${idPrefix}-other-royalty`}
+              type="number"
+              min={0}
+              max={100}
+              value={values.secondaryRightsRevenue}
+              onChange={(e) =>
+                update({
+                  secondaryRightsRevenue: parseFloat(e.target.value) || 0,
+                })
+              }
+              className="pr-8"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">%</span>
+          </div>
         </div>
       </div>
 
