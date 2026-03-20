@@ -1576,11 +1576,14 @@ const ProposalDetails: React.FC = () => {
           // Step 2: If contract should be sent, call separate contract/send API
           if (sendContract) {
             try {
-              await proposalApi.sendContract(ticketNum, {
-                contract_type: contractType || 'author',
-                title: contractTitle || proposal?.name || '',
-                subtitle: contractSubtitle || proposal?.sub_title || ''
-              });
+              await proposalApi.sendContract(
+                ticketNum,
+                buildContractSendPayload({
+                  contractType: contractType || 'author',
+                  title: contractTitle || proposal?.name || '',
+                  subtitle: contractSubtitle || proposal?.sub_title || '',
+                })
+              );
               toast({
                 title: 'Contract Sent',
                 description: 'The contract has been sent to the author.'
