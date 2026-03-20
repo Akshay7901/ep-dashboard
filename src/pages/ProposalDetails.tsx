@@ -554,7 +554,7 @@ const ProposalDetails: React.FC = () => {
             <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
-              {pendingInfoRequest && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />}
+              
             </TabsTrigger>
             <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
               <User className="h-4 w-4" />
