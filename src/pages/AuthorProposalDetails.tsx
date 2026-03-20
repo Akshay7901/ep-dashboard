@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
-import { proposalApi, contractApi, metadataApi, metadataQueriesApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, metadataQueriesApi, requestInfoApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
 import { useContractQueries } from "@/hooks/useContractQueries";
@@ -691,6 +691,10 @@ const AuthorProposalDetails: React.FC = () => {
                   saveDraftInfoRequest.mutate({ request_id: requestId, updated_fields: updatedFields });
                 }}
                 isSavingDraft={saveDraftInfoRequest.isPending}
+                onAutoSave={(requestId, updatedFields) => {
+                  // Silent auto-save: no toast, no loading state
+                  requestInfoApi.save(ticketNum, { request_id: requestId, updated_fields: updatedFields }).catch(() => {});
+                }}
               />
             </TabsContent>
           }
