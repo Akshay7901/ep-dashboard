@@ -379,10 +379,10 @@ const ProposalDetails: React.FC = () => {
   const rightPanel = <div className="space-y-6">
       {/* Proposal Header */}
       <div>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">{proposal.name}</h2>
-            {proposal.sub_title && <p className="text-base text-muted-foreground mt-1 italic">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">{proposal.name}</h2>
+            {proposal.sub_title && <p className="text-sm sm:text-base text-muted-foreground mt-1 italic">
                 {proposal.sub_title}
               </p>}
             {/* Proposed title from metadata (if different from original) */}
@@ -402,7 +402,7 @@ const ProposalDetails: React.FC = () => {
               </p>
           }
           </div>
-          <div className="flex items-center gap-2 ml-4 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <ProposalStatusBadge status={proposal.status} showIcon={false} />
             {isPostSubmission && proposal.contract_sent_at &&
           <span className="text-sm text-muted-foreground">
