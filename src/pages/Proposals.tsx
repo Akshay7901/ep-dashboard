@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Input } from "@/components/ui/input";
@@ -162,7 +162,22 @@ const Proposals: React.FC = () => {
     );
     setDisplayCount(ITEMS_PER_PAGE);
   };
-  const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+  // Infinite scroll
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   /* ---------- Guards ---------- */
 
@@ -439,10 +454,8 @@ const Proposals: React.FC = () => {
               </Card>
 
               {hasMore && (
-                <div className="flex justify-center pt-4">
-                  <Button variant="outline" onClick={handleViewMore} className="px-8">
-                    View More
-                  </Button>
+                <div ref={loadMoreRef} className="flex justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               )}
             </>
