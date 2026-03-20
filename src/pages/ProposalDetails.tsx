@@ -12,7 +12,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi, metadataApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, metadataQueriesApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
 import { buildContractSendPayload, getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
@@ -231,6 +231,13 @@ const ProposalDetails: React.FC = () => {
   const { data: metadataResponse } = useQuery({
     queryKey: ["metadata", ticketNum],
     queryFn: () => metadataApi.get(ticketNum),
+    enabled: !!ticketNum,
+    staleTime: 0,
+    refetchInterval: 10000
+  });
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNum],
+    queryFn: () => metadataQueriesApi.list(ticketNum),
     enabled: !!ticketNum,
     staleTime: 0,
     refetchInterval: 10000
@@ -577,7 +584,7 @@ const ProposalDetails: React.FC = () => {
         <TabsTrigger value="metadata" className="relative gap-1.5 text-xs sm:text-sm">
                 <ClipboardList className="h-4 w-4" />
                 <span className="hidden sm:inline">Metadata</span>
-                {statusIs(proposal.status, 'queries_raised') &&
+                {(statusIs(proposal.status, 'queries_raised') || metadataQueries.some((q) => q.type === 'query' && q.raised_by_role === 'author' && !metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))) &&
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 }
               </TabsTrigger>
