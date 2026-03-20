@@ -200,25 +200,26 @@ const Proposals: React.FC = () => {
 
   return (
     <DashboardLayout title={isReviewer1 ? "Proposal Intake" : "Peer Review Dashboard"}>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <img
               src={isReviewer1 ? brandLogo : logo}
               alt="Logo"
-              className="h-10 w-auto"
+              className="h-8 sm:h-10 w-auto shrink-0"
             />
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">
               {isReviewer1 ? "Proposal Intake" : "Peer Review Dashboard"}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {isReviewer1 && (
-              <Button variant="outline" className="gap-2" onClick={() => navigate("/peer-reviewers")}>
+              <Button variant="outline" className="gap-2 text-xs sm:text-sm" size="sm" onClick={() => navigate("/peer-reviewers")}>
                 <Users className="h-4 w-4" />
-                Peer Reviewers
+                <span className="hidden sm:inline">Peer Reviewers</span>
+                <span className="sm:hidden">Reviewers</span>
               </Button>
             )}
             <ProfileDropdown />
