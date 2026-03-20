@@ -162,7 +162,22 @@ const Proposals: React.FC = () => {
     );
     setDisplayCount(ITEMS_PER_PAGE);
   };
-  const handleViewMore = () => setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+  // Infinite scroll
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   /* ---------- Guards ---------- */
 
