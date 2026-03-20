@@ -293,21 +293,24 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
           {/* Action buttons */}
           <div className="flex items-center justify-center gap-4 pt-2">
-            <Button
-              variant="outline"
-              className="px-6"
-              disabled={isSavingDraft || isResponding || (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)}
-              onClick={() => {
-                if (pendingRequest && onSaveDraft) {
-                  onSaveDraft(pendingRequest.id, updatedFields);
-                }
-              }}
-            >
-              {isSavingDraft ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Save as Draft
-            </Button>
+            {/* Hide Save as Draft when all requested items are document uploads only */}
+            {!pendingRequest.items.every((item) => DOCUMENT_KEYS.has(item.key)) && (
+              <Button
+                variant="outline"
+                className="px-6"
+                disabled={isSavingDraft || isResponding || (Object.values(updatedFields).every((v) => !v.trim()) && Object.keys(uploadedFiles).length === 0)}
+                onClick={() => {
+                  if (pendingRequest && onSaveDraft) {
+                    onSaveDraft(pendingRequest.id, updatedFields);
+                  }
+                }}
+              >
+                {isSavingDraft ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                Save as Draft
+              </Button>
+            )}
             <Button
               className="bg-[#3d5a47] hover:bg-[#3d5a47]/90 px-6"
               onClick={handleSubmitResponse}
