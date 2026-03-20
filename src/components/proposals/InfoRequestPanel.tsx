@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload, ClipboardList } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Loader2, Send, FileText, Upload, ClipboardList, Download } from "lucide-react";
 import type { InfoRequest } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
 
