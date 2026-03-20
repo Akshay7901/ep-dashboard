@@ -106,7 +106,8 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
   const triggerAutoSave = useCallback(
     (fields: Record<string, string>) => {
-      if (!pendingRequest || !onSaveDraft) return;
+      const saveFn = onAutoSave || onSaveDraft;
+      if (!pendingRequest || !saveFn) return;
       // Skip if nothing meaningful to save
       if (Object.values(fields).every((v) => !v.trim())) return;
       // Skip if unchanged from last save
@@ -116,10 +117,10 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
         lastSavedRef.current = snapshot;
-        onSaveDraft(pendingRequest.id, fields);
+        saveFn(pendingRequest.id, fields);
       }, 2000);
     },
-    [pendingRequest, onSaveDraft]
+    [pendingRequest, onSaveDraft, onAutoSave]
   );
 
   // Cleanup timer on unmount
