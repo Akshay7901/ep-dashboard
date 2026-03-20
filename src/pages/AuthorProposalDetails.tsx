@@ -277,6 +277,10 @@ const AuthorProposalDetails: React.FC = () => {
         seenReviewSignatures.set(id, reviewNotificationSignature);
         setHasSeenReview(true);
       }
+    } else if (statusIs(proposal?.status || '', 'contract_issued') && latestContract) {
+      // When contract is issued, default to Peer Review & Contract tab
+      setActiveTab("review");
+      setOpenAccordion("contract-details");
     } else if ((proposal && statusIs(proposal.status, "awaiting_more_info", "additional_info_required", "additional_information_required")) || infoRequests.length > 0) {
       setActiveTab("additional-info");
     } else if (hasReviewContent) {
@@ -290,7 +294,7 @@ const AuthorProposalDetails: React.FC = () => {
         setOpenAccordion("contract-details");
       }
     }
-  }, [isContractSigned, hasReviewContent, proposal?.status, hasEditorQueryResponse]);
+  }, [isContractSigned, hasReviewContent, proposal?.status, hasEditorQueryResponse, latestContract]);
 
   if (isLoading) {
     return (
