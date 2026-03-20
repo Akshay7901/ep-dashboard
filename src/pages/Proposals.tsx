@@ -358,7 +358,8 @@ const Proposals: React.FC = () => {
           {!isLoading && !error && displayedProposals.length > 0 && (
             <>
               <Card className="overflow-hidden">
-                <Table className="table-fixed w-full">
+                <div className="overflow-x-auto">
+                <Table className="table-fixed w-full min-w-[700px]">
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[30%]">
