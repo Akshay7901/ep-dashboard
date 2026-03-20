@@ -1807,7 +1807,7 @@ const ProposalDetails: React.FC = () => {
         setPendingQueryResponse(null); // Discard pending response on close
       }
     }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Send Response</DialogTitle>
             <DialogDescription>
