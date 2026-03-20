@@ -1098,9 +1098,9 @@ const ProposalDetails: React.FC = () => {
                     onSend={async (text, _category, queryId) => {
                       // Store pending response — don't send yet, wait for contract dialog
                       setPendingQueryResponse({ queryId: queryId!, responseText: text });
-                      setResendContractTitle(proposedTitle || latestContract?.title || proposal?.name || '');
-                      setResendContractSubtitle(proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || '');
-                      setResendContractType(latestContract?.contract_type || getDefaultContractType(proposal?.book_type));
+                      const ct = latestContract?.contract_type || getDefaultContractType(proposal?.book_type);
+                      setResendContractFields(getDefaultContractFields(ct, proposedTitle || latestContract?.title || proposal?.name || '', proposedSubtitle || latestContract?.subtitle || proposal?.sub_title || ''));
+                      setResendContractType(ct);
                       setResendContractOpen(true);
                     }}
                     isSending={respondToQuery.isPending} />
