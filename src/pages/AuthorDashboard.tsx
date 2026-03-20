@@ -174,6 +174,7 @@ const AuthorDashboard: React.FC = () => {
           {!isLoading && !error && displayedProposals.length > 0 && (
             <>
               <Card className="overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
