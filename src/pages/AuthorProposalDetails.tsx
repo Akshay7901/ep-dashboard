@@ -295,12 +295,12 @@ const AuthorProposalDetails: React.FC = () => {
         </Button>
 
         {/* Page Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
+            <img src={brandLogo} alt="Logo" className="h-8 sm:h-10 w-auto" />
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Proposal Review</h1>
           </div>
-          <div className="text-right text-sm text-muted-foreground">
+          <div className="text-left sm:text-right text-sm text-muted-foreground">
             {proposal.ticket_number &&
             <p>
                 Proposal ID: <span className="font-medium text-foreground">{proposal.ticket_number}</span>
