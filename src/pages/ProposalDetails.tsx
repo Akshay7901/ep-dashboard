@@ -1628,13 +1628,13 @@ const ProposalDetails: React.FC = () => {
       isSubmitting={isConfirming} /> :
 
 
-    <div className="grid grid-cols-2 gap-0 items-start" style={{ height: 'calc(100vh - 140px)' }}>
-           <div className="pr-6 overflow-y-auto h-full scrollbar-thin">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-start lg:h-[calc(100vh-140px)]">
+           <div className="pr-0 lg:pr-6 overflow-y-auto lg:h-full scrollbar-thin">
             {/* Start Fresh button + info banner for decision reviewer */}
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Peer review comments</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Peer review comments</h2>
                 </div>
               </div>
 
@@ -1683,8 +1683,8 @@ const ProposalDetails: React.FC = () => {
 
         
           </div>
-          <div className="pl-6 overflow-y-auto h-full scrollbar-thin">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
+          <div className="pl-0 lg:pl-6 overflow-y-auto lg:h-full scrollbar-thin mt-6 lg:mt-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">Proposal Details</h2>
             {rightPanel}
           </div>
         </div> :
