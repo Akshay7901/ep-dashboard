@@ -8,9 +8,9 @@ export interface ContractFieldValues {
   title: string;
   subtitle: string;
   language: string;
-  authorCopies: number;
-  ifTwoAuthorCopies: number;
-  ifThreeOrFourAuthorCopies: number;
+  authorCopies: string;
+  ifTwoAuthorCopies: string;
+  ifThreeOrFourAuthorCopies: string;
   copiesSoldRevenue: number;
   secondaryRightsRevenue: number;
   publishingAgreement: string;
@@ -26,9 +26,9 @@ export function getDefaultContractFields(
     title: proposalTitle || "",
     subtitle: proposalSubtitle || "",
     language: "in all languages",
-    authorCopies: 2,
-    ifTwoAuthorCopies: 2,
-    ifThreeOrFourAuthorCopies: 1,
+    authorCopies: "two copies",
+    ifTwoAuthorCopies: "two copies",
+    ifThreeOrFourAuthorCopies: "one copy",
     copiesSoldRevenue: 10,
     secondaryRightsRevenue: 20,
     publishingAgreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${partyLabel}.`,
@@ -109,12 +109,11 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-copies`}
-            type="number"
-            min={0}
             value={values.authorCopies}
             onChange={(e) =>
-              update({ authorCopies: parseInt(e.target.value) || 0 })
+              update({ authorCopies: e.target.value })
             }
+            placeholder="e.g. two copies"
           />
         </div>
 
@@ -124,12 +123,11 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-two-copies`}
-            type="number"
-            min={0}
             value={values.ifTwoAuthorCopies}
             onChange={(e) =>
-              update({ ifTwoAuthorCopies: parseInt(e.target.value) || 0 })
+              update({ ifTwoAuthorCopies: e.target.value })
             }
+            placeholder="e.g. two copies"
           />
         </div>
 
@@ -139,14 +137,13 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-three-copies`}
-            type="number"
-            min={0}
             value={values.ifThreeOrFourAuthorCopies}
             onChange={(e) =>
               update({
-                ifThreeOrFourAuthorCopies: parseInt(e.target.value) || 0,
+                ifThreeOrFourAuthorCopies: e.target.value,
               })
             }
+            placeholder="e.g. one copy"
           />
         </div>
       </div>

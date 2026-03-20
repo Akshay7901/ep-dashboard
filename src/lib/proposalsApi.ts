@@ -130,9 +130,9 @@ export interface SendContractPayload {
   expiry_days?: number;
   notes?: string;
   language?: string;
-  author_copies?: number;
-  if_two_author_copies?: number;
-  if_three_or_four_author_copies?: number;
+  author_copies?: string;
+  if_two_author_copies?: string;
+  if_three_or_four_author_copies?: string;
   copies_sold_revenue?: number;
   secondary_rights_revenue?: number;
   publishing_agreement?: string;
