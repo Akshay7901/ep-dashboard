@@ -48,7 +48,7 @@ const AuthorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
 
   const { data, isLoading, error } = useProposals({
