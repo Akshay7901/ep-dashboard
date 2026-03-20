@@ -37,9 +37,9 @@ export interface ContractSendFields {
   expiryDays?: number;
   notes?: string;
   language?: string;
-  authorCopies?: number;
-  ifTwoAuthorCopies?: number;
-  ifThreeOrFourAuthorCopies?: number;
+  authorCopies?: string;
+  ifTwoAuthorCopies?: string;
+  ifThreeOrFourAuthorCopies?: string;
   copiesSoldRevenue?: number;
   secondaryRightsRevenue?: number;
   publishingAgreement?: string;
