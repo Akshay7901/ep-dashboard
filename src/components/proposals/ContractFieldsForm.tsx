@@ -29,8 +29,8 @@ export function getDefaultContractFields(
     authorCopies: "two copies",
     ifTwoAuthorCopies: "two copies",
     ifThreeOrFourAuthorCopies: "one copy",
-    copiesSoldRevenue: "10",
-    secondaryRightsRevenue: "20",
+    copiesSoldRevenue: "10%",
+    secondaryRightsRevenue: "20%",
     publishingAgreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${partyLabel}.`,
   };
 }
