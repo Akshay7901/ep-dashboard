@@ -840,8 +840,8 @@ const ProposalDetails: React.FC = () => {
                         <Button
                           className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
                           onClick={() => {
-                            setResendContractTitle(proposedTitle || proposal?.name || '');
-                            setResendContractSubtitle(proposedSubtitle || proposal?.sub_title || '');
+                            const ct = getDefaultContractType(proposal?.book_type);
+                            setResendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
                             setResendContractType(getDefaultContractType(proposal?.book_type));
                             setIncludeContract(true);
                             setPendingQueryResponse(null);
