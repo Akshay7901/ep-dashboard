@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import api from "@/lib/api";
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { statusIs, normalizeStatus } from "@/lib/statusUtils";
 import DocumentPreviewDialog from "@/components/proposals/PdfPreviewDialog";
 import ContractPdfViewerDialog from "@/components/proposals/ContractPdfViewerDialog";
-import { proposalApi, contractApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi } from "@/lib/proposalsApi";
 import { useReview } from "@/hooks/useReview";
 import { useContract } from "@/hooks/useContract";
 import { useContractQueries } from "@/hooks/useContractQueries";
@@ -170,6 +171,13 @@ const AuthorProposalDetails: React.FC = () => {
   const { latestContract, isLoading: contractLoading, refetch: refetchContract } = useContract(ticketNum);
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
   const { infoRequests, pendingRequest: pendingInfoRequest, respondToRequest: respondToInfoRequest, saveDraft: saveDraftInfoRequest } = useRequestInfo(ticketNum);
+
+  const { data: metadataResponse } = useQuery({
+    queryKey: ["metadata", ticketNum],
+    queryFn: () => metadataApi.get(ticketNum),
+    enabled: !!ticketNum,
+  });
+  const metadataStatus = metadataResponse?.metadata_status;
 
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
@@ -445,7 +453,7 @@ const AuthorProposalDetails: React.FC = () => {
               value="metadata"
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
                 Metadata
-                {(statusIs(proposal.status, "awaiting_author_approval") || (proposal as any).metadata_status === "sent_to_author") &&
+                {(statusIs(proposal.status, "awaiting_author_approval") || metadataStatus === "sent_to_author") &&
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 }
               </TabsTrigger>
