@@ -155,15 +155,13 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           </Label>
           <Input
             id={`${idPrefix}-book-royalty`}
-            type="number"
-            min={0}
-            max={100}
             value={values.copiesSoldRevenue}
             onChange={(e) =>
               update({
-                copiesSoldRevenue: parseFloat(e.target.value) || 0,
+                copiesSoldRevenue: e.target.value,
               })
             }
+            placeholder="e.g. 10%"
           />
         </div>
 
