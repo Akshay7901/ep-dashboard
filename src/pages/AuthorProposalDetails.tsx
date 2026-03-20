@@ -172,6 +172,13 @@ const AuthorProposalDetails: React.FC = () => {
   const { queries: contractQueries, isLoading: queriesLoading, raiseQuery, respondToQuery } = useContractQueries(ticketNum);
   const { infoRequests, pendingRequest: pendingInfoRequest, respondToRequest: respondToInfoRequest, saveDraft: saveDraftInfoRequest } = useRequestInfo(ticketNum);
 
+  const { data: metadataResponse } = useQuery({
+    queryKey: ["metadata", ticketNum],
+    queryFn: () => metadataApi.get(ticketNum),
+    enabled: !!ticketNum,
+  });
+  const metadataStatus = metadataResponse?.metadata_status;
+
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
     if (!ticketNum) return;
