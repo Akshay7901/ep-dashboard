@@ -266,8 +266,14 @@ const AuthorProposalDetails: React.FC = () => {
   // Determine if queries section should be auto-opened
   const hasEditorQueryResponse = React.useMemo(() => {
     if (!contractQueries.length) return false;
-    // Check if there's a response from the editor (i.e. queries with responses)
     return contractQueries.some((q: any) => q.type === 'response');
+  }, [contractQueries]);
+  const hasPendingContractQuery = React.useMemo(() => {
+    if (!contractQueries.length) return false;
+    const responseParentIds = new Set(
+      contractQueries.filter((q: any) => q.type === 'response' && q.parent_query_id).map((q: any) => q.parent_query_id)
+    );
+    return contractQueries.some((q: any) => q.type === 'query' && !responseParentIds.has(q.id));
   }, [contractQueries]);
 
   useEffect(() => {
