@@ -179,6 +179,16 @@ const AuthorProposalDetails: React.FC = () => {
   });
   const metadataStatus = metadataResponse?.metadata_status;
 
+  const { data: metadataQueries = [] } = useQuery({
+    queryKey: ["metadata-queries", ticketNum],
+    queryFn: () => metadataQueriesApi.list(ticketNum),
+    enabled: !!ticketNum && !!metadataResponse,
+  });
+  // Author has a pending query awaiting reviewer response
+  const hasAuthorPendingQuery = metadataQueries.some(
+    (q) => q.type === 'query' && !metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id)
+  );
+
   // Fetch a fresh signing URL and open it immediately
   const handleSignContract = async () => {
     if (!ticketNum) return;
