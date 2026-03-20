@@ -12,7 +12,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { extractCountry } from "@/lib/extractCountry";
 import { statusIs } from "@/lib/statusUtils";
-import { proposalApi, contractApi, metadataApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
+import { proposalApi, contractApi, metadataApi, metadataQueriesApi, lockProposalApi, requestInfoApi } from "@/lib/proposalsApi";
 import { buildContractSendPayload, getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
 import ContractQueryThread from "@/components/proposals/ContractQueryThread";
 import { useContractQueries } from "@/hooks/useContractQueries";
