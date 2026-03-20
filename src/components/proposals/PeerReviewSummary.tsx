@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,9 +8,11 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { StickyNote } from "lucide-react";
 import { Proposal } from "@/types";
 import { getDefaultContractType, getContractMismatchWarning } from "@/lib/contractUtils";
+import type { ContractSendFields } from "@/lib/contractUtils";
 import FieldRevisionForm from "@/components/proposals/FieldRevisionForm";
 import { emptyRevisionRow, CATEGORIES, type RevisionRow } from "@/lib/fieldRevisionCategories";
 import type { InfoRequestItem } from "@/lib/proposalsApi";
+import ContractFieldsForm, { getDefaultContractFields, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
 
 const REVIEW_FIELDS = [
   { key: "scope", label: "Scope" },
@@ -36,11 +37,9 @@ interface PeerReviewSummaryProps {
   proposal: Proposal;
   formData: Record<string, string>;
   onGoBack: () => void;
-  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string, revisionItems?: InfoRequestItem[]) => void;
+  onConfirmSubmit: (sendContract: boolean, contractType?: string, contractTitle?: string, contractSubtitle?: string, revisionItems?: InfoRequestItem[], contractFields?: ContractSendFields) => void;
   isSubmitting: boolean;
-  /** Show contract selection for decision reviewer */
   showContractSection?: boolean;
-  /** Note for decision reviewer (peer reviewer only) */
   reviewerNote?: string;
   onReviewerNoteChange?: (note: string) => void;
 }
@@ -66,14 +65,15 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   const defaultContract = getDefaultContractType(proposal.book_type);
   const [selectedContract, setSelectedContract] = useState(defaultContract);
   const [showContractDialog, setShowContractDialog] = useState(false);
-  const [contractTitle, setContractTitle] = useState(proposal?.name || "");
-  const [contractSubtitle, setContractSubtitle] = useState(proposal?.sub_title || "");
+  const [contractFieldValues, setContractFieldValues] = useState<ContractFieldValues>(
+    getDefaultContractFields(defaultContract, proposal?.name, proposal?.sub_title)
+  );
   const [showMismatchWarning, setShowMismatchWarning] = useState(false);
   const [pendingContractType, setPendingContractType] = useState<string | null>(null);
 
-  // Reset default when proposal changes
   useEffect(() => {
-    setSelectedContract(getDefaultContractType(proposal.book_type));
+    const ct = getDefaultContractType(proposal.book_type);
+    setSelectedContract(ct);
   }, [proposal.book_type]);
 
   const handleContractTypeChange = (value: string) => {
@@ -92,7 +92,6 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
       <p className="text-sm text-muted-foreground mb-8">
         Please review your comments before submitting
       </p>
-
 
       {/* Fields summary */}
       <div className="divide-y">
@@ -237,7 +236,6 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         <Button
           className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
           onClick={() => {
-            // Build revision items from rows (for major revision without contract)
             const buildRevisionItems = (): InfoRequestItem[] => {
               if (!showContractSection || !isMajorRevision || includeContractForMajor) return [];
               return revisionRows
@@ -254,8 +252,9 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
             };
 
             if (contractWillBeSent) {
-              setContractTitle(proposal?.name || "");
-              setContractSubtitle(proposal?.sub_title || "");
+              setContractFieldValues(
+                getDefaultContractFields(selectedContract, proposal?.name, proposal?.sub_title)
+              );
               setShowContractDialog(true);
             } else {
               onConfirmSubmit(false, undefined, undefined, undefined, buildRevisionItems());
@@ -271,35 +270,21 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
         </Button>
       </div>
 
-      {/* Contract Title/Subtitle Dialog */}
+      {/* Contract Details Dialog */}
       <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Contract Details</DialogTitle>
             <DialogDescription>
-              Confirm the title and subtitle for the contract before sending.
+              Confirm the contract details before sending.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="contract-title">Title</Label>
-              <Input
-                id="contract-title"
-                value={contractTitle}
-                onChange={(e) => setContractTitle(e.target.value)}
-                placeholder="Enter title"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contract-subtitle">Subtitle</Label>
-              <Input
-                id="contract-subtitle"
-                value={contractSubtitle}
-                onChange={(e) => setContractSubtitle(e.target.value)}
-                placeholder="Enter subtitle (optional)"
-              />
-            </div>
-          </div>
+          <ContractFieldsForm
+            values={contractFieldValues}
+            onChange={setContractFieldValues}
+            contractType={selectedContract}
+            idPrefix="summary-cf"
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowContractDialog(false)} disabled={isSubmitting}>
               Cancel
@@ -308,9 +293,20 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
               className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
               onClick={() => {
                 setShowContractDialog(false);
-                onConfirmSubmit(true, selectedContract, contractTitle, contractSubtitle);
+                onConfirmSubmit(true, selectedContract, contractFieldValues.title, contractFieldValues.subtitle, undefined, {
+                  contractType: selectedContract,
+                  title: contractFieldValues.title,
+                  subtitle: contractFieldValues.subtitle,
+                  language: contractFieldValues.language,
+                  authorCopies: contractFieldValues.authorCopies,
+                  ifTwoAuthorCopies: contractFieldValues.ifTwoAuthorCopies,
+                  ifThreeOrFourAuthorCopies: contractFieldValues.ifThreeOrFourAuthorCopies,
+                  copiesSoldRevenue: contractFieldValues.copiesSoldRevenue,
+                  secondaryRightsRevenue: contractFieldValues.secondaryRightsRevenue,
+                  publishingAgreement: contractFieldValues.publishingAgreement,
+                });
               }}
-              disabled={isSubmitting || !contractTitle.trim()}
+              disabled={isSubmitting || !contractFieldValues.title.trim()}
             >
               {isSubmitting ? "Submitting..." : "Send Contract & Submit"}
             </Button>
