@@ -365,7 +365,7 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
 
           {/* Timeline steps */}
-          <div className={cn("grid gap-2", `grid-cols-${apiTimeline.length || 6}`)} style={{ gridTemplateColumns: `repeat(${apiTimeline.length || 6}, minmax(0, 1fr))` }}>
+          <div className={cn("grid gap-2 overflow-x-auto")} style={{ gridTemplateColumns: `repeat(${apiTimeline.length || 6}, minmax(60px, 1fr))` }}>
             {apiTimeline.map((step) => {
               const dateStr = step.completed_at || step.started_at;
               return (
