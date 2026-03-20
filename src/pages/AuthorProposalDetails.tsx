@@ -446,7 +446,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm">
 
               Peer Review & Contract
-              {!isContractSigned && !statusIs(proposal.status, 'queries_raised') && (reviews.some((r: any) => r.status === 'submitted' || r.is_submitted) || (latestContract && latestContract.docusign_status)) && !hasSeenReview &&
+              {!isContractSigned && !statusIs(proposal.status, 'queries_raised') && (latestContract && latestContract.docusign_status) &&
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
               }
             </TabsTrigger>
