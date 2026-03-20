@@ -94,10 +94,10 @@ const AuthorDashboard: React.FC = () => {
     <DashboardLayout title="Author Dashboard">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={brandLogo} alt="Logo" className="h-10 w-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Author Dashboard</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={brandLogo} alt="Logo" className="h-8 sm:h-10 w-auto shrink-0" />
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">Author Dashboard</h1>
           </div>
           <ProfileDropdown />
         </div>
