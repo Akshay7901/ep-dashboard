@@ -85,18 +85,9 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
       
       pendingRequest.items.forEach((item) => {
         if (!DOCUMENT_KEYS.has(item.key)) {
-          // 1st priority: draft_data from the /save endpoint
+          // Only restore draft_data (saved via /save endpoint) — do NOT pre-fill from proposal
           if (draft && draft[item.key] !== undefined && draft[item.key] !== null) {
             prefilled[item.key] = draft[item.key];
-          } else {
-            // 2nd priority: current proposal field value
-            const proposalKey = PROPOSAL_FIELD_MAP[item.key];
-            const proposalValue = proposalKey ? proposal[proposalKey] : undefined;
-            if (proposalValue !== undefined && proposalValue !== null) {
-              prefilled[item.key] = String(proposalValue);
-            } else if (pendingRequest.updated_fields && pendingRequest.updated_fields[item.key] !== undefined) {
-              prefilled[item.key] = pendingRequest.updated_fields[item.key];
-            }
           }
         }
       });
