@@ -1823,7 +1823,7 @@ const ProposalDetails: React.FC = () => {
             
               <Label htmlFor="include-contract" className="cursor-pointer">Include new contract</Label>
             </div>
-            {includeContract &&
+            {includeContract && resendContractFields &&
           <>
                 <div className="space-y-2">
                   <Label>Contract Type</Label>
@@ -1850,26 +1850,12 @@ const ProposalDetails: React.FC = () => {
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="resend-contract-title">Title</Label>
-                  <input
-                id="resend-contract-title"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractTitle}
-                onChange={(e) => setResendContractTitle(e.target.value)}
-                placeholder="Enter title" />
-              
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="resend-contract-subtitle">Subtitle</Label>
-                  <input
-                id="resend-contract-subtitle"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={resendContractSubtitle}
-                onChange={(e) => setResendContractSubtitle(e.target.value)}
-                placeholder="Enter subtitle (optional)" />
-              
-                </div>
+                <ContractFieldsForm
+                  values={resendContractFields}
+                  onChange={setResendContractFields}
+                  contractType={resendContractType}
+                  idPrefix="resend-cf"
+                />
               </>
           }
           </div>
@@ -1879,7 +1865,7 @@ const ProposalDetails: React.FC = () => {
             </Button>
             <Button
             className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-            disabled={isResendingContract || includeContract && !resendContractTitle.trim()}
+            disabled={isResendingContract || (includeContract && (!resendContractFields || !resendContractFields.title.trim()))}
             onClick={async () => {
               setIsResendingContract(true);
               try {
@@ -1888,13 +1874,20 @@ const ProposalDetails: React.FC = () => {
                   await respondToQuery.mutateAsync(pendingQueryResponse);
                 }
                 // Then send contract if included
-                if (includeContract) {
+                if (includeContract && resendContractFields) {
                   await proposalApi.sendContract(
                     ticketNum,
                     buildContractSendPayload({
                       contractType: resendContractType,
-                      title: resendContractTitle,
-                      subtitle: resendContractSubtitle,
+                      title: resendContractFields.title,
+                      subtitle: resendContractFields.subtitle,
+                      language: resendContractFields.language,
+                      authorCopies: resendContractFields.authorCopies,
+                      ifTwoAuthorCopies: resendContractFields.ifTwoAuthorCopies,
+                      ifThreeOrFourAuthorCopies: resendContractFields.ifThreeOrFourAuthorCopies,
+                      copiesSoldRevenue: resendContractFields.copiesSoldRevenue,
+                      secondaryRightsRevenue: resendContractFields.secondaryRightsRevenue,
+                      publishingAgreement: resendContractFields.publishingAgreement,
                     })
                   );
                 }
