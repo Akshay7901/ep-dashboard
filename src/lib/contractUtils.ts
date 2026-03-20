@@ -30,34 +30,37 @@ export function getContractPartyLabel(contractType?: string | null): "Author" | 
   return normalizeContractType(contractType) === "editor" ? "Editor" : "Author";
 }
 
-export function buildContractSendPayload({
-  contractType,
-  title,
-  subtitle,
-  expiryDays,
-  notes,
-}: {
+export interface ContractSendFields {
   contractType?: string | null;
   title?: string;
   subtitle?: string;
   expiryDays?: number;
   notes?: string;
-}) {
-  const normalizedContractType = normalizeContractType(contractType);
+  language?: string;
+  authorCopies?: number;
+  ifTwoAuthorCopies?: number;
+  ifThreeOrFourAuthorCopies?: number;
+  copiesSoldRevenue?: number;
+  secondaryRightsRevenue?: number;
+  publishingAgreement?: string;
+}
+
+export function buildContractSendPayload(fields: ContractSendFields) {
+  const normalizedContractType = normalizeContractType(fields.contractType);
 
   return {
     contract_type: normalizedContractType,
-    ...(title !== undefined ? { title } : {}),
-    ...(subtitle !== undefined ? { subtitle } : {}),
-    language: "in all languages",
-    author_copies: 2,
-    if_two_author_copies: 2,
-    if_three_or_four_author_copies: 1,
-    copies_sold_revenue: 10,
-    secondary_rights_revenue: 20,
-    publishing_agreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${getContractPartyLabel(normalizedContractType)}.`,
-    ...(typeof expiryDays === "number" ? { expiry_days: expiryDays } : {}),
-    ...(notes?.trim() ? { notes: notes.trim() } : {}),
+    ...(fields.title !== undefined ? { title: fields.title } : {}),
+    ...(fields.subtitle !== undefined ? { subtitle: fields.subtitle } : {}),
+    language: fields.language ?? "in all languages",
+    author_copies: fields.authorCopies ?? 2,
+    if_two_author_copies: fields.ifTwoAuthorCopies ?? 2,
+    if_three_or_four_author_copies: fields.ifThreeOrFourAuthorCopies ?? 1,
+    copies_sold_revenue: fields.copiesSoldRevenue ?? 10,
+    secondary_rights_revenue: fields.secondaryRightsRevenue ?? 20,
+    publishing_agreement: fields.publishingAgreement ?? `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${getContractPartyLabel(normalizedContractType)}.`,
+    ...(typeof fields.expiryDays === "number" ? { expiry_days: fields.expiryDays } : {}),
+    ...(fields.notes?.trim() ? { notes: fields.notes.trim() } : {}),
   };
 }
 
