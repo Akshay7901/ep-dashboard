@@ -228,7 +228,7 @@ const Proposals: React.FC = () => {
 
         {/* Status Summary Chips — dynamically rendered from API status_summary */}
         {statusSummary && (
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
             {Object.entries(statusSummary).map(([key, count]) => {
               const config = statusChipColorMap[key];
               // Fallback: render even unknown keys with a default gray style
