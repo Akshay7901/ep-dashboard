@@ -568,7 +568,7 @@ const ProposalDetails: React.FC = () => {
         <TabsTrigger value="feedback" className="relative gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
-                {(infoRequests.some((r) => r.status === 'responded') && !latestContract || contractQueries.some((q) => q.type === 'query' && q.raised_by_role === 'author' && !contractQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))) &&
+                {(infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && !latestContract || contractQueries.some((q) => q.type === 'query' && q.raised_by_role === 'author' && !contractQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))) &&
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 }
               </TabsTrigger>
@@ -855,8 +855,8 @@ const ProposalDetails: React.FC = () => {
             {/* Info Request History & Author Response Actions */}
             {isReviewer1 && infoRequests.length > 0 && (
               <div className="space-y-4">
-                {/* Author Has Responded card */}
-                {infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && !latestContract && (
+                {/* Author Has Responded card — show when latest round is responded (no new pending request) */}
+                {infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && (
                   <Card className="border-[#3d5a47]/30 bg-[#3d5a47]/5">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
@@ -868,21 +868,74 @@ const ProposalDetails: React.FC = () => {
                       <p className="text-sm text-muted-foreground">
                         The author has provided the requested information. You can review the updated details and choose to send a contract or request further information.
                       </p>
+                      {/* Show uploaded documents from the latest responded request */}
+                      {(() => {
+                        const DOCUMENT_KEYS_SET = new Set(["cv", "sample_chapter", "toc_doc", "permissions_docs"]);
+                        const latestResponded = infoRequests.find((r) => r.status === 'responded');
+                        if (!latestResponded?.draft_data) return null;
+                        const docEntries = Object.entries(latestResponded.draft_data)
+                          .filter(([key, value]) => DOCUMENT_KEYS_SET.has(key) && typeof value === 'string' && value.startsWith('http'));
+                        if (docEntries.length === 0) return null;
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold text-muted-foreground">Uploaded Documents:</p>
+                            {docEntries.map(([key, url]) => {
+                              const decoded = decodeURIComponent((url as string).split('/').pop() || key);
+                              const cleanName = decoded.replace(/^[a-z_]+_\d{14}_/, '');
+                              return (
+                                <div key={key} className="flex items-center gap-3 bg-muted/30 rounded p-2">
+                                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</p>
+                                    <p className="text-sm font-medium truncate">{cleanName}</p>
+                                  </div>
+                                  <a href={url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0">View</a>
+                                  <a href={url as string} download={cleanName} className="text-xs text-primary hover:underline shrink-0">
+                                    <Download className="h-3.5 w-3.5" />
+                                  </a>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                      {/* Show text field responses from the latest responded request */}
+                      {(() => {
+                        const DOCUMENT_KEYS_SET = new Set(["cv", "sample_chapter", "toc_doc", "permissions_docs"]);
+                        const latestResponded = infoRequests.find((r) => r.status === 'responded');
+                        if (!latestResponded?.updated_fields) return null;
+                        const textEntries = Object.entries(latestResponded.updated_fields)
+                          .filter(([key, value]) => !DOCUMENT_KEYS_SET.has(key) && value?.trim());
+                        if (textEntries.length === 0) return null;
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold text-muted-foreground">Updated Fields:</p>
+                            {textEntries.map(([key, value]) => (
+                              <div key={key} className="bg-muted/30 rounded p-2">
+                                <p className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</p>
+                                <p className="text-sm">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <div className="flex items-center gap-3">
-                        <Button
-                          className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
-                          onClick={() => {
-                            const ct = getDefaultContractType(proposal?.book_type);
-                            setResendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
-                            setResendContractType(getDefaultContractType(proposal?.book_type));
-                            setIncludeContract(true);
-                            setPendingQueryResponse(null);
-                            setResendContractOpen(true);
-                          }}
-                        >
-                          <FileCheck className="h-4 w-4 mr-2" />
-                          Send Contract
-                        </Button>
+                        {!latestContract && (
+                          <Button
+                            className="bg-[#3d5a47] hover:bg-[#3d5a47]/90"
+                            onClick={() => {
+                              const ct = getDefaultContractType(proposal?.book_type);
+                              setResendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
+                              setResendContractType(getDefaultContractType(proposal?.book_type));
+                              setIncludeContract(true);
+                              setPendingQueryResponse(null);
+                              setResendContractOpen(true);
+                            }}
+                          >
+                            <FileCheck className="h-4 w-4 mr-2" />
+                            Send Contract
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           className="gap-1.5"
