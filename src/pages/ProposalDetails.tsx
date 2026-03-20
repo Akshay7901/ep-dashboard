@@ -1,6 +1,8 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
+import { getDefaultContractFields, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
+import ContractFieldsForm from "@/components/proposals/ContractFieldsForm";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
