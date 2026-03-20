@@ -691,6 +691,10 @@ const AuthorProposalDetails: React.FC = () => {
                   saveDraftInfoRequest.mutate({ request_id: requestId, updated_fields: updatedFields });
                 }}
                 isSavingDraft={saveDraftInfoRequest.isPending}
+                onAutoSave={(requestId, updatedFields) => {
+                  // Silent auto-save: no toast, no loading state
+                  requestInfoApi.save(ticketNum, { request_id: requestId, updated_fields: updatedFields }).catch(() => {});
+                }}
               />
             </TabsContent>
           }
