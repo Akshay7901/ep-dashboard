@@ -544,13 +544,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       )}
 
 
-      <div className="mb-2">
-        <h2 className="text-lg font-bold text-foreground">{proposal.name}</h2>
-        {proposal.sub_title && (
-          <p className="text-sm text-muted-foreground mt-0.5">{proposal.sub_title}</p>
-        )}
-      </div>
-
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata — READ ONLY */}
 

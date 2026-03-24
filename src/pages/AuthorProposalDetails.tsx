@@ -749,8 +749,6 @@ const AuthorProposalDetails: React.FC = () => {
                 isLoading={false}
                 viewAs="author"
                 proposal={proposal}
-                showTitle
-                onBack={() => handleTabChange("proposal")}
                 onRespond={(requestId, responseNote, updatedFields, files) => {
                   respondToInfoRequest.mutate(
                     { request_id: requestId, response_note: responseNote, updated_fields: updatedFields, files },
