@@ -170,6 +170,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Proposal title & subtitle */}
+      {showTitle && proposal && (
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{proposal.title}</h2>
+          {proposal.subtitle && (
+            <p className="text-sm text-muted-foreground mt-0.5">{proposal.subtitle}</p>
+          )}
+        </div>
+      )}
+
       {/* Pending request - Author action form */}
       {pendingRequest && viewAs === "author" && (
         <>
