@@ -820,7 +820,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       )}
 
       {/* Change Requests Section */}
-      {!isApproved && (
+      {!isApproved && proposal.status?.toLowerCase().replace(/\s+/g, '_') !== 'declined' && (
         <>
           {requestingChanges ? (
             <div className="space-y-3 border border-amber-200 bg-amber-50/50 rounded-lg p-4">
