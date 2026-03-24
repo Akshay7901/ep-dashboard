@@ -428,7 +428,6 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
 
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata header */}
-        <SectionHeader title="Publication Data" />
 
         {/* Title Full - non-editable, greyed out */}
         <EditableRow label="Title Full" value={titleFull} onChange={() => {}} disabled authorChange={authorChanges["title_full"] || null} />
