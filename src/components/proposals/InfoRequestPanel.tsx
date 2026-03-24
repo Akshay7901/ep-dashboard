@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +60,7 @@ interface InfoRequestPanelProps {
   isSavingDraft?: boolean;
   onAutoSave?: (requestId: number, updatedFields: Record<string, string>) => void;
   showTitle?: boolean;
+  onBack?: () => void;
 }
 
 const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
@@ -72,6 +74,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   isSavingDraft,
   onAutoSave,
   showTitle = false,
+  onBack,
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
@@ -170,9 +173,18 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Proposal title & subtitle */}
+      {/* Back link & Proposal title */}
       {showTitle && proposal && (
         <div>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1 text-sm text-primary hover:underline mb-2"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Proposal
+            </button>
+          )}
           <h2 className="text-lg font-bold text-foreground">{proposal.name}</h2>
           {proposal.sub_title && (
             <p className="text-sm text-muted-foreground mt-0.5">{proposal.sub_title}</p>
