@@ -553,6 +553,15 @@ const ProposalDetails: React.FC = () => {
       })()}
         </div>}
 
+      {/* Decline button — visible to DR at any stage except locked/declined/rejected */}
+      {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
+        <div className="flex">
+          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy} className="text-destructive border-destructive/30 hover:bg-destructive/10">
+            Decline Proposal
+          </Button>
+        </div>
+      )}
+
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
