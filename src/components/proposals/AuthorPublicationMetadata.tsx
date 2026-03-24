@@ -552,7 +552,41 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <ReadOnlyRow label="Subtitle" value={metaSubtitle} />
         <ReadOnlyRow label="Category Auth/Ed" value={category} />
 
-        {/* Cover Image */}
+        {/* Primary Author(s) — READ ONLY from API */}
+        <SectionHeader title={sectionLabel} />
+
+        <ReadOnlyRow label="Display Name(s)" value={displayNames} />
+        <ReadOnlyRow label="Display bio(s)" value={displayBios} />
+        <ReadOnlyRow label="Salutation" value={authorSalutation} />
+        <ReadOnlyRow label="First name" value={authorFirstName} />
+        <ReadOnlyRow label="Last name" value={authorLastName} />
+        <ReadOnlyRow label="Email" value={authorEmail} />
+        <ReadOnlyRow label="Email 2" value={authorEmail2} />
+        <ReadOnlyRow label="Institution" value={authorInstitution} />
+        <ReadOnlyRow label="Country" value={authorCountry} />
+
+        {/* Additional authors from API */}
+        {additionalAuthors.map((person, idx) => (
+          <React.Fragment key={idx}>
+            <div className="bg-muted/50 py-2 px-4 flex items-center justify-between border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Additional {isAuthorType ? "Author" : "Editor"} {idx + 1}
+              </p>
+            </div>
+            <ReadOnlyRow label="Salutation" value={person.title} />
+            <ReadOnlyRow label="First name" value={person.first_name} />
+            <ReadOnlyRow label="Last name" value={person.last_name} />
+            <ReadOnlyRow label="Email" value={person.email} />
+          </React.Fragment>
+        ))}
+
+        {/* Book Information — READ ONLY */}
+        <SectionHeader title="Book Information" />
+
+        <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={bookDescription} />
+        <ReadOnlyRow label="Keywords/Tags" value={keywordsVal} />
+
+        {/* Cover Image — moved to bottom */}
         <SectionHeader title="Cover Image" />
 
         <div className="p-4 space-y-4 border-b border-border">
@@ -742,40 +776,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             </>
           )}
         </div>
-
-        {/* Primary Author(s) — READ ONLY from API */}
-        <SectionHeader title={sectionLabel} />
-
-        <ReadOnlyRow label="Display Name(s)" value={displayNames} />
-        <ReadOnlyRow label="Display bio(s)" value={displayBios} />
-        <ReadOnlyRow label="Salutation" value={authorSalutation} />
-        <ReadOnlyRow label="First name" value={authorFirstName} />
-        <ReadOnlyRow label="Last name" value={authorLastName} />
-        <ReadOnlyRow label="Email" value={authorEmail} />
-        <ReadOnlyRow label="Email 2" value={authorEmail2} />
-        <ReadOnlyRow label="Institution" value={authorInstitution} />
-        <ReadOnlyRow label="Country" value={authorCountry} />
-
-        {/* Additional authors from API */}
-        {additionalAuthors.map((person, idx) => (
-          <React.Fragment key={idx}>
-            <div className="bg-muted/50 py-2 px-4 flex items-center justify-between border-b border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Additional {isAuthorType ? "Author" : "Editor"} {idx + 1}
-              </p>
-            </div>
-            <ReadOnlyRow label="Salutation" value={person.title} />
-            <ReadOnlyRow label="First name" value={person.first_name} />
-            <ReadOnlyRow label="Last name" value={person.last_name} />
-            <ReadOnlyRow label="Email" value={person.email} />
-          </React.Fragment>
-        ))}
-
-        {/* Book Information — READ ONLY */}
-        <SectionHeader title="Book Information" />
-
-        <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={bookDescription} />
-        <ReadOnlyRow label="Keywords/Tags" value={keywordsVal} />
 
       </div>
 
