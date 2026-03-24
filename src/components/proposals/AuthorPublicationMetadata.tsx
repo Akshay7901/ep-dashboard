@@ -852,7 +852,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           ) : null}
 
           {/* Bottom actions */}
-          <div className="flex items-center justify-center gap-3 pt-4 border-t border-border">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             {!requestingChanges && (
               <Button variant="outline" onClick={() => setRequestingChanges(true)} disabled={hasPendingQuery}>
                 Request changes
