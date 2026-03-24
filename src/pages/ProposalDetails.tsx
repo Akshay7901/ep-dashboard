@@ -484,9 +484,20 @@ const ProposalDetails: React.FC = () => {
           </div>
       }
 
+
+        {/* Standalone Decline button for post-submission states where action bar is hidden */}
+        {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
+          decisionReviewerPostSubmission || 
+          hasSubmittedReview || 
+          !(statusIs(proposal.status, "new", "submitted", "in_review", "under_review", "awaiting_more_info", "review_returned"))
+        ) && (
+          <div className="flex items-center gap-3 mt-4">
+            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              Decline
+            </Button>
+          </div>
+        )}
       </div>
-
-
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
       {isReviewer1 && !decisionReviewerPostSubmission && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
