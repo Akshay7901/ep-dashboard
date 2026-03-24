@@ -42,6 +42,8 @@ interface PeerReviewSummaryProps {
   showContractSection?: boolean;
   reviewerNote?: string;
   onReviewerNoteChange?: (note: string) => void;
+  drNote?: string;
+  onDrNoteChange?: (note: string) => void;
 }
 
 const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
@@ -53,6 +55,8 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
   showContractSection = false,
   reviewerNote = "",
   onReviewerNoteChange,
+  drNote = "",
+  onDrNoteChange,
 }) => {
   const recommendation = formData.recommendation;
   const isReject = recommendation === "reject";
@@ -146,6 +150,26 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
           />
           <p className="text-xs text-muted-foreground">
             This note will be visible to the decision reviewer alongside your review.
+          </p>
+        </div>
+      )}
+
+      {/* Note for Author (decision reviewer only) */}
+      {onDrNoteChange && (
+        <div className="mt-6 border rounded-md p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-semibold">Note for Author</p>
+            <span className="text-xs text-muted-foreground">(optional)</span>
+          </div>
+          <Textarea
+            placeholder="Add any comments or feedback you'd like to share with the author..."
+            value={drNote}
+            onChange={(e) => onDrNoteChange(e.target.value)}
+            className="min-h-[80px] resize-none"
+          />
+          <p className="text-xs text-muted-foreground">
+            This note will be visible to the author on their dashboard and included in the notification email.
           </p>
         </div>
       )}
