@@ -2009,6 +2009,7 @@ const ProposalDetails: React.FC = () => {
                       copiesSoldRevenue: resendContractFields.copiesSoldRevenue,
                       secondaryRightsRevenue: resendContractFields.secondaryRightsRevenue,
                       publishingAgreement: resendContractFields.publishingAgreement,
+                      addendum: resendContractFields.addendum,
                     })
                   );
                 }
