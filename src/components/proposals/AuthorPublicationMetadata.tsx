@@ -852,7 +852,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
-                Request Changes to Publication Metadata
+                Request changes
               </Button>
               {hasPendingQuery && (
                 <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
