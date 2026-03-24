@@ -58,6 +58,7 @@ interface InfoRequestPanelProps {
   onSaveDraft?: (requestId: number, updatedFields: Record<string, string>) => void;
   isSavingDraft?: boolean;
   onAutoSave?: (requestId: number, updatedFields: Record<string, string>) => void;
+  showTitle?: boolean;
 }
 
 const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
