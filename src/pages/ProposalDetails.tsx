@@ -1664,6 +1664,10 @@ const ProposalDetails: React.FC = () => {
               apiPayload[apiKey] = summaryFormData[formKey];
             }
           }
+          // Include dr_note if provided
+          if (drNoteForAuthor.trim()) {
+            apiPayload.dr_note = drNoteForAuthor.trim();
+          }
           // Step 1: Submit the review (without contract fields)
           await submitReviewApi(apiPayload);
 
@@ -1718,6 +1722,8 @@ const ProposalDetails: React.FC = () => {
           setIsConfirming(false);
         }
       }}
+      drNote={drNoteForAuthor}
+      onDrNoteChange={setDrNoteForAuthor}
       isSubmitting={isConfirming} /> :
 
 
