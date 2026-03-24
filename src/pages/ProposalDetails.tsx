@@ -173,6 +173,7 @@ const ProposalDetails: React.FC = () => {
   const [peerReviewerNote, setPeerReviewerNote] = useState("");
   const [isSavingPrNote, setIsSavingPrNote] = useState(false);
   const [prNoteSaved, setPrNoteSaved] = useState(false);
+  const [drNoteForAuthor, setDrNoteForAuthor] = useState("");
 
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
