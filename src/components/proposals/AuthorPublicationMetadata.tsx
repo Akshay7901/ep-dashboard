@@ -32,61 +32,78 @@ interface AuthorPublicationMetadataProps {
   ticketNumber: string;
 }
 
-/* ---- Category Badge ---- */
-const CategoryBadge: React.FC<{ label: string; color?: "amber" | "green" | "blue" }> = ({ label, color = "amber" }) => {
-  const colorMap = {
-    amber: "bg-amber-100 text-amber-800 border-amber-300",
-    green: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    blue: "bg-blue-100 text-blue-800 border-blue-300",
-  };
-  return (
-    <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${colorMap[color]}`}>
-      {label}
-    </span>
-  );
-};
-
-/* ---- Field Card ---- */
-const FieldCard: React.FC<{ category: string; categoryColor?: "amber" | "green" | "blue"; label: string; value?: string | null; sublabel?: string }> = ({
-  category,
-  categoryColor = "amber",
+/* ---- Read-only row ---- */
+const ReadOnlyRow: React.FC<{ label: string; sublabel?: string; value?: string | null }> = ({
   label,
-  value,
   sublabel,
+  value,
 }) => (
-  <div className="border border-amber-200 rounded-lg overflow-hidden bg-white">
-    <div className="bg-amber-50/60 border-b border-amber-200 px-4 py-2.5 flex items-center gap-2">
-      <CategoryBadge label={category} color={categoryColor} />
-      <span className="text-sm font-semibold text-foreground">{label}</span>
-      {sublabel && <span className="text-xs text-muted-foreground">({sublabel})</span>}
+  <div className="grid grid-cols-[200px_1fr] border-b border-border">
+    <div className="py-3 px-4 text-sm font-medium text-muted-foreground bg-muted/30">
+      {label}
+      {sublabel && (
+        <span className="block text-xs font-normal text-muted-foreground/60">{sublabel}</span>
+      )}
     </div>
-    <div className="px-4 py-3">
-      <p className="text-sm text-foreground whitespace-pre-line">{value || "—"}</p>
+    <div className="py-3 px-4 text-sm text-foreground bg-muted/20 whitespace-pre-line">
+      {value || "—"}
     </div>
   </div>
 );
 
-/* ---- Section Card (groups multiple fields) ---- */
-const SectionCard: React.FC<{
-  category: string;
-  categoryColor?: "amber" | "green" | "blue";
-  title: string;
-  children: React.ReactNode;
-}> = ({ category, categoryColor = "amber", title, children }) => (
-  <div className="border border-amber-200 rounded-lg overflow-hidden bg-white">
-    <div className="bg-amber-50/60 border-b border-amber-200 px-4 py-2.5 flex items-center gap-2">
-      <CategoryBadge label={category} color={categoryColor} />
-      <span className="text-sm font-semibold text-foreground">{title}</span>
+/* ---- Editable row ---- */
+interface EditableRowProps {
+  label: string;
+  sublabel?: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  type?: "text" | "email" | "textarea";
+  helpText?: string;
+}
+
+const EditableRow: React.FC<EditableRowProps> = ({
+  label,
+  sublabel,
+  value,
+  onChange,
+  disabled,
+  type = "text",
+  helpText,
+}) => (
+  <div className="grid grid-cols-[200px_1fr] border-b border-border">
+    <div className="py-3 px-4 text-sm font-medium text-muted-foreground bg-muted/30">
+      {label}
+      {sublabel && (
+        <span className="block text-xs font-normal text-muted-foreground/60">{sublabel}</span>
+      )}
     </div>
-    <div className="divide-y divide-border">{children}</div>
+    <div className="py-2 px-4 flex flex-col gap-1">
+      {type === "textarea" ? (
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          className={`resize-none ${disabled ? "bg-muted/40 text-muted-foreground cursor-not-allowed" : ""}`}
+          rows={3}
+        />
+      ) : (
+        <Input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          className={disabled ? "bg-muted/40 text-muted-foreground cursor-not-allowed" : ""}
+        />
+      )}
+      {helpText && <p className="text-xs text-muted-foreground/70 italic">{helpText}</p>}
+    </div>
   </div>
 );
 
-/* ---- Inline field row within a SectionCard ---- */
-const InlineField: React.FC<{ label: string; value?: string | null }> = ({ label, value }) => (
-  <div className="grid grid-cols-[180px_1fr] px-4 py-2.5">
-    <span className="text-sm font-medium text-muted-foreground">{label}</span>
-    <span className="text-sm text-foreground">{value || "—"}</span>
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+  <div className="bg-[#3d5a47] text-white py-2.5 px-4">
+    <p className="text-sm font-semibold uppercase tracking-wide">{title}</p>
   </div>
 );
 
@@ -214,29 +231,32 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   /** Parse DPI from JPEG JFIF (APP0) or EXIF (APP1) headers */
   const extractJpegDpi = (buffer: ArrayBuffer): number | null => {
     const view = new DataView(buffer);
-    if (view.getUint16(0) !== 0xFFD8) return null;
+    if (view.getUint16(0) !== 0xFFD8) return null; // Not JPEG
 
     let offset = 2;
     while (offset < view.byteLength - 4) {
       const marker = view.getUint16(offset);
-      if (marker === 0xFFDA) break;
+      if (marker === 0xFFDA) break; // Start of scan – stop
 
       const segLen = view.getUint16(offset + 2);
 
+      // JFIF APP0
       if (marker === 0xFFE0 && segLen >= 14) {
         const units = view.getUint8(offset + 11);
         const xDensity = view.getUint16(offset + 12);
         const yDensity = view.getUint16(offset + 14);
         if (units === 1 && xDensity > 0 && yDensity > 0) {
-          return Math.min(xDensity, yDensity);
+          return Math.min(xDensity, yDensity); // DPI
         }
         if (units === 2 && xDensity > 0 && yDensity > 0) {
-          return Math.min(Math.round(xDensity * 2.54), Math.round(yDensity * 2.54));
+          return Math.min(Math.round(xDensity * 2.54), Math.round(yDensity * 2.54)); // dots/cm → DPI
         }
       }
 
+      // EXIF APP1
       if (marker === 0xFFE1) {
         const exifStart = offset + 4;
+        // Check "Exif\0\0"
         if (
           view.getUint8(exifStart) === 0x45 && view.getUint8(exifStart + 1) === 0x78 &&
           view.getUint8(exifStart + 2) === 0x69 && view.getUint8(exifStart + 3) === 0x66
@@ -252,7 +272,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             const entries = getU16(ifdStart);
             let xRes: number | null = null;
             let yRes: number | null = null;
-            let resUnit = 2;
+            let resUnit = 2; // default inches
 
             for (let i = 0; i < entries; i++) {
               const entryOff = ifdStart + 2 + i * 12;
@@ -260,30 +280,30 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
               const tag = getU16(entryOff);
               const type = getU16(entryOff + 2);
 
-              if (tag === 0x011A && type === 5) {
+              if (tag === 0x011A && type === 5) { // XResolution RATIONAL
                 const valOff = tiffStart + getU32(entryOff + 8);
                 if (valOff + 8 <= view.byteLength) {
                   xRes = getU32(valOff) / getU32(valOff + 4);
                 }
               }
-              if (tag === 0x011B && type === 5) {
+              if (tag === 0x011B && type === 5) { // YResolution RATIONAL
                 const valOff = tiffStart + getU32(entryOff + 8);
                 if (valOff + 8 <= view.byteLength) {
                   yRes = getU32(valOff) / getU32(valOff + 4);
                 }
               }
-              if (tag === 0x0128) {
+              if (tag === 0x0128) { // ResolutionUnit
                 resUnit = getU32(entryOff + 8);
               }
             }
 
             if (xRes != null && yRes != null && xRes > 0 && yRes > 0) {
               let dpi = Math.min(xRes, yRes);
-              if (resUnit === 3) dpi = Math.round(dpi * 2.54);
+              if (resUnit === 3) dpi = Math.round(dpi * 2.54); // cm → inches
               return dpi;
             }
           } catch {
-            // EXIF parse failed
+            // EXIF parse failed – fall through
           }
         }
       }
@@ -304,14 +324,17 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     let height = 0;
     let dpi: number | null = null;
 
+    // File type check
     if (!["image/jpeg", "image/tiff"].includes(file.type)) {
       errors.push(`Invalid file type "${file.type.split("/")[1]?.toUpperCase() || "unknown"}". Only JPEG and TIFF files are accepted.`);
     }
 
+    // File size check
     if (fileSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
       errors.push(`File size ${(fileSize / (1024 * 1024)).toFixed(1)}MB exceeds the ${MAX_FILE_SIZE_MB}MB limit.`);
     }
 
+    // Dimension & DPI check (only if file type is valid image)
     if (["image/jpeg", "image/tiff"].includes(file.type)) {
       try {
         const dims = await validateImageDimensions(file);
@@ -324,6 +347,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         errors.push("Could not read image dimensions. The file may be corrupted.");
       }
 
+      // DPI check (JPEG only — TIFF DPI parsing is complex, let API handle it)
       if (file.type === "image/jpeg") {
         try {
           const buffer = await file.arrayBuffer();
@@ -459,6 +483,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   const handleFinalise = async () => {
     setFinalising(true);
     try {
+      // Upload pending cover image before finalising
       if (coverImageFile && coverImagePermission) {
         await metadataApi.uploadCoverImage(ticketNumber, coverImageFile, coverImageSource || undefined);
         queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
@@ -493,45 +518,46 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading publication data...</span>
+        <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
       </div>
     );
   }
 
+  // If no metadata returned (404 = not yet sent by reviewer), show a message
   if (!metadataResponse) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          Publication data is not available yet. The reviewer has not sent it for your approval.
+          Publication metadata is not available yet. The reviewer has not sent it for your approval.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {isApproved && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4" />
-          Publication data has been approved and locked. No further changes can be made.
+          Metadata has been approved and locked. No further changes can be made.
         </div>
       )}
 
-      {/* ===== Title & Category ===== */}
-      <SectionCard category="Publication Info" categoryColor="green" title="Title & Category">
-        <InlineField label="Title Full" value={titleFull} />
-        <InlineField label="Title" value={metaTitle} />
-        <InlineField label="Subtitle" value={metaSubtitle} />
-        <InlineField label="Category" value={category} />
-      </SectionCard>
 
-      {/* ===== Cover Image ===== */}
-      <div className="border border-amber-200 rounded-lg overflow-hidden bg-white">
-        <div className="bg-amber-50/60 border-b border-amber-200 px-4 py-2.5 flex items-center gap-2">
-          <CategoryBadge label="Publication Info" color="green" />
-          <span className="text-sm font-semibold text-foreground">Cover Image</span>
-        </div>
-        <div className="p-4 space-y-4">
+      <div className="space-y-0 border border-border rounded-lg overflow-hidden">
+        {/* Publication Metadata — READ ONLY */}
+        <SectionHeader title="Publication Data" />
+
+        <ReadOnlyRow label="Title Full" value={titleFull} />
+        <ReadOnlyRow label="Title" value={metaTitle} />
+        <ReadOnlyRow label="Subtitle" value={metaSubtitle} />
+        <ReadOnlyRow label="Category Auth/Ed" value={category} />
+
+        {/* Cover Image */}
+        <SectionHeader title="Cover Image" />
+
+        <div className="p-4 space-y-4 border-b border-border">
+          {/* If cover image is already saved to API, show read-only view */}
           {coverImageData?.s3_url && !coverImageFile ? (
             <div className="space-y-3">
               <div className="flex items-start gap-4">
@@ -562,6 +588,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             </div>
           ) : (
             <>
+              {/* Requirements list */}
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
                   Upload a cover image for your publication. If you do not provide one, the publisher will use a default cover.
@@ -633,6 +660,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                         />
                       </div>
 
+                      {/* Inline validation feedback */}
                       {coverImageValidation && (
                         <div className={`rounded-md p-3 text-xs space-y-1.5 border ${coverImageValidation.isValid ? 'bg-emerald-50 border-emerald-200' : 'bg-destructive/5 border-destructive/30'}`}>
                           <div className="flex items-center gap-2 font-medium">
@@ -715,39 +743,42 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
             </>
           )}
         </div>
+
+        {/* Primary Author(s) — READ ONLY from API */}
+        <SectionHeader title={sectionLabel} />
+
+        <ReadOnlyRow label="Display Name(s)" value={displayNames} />
+        <ReadOnlyRow label="Display bio(s)" value={displayBios} />
+        <ReadOnlyRow label="Salutation" value={authorSalutation} />
+        <ReadOnlyRow label="First name" value={authorFirstName} />
+        <ReadOnlyRow label="Last name" value={authorLastName} />
+        <ReadOnlyRow label="Email" value={authorEmail} />
+        <ReadOnlyRow label="Email 2" value={authorEmail2} />
+        <ReadOnlyRow label="Institution" value={authorInstitution} />
+        <ReadOnlyRow label="Country" value={authorCountry} />
+
+        {/* Additional authors from API */}
+        {additionalAuthors.map((person, idx) => (
+          <React.Fragment key={idx}>
+            <div className="bg-muted/50 py-2 px-4 flex items-center justify-between border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Additional {isAuthorType ? "Author" : "Editor"} {idx + 1}
+              </p>
+            </div>
+            <ReadOnlyRow label="Salutation" value={person.title} />
+            <ReadOnlyRow label="First name" value={person.first_name} />
+            <ReadOnlyRow label="Last name" value={person.last_name} />
+            <ReadOnlyRow label="Email" value={person.email} />
+          </React.Fragment>
+        ))}
+
+        {/* Book Information — READ ONLY */}
+        <SectionHeader title="Book Information" />
+
+        <ReadOnlyRow label="Book description" sublabel="(max 2000 characters)" value={bookDescription} />
+        <ReadOnlyRow label="Keywords/Tags" value={keywordsVal} />
+
       </div>
-
-      {/* ===== Primary Author/Editor ===== */}
-      <SectionCard category="Author Info" categoryColor="blue" title={sectionLabel}>
-        <InlineField label="Display Name(s)" value={displayNames} />
-        <InlineField label="Display bio(s)" value={displayBios} />
-        <InlineField label="Salutation" value={authorSalutation} />
-        <InlineField label="First name" value={authorFirstName} />
-        <InlineField label="Last name" value={authorLastName} />
-        <InlineField label="Email" value={authorEmail} />
-        <InlineField label="Email 2" value={authorEmail2} />
-        <InlineField label="Institution" value={authorInstitution} />
-        <InlineField label="Country" value={authorCountry} />
-      </SectionCard>
-
-      {/* ===== Additional Authors ===== */}
-      {additionalAuthors.map((person, idx) => (
-        <SectionCard
-          key={idx}
-          category="Author Info"
-          categoryColor="blue"
-          title={`Additional ${isAuthorType ? "Author" : "Editor"} ${idx + 1}`}
-        >
-          <InlineField label="Salutation" value={person.title} />
-          <InlineField label="First name" value={person.first_name} />
-          <InlineField label="Last name" value={person.last_name} />
-          <InlineField label="Email" value={person.email} />
-        </SectionCard>
-      ))}
-
-      {/* ===== Book Information ===== */}
-      <FieldCard category="Book Info" categoryColor="amber" label="Book Description" sublabel="max 2000 characters" value={bookDescription} />
-      <FieldCard category="Book Info" categoryColor="amber" label="Keywords / Tags" value={keywordsVal} />
 
       {/* Previous Queries Thread */}
       {metadataQueries.length > 0 && (
@@ -783,7 +814,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
         <>
           {requestingChanges ? (
             <div className="space-y-3 border border-amber-200 bg-amber-50/50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-amber-900">Request Changes to Publication Data</h4>
+              <h4 className="text-sm font-semibold text-amber-900">Request Changes to Metadata</h4>
               {changeRequests.map((cr, idx) => (
                 <div key={idx} className="flex gap-2 items-start">
                   <Select value={cr.field} onValueChange={(v) => updateChangeRequest(idx, "field", v)}>
@@ -811,7 +842,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
-                Request Changes to Publication Data
+                Request Changes to Publication Metadata
               </Button>
               {hasPendingQuery && (
                 <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
@@ -824,6 +855,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
              <Button
                className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
                onClick={() => {
+                 // If there's a pending cover image file, require source/credit
                  if (coverImageFile && !coverImageSource.trim()) {
                    toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information before finalising.", variant: "destructive" });
                    return;
@@ -832,7 +864,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                }}
                disabled={hasPendingQuery || finalising}
              >
-              Finalise & Lock Metadata
+              Finalise &amp; Lock Metadata
             </Button>
             {hasPendingQuery && (
               <span className="text-xs text-amber-600">Cannot finalise while a query is pending</span>
@@ -842,7 +874,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           <AlertDialog open={showFinaliseConfirm} onOpenChange={setShowFinaliseConfirm}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Finalise Publication Data</AlertDialogTitle>
+                <AlertDialogTitle>Finalise Metadata</AlertDialogTitle>
               </AlertDialogHeader>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Please note that information cannot be amended once finalised. Make sure to check over the information thoroughly before proceeding.</p>
@@ -860,7 +892,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   disabled={finalising}
                 >
                   {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Finalise Publication Data
+                  Finalise Metadata
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
