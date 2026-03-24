@@ -80,6 +80,10 @@ const ContentBlock = ({
     </div>;
 };
 
+const normalizeReviewRole = (role?: string | null) => (role || "").toString().trim().toLowerCase();
+const isPeerReviewerRole = (role?: string | null) => ["peer_reviewer", "reviewer_2", "reviewer2"].includes(normalizeReviewRole(role));
+const isDecisionReviewerRole = (role?: string | null) => ["decision_reviewer", "reviewer_1", "reviewer1", "admin", "dr"].includes(normalizeReviewRole(role));
+
 // Peer review status badge (matches dashboard colors)
 const PeerReviewStatusBadge: React.FC<{
   status: string;
@@ -256,8 +260,7 @@ const ProposalDetails: React.FC = () => {
   const reviewFormData = React.useMemo(() => {
     if (!reviewData) return {};
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    // For form pre-loading, always use the peer reviewer's review
-    const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
+    const peerReview = reviews.find((r: any) => isPeerReviewerRole(r.reviewer_role)) || reviews[0];
     const reviewObj = peerReview || reviewData;
     const candidate = reviewObj.review_data || reviewObj.data || reviewObj;
     if (candidate && typeof candidate === 'object' && (candidate.scope !== undefined || candidate.recommendation !== undefined)) {
@@ -266,11 +269,11 @@ const ProposalDetails: React.FC = () => {
     return {};
   }, [reviewData]);
 
-  // Extract decision reviewer's OWN saved draft (if any) from the API response
+  // Extract any existing decision reviewer review/draft from the API response
   const decisionReviewerDraft = React.useMemo(() => {
     if (!reviewData) return null;
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    const drReview = reviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+    const drReview = reviews.find((r: any) => isDecisionReviewerRole(r.reviewer_role));
     if (!drReview) return null;
     const candidate = drReview.review_data || drReview.data || drReview;
     if (candidate && typeof candidate === 'object' && (candidate.scope !== undefined || candidate.recommendation !== undefined)) {
@@ -283,17 +286,17 @@ const ProposalDetails: React.FC = () => {
   const reviewMeta = React.useMemo(() => {
     if (!reviewData) return {};
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || reviewData.review || reviewData || {};
+    return reviews.find((r: any) => isPeerReviewerRole(r.reviewer_role)) || reviews[0] || reviewData.review || reviewData || {};
   }, [reviewData]);
+
   // Extract peer reviewer note from review data (for decision reviewer display)
   const peerReviewerNoteFromApi = React.useMemo(() => {
     if (!reviewData) return "";
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    const peerReview = reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0];
+    const peerReview = reviews.find((r: any) => isPeerReviewerRole(r.reviewer_role)) || reviews[0];
     return peerReview?.note_to_dr || peerReview?.review_data?.note_to_dr || peerReview?.reviewer_note || peerReview?.review_data?.reviewer_note || "";
   }, [reviewData]);
 
-  // Initialize peer reviewer note from API data
   React.useEffect(() => {
     if (peerReviewerNoteFromApi) {
       setPeerReviewerNote(peerReviewerNoteFromApi);
@@ -301,10 +304,10 @@ const ProposalDetails: React.FC = () => {
     }
   }, [peerReviewerNoteFromApi]);
 
-
-  const drShouldShowFeedback = decisionReviewerSubmitted || proposal && (
-  statusIs(proposal.status, "contract_issued", "approved", "locked") ||
-  (reviewData?.reviews || []).some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted));
+  const drShouldShowFeedback = decisionReviewerSubmitted || !!proposal && (
+    statusIs(proposal.status, "contract_issued", "approved", "locked") ||
+    (reviewData?.reviews || []).some((r: any) => isDecisionReviewerRole(r.reviewer_role))
+  );
 
   // Default to metadata tab when metadata is available (contract signed)
   const isContractSignedEarly = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
@@ -349,22 +352,20 @@ const ProposalDetails: React.FC = () => {
 
 
   // Check if there's a SUBMITTED peer review available (for decision reviewer split layout)
-  // Show split screen ONLY when the peer reviewer has actually submitted (not just saved a draft)
   const peerReviewEntry = (() => {
     if (!reviewData) return null;
     const reviews = reviewData.reviews || (reviewData.review ? [reviewData.review] : []);
-    return reviews.find((r: any) => r.reviewer_role === 'peer_reviewer') || reviews[0] || null;
+    return reviews.find((r: any) => isPeerReviewerRole(r.reviewer_role)) || reviews[0] || null;
   })();
 
   const hasSubmittedReview = isReviewer1 && peerReviewEntry != null && peerReviewEntry.is_submitted === true && Object.keys(reviewFormData).length > 0;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
-  // Check if the decision reviewer has already submitted their own review
-  // Either status indicates it, or the API reviews array contains a decision_reviewer entry
   const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
-  const hasDecisionReviewInApi = allReviews.some((r: any) => r.reviewer_role === 'decision_reviewer' && r.is_submitted);
+  const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role));
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-  statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected") || hasDecisionReviewInApi);
+    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected") || hasDecisionReviewInApi
+  );
 
 
 
@@ -992,8 +993,8 @@ const ProposalDetails: React.FC = () => {
             )}
             {(() => {
           const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
-          const peerReview = allReviews.find((r: any) => r.reviewer_role === 'peer_reviewer');
-          const decisionReview = allReviews.find((r: any) => r.reviewer_role === 'decision_reviewer');
+          const peerReview = allReviews.find((r: any) => isPeerReviewerRole(r.reviewer_role));
+          const decisionReview = allReviews.find((r: any) => isDecisionReviewerRole(r.reviewer_role));
 
           const reviewFields = [
           { label: "Scope", key: "scope" },
