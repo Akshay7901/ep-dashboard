@@ -484,8 +484,13 @@ const ProposalDetails: React.FC = () => {
           </div>
       }
 
-        {/* Decline button — visible on every state except locked/declined/rejected */}
+
+        {/* Standalone Decline button for post-submission states where action bar is hidden */}
         {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
+          decisionReviewerPostSubmission || 
+          hasSubmittedReview || 
+          !(statusIs(proposal.status, "new", "submitted", "in_review", "under_review", "awaiting_more_info", "review_returned"))
+        ) && (
           <div className="flex items-center gap-3 mt-4">
             <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
               Decline
@@ -493,8 +498,6 @@ const ProposalDetails: React.FC = () => {
           </div>
         )}
       </div>
-
-
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
       {isReviewer1 && !decisionReviewerPostSubmission && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
@@ -523,6 +526,11 @@ const ProposalDetails: React.FC = () => {
               <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
+              {!statusIs(proposal.status, "locked", "declined", "rejected") && (
+                <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+                  Decline
+                </Button>
+              )}
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
@@ -595,6 +603,11 @@ const ProposalDetails: React.FC = () => {
           <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
             <Info className="h-4 w-4" /> Request Info
           </Button>
+          {!statusIs(proposal.status, "locked", "declined", "rejected") && (
+            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              Decline
+            </Button>
+          )}
         </>;
       })()}
         </div>}
