@@ -1012,6 +1012,12 @@ const ProposalDetails: React.FC = () => {
                       </p>
                     </div>
             }
+                  {data.dr_note?.trim?.() && (
+            <div className="bg-primary/5 border border-primary/20 rounded-md p-4 mt-2 space-y-1">
+                      <p className="text-sm font-semibold text-foreground">Note for Author</p>
+                      <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{data.dr_note}</p>
+                    </div>
+            )}
                 </div>;
 
 
