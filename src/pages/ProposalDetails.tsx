@@ -484,14 +484,6 @@ const ProposalDetails: React.FC = () => {
           </div>
       }
 
-        {/* Decline button — visible on every state except locked/declined/rejected */}
-        {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
-          <div className="flex items-center gap-3 mt-4">
-            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
-              Decline
-            </Button>
-          </div>
-        )}
       </div>
 
 
@@ -523,6 +515,11 @@ const ProposalDetails: React.FC = () => {
               <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
+              {!statusIs(proposal.status, "locked", "declined", "rejected") && (
+                <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+                  Decline
+                </Button>
+              )}
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
@@ -595,6 +592,11 @@ const ProposalDetails: React.FC = () => {
           <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
             <Info className="h-4 w-4" /> Request Info
           </Button>
+          {!statusIs(proposal.status, "locked", "declined", "rejected") && (
+            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              Decline
+            </Button>
+          )}
         </>;
       })()}
         </div>}
