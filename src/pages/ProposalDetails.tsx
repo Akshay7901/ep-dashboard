@@ -477,10 +477,12 @@ const ProposalDetails: React.FC = () => {
         }} disabled={isAssigning}>
                 Submit for review
               </Button>}
+              <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+                Decline
+              </Button>
               <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
-              
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
@@ -553,14 +555,6 @@ const ProposalDetails: React.FC = () => {
       })()}
         </div>}
 
-      {/* Decline button — visible to DR at any stage except locked/declined/rejected */}
-      {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
-        <div className="flex">
-          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
-            Decline
-          </Button>
-        </div>
-      )}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
