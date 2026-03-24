@@ -542,7 +542,8 @@ const ProposalDetails: React.FC = () => {
         [];
         const currentAssigned = assignedEmails.filter(Boolean)[0] || "";
         const isSameReviewer = selectedReviewer && selectedReviewer === currentAssigned;
-        return <Button
+        return <>
+          <Button
           className="bg-[#3d5a47]"
           onClick={() => {
             setAssignNote("");
@@ -550,9 +551,15 @@ const ProposalDetails: React.FC = () => {
           }}
           disabled={isAssigning || !selectedReviewer || !!isSameReviewer}
           title={isSameReviewer ? "Select a different reviewer to reassign" : ""}>
-          
               Reassign
-            </Button>;
+            </Button>
+          <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
+            <Info className="h-4 w-4" /> Request Info
+          </Button>
+          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+            Decline
+          </Button>
+        </>;
       })()}
         </div>}
 
