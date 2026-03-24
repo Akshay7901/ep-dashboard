@@ -103,6 +103,7 @@ const normalizeReviewData = (data?: Record<string, any> | null) => {
     contractType: pick("contractType", "contract_type")
   };
 };
+const hasReviewData = (data: Record<string, any>) => Object.values(data).some((value) => value !== undefined && value !== null && value !== "");
 
 // Peer review status badge (matches dashboard colors)
 const PeerReviewStatusBadge: React.FC<{
@@ -1093,7 +1094,7 @@ const ProposalDetails: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {Object.keys(peerReviewData).length > 0 ? renderReviewFields(peerReviewData) :
+                      {hasReviewData(peerReviewData) ? renderReviewFields(peerReviewData) :
                   <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
                   }
                     </AccordionContent>
@@ -1113,7 +1114,7 @@ const ProposalDetails: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {Object.keys(decisionReviewData).length > 0 ?
+                      {hasReviewData(decisionReviewData) ?
                   <div className="space-y-4">
                           {renderReviewFields(decisionReviewData)}
                           {decisionReviewData.contractType &&
