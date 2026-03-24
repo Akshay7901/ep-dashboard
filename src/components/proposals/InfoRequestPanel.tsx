@@ -173,9 +173,9 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
       {/* Proposal title & subtitle */}
       {showTitle && proposal && (
         <div>
-          <h2 className="text-lg font-bold text-foreground">{proposal.title}</h2>
-          {proposal.subtitle && (
-            <p className="text-sm text-muted-foreground mt-0.5">{proposal.subtitle}</p>
+          <h2 className="text-lg font-bold text-foreground">{proposal.main_title || proposal.corresponding_author}</h2>
+          {proposal.sub_title && (
+            <p className="text-sm text-muted-foreground mt-0.5">{proposal.sub_title}</p>
           )}
         </div>
       )}
