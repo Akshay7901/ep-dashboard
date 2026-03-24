@@ -122,23 +122,25 @@ const ReviewFeedbackCard: React.FC<{review: any;title: string;}> = ({ review, ti
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
       </div>
-      {/* DR Note for Author */}
-      {formData.dr_note?.trim?.() && (
-        <div className="bg-primary/5 border border-primary/20 rounded-md p-4 space-y-1">
-          <p className="text-sm font-semibold text-foreground">Note from the Reviewer</p>
-          <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{formData.dr_note}</p>
-        </div>
-      )}
       {REVIEW_FEEDBACK_FIELDS.map((field) => {
         const value = formData[field.key];
         if (!value?.trim?.()) return null;
         return (
-          <div key={field.key}>
-            <Separator className="mb-6" />
-            <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
-            <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
-          </div>);
-
+          <React.Fragment key={field.key}>
+            <div>
+              <Separator className="mb-6" />
+              <h4 className="text-base font-semibold text-foreground mb-2">{field.label}</h4>
+              <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{value}</p>
+            </div>
+            {/* Show DR Note right after Recommendations */}
+            {field.key === "recommendation" && formData.dr_note?.trim?.() && (
+              <div className="bg-primary/5 border border-primary/20 rounded-md p-4 space-y-1">
+                <p className="text-sm font-semibold text-foreground">Note from the Reviewer</p>
+                <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{formData.dr_note}</p>
+              </div>
+            )}
+          </React.Fragment>
+        );
       })}
     </div>);
 
