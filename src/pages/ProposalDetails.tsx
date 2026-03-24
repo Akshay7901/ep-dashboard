@@ -480,9 +480,7 @@ const ProposalDetails: React.FC = () => {
               <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
-              {statusIs(proposal.status, "new", "submitted") && <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
-                Decline
-              </Button>}
+              
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
