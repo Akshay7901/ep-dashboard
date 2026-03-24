@@ -330,7 +330,7 @@ const ProposalDetails: React.FC = () => {
   const hasContractInSystem = !!latestContract;
   const decisionReviewerPostSubmission = isReviewer1 && (
     decisionReviewerSubmitted ||
-    statusIs(proposal?.status || "", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised", "review_returned") ||
+    statusIs(proposal?.status || "", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") ||
     hasDecisionReviewInApi ||
     hasContractInSystem
   );
@@ -350,14 +350,8 @@ const ProposalDetails: React.FC = () => {
 
   React.useEffect(() => {
     if (drActiveTab !== "feedback" || !decisionReviewerPostSubmission) return;
-
-    if (statusIs(proposal?.status || "", "review_returned")) {
-      setDrFeedbackAccordion("peer-review");
-      return;
-    }
-
     setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
-  }, [drActiveTab, decisionReviewerPostSubmission, hasDecisionReviewInApi, proposal?.status]);
+  }, [drActiveTab, decisionReviewerPostSubmission, hasDecisionReviewInApi]);
 
   /* ---------------- Loading / Error ---------------- */
 
@@ -400,7 +394,7 @@ const ProposalDetails: React.FC = () => {
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised", "review_returned") || 
+    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") || 
     hasDecisionReviewInApi ||
     hasContractInSystem
   );
