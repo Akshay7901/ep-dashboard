@@ -782,7 +782,7 @@ const ProposalDetails: React.FC = () => {
           {isContractSigned &&
       <TabsContent value="metadata" className="mt-4 space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Publication Metadata</h2>
+                <h2 className="text-lg font-semibold text-foreground">Publication Data</h2>
                 {isReviewer1 && statusIs(proposal.status, 'author_approved') &&
           <Button
             variant="outline"
