@@ -546,7 +546,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata — READ ONLY */}
-        <SectionHeader title="Publication Metadata" />
+        <SectionHeader title="Publication Data" />
 
         <ReadOnlyRow label="Title Full" value={titleFull} />
         <ReadOnlyRow label="Title" value={metaTitle} />
