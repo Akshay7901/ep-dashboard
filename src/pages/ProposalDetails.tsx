@@ -83,6 +83,27 @@ const ContentBlock = ({
 const normalizeReviewRole = (role?: string | null) => (role || "").toString().trim().toLowerCase();
 const isPeerReviewerRole = (role?: string | null) => ["peer_reviewer", "reviewer_2", "reviewer2"].includes(normalizeReviewRole(role));
 const isDecisionReviewerRole = (role?: string | null) => ["decision_reviewer", "reviewer_1", "reviewer1", "admin", "dr"].includes(normalizeReviewRole(role));
+const normalizeReviewData = (data?: Record<string, any> | null) => {
+  if (!data || typeof data !== "object") return {};
+
+  const pick = (...keys: string[]) => keys.map((key) => data[key]).find((value) => value !== undefined && value !== null && value !== "");
+
+  return {
+    scope: pick("scope"),
+    purposeAndValue: pick("purposeAndValue", "purpose_value", "purpose_and_value"),
+    title: pick("title"),
+    originality: pick("originality"),
+    credibility: pick("credibility"),
+    structure: pick("structure"),
+    clarity: pick("clarity", "clarity_quality"),
+    otherComments: pick("otherComments", "other_comments"),
+    redFlags: pick("redFlags", "red_flags"),
+    recommendation: pick("recommendation"),
+    dr_note: pick("dr_note", "drNote"),
+    contractType: pick("contractType", "contract_type")
+  };
+};
+const hasReviewData = (data: Record<string, any>) => Object.values(data).some((value) => value !== undefined && value !== null && value !== "");
 
 // Peer review status badge (matches dashboard colors)
 const PeerReviewStatusBadge: React.FC<{
@@ -326,6 +347,17 @@ const ProposalDetails: React.FC = () => {
       setDrActiveTab("feedback");
     }
   }, [isContractSignedEarly, drShouldShowFeedback]);
+
+  React.useEffect(() => {
+    if (drActiveTab !== "feedback" || !decisionReviewerPostSubmission) return;
+
+    if (statusIs(proposal?.status || "", "review_returned")) {
+      setDrFeedbackAccordion("peer-review");
+      return;
+    }
+
+    setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
+  }, [drActiveTab, decisionReviewerPostSubmission, hasDecisionReviewInApi, proposal?.status]);
 
   /* ---------------- Loading / Error ---------------- */
 
@@ -1001,6 +1033,8 @@ const ProposalDetails: React.FC = () => {
           const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
           const peerReview = allReviews.find((r: any) => isPeerReviewerRole(r.reviewer_role));
           const decisionReview = allReviews.find((r: any) => isDecisionReviewerRole(r.reviewer_role));
+          const peerReviewData = normalizeReviewData(peerReview?.review_data || peerReview?.data || peerReview);
+          const decisionReviewData = normalizeReviewData(decisionReview?.review_data || decisionReview?.data || decisionReview);
 
           const reviewFields = [
           { label: "Scope", key: "scope" },
@@ -1054,13 +1088,13 @@ const ProposalDetails: React.FC = () => {
                         {peerReview &&
                     <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             {peerReview.reviewer_name || peerReview.reviewer_email || "Peer Reviewer"}
-                            {peerReview.review_data?.recommendation && ` • ${peerReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
+                            {peerReviewData.recommendation && ` • ${peerReviewData.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
                           </p>
                     }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {peerReview?.review_data ? renderReviewFields(peerReview.review_data) :
+                      {hasReviewData(peerReviewData) ? renderReviewFields(peerReviewData) :
                   <p className="text-sm text-muted-foreground">No peer review feedback available yet.</p>
                   }
                     </AccordionContent>
@@ -1074,22 +1108,22 @@ const ProposalDetails: React.FC = () => {
                         {decisionReview &&
                     <p className="text-sm text-muted-foreground font-normal mt-0.5">
                             {decisionReview.reviewer_name || decisionReview.reviewer_email || "Decision Reviewer"}
-                            {decisionReview.review_data?.recommendation && ` • ${decisionReview.review_data.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
+                            {decisionReviewData.recommendation && ` • ${decisionReviewData.recommendation.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}`}
                           </p>
                     }
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
-                      {decisionReview?.review_data ?
+                      {hasReviewData(decisionReviewData) ?
                   <div className="space-y-4">
-                          {renderReviewFields(decisionReview.review_data)}
-                          {decisionReview.review_data.contractType &&
+                          {renderReviewFields(decisionReviewData)}
+                          {decisionReviewData.contractType &&
                     <>
                               <Separator />
                               <div className="border border-muted rounded-lg p-4">
                                 <p className="text-sm font-semibold">Contract Type Issued</p>
                                 <p className="text-sm font-medium mt-1 capitalize">
-                                  {decisionReview.review_data.contractType === "editor" ? "Editor Contract" : "Author Contract"}
+                                  {decisionReviewData.contractType === "editor" ? "Editor Contract" : "Author Contract"}
                                 </p>
                               </div>
                             </>
