@@ -25,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { metadataApi, metadataQueriesApi, type MetadataQuery } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
+import { statusIs } from "@/lib/statusUtils";
 
 interface AuthorPublicationMetadataProps {
   proposal: Proposal;
@@ -820,7 +821,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       )}
 
       {/* Change Requests Section */}
-      {!isApproved && proposal.status?.toLowerCase().replace(/\s+/g, '_') !== 'declined' && (
+      {!isApproved && !statusIs(proposal.status || '', 'declined', 'rejected') && !statusIs(proposal.internal_status || '', 'declined', 'rejected') && (
         <>
           {requestingChanges ? (
             <div className="space-y-3 border border-amber-200 bg-amber-50/50 rounded-lg p-4">
