@@ -536,6 +536,17 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Introductory text */}
+      <div className="space-y-3 text-sm text-muted-foreground">
+        <p>Please review the below publication data and upload a cover image if applicable.</p>
+        <p>
+          We have prepared a description of your book for our website and for external listings, mostly derived from your proposal form. It also includes contact data, such as your email, which will not be displayed, but which forms part of our records, and which will be used when we send copies of your book.
+        </p>
+        <p>
+          If you wish to make changes to the publication data, you can submit a request for changes below. Once submitted, these requests will be assessed by your editor.
+        </p>
+      </div>
+
       {isApproved && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4" />
