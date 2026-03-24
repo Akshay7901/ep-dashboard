@@ -25,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { metadataApi, metadataQueriesApi, type MetadataQuery } from "@/lib/proposalsApi";
 import type { Proposal } from "@/types";
+import { statusIs } from "@/lib/statusUtils";
 
 interface AuthorPublicationMetadataProps {
   proposal: Proposal;
