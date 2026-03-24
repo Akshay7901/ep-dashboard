@@ -417,6 +417,11 @@ const ProposalDetails: React.FC = () => {
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
           }
+            {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") &&
+          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+                Decline
+              </Button>
+          }
             {isReviewer1 &&
           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
                 <History className="h-4 w-4" />
@@ -480,7 +485,6 @@ const ProposalDetails: React.FC = () => {
               <Button variant="outline" className="gap-1.5" onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}>
                 <Info className="h-4 w-4" /> Request Info
               </Button>
-              
             </>}
 
           {/* Submit for Review confirmation dialog with optional note */}
@@ -553,14 +557,6 @@ const ProposalDetails: React.FC = () => {
       })()}
         </div>}
 
-      {/* Decline button — visible to DR at any stage except locked/declined/rejected */}
-      {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
-        <div className="flex">
-          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
-            Decline
-          </Button>
-        </div>
-      )}
 
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
