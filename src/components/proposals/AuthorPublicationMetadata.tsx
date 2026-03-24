@@ -849,31 +849,26 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                 </Button>
               </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setRequestingChanges(true)} className="gap-1.5" disabled={hasPendingQuery}>
+          ) : null}
+
+          {/* Bottom actions */}
+          <div className="flex items-center justify-center gap-3 pt-4 border-t border-border">
+            {!requestingChanges && (
+              <Button variant="outline" onClick={() => setRequestingChanges(true)} disabled={hasPendingQuery}>
                 Request changes
               </Button>
-              {hasPendingQuery && (
-                <span className="text-xs text-amber-600">Awaiting response to your previous query</span>
-              )}
-            </div>
-          )}
-
-          {/* Finalise */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-             <Button
-               className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
-               onClick={() => {
-                 // If there's a pending cover image file, require source/credit
-                 if (coverImageFile && !coverImageSource.trim()) {
-                   toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information before finalising.", variant: "destructive" });
-                   return;
-                 }
-                 setShowFinaliseConfirm(true);
-               }}
-               disabled={hasPendingQuery || finalising}
-             >
+            )}
+            <Button
+              className="bg-[#2f4b40] hover:opacity-90 text-white px-6"
+              onClick={() => {
+                if (coverImageFile && !coverImageSource.trim()) {
+                  toast({ title: "Image Source / Credit required", description: "Please provide the image source or credit information before finalising.", variant: "destructive" });
+                  return;
+                }
+                setShowFinaliseConfirm(true);
+              }}
+              disabled={hasPendingQuery || finalising}
+            >
               Finalise &amp; Lock Metadata
             </Button>
             {hasPendingQuery && (
