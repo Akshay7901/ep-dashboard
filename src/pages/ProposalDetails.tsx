@@ -304,10 +304,16 @@ const ProposalDetails: React.FC = () => {
     }
   }, [peerReviewerNoteFromApi]);
 
-  const drShouldShowFeedback = decisionReviewerSubmitted || !!proposal && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked") ||
-    (reviewData?.reviews || []).some((r: any) => isDecisionReviewerRole(r.reviewer_role))
+  const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
+  const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role));
+  const hasContractInSystem = !!latestContract;
+  const decisionReviewerPostSubmission = isReviewer1 && (
+    decisionReviewerSubmitted ||
+    statusIs(proposal?.status || "", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised", "review_returned") ||
+    hasDecisionReviewInApi ||
+    hasContractInSystem
   );
+  const drShouldShowFeedback = decisionReviewerPostSubmission;
 
   // Default to metadata tab when metadata is available (contract signed)
   const isContractSignedEarly = latestContract?.docusign_status === 'completed' || !!latestContract?.docusign_completed_at;
@@ -361,9 +367,6 @@ const ProposalDetails: React.FC = () => {
   const hasSubmittedReview = isReviewer1 && peerReviewEntry != null && peerReviewEntry.is_submitted === true && Object.keys(reviewFormData).length > 0;
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
-  const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
-  const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role));
-  const hasContractInSystem = !!latestContract;
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
     statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised", "review_returned") || 
     hasDecisionReviewInApi ||
@@ -386,7 +389,7 @@ const ProposalDetails: React.FC = () => {
 
   /* ======================== RIGHT PANEL CONTENT ======================== */
 
-  const isPostSubmission = decisionReviewerSubmitted || decisionReviewerAlreadySubmitted;
+  const isPostSubmission = decisionReviewerPostSubmission;
 
   const rightPanel = <div className="space-y-6">
       {/* Proposal Header */}
@@ -456,7 +459,7 @@ const ProposalDetails: React.FC = () => {
       }
 
         {/* Decline button for stages where the action bar below is hidden */}
-        {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (hasSubmittedReview || !(statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned"))) && (
+        {isReviewer1 && !decisionReviewerPostSubmission && !statusIs(proposal.status, "locked", "declined", "rejected") && (hasSubmittedReview || !(statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned"))) && (
           <div className="flex items-center gap-3 mt-4">
             <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
               Decline
@@ -467,7 +470,7 @@ const ProposalDetails: React.FC = () => {
 
 
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
-      {isReviewer1 && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned")) && <div className="flex items-center gap-3 flex-wrap">
+      {isReviewer1 && !decisionReviewerPostSubmission && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
               <UserCircle className="h-5 w-5 text-muted-foreground" />
               <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
@@ -578,7 +581,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
-          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerSubmitted || decisionReviewerAlreadySubmitted ? 1 : 0)}, minmax(0, 1fr))` }}>
+          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerPostSubmission ? 1 : 0)}, minmax(0, 1fr))` }}>
             <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -592,7 +595,7 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            {(decisionReviewerSubmitted || decisionReviewerAlreadySubmitted) &&
+            {decisionReviewerPostSubmission &&
         <TabsTrigger value="feedback" className="relative gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Feedback & Contract</span>
@@ -1509,7 +1512,7 @@ const ProposalDetails: React.FC = () => {
           {isReviewer1 ? "Back to Home" : "Back to Dashboard"}
         </button>
 
-        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerSubmitted && !decisionReviewerAlreadySubmitted && <div className="flex items-center gap-3">
+        {(showReviewForm || hasSubmittedReview) && !showingSummary && !peerReviewAlreadySubmitted && !decisionReviewerPostSubmission && <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => reviewFormRef.current?.saveDraft()} disabled={reviewFormRef.current?.isSaving}>
               Save Draft
             </Button>
@@ -1657,7 +1660,7 @@ const ProposalDetails: React.FC = () => {
               {rightPanel}
             </div>
           </div> : hasSubmittedReview ?
-    decisionReviewerSubmitted || decisionReviewerAlreadySubmitted ?
+    decisionReviewerPostSubmission ?
     <div>{rightPanel}</div> :
     showingSummary ?
     <PeerReviewSummary
