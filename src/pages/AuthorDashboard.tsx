@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import brandLogo from "@/assets/brand-logo.webp";
 import ProposalStatusBadge from "@/components/proposals/ProposalStatusBadge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -27,20 +28,45 @@ interface StatusChipProps {
   colorClass: string;
   isActive?: boolean;
   onClick?: () => void;
+  tooltip?: string;
 }
 
-const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "inline-flex items-center gap-2 px-5 py-2 text-sm font-medium border transition-all rounded-full",
-      colorClass,
-      isActive && "ring-2 ring-offset-2 ring-primary",
-    )}
-  >
-    {label} [{count}]
-  </button>
-);
+const authorTooltips: Record<string, string> = {
+  submitted: "Total submissions",
+  additional_info_required: "More information requested",
+  additional_information_required: "More information requested",
+  peer_review: "Proposal with peer review",
+  in_review: "Proposal with peer review",
+  editorial_review: "Proposal with peer review",
+  feedback_and_agreement_pending: "Feedback & contract available",
+  feedback_and_contract_issued: "Feedback & contract available",
+  final_review_and_confirmation: "Publication data issued",
+  confirmed_and_finalised: "Publication data locked",
+};
+
+const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isActive, onClick, tooltip }) => {
+  const chip = (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-2 px-5 py-2 text-sm font-medium border transition-all rounded-full",
+        colorClass,
+        isActive && "ring-2 ring-offset-2 ring-primary",
+      )}
+    >
+      {label} [{count}]
+    </button>
+  );
+
+  if (!tooltip) return chip;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{chip}</TooltipTrigger>
+      <TooltipContent><p>{tooltip}</p></TooltipContent>
+    </Tooltip>
+  );
+};
 
 /* ---- Main ---- */
 
@@ -120,6 +146,7 @@ const AuthorDashboard: React.FC = () => {
 
         {/* Status Chips — dynamically rendered from API status_summary */}
         {statusSummary && (
+          <TooltipProvider>
           <div className="flex flex-wrap items-center gap-3">
             {Object.entries(statusSummary).map(([key, count]) => {
               if (key === "total") return null;
@@ -145,12 +172,14 @@ const AuthorDashboard: React.FC = () => {
                   count={count}
                   label={label}
                   colorClass={colorClass}
+                  tooltip={authorTooltips[key]}
                   isActive={statusFilter.includes(key)}
                   onClick={() => handleStatusChange(key)}
                 />
               );
             })}
           </div>
+          </TooltipProvider>
         )}
 
         {/* Sort Control */}

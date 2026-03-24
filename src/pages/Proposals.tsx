@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Loader2, Users, ArrowUpDown } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ProfileDropdown from "@/components/layout/ProfileDropdown";
 import TruncatedCell from "@/components/ui/truncated-cell";
 import { format } from "date-fns";
@@ -63,20 +64,43 @@ interface StatusChipProps {
   colorClass: string;
   isActive?: boolean;
   onClick?: () => void;
+  tooltip?: string;
 }
 
-const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={cn(
-      "flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded-full w-full h-10",
-      colorClass,
-      isActive && "ring-2 ring-offset-2 ring-primary",
-    )}
-  >
-    {label} [{count}]
-  </button>
-);
+const decisionReviewerTooltips: Record<string, string> = {
+  awaiting_more_info: "More information requested",
+  in_review: "Proposal with peer review",
+  review_returned: "Peer review return",
+  contract_issued: "Contract sent",
+  queries_raised: "Author raised query",
+  awaiting_author_approval: "Publication data pending",
+  author_approved: "Publication data approved",
+  locked: "Publication data locked",
+};
+
+const StatusChip: React.FC<StatusChipProps> = ({ count, label, colorClass, isActive, onClick, tooltip }) => {
+  const chip = (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border transition-all rounded-full w-full h-10",
+        colorClass,
+        isActive && "ring-2 ring-offset-2 ring-primary",
+      )}
+    >
+      {label} [{count}]
+    </button>
+  );
+
+  if (!tooltip) return chip;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{chip}</TooltipTrigger>
+      <TooltipContent><p>{tooltip}</p></TooltipContent>
+    </Tooltip>
+  );
+};
 
 /* ============================================================
    Main Component
@@ -243,6 +267,7 @@ const Proposals: React.FC = () => {
 
         {/* Status Summary Chips — dynamically rendered from API status_summary */}
         {statusSummary && (
+          <TooltipProvider>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
             {Object.entries(statusSummary).map(([key, count]) => {
               const config = statusChipColorMap[key];
@@ -255,6 +280,7 @@ const Proposals: React.FC = () => {
                   count={count}
                   label={formatStatusLabel(key)}
                   colorClass={colorClass}
+                  tooltip={isTotal ? undefined : decisionReviewerTooltips[key]}
                   isActive={isTotal ? statusFilter.length === 0 : statusFilter.includes(key)}
                   onClick={() => {
                     if (isTotal) {
@@ -268,6 +294,7 @@ const Proposals: React.FC = () => {
               );
             })}
           </div>
+          </TooltipProvider>
         )}
 
         {/* Filters Row */}
