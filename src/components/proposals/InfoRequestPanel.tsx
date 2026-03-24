@@ -58,6 +58,7 @@ interface InfoRequestPanelProps {
   onSaveDraft?: (requestId: number, updatedFields: Record<string, string>) => void;
   isSavingDraft?: boolean;
   onAutoSave?: (requestId: number, updatedFields: Record<string, string>) => void;
+  showTitle?: boolean;
 }
 
 const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
@@ -70,6 +71,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   onSaveDraft,
   isSavingDraft,
   onAutoSave,
+  showTitle = false,
 }) => {
   const [responseNote, setResponseNote] = useState("");
   const [updatedFields, setUpdatedFields] = useState<Record<string, string>>({});
@@ -168,6 +170,16 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Proposal title & subtitle */}
+      {showTitle && proposal && (
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{proposal.name}</h2>
+          {proposal.sub_title && (
+            <p className="text-sm text-muted-foreground mt-0.5">{proposal.sub_title}</p>
+          )}
+        </div>
+      )}
+
       {/* Pending request - Author action form */}
       {pendingRequest && viewAs === "author" && (
         <>
