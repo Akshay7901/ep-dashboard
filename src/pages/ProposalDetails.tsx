@@ -556,8 +556,8 @@ const ProposalDetails: React.FC = () => {
       {/* Decline button — visible to DR at any stage except locked/declined/rejected */}
       {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (
         <div className="flex">
-          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy} className="text-destructive border-destructive/30 hover:bg-destructive/10">
-            Decline Proposal
+          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+            Decline
           </Button>
         </div>
       )}
