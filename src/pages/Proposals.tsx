@@ -372,18 +372,13 @@ const Proposals: React.FC = () => {
                 <Table className="table-fixed w-full min-w-[900px]">
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      {isReviewer1 && (
-                        <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[12%]">
-                          Ticket #
-                        </TableHead>
-                      )}
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[25%]">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[30%]">
                         Title
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[13%]">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[14%]">
                         Author
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[16%]">
+                      <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[18%]">
                         Email
                       </TableHead>
                       <TableHead className="font-semibold text-foreground uppercase text-xs tracking-wide w-[8%]">
@@ -416,11 +411,6 @@ const Proposals: React.FC = () => {
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => handleProposalClick(proposal.id)}
                       >
-                        {isReviewer1 && (
-                          <TableCell className="text-muted-foreground text-sm font-mono">
-                            {proposal.ticket_number || "—"}
-                          </TableCell>
-                        )}
                         <TableCell className="font-medium text-foreground">
                           <TruncatedCell text={proposal.name} maxLines={2} />
                         </TableCell>
