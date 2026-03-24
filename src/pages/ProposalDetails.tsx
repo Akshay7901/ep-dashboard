@@ -363,8 +363,11 @@ const ProposalDetails: React.FC = () => {
 
   const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
   const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role));
+  const hasContractInSystem = !!latestContract;
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected") || hasDecisionReviewInApi
+    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised", "review_returned") || 
+    hasDecisionReviewInApi ||
+    hasContractInSystem
   );
 
 
