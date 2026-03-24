@@ -43,6 +43,7 @@ export interface ContractSendFields {
   copiesSoldRevenue?: string | number;
   secondaryRightsRevenue?: string | number;
   publishingAgreement?: string;
+  addendum?: string;
 }
 
 export function buildContractSendPayload(fields: ContractSendFields) {
@@ -61,6 +62,7 @@ export function buildContractSendPayload(fields: ContractSendFields) {
     publishing_agreement: fields.publishingAgreement ?? `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${getContractPartyLabel(normalizedContractType)}.`,
     ...(typeof fields.expiryDays === "number" ? { expiry_days: fields.expiryDays } : {}),
     ...(fields.notes?.trim() ? { notes: fields.notes.trim() } : {}),
+    ...(fields.addendum?.trim() ? { addendum: fields.addendum.trim() } : {}),
   };
 }
 

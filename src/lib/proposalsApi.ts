@@ -136,6 +136,7 @@ export interface SendContractPayload {
   copies_sold_revenue?: string | number;
   secondary_rights_revenue?: string | number;
   publishing_agreement?: string;
+  addendum?: string;
 }
 
 export const proposalApi = {

@@ -14,6 +14,7 @@ export interface ContractFieldValues {
   copiesSoldRevenue: string;
   secondaryRightsRevenue: string;
   publishingAgreement: string;
+  addendum: string;
 }
 
 export function getDefaultContractFields(
@@ -32,6 +33,7 @@ export function getDefaultContractFields(
     copiesSoldRevenue: "10%",
     secondaryRightsRevenue: "20%",
     publishingAgreement: `This publishing agreement will run in perpetuity, unless agreed otherwise by both the Publisher and the ${partyLabel}.`,
+    addendum: "",
   };
 }
 
@@ -189,6 +191,18 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
           value={values.publishingAgreement}
           onChange={(e) => update({ publishingAgreement: e.target.value })}
           rows={3}
+          className="resize-none text-sm"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-addendum`}>Addendum (Optional)</Label>
+        <Textarea
+          id={`${idPrefix}-addendum`}
+          value={values.addendum}
+          onChange={(e) => update({ addendum: e.target.value })}
+          rows={3}
+          placeholder="Enter any additional terms or conditions..."
           className="resize-none text-sm"
         />
       </div>
