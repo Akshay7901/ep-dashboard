@@ -89,7 +89,7 @@ const Proposals: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<string>("author");
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [actionRequiredFilter, setActionRequiredFilter] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   // Peer reviewers use client-side filtering (their status keys like "assigned", "pending"
   // don't match the API's status parameter values)
