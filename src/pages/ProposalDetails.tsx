@@ -417,6 +417,11 @@ const ProposalDetails: React.FC = () => {
                 {format(new Date(proposal.contract_sent_at), "do MMMM yyyy")}
               </span>
           }
+            {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") &&
+          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+                Decline
+              </Button>
+          }
             {isReviewer1 &&
           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setEventsSheetOpen(true)} title="View Audit Trail">
                 <History className="h-4 w-4" />
