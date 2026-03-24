@@ -450,6 +450,15 @@ const ProposalDetails: React.FC = () => {
               </>}
           </div>
       }
+
+        {/* Decline button for stages where the action bar below is hidden */}
+        {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (hasSubmittedReview || !(statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned"))) && (
+          <div className="flex items-center gap-3 mt-4">
+            <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
+              Decline
+            </Button>
+          </div>
+        )}
       </div>
 
 
@@ -562,15 +571,6 @@ const ProposalDetails: React.FC = () => {
         </>;
       })()}
         </div>}
-
-      {/* Decline button for stages where the action bar above is hidden */}
-      {isReviewer1 && !statusIs(proposal.status, "locked", "declined", "rejected") && (hasSubmittedReview || !(statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned"))) && (
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => setIsDeclineDialogOpen(true)} disabled={isBusy}>
-            Decline
-          </Button>
-        </div>
-      )}
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
