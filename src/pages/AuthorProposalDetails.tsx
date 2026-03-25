@@ -400,11 +400,22 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
         </div>
 
+        {/* Declined Banner */}
+        {isDeclined && (
+          <div className="bg-destructive/5 border border-destructive/30 rounded-lg p-4 flex items-center gap-3">
+            <XCircle className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-destructive">This proposal has been declined</p>
+              <p className="text-xs text-muted-foreground">No further actions can be taken on this proposal.</p>
+            </div>
+          </div>
+        )}
+
         {/* Action Banner */}
-        {actionBanner.show}
+        {!isDeclined && actionBanner.show}
 
         {/* Info Request Banner - only show action-required badge, not the full panel (that's in the tab) */}
-        {pendingInfoRequest &&
+        {!isDeclined && pendingInfoRequest &&
           !statusIs(
             proposal.status,
             "awaiting_more_info",
