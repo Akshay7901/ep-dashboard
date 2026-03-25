@@ -217,7 +217,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       markAsStarted();
     }, [markAsStarted]);
 
-    const handleSave = async (submitForAuthorization: boolean = false) => {
+    const handleSave = async (submitForAuthorization: boolean = false, skipRefetch: boolean = false) => {
       if (submitForAuthorization && !formData.recommendation?.trim()) {
         const { toast } = await import('@/hooks/use-toast');
         toast({
