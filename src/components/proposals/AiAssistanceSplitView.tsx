@@ -101,26 +101,6 @@ const AiAssistanceSplitView: React.FC<AiAssistanceSplitViewProps> = ({ proposal,
 
   return (
     <div className="space-y-0">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-5 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-[#3d5a47]/10 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-[#3d5a47]" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-foreground">AI Assistance</h3>
-            <p className="text-xs text-muted-foreground">Compare original proposal data with AI-generated metadata</p>
-          </div>
-        </div>
-        {metadata && (
-          <Badge
-            variant="outline"
-            className="text-xs capitalize border-[#3d5a47]/30 text-[#3d5a47]"
-          >
-            {metadata.metadata_status || "draft"}
-          </Badge>
-        )}
-      </div>
 
       {/* Column Headers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-5 pb-2 sticky top-0 bg-background z-10">
