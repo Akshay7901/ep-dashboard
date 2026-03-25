@@ -373,6 +373,7 @@ const AuthorProposalDetails: React.FC = () => {
   const actionBanner = getActionBanner(proposal.status);
   const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
+  const isDeclined = statusIs(proposal.status, "declined", "rejected");
 
   return (
     <DashboardLayout title="Proposal Review">
