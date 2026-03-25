@@ -36,6 +36,7 @@ const statusChipColorMap: Record<string, { colorClass: string }> = {
   in_review: { colorClass: "bg-[#7C3AED] text-white border-[#7C3AED]" },
   review_returned: { colorClass: "bg-[#F59E0B] text-white border-[#F59E0B]" },
   contract_issued: { colorClass: "bg-[#0D9488] text-white border-[#0D9488]" },
+  contract_received: { colorClass: "bg-[#BE185D] text-white border-[#BE185D]" },
   queries_raised: { colorClass: "bg-[#EA580C] text-white border-[#EA580C]" },
   awaiting_more_info: { colorClass: "bg-[#D97706] text-white border-[#D97706]" },
   awaiting_author_approval: { colorClass: "bg-[#BE185D] text-white border-[#BE185D]" },
