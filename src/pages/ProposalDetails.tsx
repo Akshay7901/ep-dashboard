@@ -336,11 +336,11 @@ const ProposalDetails: React.FC = () => {
   }, [peerReviewerNoteFromApi]);
 
   const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
-  const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role));
+  const hasDecisionReviewInApi = allReviews.some((r: any) => isDecisionReviewerRole(r.reviewer_role) && r.is_submitted);
   const hasContractInSystem = !!latestContract;
   const decisionReviewerPostSubmission = isReviewer1 && (
     decisionReviewerSubmitted ||
-    statusIs(proposal?.status || "", "review_returned", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") ||
+    statusIs(proposal?.status || "", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") ||
     hasDecisionReviewInApi ||
     hasContractInSystem
   );
@@ -404,7 +404,7 @@ const ProposalDetails: React.FC = () => {
   const submittedReview = hasSubmittedReview ? reviewFormData : null;
 
   const decisionReviewerAlreadySubmitted = isReviewer1 && (
-    statusIs(proposal.status, "review_returned", "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") || 
+    statusIs(proposal.status, "contract_issued", "approved", "locked", "awaiting_author_approval", "author_approved", "declined", "rejected", "queries_raised") || 
     hasDecisionReviewInApi ||
     hasContractInSystem
   );
