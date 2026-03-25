@@ -507,7 +507,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
             >
               Peer Review & Contract
-              {!isContractSigned &&
+              {!isDeclined && !isContractSigned &&
                 !statusIs(proposal.status, "queries_raised") &&
                 !hasPendingContractQuery &&
                 latestContract && (
