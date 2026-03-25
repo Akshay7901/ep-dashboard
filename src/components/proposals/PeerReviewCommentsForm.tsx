@@ -261,7 +261,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           await saveDraft(reviewPayload);
           onDraftSaved?.();
         }
-        onSave?.();
+        if (!skipRefetch) onSave?.();
       } catch (error: any) {
         console.error("Failed to save assessment:", JSON.stringify({ message: error?.message, status: error?.status }));
       } finally {
