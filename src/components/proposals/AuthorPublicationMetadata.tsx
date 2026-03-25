@@ -31,6 +31,7 @@ interface AuthorPublicationMetadataProps {
   proposal: Proposal;
   contractSigned?: boolean;
   ticketNumber: string;
+  readOnly?: boolean;
 }
 
 /* ---- Read-only row ---- */
