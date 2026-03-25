@@ -444,42 +444,60 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Author Response</span>
                             {req.responded_at && (
                               <span className="text-xs text-muted-foreground">
-                                — {format(new Date(req.responded_at), "MMM d, yyyy")}
+                                — {format(new Date(req.responded_at), "MMM d, yyyy 'at' h:mm a")}
                               </span>
                             )}
                           </div>
                           {req.response_note && (
                             <p className="text-sm text-muted-foreground">{req.response_note}</p>
                           )}
-                          {/* Show each requested field with its response */}
-                          <div className="space-y-2">
-                            {req.items.map((item) => {
-                              const responseValue = req.updated_fields?.[item.key];
-                              const draftValue = req.draft_data?.[item.key];
-                              const isDoc = DOCUMENT_KEYS.has(item.key);
-                              const docUrl = isDoc && typeof draftValue === "string" && draftValue.startsWith("http") ? draftValue : null;
+                          {/* Show per-field responses if data exists */}
+                          {(() => {
+                            const hasUpdatedFields = req.updated_fields && Object.keys(req.updated_fields).length > 0;
+                            const hasDraftData = req.draft_data && Object.keys(req.draft_data).length > 0;
 
+                            if (!hasUpdatedFields && !hasDraftData) {
+                              // API doesn't return response content — show confirmation
                               return (
-                                <div key={item.key} className="bg-[#3d5a47]/5 border border-[#3d5a47]/20 rounded-md p-3">
-                                  <p className="text-xs font-medium text-foreground mb-1">{item.label}</p>
-                                  {docUrl ? (
-                                    <div className="flex items-center gap-3">
-                                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                                      <span className="text-sm flex-1 truncate">
-                                        {decodeURIComponent(docUrl.split("/").pop() || item.key).replace(/^[a-z_]+_\d{14}_/, "")}
-                                      </span>
-                                      <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">View</a>
-                                      <a href={docUrl} download className="text-xs text-primary hover:underline"><Download className="h-3.5 w-3.5" /></a>
-                                    </div>
-                                  ) : (responseValue || (!isDoc && draftValue)) ? (
-                                    <p className="text-sm text-foreground/80">{responseValue || draftValue}</p>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground italic">No response provided</p>
-                                  )}
+                                <div className="bg-[#3d5a47]/5 border border-[#3d5a47]/20 rounded-md p-3">
+                                  <p className="text-sm text-foreground/80">
+                                    The author has provided the requested information. The updated data has been applied to the proposal.
+                                  </p>
                                 </div>
                               );
-                            })}
-                          </div>
+                            }
+
+                            return (
+                              <div className="space-y-2">
+                                {req.items.map((item) => {
+                                  const responseValue = req.updated_fields?.[item.key];
+                                  const draftValue = req.draft_data?.[item.key];
+                                  const isDoc = DOCUMENT_KEYS.has(item.key);
+                                  const docUrl = isDoc && typeof draftValue === "string" && draftValue.startsWith("http") ? draftValue : null;
+
+                                  return (
+                                    <div key={item.key} className="bg-[#3d5a47]/5 border border-[#3d5a47]/20 rounded-md p-3">
+                                      <p className="text-xs font-medium text-foreground mb-1">{item.label}</p>
+                                      {docUrl ? (
+                                        <div className="flex items-center gap-3">
+                                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                          <span className="text-sm flex-1 truncate">
+                                            {decodeURIComponent(docUrl.split("/").pop() || item.key).replace(/^[a-z_]+_\d{14}_/, "")}
+                                          </span>
+                                          <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">View</a>
+                                          <a href={docUrl} download className="text-xs text-primary hover:underline"><Download className="h-3.5 w-3.5" /></a>
+                                        </div>
+                                      ) : (responseValue || (!isDoc && draftValue)) ? (
+                                        <p className="text-sm text-foreground/80">{responseValue || draftValue}</p>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground italic">Updated in proposal</p>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </>
                     )}
