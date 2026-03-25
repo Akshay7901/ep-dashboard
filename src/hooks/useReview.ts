@@ -36,6 +36,25 @@ export const useReview = (ticketNumber: string | undefined) => {
     },
   });
 
+  // Quiet version: saves draft without invalidating queries (used by diff checker)
+  const saveDraftQuietMutation = useMutation({
+    mutationFn: (reviewData: Record<string, any>) =>
+      reviewsApi.saveDraft(ticketNumber!, reviewData),
+    onSuccess: () => {
+      toast({
+        title: 'Draft Saved',
+        description: 'Your review draft has been saved.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to save draft.',
+      });
+    },
+  });
+
   const submitMutation = useMutation({
     mutationFn: (reviewData: Record<string, any>) =>
       reviewsApi.submit(ticketNumber!, reviewData),
