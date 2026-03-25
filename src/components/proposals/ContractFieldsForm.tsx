@@ -17,6 +17,21 @@ export interface ContractFieldValues {
   addendum: string;
 }
 
+/** Returns true if all required contract fields (everything except addendum) are filled */
+export function areContractFieldsValid(values: ContractFieldValues): boolean {
+  return !!(
+    values.title.trim() &&
+    values.subtitle.trim() &&
+    values.language.trim() &&
+    values.authorCopies.trim() &&
+    values.ifTwoAuthorCopies.trim() &&
+    values.ifThreeOrFourAuthorCopies.trim() &&
+    values.copiesSoldRevenue.trim() &&
+    values.secondaryRightsRevenue.trim() &&
+    values.publishingAgreement.trim()
+  );
+}
+
 export function getDefaultContractFields(
   contractType: string,
   proposalTitle?: string,
@@ -75,7 +90,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+        <Label htmlFor={`${idPrefix}-title`}>Title <span className="text-destructive">*</span></Label>
         <Input
           id={`${idPrefix}-title`}
           value={values.title}
@@ -85,7 +100,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-subtitle`}>Subtitle</Label>
+        <Label htmlFor={`${idPrefix}-subtitle`}>Subtitle <span className="text-destructive">*</span></Label>
         <Input
           id={`${idPrefix}-subtitle`}
           value={values.subtitle}
@@ -95,7 +110,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-language`}>Publication Language</Label>
+        <Label htmlFor={`${idPrefix}-language`}>Publication Language <span className="text-destructive">*</span></Label>
         <Input
           id={`${idPrefix}-language`}
           value={values.language}
@@ -107,7 +122,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-copies`} className="text-xs">
-            Complimentary Copies on Publication
+            Complimentary Copies on Publication <span className="text-destructive">*</span>
           </Label>
           <Input
             id={`${idPrefix}-copies`}
@@ -121,7 +136,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-two-copies`} className="text-xs">
-            Complimentary Copies Each - 2 Authors
+            Complimentary Copies Each - 2 Authors <span className="text-destructive">*</span>
           </Label>
           <Input
             id={`${idPrefix}-two-copies`}
@@ -135,7 +150,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-three-copies`} className="text-xs">
-            Complimentary Copies Each - 3 or 4 Authors
+            Complimentary Copies Each - 3 or 4 Authors <span className="text-destructive">*</span>
           </Label>
           <Input
             id={`${idPrefix}-three-copies`}
@@ -153,7 +168,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-book-royalty`} className="text-xs">
-            Author Royalty - Book Sales (%)
+            Author Royalty - Book Sales (%) <span className="text-destructive">*</span>
           </Label>
           <Input
             id={`${idPrefix}-book-royalty`}
@@ -169,7 +184,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-other-royalty`} className="text-xs">
-            Author Royalty - Other Rights (%)
+            Author Royalty - Other Rights (%) <span className="text-destructive">*</span>
           </Label>
           <Input
             id={`${idPrefix}-other-royalty`}
@@ -185,7 +200,7 @@ const ContractFieldsForm: React.FC<ContractFieldsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-agreement`}>Agreement Duration</Label>
+        <Label htmlFor={`${idPrefix}-agreement`}>Agreement Duration <span className="text-destructive">*</span></Label>
         <Textarea
           id={`${idPrefix}-agreement`}
           value={values.publishingAgreement}
