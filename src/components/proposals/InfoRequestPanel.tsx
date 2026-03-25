@@ -171,7 +171,7 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Pending request - Author action form */}
-      {pendingRequest && viewAs === "author" && (
+      {pendingRequest && viewAs === "author" && !readOnly && (
         <>
           {/* Yellow banner */}
           <div className="bg-[#FEF3C7] border border-[#F59E0B]/30 rounded-lg p-5">
