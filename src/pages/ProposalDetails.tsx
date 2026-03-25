@@ -478,7 +478,21 @@ const ProposalDetails: React.FC = () => {
               </Button>
             )}
           </div> :
-      </div>
+
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3">
+            <span className="font-medium text-foreground">
+              {proposal.corresponding_author_name || proposal.author_name}
+            </span>
+            {proposal.institution && <>
+                <span>•</span>
+                <span>{proposal.institution}</span>
+              </>}
+            {proposal.word_count && <>
+                <span>•</span>
+                <span>{proposal.word_count} words</span>
+              </>}
+          </div>
+      }
       {/* Reviewer + Actions row (for reviewer_1 only, hide once review is returned) */}
       {isReviewer1 && !decisionReviewerPostSubmission && !hasSubmittedReview && !statusIs(proposal.status, "declined", "rejected") && (statusIs(proposal.status, "new", "submitted") || statusIs(proposal.status, "in_review", "under_review") || statusIs(proposal.status, "awaiting_more_info", "review_returned")) && <div className="flex items-center gap-3 flex-wrap">
           {reviewers.length > 0 && <>
