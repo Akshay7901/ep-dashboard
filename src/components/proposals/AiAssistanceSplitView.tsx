@@ -37,57 +37,27 @@ const AiAssistanceSplitView: React.FC<AiAssistanceSplitViewProps> = ({ proposal,
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-foreground">Original Proposal</h3>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Book Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <DetailRow label="Title" value={proposal.name} />
-            <DetailRow label="Subtitle" value={proposal.sub_title} />
-            <DetailRow label="Book Type" value={proposal.book_type} />
-            <DetailRow label="Word Count" value={proposal.word_count} />
-            <DetailRow label="Expected Completion" value={proposal.expected_completion_date} />
+          <CardContent className="pt-6 space-y-4">
+            {proposal.biography && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Display Bios</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.biography}</p>
+              </div>
+            )}
+            {proposal.short_description && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Book Description</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.short_description}</p>
+              </div>
+            )}
+            <DetailRow label="Short Description" value={proposal.short_description} />
             <DetailRow label="Keywords" value={proposal.keywords} />
+            <DetailRow label="Website Classification" value={null} />
+            <DetailRow label="BIC" value={null} />
+            <DetailRow label="BISAC" value={null} />
+            <DetailRow label="Thema" value={null} />
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Author Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <DetailRow label="Author" value={proposal.corresponding_author_name || proposal.author_name} />
-            <DetailRow label="Email" value={proposal.author_email} />
-            <DetailRow label="Institution" value={proposal.institution} />
-            <DetailRow label="Job Title" value={proposal.job_title} />
-            <DetailRow label="Country" value={extractCountry(proposal.address)} />
-          </CardContent>
-        </Card>
-
-        {proposal.short_description && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Blurb</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                {proposal.short_description}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {proposal.table_of_contents && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Table of Contents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                {proposal.table_of_contents}
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* RIGHT: Metadata from API */}
