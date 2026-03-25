@@ -1005,14 +1005,16 @@ const ProposalDetails: React.FC = () => {
                             Send Contract
                           </Button>
                         )}
-                        <Button
-                          variant="outline"
-                          className="gap-1.5"
-                          onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}
-                        >
-                          <Info className="h-4 w-4" />
-                          Request More Info
-                        </Button>
+                        {!latestContract && (
+                          <Button
+                            variant="outline"
+                            className="gap-1.5"
+                            onClick={() => navigate(`/proposals/${proposal.ticket_number || id}/request-info`)}
+                          >
+                            <Info className="h-4 w-4" />
+                            Request More Info
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
