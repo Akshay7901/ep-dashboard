@@ -82,7 +82,8 @@ export const useReview = (ticketNumber: string | undefined) => {
     error: reviewQuery.error,
     refetchReview: reviewQuery.refetch,
     saveDraft: saveDraftMutation.mutateAsync,
-    isSavingDraft: saveDraftMutation.isPending,
+    saveDraftQuiet: saveDraftQuietMutation.mutateAsync,
+    isSavingDraft: saveDraftMutation.isPending || saveDraftQuietMutation.isPending,
     submitReview: submitMutation.mutateAsync,
     isSubmitting: submitMutation.isPending,
   };
