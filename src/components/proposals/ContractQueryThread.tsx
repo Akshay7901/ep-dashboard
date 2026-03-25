@@ -21,6 +21,7 @@ interface ContractQueryThreadProps {
   onSend: (text: string, category?: string, queryId?: number) => Promise<void>;
   isSending: boolean;
   hasActiveContract?: boolean;
+  readOnly?: boolean;
 }
 
 const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
@@ -30,7 +31,8 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   proposalStatus,
   onSend,
   isSending,
-  hasActiveContract = false
+  hasActiveContract = false,
+  readOnly = false,
 }) => {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("contract");
@@ -233,7 +235,7 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
       }
 
       {/* Input area */}
-      {canSend &&
+      {canSend && !readOnly &&
       <div className="bg-muted/30 rounded-xl border p-4 space-y-3">
           {viewAs === "author" && !authorCanRaise ? (
         /* Author has a pending query — must wait for DR response */

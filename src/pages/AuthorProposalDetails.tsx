@@ -373,6 +373,7 @@ const AuthorProposalDetails: React.FC = () => {
   const actionBanner = getActionBanner(proposal.status);
   const apiTimeline: TimelineStage[] = proposal.timeline || [];
   const progress = getTimelineProgressFromApi(apiTimeline);
+  const isDeclined = statusIs(proposal.status, "declined", "rejected");
 
   return (
     <DashboardLayout title="Proposal Review">
@@ -399,11 +400,22 @@ const AuthorProposalDetails: React.FC = () => {
           </div>
         </div>
 
+        {/* Declined Banner */}
+        {isDeclined && (
+          <div className="bg-destructive/5 border border-destructive/30 rounded-lg p-4 flex items-center gap-3">
+            <XCircle className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-destructive">This proposal has been declined</p>
+              <p className="text-xs text-muted-foreground">No further actions can be taken on this proposal.</p>
+            </div>
+          </div>
+        )}
+
         {/* Action Banner */}
-        {actionBanner.show}
+        {!isDeclined && actionBanner.show}
 
         {/* Info Request Banner - only show action-required badge, not the full panel (that's in the tab) */}
-        {pendingInfoRequest &&
+        {!isDeclined && pendingInfoRequest &&
           !statusIs(
             proposal.status,
             "awaiting_more_info",
@@ -495,7 +507,7 @@ const AuthorProposalDetails: React.FC = () => {
               className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
             >
               Peer Review & Contract
-              {!isContractSigned &&
+              {!isDeclined && !isContractSigned &&
                 !statusIs(proposal.status, "queries_raised") &&
                 !hasPendingContractQuery &&
                 latestContract && (
@@ -514,7 +526,7 @@ const AuthorProposalDetails: React.FC = () => {
                 className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
               >
                 Additional Information
-                {pendingInfoRequest && (
+                {!isDeclined && pendingInfoRequest && (
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 )}
               </TabsTrigger>
@@ -525,7 +537,7 @@ const AuthorProposalDetails: React.FC = () => {
                 className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#3d5a47] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6 py-3 text-sm"
               >
                 Publication Data
-                {(statusIs(proposal.status, "awaiting_author_approval") || metadataStatus === "sent_to_author") &&
+                {!isDeclined && (statusIs(proposal.status, "awaiting_author_approval") || metadataStatus === "sent_to_author") &&
                   !hasAuthorPendingQuery && (
                     <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                   )}
@@ -731,7 +743,7 @@ const AuthorProposalDetails: React.FC = () => {
           {/* ---- METADATA TAB (only after contract signed) ---- */}
           {isContractSigned && (
             <TabsContent value="metadata" className="mt-6 space-y-6">
-              <AuthorPublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
+              <AuthorPublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} readOnly={isDeclined} />
             </TabsContent>
           )}
 
@@ -749,6 +761,7 @@ const AuthorProposalDetails: React.FC = () => {
                 isLoading={false}
                 viewAs="author"
                 proposal={proposal}
+                readOnly={isDeclined}
                 onRespond={(requestId, responseNote, updatedFields, files) => {
                   respondToInfoRequest.mutate(
                     { request_id: requestId, response_note: responseNote, updated_fields: updatedFields, files },
@@ -761,7 +774,6 @@ const AuthorProposalDetails: React.FC = () => {
                 }}
                 isSavingDraft={saveDraftInfoRequest.isPending}
                 onAutoSave={(requestId, updatedFields) => {
-                  // Silent auto-save: no toast, no loading state
                   requestInfoApi
                     .save(ticketNum, { request_id: requestId, updated_fields: updatedFields })
                     .catch(() => {});
@@ -837,7 +849,7 @@ const AuthorProposalDetails: React.FC = () => {
                           ).toLowerCase();
                           const isSent = contractStatus === "sent";
                           const isSigned = contractStatus === "completed" || contractStatus === "signed";
-                          const isDeclined = contractStatus === "declined";
+                          const isContractDeclined = contractStatus === "declined";
                           const isVoided = contractStatus === "voided";
                           const proposalIsQueriesRaised = statusIs(proposal.status, "queries_raised");
                           // Also block signing if there are local pending (unanswered) queries
@@ -849,7 +861,7 @@ const AuthorProposalDetails: React.FC = () => {
                           const hasPendingQuery = contractQueries
                             .filter((q) => q.type === "query")
                             .some((q) => !responseParentIds.has(q.id));
-                          const signingBlocked = proposalIsQueriesRaised || hasPendingQuery;
+                          const signingBlocked = proposalIsQueriesRaised || hasPendingQuery || isDeclined;
 
                           return (
                             <div className="space-y-5">
@@ -945,12 +957,15 @@ const AuthorProposalDetails: React.FC = () => {
                                   )}
 
                                   {signingBlocked && !signingLoading && (
-                                    <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
-                                      <p className="text-sm font-medium text-[#c4940a]">
-                                        Signing is disabled while your query is being reviewed
+                                    <div className={cn(
+                                      "rounded-md p-4 text-center",
+                                      isDeclined ? "bg-destructive/5 border border-destructive/30" : "bg-[#c4940a]/5 border border-[#c4940a]/30"
+                                    )}>
+                                      <p className={cn("text-sm font-medium", isDeclined ? "text-destructive" : "text-[#c4940a]")}>
+                                        {isDeclined ? "This proposal has been declined" : "Signing is disabled while your query is being reviewed"}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-1">
-                                        The signing button will be re-enabled once the editorial team responds.
+                                        {isDeclined ? "No further actions can be taken on this proposal." : "The signing button will be re-enabled once the editorial team responds."}
                                       </p>
                                     </div>
                                   )}
@@ -991,7 +1006,7 @@ const AuthorProposalDetails: React.FC = () => {
                               )}
 
                               {/* Declined */}
-                              {isDeclined && (
+                              {isContractDeclined && (
                                 <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5">
                                   <p className="text-sm font-bold text-destructive">Contract Declined</p>
                                   {latestContract.docusign_decline_reason && (
@@ -1047,9 +1062,9 @@ const AuthorProposalDetails: React.FC = () => {
                             isLoading={queriesLoading}
                             viewAs="author"
                             proposalStatus={proposal.status}
+                            readOnly={isDeclined}
                             onSend={async (text, category) => {
                               await raiseQuery.mutateAsync({ queryText: text, category: category || "contract" });
-                              // Refetch proposal after a short delay to pick up status change to queries_raised
                               setTimeout(() => {
                                 refetch();
                                 refetchContract();

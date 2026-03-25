@@ -31,6 +31,7 @@ interface AuthorPublicationMetadataProps {
   proposal: Proposal;
   contractSigned?: boolean;
   ticketNumber: string;
+  readOnly?: boolean;
 }
 
 /* ---- Read-only row ---- */
@@ -125,6 +126,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   proposal,
   contractSigned,
   ticketNumber,
+  readOnly = false,
 }) => {
   const queryClient = useQueryClient();
 
@@ -664,7 +666,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   {coverImagePreview ? (
                     <div className={`relative w-32 h-44 rounded-md overflow-hidden border-2 ${coverImageValidation && !coverImageValidation.isValid ? 'border-destructive' : 'border-border'}`}>
                       <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
-                      {!isApproved && (
+                      {!isApproved && !readOnly && (
                         <button
                           onClick={() => {
                             setCoverImageFile(null);
@@ -685,7 +687,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                       <span className="text-[10px] text-muted-foreground mt-1">No image</span>
                     </div>
                   )}
-                  {!isApproved && (
+                  {!isApproved && !readOnly && (
                     <div className="flex-1 space-y-3">
                       <div>
                         <Label htmlFor="cover-upload" className="cursor-pointer">
@@ -821,7 +823,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       )}
 
       {/* Change Requests Section */}
-      {!isApproved && !statusIs(proposal.status || '', 'declined', 'rejected') && !statusIs(proposal.internal_status || '', 'declined', 'rejected') && (
+      {!isApproved && !readOnly && !statusIs(proposal.status || '', 'declined', 'rejected') && !statusIs(proposal.internal_status || '', 'declined', 'rejected') && (
         <>
           {requestingChanges ? (
             <div className="space-y-3 border border-amber-200 bg-amber-50/50 rounded-lg p-4">
