@@ -259,7 +259,11 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           setIsSubmitted(true);
         } else {
           // Use review/save endpoint for drafts
-          await saveDraft(reviewPayload);
+          if (skipRefetch) {
+            await saveDraftQuiet(reviewPayload);
+          } else {
+            await saveDraft(reviewPayload);
+          }
           onDraftSaved?.();
         }
         if (!skipRefetch) onSave?.();
