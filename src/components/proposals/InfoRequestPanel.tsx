@@ -371,21 +371,23 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
         </Card>
       )}
 
-      {/* History of previous rounds */}
+      {/* History of requested info */}
       {pastRequests.length > 0 && (
         <Accordion type="single" collapsible className="space-y-2">
           <AccordionItem value="history" className="border rounded-lg px-4">
             <AccordionTrigger className="text-sm font-semibold hover:no-underline">
               <span className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                Previous Rounds ({pastRequests.length})
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                Requested Info ({pastRequests.length})
               </span>
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-4">
-              {pastRequests.map((req) => (
-                <div key={req.id} className="border rounded-md p-4 space-y-3">
-                  <div className="flex items-center justify-between">
+              {[...pastRequests].reverse().map((req, idx) => (
+                <div key={req.id} className="border rounded-lg overflow-hidden">
+                  {/* Round header */}
+                  <div className="bg-muted/40 px-4 py-3 flex items-center justify-between border-b">
                     <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">Round {idx + 1}</span>
                       <Badge
                         variant={req.status === "responded" ? "default" : "secondary"}
                         className={
@@ -396,97 +398,92 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                       >
                         {req.status === "responded" ? "Responded" : "Superseded"}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(req.requested_at), "MMM d, yyyy")}
-                      </span>
                     </div>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(req.requested_at), "MMM d, yyyy")}
+                    </span>
                   </div>
 
-                  <div className="space-y-1.5">
-                     {req.items.map((item) => (
-                       <div key={item.key} className="flex flex-col gap-0.5">
-                         <Badge variant="outline" className="text-xs w-fit">
-                           {item.label}
-                         </Badge>
-                         {item.note && (
-                           <p className="text-xs text-muted-foreground italic ml-1">{item.note}</p>
-                         )}
-                       </div>
-                     ))}
-                   </div>
-
-                  {req.note && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Request Note:</p>
-                      <p className="text-sm">{req.note}</p>
-                    </div>
-                  )}
-
-                  {req.status === "responded" && (
-                    <>
-                      <Separator />
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-[#3d5a47]" />
-                          <span className="text-sm font-medium">Author Response</span>
-                          {req.responded_at && (
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(req.responded_at), "MMM d, yyyy")}
-                            </span>
-                          )}
-                        </div>
-                        {req.response_note && (
-                          <p className="text-sm text-muted-foreground">{req.response_note}</p>
-                        )}
-                        {req.updated_fields && Object.keys(req.updated_fields).length > 0 && (
-                          <div className="space-y-2">
-                            {Object.entries(req.updated_fields).map(([key, value]) => (
-                              <div key={key} className="bg-muted/30 rounded p-2">
-                                <p className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, " ")}</p>
-                                <p className="text-sm">{value}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {/* Show uploaded documents from draft_data */}
-                        {req.draft_data && Object.keys(req.draft_data).length > 0 && (
-                          <div className="space-y-2">
-                            {Object.entries(req.draft_data)
-                              .filter(([key, value]) => DOCUMENT_KEYS.has(key) && typeof value === "string" && value.startsWith("http"))
-                              .map(([key, value]) => {
-                                const url = value as string;
-                                const decodedName = decodeURIComponent(url.split("/").pop() || key);
-                                const cleanName = decodedName.replace(/^[a-z_]+_\d{14}_/, "");
-                                return (
-                                  <div key={key} className="flex items-center gap-3 bg-muted/30 rounded p-2">
-                                    <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, " ")}</p>
-                                      <p className="text-sm font-medium truncate">{cleanName}</p>
-                                    </div>
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-primary hover:underline shrink-0"
-                                    >
-                                      View
-                                    </a>
-                                    <a
-                                      href={url}
-                                      download={cleanName}
-                                      className="text-xs text-primary hover:underline shrink-0"
-                                    >
-                                      <Download className="h-3.5 w-3.5" />
-                                    </a>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        )}
+                  <div className="p-4 space-y-4">
+                    {/* DR Requested Fields */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Send className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Requested by Reviewer</span>
                       </div>
-                    </>
-                  )}
+                      <div className="space-y-2">
+                        {req.items.map((item) => (
+                          <div key={item.key} className="bg-muted/30 border rounded-md p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-xs">
+                                {CATEGORY_MAP[item.key] || "OTHER"}
+                              </Badge>
+                              <span className="text-sm font-medium">{item.label}</span>
+                            </div>
+                            {item.note && (
+                              <p className="text-xs text-muted-foreground italic mt-1">Reason: {item.note}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {req.note && (
+                        <div className="bg-muted/20 border rounded-md p-3">
+                          <p className="text-xs text-muted-foreground mb-0.5">Request Note:</p>
+                          <p className="text-sm">{req.note}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Author Response */}
+                    {req.status === "responded" && (
+                      <>
+                        <Separator />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[#3d5a47]" />
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Author Response</span>
+                            {req.responded_at && (
+                              <span className="text-xs text-muted-foreground">
+                                — {format(new Date(req.responded_at), "MMM d, yyyy")}
+                              </span>
+                            )}
+                          </div>
+                          {req.response_note && (
+                            <p className="text-sm text-muted-foreground">{req.response_note}</p>
+                          )}
+                          {/* Show each requested field with its response */}
+                          <div className="space-y-2">
+                            {req.items.map((item) => {
+                              const responseValue = req.updated_fields?.[item.key];
+                              const draftValue = req.draft_data?.[item.key];
+                              const isDoc = DOCUMENT_KEYS.has(item.key);
+                              const docUrl = isDoc && typeof draftValue === "string" && draftValue.startsWith("http") ? draftValue : null;
+
+                              return (
+                                <div key={item.key} className="bg-[#3d5a47]/5 border border-[#3d5a47]/20 rounded-md p-3">
+                                  <p className="text-xs font-medium text-foreground mb-1">{item.label}</p>
+                                  {docUrl ? (
+                                    <div className="flex items-center gap-3">
+                                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                      <span className="text-sm flex-1 truncate">
+                                        {decodeURIComponent(docUrl.split("/").pop() || item.key).replace(/^[a-z_]+_\d{14}_/, "")}
+                                      </span>
+                                      <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">View</a>
+                                      <a href={docUrl} download className="text-xs text-primary hover:underline"><Download className="h-3.5 w-3.5" /></a>
+                                    </div>
+                                  ) : responseValue ? (
+                                    <p className="text-sm text-foreground/80">{responseValue}</p>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground italic">No response provided</p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </AccordionContent>
