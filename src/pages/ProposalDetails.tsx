@@ -1074,7 +1074,31 @@ const ProposalDetails: React.FC = () => {
                           <span className="text-sm text-muted-foreground">Loading contract details…</span>
                         </div> :
                   !latestContract ?
-                  <p className="text-sm text-muted-foreground">No contract found for this proposal.</p> :
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">No contract has been sent for this proposal.</p>
+                    {infoRequests.some((r) => r.status === 'responded') && (
+                      <div className="flex items-center gap-3">
+                        <Button
+                          className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white gap-2"
+                          onClick={() => {
+                            const ct = getDefaultContractType(proposal?.book_type);
+                            setStandaloneSendContractType(ct);
+                            setStandaloneSendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
+                            setStandaloneSendContractOpen(true);
+                          }}
+                        >
+                          <Send className="h-4 w-4" /> Send Contract
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => navigate(`/proposals/${ticketNum}/request-info`)}
+                        >
+                          <Info className="h-4 w-4" /> Request More Info
+                        </Button>
+                      </div>
+                    )}
+                  </div> :
 
                   <div className="space-y-4">
                           {/* Contract info grid */}
