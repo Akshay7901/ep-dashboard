@@ -28,6 +28,7 @@ interface PeerReviewCommentsFormProps {
 
 export interface PeerReviewCommentsFormHandle {
   saveDraft: () => Promise<void>;
+  saveDraftQuiet: () => Promise<void>;
   submitReview: () => Promise<void>;
   confirmSubmit: () => Promise<void>;
   isSaving: boolean;
@@ -217,7 +218,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       markAsStarted();
     }, [markAsStarted]);
 
-    const handleSave = async (submitForAuthorization: boolean = false) => {
+    const handleSave = async (submitForAuthorization: boolean = false, skipRefetch: boolean = false) => {
       if (submitForAuthorization && !formData.recommendation?.trim()) {
         const { toast } = await import('@/hooks/use-toast');
         toast({
@@ -261,7 +262,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           await saveDraft(reviewPayload);
           onDraftSaved?.();
         }
-        onSave?.();
+        if (!skipRefetch) onSave?.();
       } catch (error: any) {
         console.error("Failed to save assessment:", JSON.stringify({ message: error?.message, status: error?.status }));
       } finally {
@@ -274,6 +275,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       ref,
       () => ({
         saveDraft: () => handleSave(false),
+        saveDraftQuiet: () => handleSave(false, true),
         submitReview: async () => {
           if (onSubmitReview) {
             onSubmitReview({ ...formData });

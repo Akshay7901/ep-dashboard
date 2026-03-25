@@ -1880,7 +1880,7 @@ const ProposalDetails: React.FC = () => {
         });
         // Wait for React state to flush before saving
         await new Promise((resolve) => setTimeout(resolve, 50));
-        await reviewFormRef.current?.saveDraft();
+        await reviewFormRef.current?.saveDraftQuiet();
         // Update snapshot so diff checker reflects saved state
         setDiffCheckerDrData({ ...(reviewFormRef.current?.formData || {}) });
       }} />
