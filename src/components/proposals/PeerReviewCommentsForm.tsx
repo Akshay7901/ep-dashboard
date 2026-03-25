@@ -274,6 +274,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
       ref,
       () => ({
         saveDraft: () => handleSave(false),
+        saveDraftQuiet: () => handleSave(false, true),
         submitReview: async () => {
           if (onSubmitReview) {
             onSubmitReview({ ...formData });
