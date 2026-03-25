@@ -629,6 +629,10 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
+            <TabsTrigger value="ai-assistance" className="gap-1.5 text-xs sm:text-sm">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Assistance</span>
+            </TabsTrigger>
             {decisionReviewerPostSubmission &&
         <TabsTrigger value="feedback" className="relative gap-1.5 text-xs sm:text-sm">
                 <FileCheck className="h-4 w-4" />
@@ -647,10 +651,6 @@ const ProposalDetails: React.FC = () => {
                 }
               </TabsTrigger>
         }
-            <TabsTrigger value="ai-assistance" className="gap-1.5 text-xs sm:text-sm">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">AI Assistance</span>
-            </TabsTrigger>
           </TabsList>
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
