@@ -33,7 +33,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock, StickyNote, Save, Info } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, BookOpen, User, Folder, UserCircle, ClipboardList, MessageSquare, CheckCircle2, FileCheck, Send, Loader2, History, GitCompareArrows, Lock, StickyNote, Save, Info, Sparkles } from "lucide-react";
 import { useProposal, useWorkflowLogs, useProposalEvents } from "@/hooks/useProposals";
 import { useReview } from "@/hooks/useReview";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -48,6 +48,7 @@ import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
 import { useRequestInfo } from "@/hooks/useRequestInfo";
 import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
+import AiAssistanceSplitView from "@/components/proposals/AiAssistanceSplitView";
 
 /* ---------------- Helpers ---------------- */
 
@@ -614,7 +615,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
-          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerPostSubmission ? 1 : 0)}, minmax(0, 1fr))` }}>
+          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${4 + (isContractSigned ? 1 : 0) + (decisionReviewerPostSubmission ? 1 : 0)}, minmax(0, 1fr))` }}>
             <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
@@ -646,6 +647,10 @@ const ProposalDetails: React.FC = () => {
                 }
               </TabsTrigger>
         }
+            <TabsTrigger value="ai-assistance" className="gap-1.5 text-xs sm:text-sm">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Assistance</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* ---- BOOK INFO (Decision Reviewer) ---- */}
@@ -912,7 +917,12 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* Events Sheet moved to slide-out panel */}
+          {/* ---- AI ASSISTANCE (Decision Reviewer) ---- */}
+          <TabsContent value="ai-assistance" className="mt-4">
+            <AiAssistanceSplitView proposal={proposal} ticketNumber={ticketNum} />
+          </TabsContent>
+
+
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
