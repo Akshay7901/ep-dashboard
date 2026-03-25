@@ -687,7 +687,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                       <span className="text-[10px] text-muted-foreground mt-1">No image</span>
                     </div>
                   )}
-                  {!isApproved && (
+                  {!isApproved && !readOnly && (
                     <div className="flex-1 space-y-3">
                       <div>
                         <Label htmlFor="cover-upload" className="cursor-pointer">
