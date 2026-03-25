@@ -14,6 +14,8 @@ interface PeerReviewCommentsFormProps {
   onSave?: () => void;
   onSubmitReview?: (formData: Record<string, string>) => void;
   onDraftSaved?: () => void;
+  /** When true, draft saves persist without triggering a parent refresh */
+  quietDraftSave?: boolean;
   /** When true, ignore the submittedForAuthorization flag and always show the editable form */
   forceEditable?: boolean;
   /** When true, hide the built-in header (progress bar + title) */
@@ -128,7 +130,7 @@ const RECOMMENDATION_OPTIONS = [
 ];
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
-  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle, peerReviewerNote, peerReviewerName }, ref) => {
+  ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, quietDraftSave = false, forceEditable, hideHeader, preloadedStyle, peerReviewerNote, peerReviewerName }, ref) => {
     const { saveDraft, saveDraftQuiet, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
@@ -278,7 +280,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
     useImperativeHandle(
       ref,
       () => ({
-        saveDraft: () => handleSave(false),
+        saveDraft: () => handleSave(false, quietDraftSave),
         saveDraftQuiet: () => handleSave(false, true),
         submitReview: async () => {
           if (onSubmitReview) {
@@ -294,7 +296,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           handleFieldChange(field, value);
         },
       }),
-      [isSaving, formData, progress, onSubmitReview, handleFieldChange],
+      [isSaving, formData, progress, onSubmitReview, handleFieldChange, handleSave, quietDraftSave],
     );
 
     if (isSubmitted) {
@@ -387,7 +389,7 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" onClick={() => handleSave(false)} disabled={isSaving} className="flex-1">
+          <Button variant="outline" onClick={() => handleSave(false, quietDraftSave)} disabled={isSaving} className="flex-1">
             <Save className="h-4 w-4 mr-2" />
             Save Draft
           </Button>
