@@ -12,7 +12,7 @@ import type { ContractSendFields } from "@/lib/contractUtils";
 import FieldRevisionForm from "@/components/proposals/FieldRevisionForm";
 import { emptyRevisionRow, CATEGORIES, type RevisionRow } from "@/lib/fieldRevisionCategories";
 import type { InfoRequestItem } from "@/lib/proposalsApi";
-import ContractFieldsForm, { getDefaultContractFields, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
+import ContractFieldsForm, { getDefaultContractFields, areContractFieldsValid, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
 
 const REVIEW_FIELDS = [
   { key: "scope", label: "Scope" },
@@ -330,7 +330,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                   publishingAgreement: contractFieldValues.publishingAgreement,
                 });
               }}
-              disabled={isSubmitting || !contractFieldValues.title.trim()}
+              disabled={isSubmitting || !areContractFieldsValid(contractFieldValues)}
             >
               {isSubmitting ? "Submitting..." : "Send Contract & Submit"}
             </Button>
