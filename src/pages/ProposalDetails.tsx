@@ -2049,6 +2049,92 @@ const ProposalDetails: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Standalone Send Contract Dialog (after author responds to info request, no contract yet) */}
+      <Dialog open={standaloneSendContractOpen} onOpenChange={(open) => {
+        if (!open) {
+          setStandaloneSendContractOpen(false);
+          setStandaloneSendContractFields(null);
+        }
+      }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Send Publishing Contract</DialogTitle>
+            <DialogDescription>Configure and send a publishing contract to the author.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Contract Type</Label>
+              <Select value={standaloneSendContractType} onValueChange={(v) => {
+                const mismatch = getContractMismatchWarning(proposal?.book_type, v);
+                if (mismatch) {
+                  setPendingResendContractType(v);
+                  setShowResendMismatchWarning(true);
+                  return;
+                }
+                setStandaloneSendContractType(v);
+                if (standaloneSendContractFields) {
+                  setStandaloneSendContractFields(getDefaultContractFields(v, standaloneSendContractFields.title, standaloneSendContractFields.subtitle));
+                }
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="author">Author Contract</SelectItem>
+                  <SelectItem value="editor">Editor Contract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {standaloneSendContractFields && (
+              <ContractFieldsForm
+                values={standaloneSendContractFields}
+                onChange={setStandaloneSendContractFields}
+                contractType={standaloneSendContractType}
+                idPrefix="standalone-cf"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStandaloneSendContractOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
+              disabled={isSendingStandaloneContract || !standaloneSendContractFields || !areContractFieldsValid(standaloneSendContractFields)}
+              onClick={async () => {
+                if (!standaloneSendContractFields) return;
+                setIsSendingStandaloneContract(true);
+                try {
+                  await proposalApi.sendContract(
+                    ticketNum,
+                    buildContractSendPayload({
+                      contractType: standaloneSendContractType,
+                      title: standaloneSendContractFields.title,
+                      subtitle: standaloneSendContractFields.subtitle,
+                      language: standaloneSendContractFields.language,
+                      authorCopies: standaloneSendContractFields.authorCopies,
+                      ifTwoAuthorCopies: standaloneSendContractFields.ifTwoAuthorCopies,
+                      ifThreeOrFourAuthorCopies: standaloneSendContractFields.ifThreeOrFourAuthorCopies,
+                      copiesSoldRevenue: standaloneSendContractFields.copiesSoldRevenue,
+                      secondaryRightsRevenue: standaloneSendContractFields.secondaryRightsRevenue,
+                      publishingAgreement: standaloneSendContractFields.publishingAgreement,
+                      addendum: standaloneSendContractFields.addendum,
+                    })
+                  );
+                  toast({ title: 'Contract Sent', description: 'The contract has been sent to the author.' });
+                  queryClient.invalidateQueries({ queryKey: ['contract', ticketNum] });
+                  queryClient.invalidateQueries({ queryKey: ['proposal', ticketNum] });
+                  queryClient.invalidateQueries({ queryKey: ['proposals'] });
+                  setStandaloneSendContractOpen(false);
+                  setStandaloneSendContractFields(null);
+                } catch (err: any) {
+                  toast({ variant: 'destructive', title: 'Contract Send Failed', description: err?.response?.data?.error || err.message || 'Failed to send contract.' });
+                } finally {
+                  setIsSendingStandaloneContract(false);
+                }
+              }}>
+              {isSendingStandaloneContract ? 'Sending...' : 'Send Contract'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>;
 };
 export default ProposalDetails;
