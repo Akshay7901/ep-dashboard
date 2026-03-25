@@ -861,7 +861,7 @@ const AuthorProposalDetails: React.FC = () => {
                           const hasPendingQuery = contractQueries
                             .filter((q) => q.type === "query")
                             .some((q) => !responseParentIds.has(q.id));
-                          const signingBlocked = proposalIsQueriesRaised || hasPendingQuery;
+                          const signingBlocked = proposalIsQueriesRaised || hasPendingQuery || isDeclined;
 
                           return (
                             <div className="space-y-5">
