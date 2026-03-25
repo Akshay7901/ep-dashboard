@@ -615,7 +615,7 @@ const ProposalDetails: React.FC = () => {
       {/* ============ TABS — ROLE-SPECIFIC ============ */}
       {isReviewer1 ? (/* ---------- DECISION REVIEWER TABS ---------- */
     <Tabs value={drActiveTab} onValueChange={(v) => {setDrActiveTab(v);setDrFeedbackAccordion(undefined);}}>
-          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${3 + (isContractSigned ? 1 : 0) + (decisionReviewerPostSubmission ? 1 : 0)}, minmax(0, 1fr))` }}>
+          <TabsList className={`grid w-full`} style={{ gridTemplateColumns: `repeat(${4 + (isContractSigned ? 1 : 0) + (decisionReviewerPostSubmission ? 1 : 0)}, minmax(0, 1fr))` }}>
             <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book info</span>
