@@ -1776,6 +1776,7 @@ const ProposalDetails: React.FC = () => {
           ref={reviewFormRef}
           proposal={proposal}
           existingAssessment={decisionReviewerDraft || reviewFormData || {}}
+          quietDraftSave
           forceEditable
           hideHeader
           preloadedStyle={!decisionReviewerDraft}
