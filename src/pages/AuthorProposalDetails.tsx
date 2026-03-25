@@ -1003,7 +1003,7 @@ const AuthorProposalDetails: React.FC = () => {
                               )}
 
                               {/* Declined */}
-                              {isDeclined && (
+                              {isContractDeclined && (
                                 <div className="border border-destructive/30 bg-destructive/5 rounded-md p-5">
                                   <p className="text-sm font-bold text-destructive">Contract Declined</p>
                                   {latestContract.docusign_decline_reason && (
