@@ -1,7 +1,7 @@
 // PROPOSAL DETAILS — TWO-PANEL PEER REVIEW LAYOUT
 
 import React, { useState, useRef } from "react";
-import { getDefaultContractFields, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
+import { getDefaultContractFields, areContractFieldsValid, type ContractFieldValues } from "@/components/proposals/ContractFieldsForm";
 import ContractFieldsForm from "@/components/proposals/ContractFieldsForm";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -2035,7 +2035,7 @@ const ProposalDetails: React.FC = () => {
             </Button>
             <Button
             className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white"
-            disabled={isResendingContract || (includeContract && (!resendContractFields || !resendContractFields.title.trim()))}
+            disabled={isResendingContract || (includeContract && (!resendContractFields || !areContractFieldsValid(resendContractFields)))}
             onClick={async () => {
               setIsResendingContract(true);
               try {
