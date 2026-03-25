@@ -933,7 +933,7 @@ const AuthorProposalDetails: React.FC = () => {
                                         className="w-full bg-[#2f4b40] hover:opacity-90 text-white py-5 text-base"
                                         onClick={handleSignContract}
                                       >
-                                        <ExternalLink className="mr-2 h-4 w-4" /> Open & Sign Contract
+                                        <ExternalLink className="mr-2 h-4 w-4" /> Review & Complete Contract
                                       </Button>
                                       <p className="text-xs text-muted-foreground">
                                         A fresh signing link will be generated each time you click.
