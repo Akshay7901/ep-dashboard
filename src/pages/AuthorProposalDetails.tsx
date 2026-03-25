@@ -957,12 +957,15 @@ const AuthorProposalDetails: React.FC = () => {
                                   )}
 
                                   {signingBlocked && !signingLoading && (
-                                    <div className="bg-[#c4940a]/5 border border-[#c4940a]/30 rounded-md p-4 text-center">
-                                      <p className="text-sm font-medium text-[#c4940a]">
-                                        Signing is disabled while your query is being reviewed
+                                    <div className={cn(
+                                      "rounded-md p-4 text-center",
+                                      isDeclined ? "bg-destructive/5 border border-destructive/30" : "bg-[#c4940a]/5 border border-[#c4940a]/30"
+                                    )}>
+                                      <p className={cn("text-sm font-medium", isDeclined ? "text-destructive" : "text-[#c4940a]")}>
+                                        {isDeclined ? "This proposal has been declined" : "Signing is disabled while your query is being reviewed"}
                                       </p>
                                       <p className="text-xs text-muted-foreground mt-1">
-                                        The signing button will be re-enabled once the editorial team responds.
+                                        {isDeclined ? "No further actions can be taken on this proposal." : "The signing button will be re-enabled once the editorial team responds."}
                                       </p>
                                     </div>
                                   )}
