@@ -129,7 +129,7 @@ const RECOMMENDATION_OPTIONS = [
 
 const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerReviewCommentsFormProps>(
   ({ proposal, existingAssessment, onSave, onSubmitReview, onDraftSaved, forceEditable, hideHeader, preloadedStyle, peerReviewerNote, peerReviewerName }, ref) => {
-    const { saveDraft, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
+    const { saveDraft, saveDraftQuiet, submitReview: submitReviewApi, isSavingDraft, isSubmitting: isSubmittingApi } = useReview(proposal.ticket_number || proposal.id);
 
     const [formData, setFormData] = useState<Record<string, string>>(
       existingAssessment || {
@@ -259,7 +259,11 @@ const PeerReviewCommentsForm = forwardRef<PeerReviewCommentsFormHandle, PeerRevi
           setIsSubmitted(true);
         } else {
           // Use review/save endpoint for drafts
-          await saveDraft(reviewPayload);
+          if (skipRefetch) {
+            await saveDraftQuiet(reviewPayload);
+          } else {
+            await saveDraft(reviewPayload);
+          }
           onDraftSaved?.();
         }
         if (!skipRefetch) onSave?.();
