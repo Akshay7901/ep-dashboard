@@ -761,6 +761,7 @@ const AuthorProposalDetails: React.FC = () => {
                 isLoading={false}
                 viewAs="author"
                 proposal={proposal}
+                readOnly={isDeclined}
                 onRespond={(requestId, responseNote, updatedFields, files) => {
                   respondToInfoRequest.mutate(
                     { request_id: requestId, response_note: responseNote, updated_fields: updatedFields, files },
@@ -773,7 +774,6 @@ const AuthorProposalDetails: React.FC = () => {
                 }}
                 isSavingDraft={saveDraftInfoRequest.isPending}
                 onAutoSave={(requestId, updatedFields) => {
-                  // Silent auto-save: no toast, no loading state
                   requestInfoApi
                     .save(ticketNum, { request_id: requestId, updated_fields: updatedFields })
                     .catch(() => {});
