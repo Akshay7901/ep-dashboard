@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { metadataApi, type MetadataResponse } from "@/lib/proposalsApi";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Proposal } from "@/types";
 
@@ -16,28 +16,39 @@ interface FieldDef {
   right: string | null | undefined;
 }
 
-const FieldRow: React.FC<{ field: FieldDef }> = ({ field }) => {
+const FieldRow: React.FC<{ field: FieldDef; index: number }> = ({ field, index }) => {
   const hasLeft = !!field.left;
   const hasRight = !!field.right;
   if (!hasLeft && !hasRight) return null;
 
   return (
-    <div className="border-b border-border last:border-b-0 py-4">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-        {field.label}
-      </p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-muted/30 rounded-md p-3 min-h-[40px]">
-          <p className="text-[10px] font-medium text-muted-foreground mb-1">Original</p>
-          <p className="text-sm leading-relaxed whitespace-pre-line break-words">
-            {hasLeft ? field.left : <span className="text-muted-foreground italic">—</span>}
-          </p>
+    <div className={`py-5 ${index > 0 ? "border-t border-border" : ""}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3d5a47]" />
+        <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
+          {field.label}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Original */}
+        <div className="rounded-lg border border-border bg-muted/20 p-4 relative">
+          {hasLeft ? (
+            <p className="text-sm leading-relaxed whitespace-pre-line break-words text-foreground">
+              {field.left}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground/50 italic">Not available in proposal</p>
+          )}
         </div>
-        <div className="bg-primary/5 rounded-md p-3 min-h-[40px]">
-          <p className="text-[10px] font-medium text-muted-foreground mb-1">AI Generated</p>
-          <p className="text-sm leading-relaxed whitespace-pre-line break-words">
-            {hasRight ? field.right : <span className="text-muted-foreground italic">—</span>}
-          </p>
+        {/* AI Generated */}
+        <div className="rounded-lg border border-[#3d5a47]/20 bg-[#3d5a47]/[0.03] p-4 relative">
+          {hasRight ? (
+            <p className="text-sm leading-relaxed whitespace-pre-line break-words text-foreground">
+              {field.right}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground/50 italic">Not yet generated</p>
+          )}
         </div>
       </div>
     </div>
@@ -54,15 +65,22 @@ const AiAssistanceSplitView: React.FC<AiAssistanceSplitViewProps> = ({ proposal,
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div className="h-10 w-10 rounded-full bg-[#3d5a47]/10 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-[#3d5a47]" />
+        </div>
+        <p className="text-sm text-muted-foreground">Loading AI metadata…</p>
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-sm text-destructive text-center py-8">Failed to load metadata</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-2">
+        <p className="text-sm text-destructive font-medium">Failed to load metadata</p>
+        <p className="text-xs text-muted-foreground">Please try again later</p>
+      </div>
+    );
   }
 
   const md = metadata?.metadata;
@@ -79,25 +97,59 @@ const AiAssistanceSplitView: React.FC<AiAssistanceSplitViewProps> = ({ proposal,
     { label: "Thema", left: null, right: mdAny?.thema },
   ];
 
+  const visibleFields = fields.filter((f) => !!f.left || !!f.right);
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground">AI Assistance — Comparison</h3>
+    <div className="space-y-0">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-5 border-b border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg bg-[#3d5a47]/10 flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-[#3d5a47]" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-foreground">AI Assistance</h3>
+            <p className="text-xs text-muted-foreground">Compare original proposal data with AI-generated metadata</p>
+          </div>
+        </div>
         {metadata && (
-          <Badge variant="outline" className="text-xs capitalize">
+          <Badge
+            variant="outline"
+            className="text-xs capitalize border-[#3d5a47]/30 text-[#3d5a47]"
+          >
             {metadata.metadata_status || "draft"}
           </Badge>
         )}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-        <p className="text-sm font-semibold text-foreground">Original Proposal</p>
-        <p className="text-sm font-semibold text-foreground">AI-Generated Metadata</p>
+
+      {/* Column Headers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-5 pb-2 sticky top-0 bg-background z-10">
+        <div className="flex items-center gap-2">
+          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Original Proposal
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-[#3d5a47]" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#3d5a47]">
+            AI-Generated
+          </p>
+        </div>
       </div>
-      <div>
-        {fields.map((field) => (
-          <FieldRow key={field.label} field={field} />
-        ))}
-      </div>
+
+      {/* Field Rows */}
+      {visibleFields.length > 0 ? (
+        <div>
+          {visibleFields.map((field, i) => (
+            <FieldRow key={field.label} field={field} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 gap-2">
+          <p className="text-sm text-muted-foreground">No metadata available for comparison yet.</p>
+        </div>
+      )}
     </div>
   );
 };
