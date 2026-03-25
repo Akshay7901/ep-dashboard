@@ -48,6 +48,7 @@ import PublicationMetadata from "@/components/proposals/PublicationMetadata";
 import { useContract } from "@/hooks/useContract";
 import { useRequestInfo } from "@/hooks/useRequestInfo";
 import InfoRequestPanel from "@/components/proposals/InfoRequestPanel";
+import AiAssistanceSplitView from "@/components/proposals/AiAssistanceSplitView";
 
 /* ---------------- Helpers ---------------- */
 
