@@ -126,6 +126,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
   proposal,
   contractSigned,
   ticketNumber,
+  readOnly = false,
 }) => {
   const queryClient = useQueryClient();
 
