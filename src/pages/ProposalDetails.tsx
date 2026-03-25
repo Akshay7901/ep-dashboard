@@ -924,9 +924,6 @@ const ProposalDetails: React.FC = () => {
             {/* Info Request History & Author Response Actions */}
             {isReviewer1 && infoRequests.length > 0 && (
               <div className="space-y-4">
-                {/* Author Has Responded card — show when latest round is responded (no new pending request) */}
-                )}
-
                 {/* Pending info request (awaiting author) */}
                 {pendingInfoRequest && (
                   <InfoRequestPanel
