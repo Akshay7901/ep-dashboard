@@ -21,6 +21,7 @@ interface ContractQueryThreadProps {
   onSend: (text: string, category?: string, queryId?: number) => Promise<void>;
   isSending: boolean;
   hasActiveContract?: boolean;
+  readOnly?: boolean;
 }
 
 const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
@@ -30,7 +31,8 @@ const ContractQueryThread: React.FC<ContractQueryThreadProps> = ({
   proposalStatus,
   onSend,
   isSending,
-  hasActiveContract = false
+  hasActiveContract = false,
+  readOnly = false,
 }) => {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("contract");
