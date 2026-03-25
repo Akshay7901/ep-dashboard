@@ -471,8 +471,8 @@ const InfoRequestPanel: React.FC<InfoRequestPanelProps> = ({
                                       <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">View</a>
                                       <a href={docUrl} download className="text-xs text-primary hover:underline"><Download className="h-3.5 w-3.5" /></a>
                                     </div>
-                                  ) : responseValue ? (
-                                    <p className="text-sm text-foreground/80">{responseValue}</p>
+                                  ) : (responseValue || (!isDoc && draftValue)) ? (
+                                    <p className="text-sm text-foreground/80">{responseValue || draftValue}</p>
                                   ) : (
                                     <p className="text-sm text-muted-foreground italic">No response provided</p>
                                   )}
