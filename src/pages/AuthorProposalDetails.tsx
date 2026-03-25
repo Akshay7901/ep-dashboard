@@ -1059,9 +1059,9 @@ const AuthorProposalDetails: React.FC = () => {
                             isLoading={queriesLoading}
                             viewAs="author"
                             proposalStatus={proposal.status}
+                            readOnly={isDeclined}
                             onSend={async (text, category) => {
                               await raiseQuery.mutateAsync({ queryText: text, category: category || "contract" });
-                              // Refetch proposal after a short delay to pick up status change to queries_raised
                               setTimeout(() => {
                                 refetch();
                                 refetchContract();
