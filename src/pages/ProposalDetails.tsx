@@ -917,7 +917,12 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* Events Sheet moved to slide-out panel */}
+          {/* ---- AI ASSISTANCE (Decision Reviewer) ---- */}
+          <TabsContent value="ai-assistance" className="mt-4">
+            <AiAssistanceSplitView proposal={proposal} ticketNumber={ticketNum} />
+          </TabsContent>
+
+
 
           {/* ---- FEEDBACK & CONTRACT (Decision Reviewer) ---- */}
           <TabsContent value="feedback" className="mt-4 space-y-4">
