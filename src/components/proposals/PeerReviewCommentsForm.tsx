@@ -28,6 +28,7 @@ interface PeerReviewCommentsFormProps {
 
 export interface PeerReviewCommentsFormHandle {
   saveDraft: () => Promise<void>;
+  saveDraftQuiet: () => Promise<void>;
   submitReview: () => Promise<void>;
   confirmSubmit: () => Promise<void>;
   isSaving: boolean;
