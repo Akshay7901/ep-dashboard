@@ -849,7 +849,7 @@ const AuthorProposalDetails: React.FC = () => {
                           ).toLowerCase();
                           const isSent = contractStatus === "sent";
                           const isSigned = contractStatus === "completed" || contractStatus === "signed";
-                          const isDeclined = contractStatus === "declined";
+                          const isContractDeclined = contractStatus === "declined";
                           const isVoided = contractStatus === "voided";
                           const proposalIsQueriesRaised = statusIs(proposal.status, "queries_raised");
                           // Also block signing if there are local pending (unanswered) queries
