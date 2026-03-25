@@ -328,6 +328,7 @@ const PeerReviewSummary: React.FC<PeerReviewSummaryProps> = ({
                   copiesSoldRevenue: contractFieldValues.copiesSoldRevenue,
                   secondaryRightsRevenue: contractFieldValues.secondaryRightsRevenue,
                   publishingAgreement: contractFieldValues.publishingAgreement,
+                  addendum: contractFieldValues.addendum,
                 });
               }}
               disabled={isSubmitting || !areContractFieldsValid(contractFieldValues)}
