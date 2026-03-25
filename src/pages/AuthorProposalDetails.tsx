@@ -743,7 +743,7 @@ const AuthorProposalDetails: React.FC = () => {
           {/* ---- METADATA TAB (only after contract signed) ---- */}
           {isContractSigned && (
             <TabsContent value="metadata" className="mt-6 space-y-6">
-              <AuthorPublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} />
+              <AuthorPublicationMetadata proposal={proposal} contractSigned ticketNumber={ticketNum} readOnly={isDeclined} />
             </TabsContent>
           )}
 
