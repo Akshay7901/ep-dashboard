@@ -211,6 +211,12 @@ const ProposalDetails: React.FC = () => {
   const [pendingResendContractType, setPendingResendContractType] = useState<string | null>(null);
   const [includeContract, setIncludeContract] = useState(false);
 
+  // Standalone send contract dialog (after author responds to info request, no contract yet)
+  const [standaloneSendContractOpen, setStandaloneSendContractOpen] = useState(false);
+  const [standaloneSendContractType, setStandaloneSendContractType] = useState("author");
+  const [standaloneSendContractFields, setStandaloneSendContractFields] = useState<import("@/components/proposals/ContractFieldsForm").ContractFieldValues | null>(null);
+  const [isSendingStandaloneContract, setIsSendingStandaloneContract] = useState(false);
+
   /* ---------------- Data ---------------- */
 
   const {
