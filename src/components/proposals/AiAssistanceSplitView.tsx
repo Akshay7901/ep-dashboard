@@ -2,23 +2,44 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { metadataApi, type MetadataResponse } from "@/lib/proposalsApi";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import type { Proposal } from "@/types";
-import { extractCountry } from "@/lib/extractCountry";
 
 interface AiAssistanceSplitViewProps {
   proposal: Proposal;
   ticketNumber: string;
 }
 
-const DetailRow = ({ label, value }: { label: string; value?: string | null }) => {
-  if (!value) return null;
+interface FieldDef {
+  label: string;
+  left: string | null | undefined;
+  right: string | null | undefined;
+}
+
+const FieldRow: React.FC<{ field: FieldDef }> = ({ field }) => {
+  const hasLeft = !!field.left;
+  const hasRight = !!field.right;
+  if (!hasLeft && !hasRight) return null;
+
   return (
-    <div className="flex gap-3 py-1.5 min-w-0">
-      <span className="text-xs text-muted-foreground w-32 shrink-0">{label}:</span>
-      <span className="text-xs font-medium flex-1 min-w-0 break-words">{value}</span>
+    <div className="border-b border-border last:border-b-0 py-4">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        {field.label}
+      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-muted/30 rounded-md p-3 min-h-[40px]">
+          <p className="text-[10px] font-medium text-muted-foreground mb-1">Original</p>
+          <p className="text-sm leading-relaxed whitespace-pre-line break-words">
+            {hasLeft ? field.left : <span className="text-muted-foreground italic">—</span>}
+          </p>
+        </div>
+        <div className="bg-primary/5 rounded-md p-3 min-h-[40px]">
+          <p className="text-[10px] font-medium text-muted-foreground mb-1">AI Generated</p>
+          <p className="text-sm leading-relaxed whitespace-pre-line break-words">
+            {hasRight ? field.right : <span className="text-muted-foreground italic">—</span>}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -31,96 +52,51 @@ const AiAssistanceSplitView: React.FC<AiAssistanceSplitViewProps> = ({ proposal,
     staleTime: 30000,
   });
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* LEFT: Original Proposal Details */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">Original Proposal</h3>
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            {proposal.biography && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Display Bios</p>
-                <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.biography}</p>
-              </div>
-            )}
-            {proposal.short_description && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Book Description</p>
-                <p className="text-sm leading-relaxed whitespace-pre-line">{proposal.short_description}</p>
-              </div>
-            )}
-            <DetailRow label="Short Description" value={proposal.short_description} />
-            <DetailRow label="Keywords" value={proposal.keywords} />
-            <DetailRow label="Website Classification" value={null} />
-            <DetailRow label="BIC" value={null} />
-            <DetailRow label="BISAC" value={null} />
-            <DetailRow label="Thema" value={null} />
-          </CardContent>
-        </Card>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
       </div>
+    );
+  }
 
-      {/* RIGHT: Metadata from API */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">AI-Generated Metadata</h3>
+  if (error) {
+    return <p className="text-sm text-destructive text-center py-8">Failed to load metadata</p>;
+  }
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading metadata...</span>
-          </div>
-        )}
+  const md = metadata?.metadata;
+  const mdAny = md as Record<string, any> | undefined;
 
-        {error && (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-sm text-destructive">Failed to load metadata</p>
-            </CardContent>
-          </Card>
-        )}
+  const fields: FieldDef[] = [
+    { label: "Display Bios", left: proposal.biography, right: md?.display_bios },
+    { label: "Book Description", left: proposal.short_description, right: md?.book_description },
+    { label: "Short Description", left: proposal.short_description, right: mdAny?.short_description },
+    { label: "Keywords", left: proposal.keywords, right: md?.keywords },
+    { label: "Website Classification", left: null, right: md?.website_classification },
+    { label: "BIC", left: null, right: md?.bic },
+    { label: "BISAC", left: null, right: mdAny?.bisac },
+    { label: "Thema", left: null, right: mdAny?.thema },
+  ];
 
-        {!isLoading && !error && !metadata && (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">No metadata available for this proposal yet.</p>
-            </CardContent>
-          </Card>
-        )}
-
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground">AI Assistance — Comparison</h3>
         {metadata && (
-          <>
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">AI-Generated Data</CardTitle>
-                  <Badge variant="outline" className="text-xs capitalize">
-                    {metadata.metadata_status || "draft"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {metadata.metadata?.display_bios && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Display Bios</p>
-                    <p className="text-sm leading-relaxed whitespace-pre-line">{metadata.metadata.display_bios}</p>
-                  </div>
-                )}
-                {metadata.metadata?.book_description && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Book Description</p>
-                    <p className="text-sm leading-relaxed whitespace-pre-line">{metadata.metadata.book_description}</p>
-                  </div>
-                )}
-                <DetailRow label="Short Description" value={(metadata.metadata as any)?.short_description} />
-                <DetailRow label="Keywords" value={metadata.metadata?.keywords} />
-                <DetailRow label="Website Classification" value={metadata.metadata?.website_classification} />
-                <DetailRow label="BIC" value={metadata.metadata?.bic} />
-                <DetailRow label="BISAC" value={(metadata.metadata as any)?.bisac} />
-                <DetailRow label="Thema" value={(metadata.metadata as any)?.thema} />
-              </CardContent>
-            </Card>
-          </>
+          <Badge variant="outline" className="text-xs capitalize">
+            {metadata.metadata_status || "draft"}
+          </Badge>
         )}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+        <p className="text-sm font-semibold text-foreground">Original Proposal</p>
+        <p className="text-sm font-semibold text-foreground">AI-Generated Metadata</p>
+      </div>
+      <div>
+        {fields.map((field) => (
+          <FieldRow key={field.label} field={field} />
+        ))}
       </div>
     </div>
   );
