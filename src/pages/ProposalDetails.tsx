@@ -201,6 +201,9 @@ const ProposalDetails: React.FC = () => {
   const [prNoteSaved, setPrNoteSaved] = useState(false);
   const [drNoteForAuthor, setDrNoteForAuthor] = useState("");
 
+  // Stable initial assessment for DR split screen — captured once to prevent resets on background refetches
+  const drSplitScreenAssessmentRef = useRef<Record<string, any> | null>(null);
+
   // Resend contract dialog state (after query response)
   const [resendContractOpen, setResendContractOpen] = useState(false);
   const [resendContractType, setResendContractType] = useState("author");
@@ -1772,19 +1775,29 @@ const ProposalDetails: React.FC = () => {
               </div>
             </div>
 
-            <PeerReviewCommentsForm
-          ref={reviewFormRef}
-          proposal={proposal}
-          existingAssessment={decisionReviewerDraft || reviewFormData || {}}
-          quietDraftSave
-          forceEditable
-          hideHeader
-          preloadedStyle={!decisionReviewerDraft}
-          peerReviewerNote={peerReviewerNoteFromApi}
-          peerReviewerName={reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"}
-          onSave={() => refetch()}
-          onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
-          onDraftSaved={() => {}} />
+             {(() => {
+              // Capture initial assessment once so background refetches don't reset the form
+              if (!drSplitScreenAssessmentRef.current) {
+                drSplitScreenAssessmentRef.current = decisionReviewerDraft || reviewFormData || {};
+              }
+              const stableAssessment = drSplitScreenAssessmentRef.current;
+              const showPreloaded = !decisionReviewerDraft || drSplitScreenAssessmentRef.current === reviewFormData;
+              return (
+                <PeerReviewCommentsForm
+                  ref={reviewFormRef}
+                  proposal={proposal}
+                  existingAssessment={stableAssessment}
+                  quietDraftSave
+                  forceEditable
+                  hideHeader
+                  preloadedStyle={showPreloaded}
+                  peerReviewerNote={peerReviewerNoteFromApi}
+                  peerReviewerName={reviewMeta?.reviewer_name || reviewMeta?.reviewer_email || "Peer Reviewer"}
+                  onSave={() => {}}
+                  onSubmitReview={(data) => {setSummaryFormData(data);setShowingSummary(true);}}
+                  onDraftSaved={() => {}} />
+              );
+             })()}
 
         
           </div>
