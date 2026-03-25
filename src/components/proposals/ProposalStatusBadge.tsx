@@ -39,8 +39,8 @@ const statusColorMap: Record<string, {
   awaiting_approval: { className: 'bg-[#BE185D] text-white hover:bg-[#BE185D] border-[#BE185D]', icon: Clock },
   // Author dashboard statuses
   'final_review_&_confirmation': { className: 'bg-[#F59E0B] text-white hover:bg-[#F59E0B] border-[#F59E0B]', icon: Clock },
-  'feedback_&_agreement_pending': { className: 'bg-[#BE185D] text-white hover:bg-[#BE185D] border-[#BE185D]', icon: FileCheck },
-  'feedback_&_contract_issued': { className: 'bg-[#BE185D] text-white hover:bg-[#BE185D] border-[#BE185D]', icon: FileCheck },
+  'feedback_&_agreement_pending': { className: 'bg-[#0D9488] text-white hover:bg-[#0D9488] border-[#0D9488]', icon: FileCheck },
+  'feedback_&_contract_issued': { className: 'bg-[#0D9488] text-white hover:bg-[#0D9488] border-[#0D9488]', icon: FileCheck },
   author_approved: { className: 'bg-[#16A34A] text-white hover:bg-[#16A34A] border-[#16A34A]', icon: CheckCircle2 },
   accepted: { className: 'bg-[#16A34A] text-white hover:bg-[#16A34A] border-[#16A34A]', icon: CheckCircle2 },
   'confirmed_&_finalised': { className: 'bg-[#16A34A] text-white hover:bg-[#16A34A] border-[#16A34A]', icon: CheckCircle2 },
