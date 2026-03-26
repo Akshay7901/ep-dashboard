@@ -632,7 +632,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
               Respond to Author Queries
             </DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Please respond to the author's queries before submitting the metadata.
+              Please respond to the author's queries before submitting the publication Data.
             </p>
           </DialogHeader>
           <div className="space-y-4 max-h-[400px] overflow-y-auto py-2">
