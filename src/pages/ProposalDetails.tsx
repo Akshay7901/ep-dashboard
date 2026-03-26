@@ -182,6 +182,7 @@ const ProposalDetails: React.FC = () => {
 
   const [assignNote, setAssignNote] = useState("");
   const [isDeclineDialogOpen, setIsDeclineDialogOpen] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
   const [isRevertDialogOpen, setIsRevertDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<"accept" | "decline" | null>(null);
   const [showingSummary, setShowingSummary] = useState(false);
@@ -1825,18 +1826,22 @@ const ProposalDetails: React.FC = () => {
     
 
 
-      <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={setIsDeclineDialogOpen} onConfirm={async () => {
+      <DeclineProposalDialog open={isDeclineDialogOpen} onOpenChange={(open) => { if (!isDeclining) setIsDeclineDialogOpen(open); }} onConfirm={async () => {
+      if (isDeclining) return;
+      setIsDeclining(true);
       try {
         const ticketNum = proposal.ticket_number || id;
         await proposalApi.decline(ticketNum!);
+        setIsDeclineDialogOpen(false);
         queryClient.invalidateQueries({ queryKey: ["proposals"] });
         queryClient.invalidateQueries({ queryKey: ["proposal", ticketNum] });
         toast({ title: "Proposal Declined", description: "The proposal has been declined and the author has been notified." });
-        setIsDeclineDialogOpen(false);
       } catch (error: any) {
         toast({ variant: "destructive", title: "Failed to Decline", description: error?.message || "An error occurred while declining the proposal." });
+      } finally {
+        setIsDeclining(false);
       }
-    }} isLoading={isBusy} />
+    }} isLoading={isDeclining} />
 
       {/* Lock Proposal Confirmation Dialog */}
       <AlertDialog open={lockConfirmOpen} onOpenChange={setLockConfirmOpen}>
