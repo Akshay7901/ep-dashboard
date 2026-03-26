@@ -1189,7 +1189,7 @@ const ProposalDetails: React.FC = () => {
                   </AccordionItem>
 
                   {/* Contract Queries */}
-                  <AccordionItem value="queries" className="border rounded-lg px-4">
+                  <AccordionItem value="queries" className="border rounded-lg px-4" data-queries-section>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
                         <p className="text-base font-semibold">
