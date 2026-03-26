@@ -421,7 +421,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
       queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
       queryClient.invalidateQueries({ queryKey: ["metadata-queries", ticketNumber] });
       setShowRespondDialog(false);
-      toast({ title: "Sent to Author", description: "Queries responded and metadata sent to author." });
+      toast({ title: "Sent to Author", description: "Queries responded and publication data sent to author." });
     } catch (err: any) {
       toast({ title: "Submit failed", description: err?.message || "Could not complete.", variant: "destructive" });
     } finally {
