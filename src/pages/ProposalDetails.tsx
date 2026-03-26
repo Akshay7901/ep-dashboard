@@ -270,14 +270,14 @@ const ProposalDetails: React.FC = () => {
     queryFn: () => metadataApi.get(ticketNum),
     enabled: !!ticketNum,
     staleTime: 0,
-    refetchInterval: 10000
+    refetchInterval: 5000
   });
   const { data: metadataQueries = [] } = useQuery({
     queryKey: ["metadata-queries", ticketNum],
     queryFn: () => metadataQueriesApi.list(ticketNum),
     enabled: !!ticketNum,
     staleTime: 0,
-    refetchInterval: 10000
+    refetchInterval: 5000
   });
   const proposedTitle = metadataResponse?.metadata?.title;
   const proposedSubtitle = metadataResponse?.metadata?.subtitle;
