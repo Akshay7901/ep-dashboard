@@ -513,7 +513,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
       queryClient.invalidateQueries({ queryKey: ["proposal"] });
       setShowFinaliseConfirm(false);
       toast({
-        title: "Metadata finalised",
+        title: "Publication data finalised",
         description: hasCoverImage
           ? "Your metadata and cover image have been submitted and locked."
           : "Your metadata has been submitted and locked. No cover image was provided — the publisher will use a default cover.",
