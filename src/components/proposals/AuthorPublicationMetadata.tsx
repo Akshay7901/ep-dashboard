@@ -441,6 +441,17 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
 
   const sectionLabel = isAuthorType ? "Primary Author(s)" : "Primary Editor(s)";
 
+  const additionalLabel = isAuthorType ? "Author" : "Editor";
+  const additionalFieldOptions = additionalAuthors.flatMap((_, idx) => {
+    const prefix = `Additional ${additionalLabel} ${idx + 1}`;
+    return [
+      `${prefix} - Salutation`,
+      `${prefix} - First name`,
+      `${prefix} - Last name`,
+      `${prefix} - Email`,
+    ];
+  });
+
   const FIELD_OPTIONS = [
     "Title",
     "Subtitle",
@@ -454,6 +465,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
     "Email 2",
     "Institution",
     "Country",
+    ...additionalFieldOptions,
     "Book description",
     "Keywords/Tags",
   ];
