@@ -465,6 +465,48 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
         </div>
       )}
 
+      {/* Metadata Queries - Diff Panel (shown at top for visibility) */}
+      {metadataQueries.length > 0 && (
+        <div className="space-y-3">
+          {/* Pending queries with diff */}
+          {pendingQueries.map((q) => (
+            <MetadataQueryDiffPanel
+              key={q.id}
+              query={q}
+              fieldMap={fieldMap}
+              onApplyField={handleApplyField}
+              onRespond={handleRespondToQuery}
+              respondingLoading={respondingLoading}
+              hasResponse={false}
+            />
+          ))}
+
+          {/* Responded queries (collapsed) */}
+          {metadataQueries
+            .filter((q) => q.type === 'query' && metadataQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))
+            .map((q) => {
+              const response = metadataQueries.find((r) => r.type === 'response' && r.parent_query_id === q.id);
+              return (
+                <div key={q.id} className="border border-border rounded-lg overflow-hidden opacity-70">
+                  <div className="px-4 py-2 bg-muted/30 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Query from {q.raised_by_name || q.raised_by} — {new Date(q.created_at).toLocaleString()}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px]">Responded</Badge>
+                  </div>
+                  <div className="px-4 py-2 text-sm whitespace-pre-line border-b border-border" dangerouslySetInnerHTML={{ __html: (q.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
+                  {response && (
+                    <div className="px-4 py-2 text-sm bg-emerald-50/50 whitespace-pre-line">
+                      <span className="text-xs font-medium text-emerald-700">Your response: </span>
+                      {response.text}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+        </div>
+      )}
+
       <div className="space-y-0 border border-border rounded-lg overflow-hidden">
         {/* Publication Metadata header */}
 
