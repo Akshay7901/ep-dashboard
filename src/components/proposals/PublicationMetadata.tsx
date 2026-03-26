@@ -226,7 +226,29 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
       keywords: setKeywords,
     };
     const setter = setters[fieldKey];
-    if (setter) setter(value);
+    if (setter) {
+      setter(value);
+      return;
+    }
+
+    // Handle additional editor/author fields (e.g. additional_editor_1_-_first_name)
+    const additionalMatch = fieldKey.match(/^additional_(?:editor|author)_(\d+)_-_(.+)$/);
+    if (additionalMatch) {
+      const idx = parseInt(additionalMatch[1], 10) - 1;
+      const subField = additionalMatch[2];
+      const fieldToKey: Record<string, keyof AdditionalPerson> = {
+        salutation: "salutation",
+        first_name: "firstName",
+        last_name: "lastName",
+        email: "email",
+      };
+      const personKey = fieldToKey[subField];
+      if (personKey && idx >= 0 && idx < additionalPeople.length) {
+        setAdditionalPeople(prev => prev.map((p, i) =>
+          i === idx ? { ...p, [personKey]: value } : p
+        ));
+      }
+    }
   };
 
   const handleRespondToQuery = async (queryId: number, text: string) => {
