@@ -329,7 +329,7 @@ export const useProposal = (id: string) => {
     enabled: !!id,
     retry: false,
     staleTime: 0,
-    refetchInterval: 10000,
+    refetchInterval: 5000,
   });
 };
 
