@@ -364,6 +364,10 @@ const ProposalDetails: React.FC = () => {
     // Auto-open Queries accordion when queries are raised
     if (statusIs(proposal?.status || "", "queries_raised")) {
       setDrFeedbackAccordion("queries");
+      // Scroll to queries section after accordion opens
+      setTimeout(() => {
+        document.querySelector('[data-queries-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
     } else {
       setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
     }
