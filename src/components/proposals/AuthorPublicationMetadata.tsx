@@ -894,7 +894,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           <AlertDialog open={showFinaliseConfirm} onOpenChange={setShowFinaliseConfirm}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Finalise Metadata</AlertDialogTitle>
+                <AlertDialogTitle>Finalise Publication data</AlertDialogTitle>
               </AlertDialogHeader>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Please note that information cannot be amended once finalised. Make sure to check over the information thoroughly before proceeding.</p>
@@ -912,7 +912,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   disabled={finalising}
                 >
                   {finalising && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Finalise Metadata
+                  Finalise Publication data
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
