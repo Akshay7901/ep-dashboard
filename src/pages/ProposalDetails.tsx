@@ -364,6 +364,10 @@ const ProposalDetails: React.FC = () => {
     // Auto-open Queries accordion when queries are raised
     if (statusIs(proposal?.status || "", "queries_raised")) {
       setDrFeedbackAccordion("queries");
+      // Scroll to queries section after accordion opens
+      setTimeout(() => {
+        document.querySelector('[data-queries-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
     } else {
       setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
     }
@@ -1185,7 +1189,7 @@ const ProposalDetails: React.FC = () => {
                   </AccordionItem>
 
                   {/* Contract Queries */}
-                  <AccordionItem value="queries" className="border rounded-lg px-4">
+                  <AccordionItem value="queries" className="border rounded-lg px-4" data-queries-section>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="text-left">
                         <p className="text-base font-semibold">
