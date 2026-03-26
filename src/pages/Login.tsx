@@ -80,12 +80,17 @@ const Login: React.FC = () => {
       }
     } catch (error: any) {
       const msg = error.response?.data?.error || error.message || "Something went wrong. Please try again.";
-      // If the API returns a 404/not-found style error, show it instead of falling through
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: msg,
-      });
+
+      if (msg.toLowerCase().includes("password is required")) {
+        passwordForm.reset({ password: '' });
+        setStep('password');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: msg,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
