@@ -1215,10 +1215,13 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
-          <TabsList className={`grid w-full ${infoRequests.length > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="book" className="relative gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book Info</span>
+              {infoRequests.some((r) => r.status === 'responded') && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
+              )}
             </TabsTrigger>
             <TabsTrigger value="author" className="gap-1.5 text-xs sm:text-sm">
               <User className="h-4 w-4" />
@@ -1228,19 +1231,19 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
-            {infoRequests.length > 0 && (
-              <TabsTrigger value="additional-info" className="gap-1.5 text-xs sm:text-sm relative">
-                <ClipboardList className="h-4 w-4" />
-                <span className="hidden sm:inline">Updates</span>
-                {infoRequests.some((r) => r.status === 'responded') && (
-                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
-                )}
-              </TabsTrigger>
-            )}
           </TabsList>
 
           {/* ---- BOOK INFO (Peer Reviewer) ---- */}
           <TabsContent value="book" className="space-y-2 mt-4">
+            {/* Info Request Updates (inline) */}
+            {infoRequests.length > 0 && (
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="reviewer"
+                readOnly
+              />
+            )}
             <Accordion type="multiple" defaultValue={["overview"]} className="space-y-1">
               <AccordionItem value="overview" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
@@ -1417,17 +1420,6 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* ---- UPDATES / INFO REQUESTS (Peer Reviewer) ---- */}
-          {infoRequests.length > 0 && (
-            <TabsContent value="additional-info" className="mt-4 space-y-4">
-              <InfoRequestPanel
-                infoRequests={infoRequests}
-                isLoading={false}
-                viewAs="reviewer"
-                readOnly
-              />
-            </TabsContent>
-          )}
 
         </Tabs>)}
       {/* Events Audit Trail Sheet */}
