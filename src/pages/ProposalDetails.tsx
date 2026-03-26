@@ -1215,7 +1215,7 @@ const ProposalDetails: React.FC = () => {
           </TabsContent>
         </Tabs>) : (/* ---------- PEER REVIEWER TABS ---------- */
     <Tabs defaultValue="book">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className={`grid w-full ${infoRequests.length > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="book" className="gap-1.5 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Book Info</span>
@@ -1228,6 +1228,15 @@ const ProposalDetails: React.FC = () => {
               <Folder className="h-4 w-4" />
               <span className="hidden sm:inline">Supporting Documents</span>
             </TabsTrigger>
+            {infoRequests.length > 0 && (
+              <TabsTrigger value="additional-info" className="gap-1.5 text-xs sm:text-sm relative">
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Updates</span>
+                {infoRequests.some((r) => r.status === 'responded') && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* ---- BOOK INFO (Peer Reviewer) ---- */}
