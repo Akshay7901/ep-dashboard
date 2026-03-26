@@ -894,7 +894,7 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
           <AlertDialog open={showFinaliseConfirm} onOpenChange={setShowFinaliseConfirm}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Finalise Metadata</AlertDialogTitle>
+                <AlertDialogTitle>Finalise Publication data</AlertDialogTitle>
               </AlertDialogHeader>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Please note that information cannot be amended once finalised. Make sure to check over the information thoroughly before proceeding.</p>
