@@ -821,13 +821,6 @@ const AuthorPublicationMetadata: React.FC<AuthorPublicationMetadataProps> = ({
                   </span>
                 </div>
                 <p className="whitespace-pre-line" dangerouslySetInnerHTML={{ __html: (q.text || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />
-                {q.fields && q.fields.length > 0 && (
-                  <div className="flex gap-1 mt-1.5 flex-wrap">
-                    {q.fields.map((f) => (
-                      <Badge key={f} variant="secondary" className="text-[10px]">{f}</Badge>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
           </div>
