@@ -361,8 +361,13 @@ const ProposalDetails: React.FC = () => {
 
   React.useEffect(() => {
     if (drActiveTab !== "feedback" || !decisionReviewerPostSubmission) return;
-    setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
-  }, [drActiveTab, decisionReviewerPostSubmission, hasDecisionReviewInApi]);
+    // Auto-open Queries accordion when queries are raised
+    if (statusIs(proposal?.status || "", "queries_raised")) {
+      setDrFeedbackAccordion("queries");
+    } else {
+      setDrFeedbackAccordion(hasDecisionReviewInApi ? "final-review" : "peer-review");
+    }
+  }, [drActiveTab, decisionReviewerPostSubmission, hasDecisionReviewInApi, proposal?.status]);
 
   /* ---------------- Loading / Error ---------------- */
 
