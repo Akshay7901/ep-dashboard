@@ -371,7 +371,7 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
     try {
       await metadataApi.update(ticketNumber, { ...buildPayload(), notes: "Draft saved" });
       queryClient.invalidateQueries({ queryKey: ["metadata", ticketNumber] });
-      toast({ title: "Metadata saved", description: "Your changes have been saved." });
+      toast({ title: "Publication Data saved", description: "Your changes have been saved." });
     } catch (err: any) {
       toast({ title: "Save failed", description: err?.message || "Could not save metadata.", variant: "destructive" });
     } finally {
