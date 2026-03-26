@@ -167,25 +167,42 @@ const PublicationMetadata: React.FC<PublicationMetadataProps> = ({
   const [dialogResponses, setDialogResponses] = useState<Record<number, string>>({});
 
   // Field map for diff panel - maps normalized field keys to labels and current values
-  const fieldMap = useMemo(() => ({
-    title: { label: "Title", currentValue: title },
-    subtitle: { label: "Subtitle", currentValue: subtitle },
-    category_auth_ed: { label: "Category Auth/Ed", currentValue: categoryAuthEd },
-    display_name_s_: { label: "Display Name(s)", currentValue: displayName },
-    display_names: { label: "Display Name(s)", currentValue: displayName },
-    display_bio_s_: { label: "Display bio(s)", currentValue: displayBio },
-    display_bios: { label: "Display bio(s)", currentValue: displayBio },
-    salutation: { label: "Salutation", currentValue: salutation },
-    first_name: { label: "First name", currentValue: firstName },
-    last_name: { label: "Last name", currentValue: lastName },
-    email: { label: "Email", currentValue: email },
-    email_2: { label: "Email 2", currentValue: email2 },
-    institution: { label: "Institution", currentValue: institution },
-    country: { label: "Country", currentValue: countryVal },
-    book_description: { label: "Book description", currentValue: bookDesc },
-    keywords_tags: { label: "Keywords/Tags", currentValue: keywords },
-    keywords: { label: "Keywords/Tags", currentValue: keywords },
-  }), [title, subtitle, categoryAuthEd, displayName, displayBio, salutation, firstName, lastName, email, email2, institution, countryVal, bookDesc, keywords]);
+  const isAuthorType = (categoryAuthEd || "").toLowerCase().includes("author");
+  const additionalLabel = isAuthorType ? "Author" : "Editor";
+
+  const fieldMap = useMemo(() => {
+    const base: Record<string, { label: string; currentValue: string }> = {
+      title: { label: "Title", currentValue: title },
+      subtitle: { label: "Subtitle", currentValue: subtitle },
+      category_auth_ed: { label: "Category Auth/Ed", currentValue: categoryAuthEd },
+      display_name_s_: { label: "Display Name(s)", currentValue: displayName },
+      display_names: { label: "Display Name(s)", currentValue: displayName },
+      display_bio_s_: { label: "Display bio(s)", currentValue: displayBio },
+      display_bios: { label: "Display bio(s)", currentValue: displayBio },
+      salutation: { label: "Salutation", currentValue: salutation },
+      first_name: { label: "First name", currentValue: firstName },
+      last_name: { label: "Last name", currentValue: lastName },
+      email: { label: "Email", currentValue: email },
+      email_2: { label: "Email 2", currentValue: email2 },
+      institution: { label: "Institution", currentValue: institution },
+      country: { label: "Country", currentValue: countryVal },
+      book_description: { label: "Book description", currentValue: bookDesc },
+      keywords_tags: { label: "Keywords/Tags", currentValue: keywords },
+      keywords: { label: "Keywords/Tags", currentValue: keywords },
+    };
+
+    // Add dynamic additional editor/author fields
+    additionalPeople.forEach((person, idx) => {
+      const num = idx + 1;
+      const prefix = `additional_${additionalLabel.toLowerCase()}_${num}`;
+      base[`${prefix}_-_salutation`] = { label: `Additional ${additionalLabel} ${num} - Salutation`, currentValue: person.salutation };
+      base[`${prefix}_-_first_name`] = { label: `Additional ${additionalLabel} ${num} - First name`, currentValue: person.firstName };
+      base[`${prefix}_-_last_name`] = { label: `Additional ${additionalLabel} ${num} - Last name`, currentValue: person.lastName };
+      base[`${prefix}_-_email`] = { label: `Additional ${additionalLabel} ${num} - Email`, currentValue: person.email };
+    });
+
+    return base;
+  }, [title, subtitle, categoryAuthEd, displayName, displayBio, salutation, firstName, lastName, email, email2, institution, countryVal, bookDesc, keywords, additionalPeople, additionalLabel]);
 
   // Apply a field value from a query diff
   const handleApplyField = (fieldKey: string, value: string) => {
