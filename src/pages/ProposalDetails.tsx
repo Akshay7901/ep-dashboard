@@ -1235,6 +1235,15 @@ const ProposalDetails: React.FC = () => {
 
           {/* ---- BOOK INFO (Peer Reviewer) ---- */}
           <TabsContent value="book" className="space-y-2 mt-4">
+            {/* Info Request Updates (inline) */}
+            {infoRequests.length > 0 && (
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="reviewer"
+                readOnly
+              />
+            )}
             <Accordion type="multiple" defaultValue={["overview"]} className="space-y-1">
               <AccordionItem value="overview" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-base font-semibold">
