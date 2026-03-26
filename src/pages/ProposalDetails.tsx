@@ -1417,6 +1417,17 @@ const ProposalDetails: React.FC = () => {
             </Card>
           </TabsContent>
 
+          {/* ---- UPDATES / INFO REQUESTS (Peer Reviewer) ---- */}
+          {infoRequests.length > 0 && (
+            <TabsContent value="additional-info" className="mt-4 space-y-4">
+              <InfoRequestPanel
+                infoRequests={infoRequests}
+                isLoading={false}
+                viewAs="reviewer"
+                readOnly
+              />
+            </TabsContent>
+          )}
 
         </Tabs>)}
       {/* Events Audit Trail Sheet */}
