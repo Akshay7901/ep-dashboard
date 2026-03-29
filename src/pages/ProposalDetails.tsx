@@ -960,6 +960,48 @@ const ProposalDetails: React.FC = () => {
                 />
               </div>
             )}
+
+            {/* Prominent action banner when author responded but no contract sent */}
+            {isReviewer1 && !latestContract && !contractLoading && infoRequests.some((r) => r.status === 'responded') && (
+              <Card className="border-2 border-primary/30 bg-primary/5">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/10 p-2 shrink-0 mt-0.5">
+                      <Send className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <p className="text-base font-semibold text-foreground">Author Has Responded — Next Steps</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          The author has provided the requested information. You can now send a publishing contract or request additional information.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          className="bg-[#2f4b40] hover:bg-[#2f4b40] hover:opacity-90 text-white gap-2"
+                          onClick={() => {
+                            const ct = getDefaultContractType(proposal?.book_type);
+                            setStandaloneSendContractType(ct);
+                            setStandaloneSendContractFields(getDefaultContractFields(ct, proposedTitle || proposal?.name || '', proposedSubtitle || proposal?.sub_title || ''));
+                            setStandaloneSendContractOpen(true);
+                          }}
+                        >
+                          <Send className="h-4 w-4" /> Send Contract
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => navigate(`/proposals/${ticketNum}/request-info`)}
+                        >
+                          <Info className="h-4 w-4" /> Request More Info
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {(() => {
           const allReviews = reviewData?.reviews || (reviewData?.review ? [reviewData.review] : []);
           const peerReview = allReviews.find((r: any) => isPeerReviewerRole(r.reviewer_role));
