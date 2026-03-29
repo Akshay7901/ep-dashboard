@@ -636,6 +636,7 @@ const ProposalDetails: React.FC = () => {
                 {(infoRequests.some((r) => r.status === 'responded') && !pendingInfoRequest && !latestContract || contractQueries.some((q) => q.type === 'query' && q.raised_by_role === 'author' && !contractQueries.some((r) => r.type === 'response' && r.parent_query_id === q.id))) &&
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#D97706]" />
                 }
+              </TabsTrigger>
             {isContractSigned &&
         <TabsTrigger value="metadata" className="relative gap-1.5 text-xs sm:text-sm">
                 <ClipboardList className="h-4 w-4" />
